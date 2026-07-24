@@ -228,7 +228,9 @@ if 'texto_completo_pdf' not in st.session_state:
     st.session_state.texto_completo_pdf = ""
 
 def formatear_bs(monto):
-    return f"Bs. {monto:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    # Formateamos solo el número primero para no afectar las letras
+    numero_formateado = f"{monto:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"Bs. {numero_formateado}"
 
 def obtener_abreviatura_carrera(nombre_carrera):
     match = re.search(r'\d+', nombre_carrera)
