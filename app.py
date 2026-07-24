@@ -8,7 +8,7 @@ from pypdf import PdfReader
 from streamlit_autorefresh import st_autorefresh
 
 # Configuración de pantalla completa (Responsive para Móviles y PC)
-st.set_page_config(page_title="Sistema de Remates", layout="wide", page_icon="🏇")
+st.set_page_config(page_title="California Chrome", layout="wide", page_icon="🏇")
 
 # --- AUTOREFRESH (3 SEGUNDOS) ---
 try:
@@ -236,34 +236,109 @@ def obtener_abreviatura_carrera(nombre_carrera):
         return f"C{match.group(0)}"
     return nombre_carrera[:3].upper()
 
-# --- FORMATEADOR VISUAL LLAMATIVO PARA LA TABLA ---
-def formatear_tabla_remate(remates_dict):
-    """Convierte el diccionario de remates en una tabla con números de posición visualmente coloridos tipo etiqueta y nombres claros."""
-    colores_badges = {
-        1: "🟦 1", 2: "🟩 2", 3: "🟪 3", 4: "🟧 4", 5: "🟨 5",
-        6: "🟥 6", 7: "🔷 7", 8: "🟢 8", 9: "🟣 9", 10: "🟤 10",
-        11: "🔵 11", 12: "🟢 12", 13: "🟣 13", 14: "🟠 14", 15: "🟡 15",
-        16: "🔴 16", 17: "💠 17", 18: "❇️ 18", 19: "🌀 19", 20: "🔶 20",
-        21: "🔹 21", 22: "🟩 22", 23: "💜 23", 24: "🧡 24", 25: "💛 25"
-    }
+# --- FORMATEADOR HTML PARA TABLA ESTILO REFERENCIA ---
+def generar_tabla_html_remate(remates_dict):
+    html = """
+    <style>
+        .tabla-referencia {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            margin-bottom: 20px;
+        }
+        .tabla-referencia th {
+            border-top: 3px solid #dfc729; /* Línea amarilla superior gruesa */
+            border-bottom: 2px solid #dfc729; /* Línea amarilla inferior */
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 800;
+            background-color: #ffffff;
+            color: #000000;
+            font-size: 16px;
+        }
+        .tabla-referencia td {
+            border-bottom: 1px solid #dfc729; /* Líneas separadoras amarillas */
+            padding: 10px 8px;
+            background-color: #fbfbfb;
+            color: #111111;
+            font-size: 15px;
+            vertical-align: middle;
+        }
+        .tabla-referencia tr:nth-child(even) td {
+            background-color: #ffffff;
+        }
+        .badge-numero {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            font-weight: bold;
+            font-size: 15px;
+            border-radius: 2px;
+            box-sizing: border-box;
+        }
+        /* Colores exactos de la imagen para las posiciones */
+        .badge-1 { background-color: #e3242b; color: #ffffff; }
+        .badge-2 { background-color: #ffffff; color: #000000; border: 2px solid #000000; }
+        .badge-3 { background-color: #1d11c0; color: #ffffff; }
+        .badge-4 { background-color: #f1c40f; color: #000000; }
+        .badge-5 { background-color: #28a745; color: #ffffff; }
+        .badge-6 { background-color: #000000; color: #ffffff; }
+        .badge-7 { background-color: #fd7e14; color: #ffffff; }
+        .badge-default { background-color: #6c757d; color: #ffffff; }
+    </style>
     
-    datos = []
+    <div style="background-color: #ffffff; padding: 10px; border-radius: 8px;">
+        <table class="tabla-referencia">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">No</th>
+                    <th style="width: 35%;">Ejemplar</th>
+                    <th style="width: 30%;">Comprador</th>
+                    <th style="width: 30%;">Monto Actual</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
     for cab, info in remates_dict.items():
+        # Extraer el número y el nombre del ejemplar
         match_num = re.match(r'^(\d+)', cab)
         if match_num:
             num = int(match_num.group(1))
             nombre_solo = cab.split(" - ", 1)[1] if " - " in cab else cab
-            etiqueta_colorida = colores_badges.get(num, f"🔹 {num}")
-            ejemplar_formateado = f"{etiqueta_colorida} ➔ {nombre_solo.upper()}"
         else:
-            ejemplar_formateado = f"{cab}"
+            num = 0
+            nombre_solo = cab
             
-        datos.append({
-            "Ejemplar / Posición": ejemplar_formateado,
-            "Comprador": info['jugador'],
-            "Monto Actual": formatear_bs(info['monto'])
-        })
-    return datos
+        # Asignar la clase CSS según el número de posición
+        if num == 1: badge_class = "badge-1"
+        elif num == 2: badge_class = "badge-2"
+        elif num == 3: badge_class = "badge-3"
+        elif num == 4: badge_class = "badge-4"
+        elif num == 5: badge_class = "badge-5"
+        elif num == 6: badge_class = "badge-6"
+        elif num == 7: badge_class = "badge-7"
+        else: badge_class = "badge-default"
+        
+        html += f"""
+                <tr>
+                    <td><span class="badge-numero {badge_class}">{num}</span></td>
+                    <td style="font-weight: 800; font-size: 16px;">{nombre_solo.upper()}</td>
+                    <td>{info['jugador']}</td>
+                    <td style="font-weight: bold; color: #000000;">{formatear_bs(info['monto'])}</td>
+                </tr>
+        """
+    
+    html += """
+            </tbody>
+        </table>
+    </div>
+    """
+    return html
 
 # --- EXTRACCIÓN GENERAL DE TEXTO DEL PDF ---
 def extraer_texto_pdf(archivo_pdf):
@@ -358,7 +433,7 @@ if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponib
     st.session_state.carreras_habilitadas_dupleta = list(lista_carreras_disponibles)
 
 # --- BARRA LATERAL ---
-st.sidebar.header("⚙️ Menú de Control")
+st.sidebar.header("barra lateral")
 ahora_dt = obtener_hora_venezuela_local()
 st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
 
@@ -536,20 +611,12 @@ with tab1:
                             else:
                                 st.markdown(f"<div class='timer-box'>⚠️ ULTIMOS SEGUNDOS ANTES DE CIERRE ({carr_activa})</div>", unsafe_allow_html=True)
 
-                # --- TABLA DE EJEMPLARES CON BORDES DESTACADOS Y ELEGANTES ---
-                datos_tabla = formatear_tabla_remate(st.session_state.remates[carr_activa])
+                # --- TABLA DE EJEMPLARES ESTILO IMAGEN DE REFERENCIA ---
+                tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa])
+                st.markdown(tabla_html, unsafe_allow_html=True)
+                
                 total_pote = sum([info['monto'] for info in st.session_state.remates[carr_activa].values()])
-                
-                cantidad_filas = len(datos_tabla)
-                altura_tabla = min(max(180, (cantidad_filas + 1) * 44), 500)
-                
-                st.dataframe(
-                    pd.DataFrame(datos_tabla), 
-                    use_container_width=True, 
-                    hide_index=True,
-                    height=altura_tabla
-                )
-                
+
                 monto_casa = total_pote * (porcentaje_casa / 100)
                 pote_neto_base = total_pote - monto_casa
 
