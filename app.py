@@ -96,47 +96,6 @@ st.markdown("""
         max-width: 100% !important;
     }
     
-    /* --- ESTILOS DE TABLA ULTRA-ELEGADA CON BORDES DESTACADOS PARA CABECERAS Y CELDAS --- */
-    div[data-testid="stDataFrame"] {
-        font-size: 18px !important;
-        border: 2px solid #30363d !important;
-        border-radius: 10px !important;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
-        overflow: hidden !important;
-        background-color: #13171f !important;
-    }
-    div[data-testid="stDataFrame"] table {
-        font-size: 18px !important;
-        border-collapse: separate !important;
-        border-spacing: 0 !important;
-        width: 100% !important;
-    }
-    div[data-testid="stDataFrame"] th {
-        font-size: 19px !important;
-        font-weight: 800 !important;
-        background: linear-gradient(135deg, #1f242c 0%, #161b22 100%) !important;
-        color: #f1e05a !important;
-        text-transform: uppercase;
-        border-bottom: 3px solid #f1e05a !important;
-        border-right: 1px solid #30363d !important;
-        padding: 14px 16px !important;
-        text-align: left !important;
-        letter-spacing: 0.5px;
-    }
-    div[data-testid="stDataFrame"] td {
-        font-size: 18px !important;
-        font-weight: 700 !important;
-        padding: 12px 16px !important;
-        color: #ffffff !important;
-        background-color: #161b22 !important;
-        border-bottom: 1px solid #21262d !important;
-        border-right: 1px solid #21262d !important;
-    }
-    div[data-testid="stDataFrame"] tr:hover td {
-        background-color: #1c212c !important;
-        color: #58a6ff !important;
-    }
-
     /* --- BOTONES BASE DE REGISTRO RÁPIDO --- */
     .stButton button {
         width: 100% !important;
@@ -148,19 +107,6 @@ st.markdown("""
         font-size: 11px !important;
         white-space: pre-line !important;
         letter-spacing: 0.2px;
-    }
-
-    /* --- ADAPTACIÓN MÓVIL MEJORADA (RESPONSIVE) --- */
-    @media (max-width: 768px) {
-        [data-testid="column"] {
-            width: 100% !important;
-            flex: 1 1 100% !important;
-            min-width: 100% !important;
-            margin-bottom: 4px;
-        }
-        div[data-testid="stDataFrame"] {
-            overflow-x: auto;
-        }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -539,152 +485,192 @@ with tab1:
         if not carreras_filtradas_visibles:
             st.info("ℹ️ No hay carreras activas ni cerradas para mostrar. Selecciona carreras en el menú lateral de control.")
         else:
-            num_carreras_visibles = len(carreras_filtradas_visibles)
-            anchos_columnas = [1] * num_carreras_visibles + [max(1, 7 - num_carreras_visibles)]
-            cols_selector = st.columns(anchos_columnas)
-            
-            for idx, c_nombre in enumerate(carreras_filtradas_visibles):
-                col_target = cols_selector[idx]
-                
-                c_cerrada = st.session_state.carreras_cerradas_remate.get(c_nombre, False)
-                abreviatura = obtener_abreviatura_carrera(c_nombre)
-                
-                if c_cerrada:
-                    label_btn = f"{abreviatura} 🔴"
-                    tipo_btn = "secondary"
-                else:
-                    label_btn = f"{abreviatura} 🟢"
-                    tipo_btn = "primary"
-                
-                with col_target:
-                    if st.button(label_btn, key=f"btn_sel_carr_didactico_{idx}", use_container_width=True, type=tipo_btn, help=f"{c_nombre} - {'Cerrada' if c_cerrada else 'Activa'}"):
-                        st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
-                        st.rerun()
+            # --- INYECCIÓN DE CSS PARA PILLS (PASTILLAS) ---
+            st.markdown("""
+            <style>
+            div.stRadio > div[role="radiogroup"] {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: wrap !important;
+                gap: 12px !important;
+                margin-bottom: 15px !important;
+            }
+            div.stRadio > div[role="radiogroup"] > label {
+                background-color: #ffffff !important;
+                color: #111111 !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 30px !important;
+                padding: 10px 24px !important;
+                margin: 0 !important;
+                cursor: pointer !important;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+                transition: all 0.2s ease !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            div.stRadio > div[role="radiogroup"] > label > div:first-child {
+                display: none !important;
+            }
+            div.stRadio > div[role="radiogroup"] > label > div:last-child {
+                margin-left: 0 !important; 
+            }
+            div.stRadio > div[role="radiogroup"] > label p {
+                font-size: 18px !important;
+                font-weight: 500 !important;
+                margin: 0 !important;
+                color: inherit !important;
+            }
+            /* Pill Activa/Seleccionada */
+            div.stRadio > div[role="radiogroup"] > label[data-checked="true"],
+            div.stRadio > div[role="radiogroup"] > label[aria-checked="true"],
+            div.stRadio > div[role="radiogroup"] > label:has(input:checked) {
+                background-color: #0b1120 !important; 
+                color: #ffffff !important;
+                border-color: #0b1120 !important;
+            }
+            /* Hover para las no seleccionadas */
+            div.stRadio > div[role="radiogroup"] > label:hover:not(:has(input:checked)) {
+                background-color: #f1f5f9 !important;
+                border-color: #cbd5e1 !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
 
+            # Lógica para mantener la selección
             if "carrera_remate_activa_seleccionada" not in st.session_state or st.session_state["carrera_remate_activa_seleccionada"] not in carreras_filtradas_visibles:
-                carr_activa = carreras_filtradas_visibles[0]
-                st.session_state["carrera_remate_activa_seleccionada"] = carr_activa
+                indice_seleccionado = 0
+                st.session_state["carrera_remate_activa_seleccionada"] = carreras_filtradas_visibles[0]
             else:
-                carr_activa = st.session_state["carrera_remate_activa_seleccionada"]
+                indice_seleccionado = carreras_filtradas_visibles.index(st.session_state["carrera_remate_activa_seleccionada"])
 
-            if not carr_activa:
-                st.info("👆 Selecciona una carrera arriba para ver su panel.")
+            # Componente de radio estilizado
+            carr_activa = st.radio(
+                "Seleccionar Carrera Activa",
+                options=carreras_filtradas_visibles,
+                format_func=obtener_abreviatura_carrera, # Muestra C1, C2, etc.
+                index=indice_seleccionado,
+                key="radio_carreras_pills",
+                horizontal=True,
+                label_visibility="collapsed"
+            )
+            
+            st.session_state["carrera_remate_activa_seleccionada"] = carr_activa
+            st.markdown(f"---")
+            
+            carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
+            
+            if carrera_cerrada:
+                st.error(f"🔴 La carrera **{carr_activa}** se encuentra **CERRADA** para nuevas pujas.")
             else:
-                st.markdown(f"---")
-                
-                carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
-                
-                if carrera_cerrada:
-                    st.error(f"🔴 La carrera **{carr_activa}** se encuentra **CERRADA** para nuevas pujas.")
-                else:
-                    st.success(f"🟢 Panel activo y abierto para: **{carr_activa}**")
+                st.success(f"🟢 Panel activo y abierto para: **{carr_activa}**")
 
-                st.markdown(f"### 🏁 {carr_activa}")
-                
-                dt_limite = st.session_state.fechas_horas_cierre_remate.get(carr_activa)
-                estado_conteo = st.session_state.estado_conteo_carrera.get(carr_activa, "INACTIVO")
-                
-                if dt_limite:
-                    st.markdown(f"<div class='cierre-info-box'>⏰ Cierre Estricto: <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+            st.markdown(f"### 🏁 {carr_activa}")
+            
+            dt_limite = st.session_state.fechas_horas_cierre_remate.get(carr_activa)
+            estado_conteo = st.session_state.estado_conteo_carrera.get(carr_activa, "INACTIVO")
+            
+            if dt_limite:
+                st.markdown(f"<div class='cierre-info-box'>⏰ Cierre Estricto: <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
 
-                if dt_limite and not carrera_cerrada:
-                    diferencia_segundos = (dt_limite - ahora_dt).total_seconds()
+            if dt_limite and not carrera_cerrada:
+                diferencia_segundos = (dt_limite - ahora_dt).total_seconds()
+                
+                if estado_conteo == "INACTIVO":
+                    if 0 < diferencia_segundos <= 10:
+                        st.session_state.estado_conteo_carrera[carr_activa] = "CONTEO_10S"
+                        st.session_state.tiempo_inicio_conteo[carr_activa] = ahora_dt
+                        st.rerun()
+                    elif diferencia_segundos <= 0:
+                        st.session_state.carreras_cerradas_remate[carr_activa] = True
+                        st.session_state.estado_conteo_carrera[carr_activa] = "CERRADO"
+                        st.rerun()
+                elif estado_conteo == "CONTEO_10S":
+                    tiempo_inicio = st.session_state.tiempo_inicio_conteo.get(carr_activa, ahora_dt)
+                    transcurridos = (ahora_dt - tiempo_inicio).total_seconds()
                     
-                    if estado_conteo == "INACTIVO":
-                        if 0 < diferencia_segundos <= 10:
-                            st.session_state.estado_conteo_carrera[carr_activa] = "CONTEO_10S"
-                            st.session_state.tiempo_inicio_conteo[carr_activa] = ahora_dt
-                            st.rerun()
-                        elif diferencia_segundos <= 0:
-                            st.session_state.carreras_cerradas_remate[carr_activa] = True
-                            st.session_state.estado_conteo_carrera[carr_activa] = "CERRADO"
-                            st.rerun()
-                    elif estado_conteo == "CONTEO_10S":
-                        tiempo_inicio = st.session_state.tiempo_inicio_conteo.get(carr_activa, ahora_dt)
-                        transcurridos = (ahora_dt - tiempo_inicio).total_seconds()
-                        
-                        if transcurridos >= 12:
-                            st.session_state.carreras_cerradas_remate[carr_activa] = True
-                            st.session_state.estado_conteo_carrera[carr_activa] = "CERRADO"
-                            st.rerun()
-                        else:
-                            restantes_10s = max(0, 10 - int(transcurridos))
-                            if restantes_10s > 0:
-                                st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa})</div>", unsafe_allow_html=True)
-                            else:
-                                st.markdown(f"<div class='timer-box'>⚠️ ULTIMOS SEGUNDOS ANTES DE CIERRE ({carr_activa})</div>", unsafe_allow_html=True)
-
-                # --- TABLA DE EJEMPLARES ESTILO IMAGEN DE REFERENCIA ---
-                tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa])
-                
-                # Usamos components.html para aislar la tabla y garantizar que se vea
-                cantidad_filas = len(st.session_state.remates[carr_activa])
-                altura_dinamica = min(max(200, (cantidad_filas * 50) + 100), 700)
-                
-                components.html(tabla_html, height=altura_dinamica, scrolling=True)
-                
-                total_pote = sum([info['monto'] for info in st.session_state.remates[carr_activa].values()])
-
-                monto_casa = total_pote * (porcentaje_casa / 100)
-                pote_neto_base = total_pote - monto_casa
-
-                c_m1, c_m2 = st.columns(2)
-                c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
-                pote_incentivo_extra = c_m2.number_input("🎁 Extra", min_value=0.0, value=0.0, step=50.0, key=f"pote_inc_{carr_activa}")
-                premio_total_calculado = pote_neto_base + pote_incentivo_extra
-                st.metric(f"🏆 Premio Total ({carr_activa})", formatear_bs(premio_total_calculado))
-
-                # --- REGISTRO RÁPIDO DE PUJA CON BOTONES COLORIDOS ---
-                with st.container(border=True):
-                    st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
-                    lista_caballos_activos = list(st.session_state.remates[carr_activa].keys())
-                    
-                    if not lista_caballos_activos:
-                        st.warning("Sin ejemplares inscritos en esta carrera.")
+                    if transcurridos >= 12:
+                        st.session_state.carreras_cerradas_remate[carr_activa] = True
+                        st.session_state.estado_conteo_carrera[carr_activa] = "CERRADO"
+                        st.rerun()
                     else:
-                        k_sel_cab = f"caballo_seleccionado_click_{carr_activa}"
-                        if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
-                            st.session_state[k_sel_cab] = lista_caballos_activos[0]
-                            
-                        st.markdown(f"🔹 **1. Seleccionar Ejemplar (Total inscritos: {len(lista_caballos_activos)}):**")
-                        
-                        cantidad_ejemplares = len(lista_caballos_activos)
-                        columnas_por_fila = 4
-                        num_filas = (cantidad_ejemplares + columnas_por_fila - 1) // columnas_por_fila
-                        
-                        idx_cab = 0
-                        for f in range(num_filas):
-                            cols_fila = st.columns(columnas_por_fila)
-                            for c in range(columnas_por_fila):
-                                if idx_cab < cantidad_ejemplares:
-                                    cab_item = lista_caballos_activos[idx_cab]
-                                    num_parte = cab_item.split(" - ")[0]
-                                    with cols_fila[c]:
-                                        if st.button(f"#{num_parte}", key=f"btn_r_cab_{carr_activa}_{idx_cab}", use_container_width=True):
-                                            st.session_state[k_sel_cab] = cab_item
-                                    idx_cab += 1
-                        
-                        caballo_seleccionado = st.session_state[k_sel_cab]
-                        st.info(f"Ejemplar activo en {carr_activa}: **{caballo_seleccionado}**")
-
-                        puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
-                        opciones_escala = obtener_siguientes_montos(puja_actual)
-                        monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"sel_esc_{carr_activa}_{caballo_seleccionado}")
-                        
-                        if carrera_cerrada:
-                            st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"btn_p_{carr_activa}", use_container_width=True, type="primary", disabled=True)
+                        restantes_10s = max(0, 10 - int(transcurridos))
+                        if restantes_10s > 0:
+                            st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa})</div>", unsafe_allow_html=True)
                         else:
-                            if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"btn_p_{carr_activa}", use_container_width=True, type="primary"):
-                                if monto_puja <= puja_actual:
-                                    st.error("El monto debe ser mayor a la puja actual.")
-                                else:
-                                    st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": "Sin Postor", "monto": monto_puja}
+                            st.markdown(f"<div class='timer-box'>⚠️ ULTIMOS SEGUNDOS ANTES DE CIERRE ({carr_activa})</div>", unsafe_allow_html=True)
+
+            # --- TABLA DE EJEMPLARES ESTILO IMAGEN DE REFERENCIA ---
+            tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa])
+            
+            # Usamos components.html para aislar la tabla y garantizar que se vea
+            cantidad_filas = len(st.session_state.remates[carr_activa])
+            altura_dinamica = min(max(200, (cantidad_filas * 50) + 100), 700)
+            
+            components.html(tabla_html, height=altura_dinamica, scrolling=True)
+            
+            total_pote = sum([info['monto'] for info in st.session_state.remates[carr_activa].values()])
+
+            monto_casa = total_pote * (porcentaje_casa / 100)
+            pote_neto_base = total_pote - monto_casa
+
+            c_m1, c_m2 = st.columns(2)
+            c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
+            pote_incentivo_extra = c_m2.number_input("🎁 Extra", min_value=0.0, value=0.0, step=50.0, key=f"pote_inc_{carr_activa}")
+            premio_total_calculado = pote_neto_base + pote_incentivo_extra
+            st.metric(f"🏆 Premio Total ({carr_activa})", formatear_bs(premio_total_calculado))
+
+            # --- REGISTRO RÁPIDO DE PUJA CON BOTONES COLORIDOS ---
+            with st.container(border=True):
+                st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
+                lista_caballos_activos = list(st.session_state.remates[carr_activa].keys())
+                
+                if not lista_caballos_activos:
+                    st.warning("Sin ejemplares inscritos en esta carrera.")
+                else:
+                    k_sel_cab = f"caballo_seleccionado_click_{carr_activa}"
+                    if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
+                        st.session_state[k_sel_cab] = lista_caballos_activos[0]
+                        
+                    st.markdown(f"🔹 **1. Seleccionar Ejemplar (Total inscritos: {len(lista_caballos_activos)}):**")
+                    
+                    cantidad_ejemplares = len(lista_caballos_activos)
+                    columnas_por_fila = 4
+                    num_filas = (cantidad_ejemplares + columnas_por_fila - 1) // columnas_por_fila
+                    
+                    idx_cab = 0
+                    for f in range(num_filas):
+                        cols_fila = st.columns(columnas_por_fila)
+                        for c in range(columnas_por_fila):
+                            if idx_cab < cantidad_ejemplares:
+                                cab_item = lista_caballos_activos[idx_cab]
+                                num_parte = cab_item.split(" - ")[0]
+                                with cols_fila[c]:
+                                    if st.button(f"#{num_parte}", key=f"btn_r_cab_{carr_activa}_{idx_cab}", use_container_width=True):
+                                        st.session_state[k_sel_cab] = cab_item
+                                idx_cab += 1
+                    
+                    caballo_seleccionado = st.session_state[k_sel_cab]
+                    st.info(f"Ejemplar activo en {carr_activa}: **{caballo_seleccionado}**")
+
+                    puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
+                    opciones_escala = obtener_siguientes_montos(puja_actual)
+                    monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"sel_esc_{carr_activa}_{caballo_seleccionado}")
+                    
+                    if carrera_cerrada:
+                        st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"btn_p_{carr_activa}", use_container_width=True, type="primary", disabled=True)
+                    else:
+                        if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"btn_p_{carr_activa}", use_container_width=True, type="primary"):
+                            if monto_puja <= puja_actual:
+                                st.error("El monto debe ser mayor a la puja actual.")
+                            else:
+                                st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": "Sin Postor", "monto": monto_puja}
+                                
+                                if estado_conteo == "CONTEO_10S":
+                                    st.session_state.tiempo_inicio_conteo[carr_activa] = obtener_hora_venezuela_local()
                                     
-                                    if estado_conteo == "CONTEO_10S":
-                                        st.session_state.tiempo_inicio_conteo[carr_activa] = obtener_hora_venezuela_local()
-                                        
-                                    st.success("✅ ¡Puja registrada correctamente y conteo reiniciado!")
-                                    st.rerun()
+                                st.success("✅ ¡Puja registrada correctamente y conteo reiniciado!")
+                                st.rerun()
 
 # 2. BANCO
 with tab2:
