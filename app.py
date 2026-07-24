@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import os
 import re
@@ -615,7 +616,12 @@ with tab1:
 
                 # --- TABLA DE EJEMPLARES ESTILO IMAGEN DE REFERENCIA ---
                 tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa])
-                st.markdown(tabla_html, unsafe_allow_html=True)
+                
+                # Usamos components.html para aislar la tabla y garantizar que se vea
+                cantidad_filas = len(st.session_state.remates[carr_activa])
+                altura_dinamica = min(max(200, (cantidad_filas * 50) + 100), 700)
+                
+                components.html(tabla_html, height=altura_dinamica, scrolling=True)
                 
                 total_pote = sum([info['monto'] for info in st.session_state.remates[carr_activa].values()])
 
