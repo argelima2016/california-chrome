@@ -485,77 +485,65 @@ with tab1:
         if not carreras_filtradas_visibles:
             st.info("ℹ️ No hay carreras activas ni cerradas para mostrar. Selecciona carreras en el menú lateral de control.")
         else:
-            # --- INYECCIÓN DE CSS PARA PILLS (PASTILLAS) ---
+            # --- INYECCIÓN DE CSS PARA PILLS USANDO BOTONES NATIVOS ---
             st.markdown("""
             <style>
-            div.stRadio > div[role="radiogroup"] {
-                display: flex !important;
-                flex-direction: row !important;
-                flex-wrap: wrap !important;
-                gap: 12px !important;
-                margin-bottom: 15px !important;
-            }
-            div.stRadio > div[role="radiogroup"] > label {
+            /* Estilo base para los botones Pill inactivos (Secondary) */
+            button[kind="secondary"] {
                 background-color: #ffffff !important;
                 color: #111111 !important;
                 border: 1px solid #e2e8f0 !important;
                 border-radius: 30px !important;
-                padding: 10px 24px !important;
-                margin: 0 !important;
-                cursor: pointer !important;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-                transition: all 0.2s ease !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-            }
-            div.stRadio > div[role="radiogroup"] > label > div:first-child {
-                display: none !important;
-            }
-            div.stRadio > div[role="radiogroup"] > label > div:last-child {
-                margin-left: 0 !important; 
-            }
-            div.stRadio > div[role="radiogroup"] > label p {
-                font-size: 18px !important;
                 font-weight: 500 !important;
-                margin: 0 !important;
-                color: inherit !important;
+                font-size: 16px !important;
+                transition: all 0.2s ease !important;
             }
-            /* Pill Activa/Seleccionada */
-            div.stRadio > div[role="radiogroup"] > label[data-checked="true"],
-            div.stRadio > div[role="radiogroup"] > label[aria-checked="true"],
-            div.stRadio > div[role="radiogroup"] > label:has(input:checked) {
-                background-color: #0b1120 !important; 
-                color: #ffffff !important;
-                border-color: #0b1120 !important;
+            button[kind="secondary"] * {
+                color: #111111 !important;
             }
-            /* Hover para las no seleccionadas */
-            div.stRadio > div[role="radiogroup"] > label:hover:not(:has(input:checked)) {
+            button[kind="secondary"]:hover {
                 background-color: #f1f5f9 !important;
                 border-color: #cbd5e1 !important;
+            }
+            /* Estilo base para el botón Pill activo (Primary) */
+            button[kind="primary"] {
+                background-color: #0b1120 !important;
+                color: #ffffff !important;
+                border: 1px solid #0b1120 !important;
+                border-radius: 30px !important;
+                font-weight: 700 !important;
+                font-size: 16px !important;
+            }
+            button[kind="primary"] * {
+                color: #ffffff !important;
             }
             </style>
             """, unsafe_allow_html=True)
 
-            # Lógica para mantener la selección
             if "carrera_remate_activa_seleccionada" not in st.session_state or st.session_state["carrera_remate_activa_seleccionada"] not in carreras_filtradas_visibles:
-                indice_seleccionado = 0
-                st.session_state["carrera_remate_activa_seleccionada"] = carreras_filtradas_visibles[0]
+                carr_activa = carreras_filtradas_visibles[0]
+                st.session_state["carrera_remate_activa_seleccionada"] = carr_activa
             else:
-                indice_seleccionado = carreras_filtradas_visibles.index(st.session_state["carrera_remate_activa_seleccionada"])
+                carr_activa = st.session_state["carrera_remate_activa_seleccionada"]
 
-            # Componente de radio estilizado
-            carr_activa = st.radio(
-                "Seleccionar Carrera Activa",
-                options=carreras_filtradas_visibles,
-                format_func=obtener_abreviatura_carrera, # Muestra C1, C2, etc.
-                index=indice_seleccionado,
-                key="radio_carreras_pills",
-                horizontal=True,
-                label_visibility="collapsed"
-            )
+            # Generador de filas para envolver los botones como si fuesen pastillas (8 por fila)
+            cantidad_carreras = len(carreras_filtradas_visibles)
+            columnas_por_fila = 8
             
-            st.session_state["carrera_remate_activa_seleccionada"] = carr_activa
+            for i in range(0, cantidad_carreras, columnas_por_fila):
+                grupo_carreras = carreras_filtradas_visibles[i:i+columnas_por_fila]
+                cols = st.columns(columnas_por_fila)
+                
+                for j, c_nombre in enumerate(grupo_carreras):
+                    abreviatura = obtener_abreviatura_carrera(c_nombre) # Muestra C1, C2, etc
+                    es_activa = (c_nombre == carr_activa)
+                    
+                    with cols[j]:
+                        # Utilizamos el tipo "primary" para la activa y "secondary" para las demás
+                        if st.button(abreviatura, key=f"btn_pill_sel_{c_nombre}_{i}_{j}", use_container_width=True, type="primary" if es_activa else "secondary"):
+                            st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
+                            st.rerun()
+
             st.markdown(f"---")
             
             carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
