@@ -485,7 +485,7 @@ with tab1:
         if not carreras_filtradas_visibles:
             st.info("ℹ️ No hay carreras activas ni cerradas para mostrar. Selecciona carreras en el menú lateral de control.")
         else:
-            # --- INYECCIÓN DE CSS PARA PILLS USANDO BOTONES NATIVOS ---
+            # --- INYECCIÓN DE CSS PARA PILLS USANDO BOTONES NATIVOS (MÁS PEQUEÑOS) ---
             st.markdown("""
             <style>
             /* Estilo base para los botones Pill inactivos (Secondary) */
@@ -493,10 +493,14 @@ with tab1:
                 background-color: #ffffff !important;
                 color: #111111 !important;
                 border: 1px solid #e2e8f0 !important;
-                border-radius: 30px !important;
-                font-weight: 500 !important;
-                font-size: 16px !important;
+                border-radius: 25px !important;
+                font-weight: 600 !important;
+                font-size: 12px !important;
+                padding: 0px 4px !important;
+                min-height: 28px !important;
+                height: 28px !important;
                 transition: all 0.2s ease !important;
+                line-height: 1 !important;
             }
             button[kind="secondary"] * {
                 color: #111111 !important;
@@ -510,9 +514,13 @@ with tab1:
                 background-color: #0b1120 !important;
                 color: #ffffff !important;
                 border: 1px solid #0b1120 !important;
-                border-radius: 30px !important;
+                border-radius: 25px !important;
                 font-weight: 700 !important;
-                font-size: 16px !important;
+                font-size: 12px !important;
+                padding: 0px 4px !important;
+                min-height: 28px !important;
+                height: 28px !important;
+                line-height: 1 !important;
             }
             button[kind="primary"] * {
                 color: #ffffff !important;
