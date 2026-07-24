@@ -3,13 +3,14 @@ import streamlit.components.v1 as components
 import pandas as pd
 import os
 import re
+import base64
 from datetime import datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pypdf import PdfReader
 from streamlit_autorefresh import st_autorefresh
 
 # Configuración de pantalla completa (Responsive para Móviles y PC)
-st.set_page_config(page_title="California Chrome", layout="wide", page_icon="🏇")
+st.set_page_config(page_title="Wolf Remates", layout="wide", page_icon="🏇")
 
 # --- AUTOREFRESH (3 SEGUNDOS) ---
 try:
@@ -41,13 +42,31 @@ def obtener_siguientes_montos(monto_actual):
         siguientes = [ultimo + i * 1000 for i in range(1, 50)]
     return siguientes
 
-# --- CABECERA PERSONALIZADA ESTILO "TB" ---
-st.markdown("""
-    <div style="background-color: #000000; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; margin-top: -40px; margin-bottom: 10px; margin-left: -1rem; margin-right: -1rem;">
+# --- LECTOR DE LOGOTIPO LOCAL ---
+def get_image_base64(ruta_imagen):
+    try:
+        with open(ruta_imagen, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode('utf-8')
+    except Exception:
+        return ""
+
+# Carga la imagen específica que solicitaste
+img_b64 = get_image_base64("1001394095_preview_rev_1.jpg")
+
+if img_b64:
+    # Si la imagen existe, la muestra con altura controlada
+    logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" style="height: 70px; object-fit: contain;">'
+else:
+    # Texto de respaldo por si no encuentra la imagen en la carpeta
+    logo_display = '<span style="color: #f1c40f; font-size: 28px; font-weight: 900; font-style: italic;">WOLF REMATES</span>'
+
+# --- CABECERA PERSONALIZADA CON LOGOTIPO ---
+# Hemos ajustado el margin-top a 0px para que no quede tan pegado arriba
+st.markdown(f"""
+    <div style="background-color: #000000; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; margin-top: 0px; margin-bottom: 10px; margin-left: -1rem; margin-right: -1rem;">
         <div style="color: #f1c40f; font-size: 28px; cursor: pointer; border: 1px solid #f1c40f; border-radius: 6px; padding: 0px 10px;">☰</div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="color: #f1c40f; font-size: 32px; font-weight: 900; font-style: italic; letter-spacing: -2px;">CC</span>
-            <span style="color: #f1c40f; font-size: 28px;">🏆</span>
+        <div style="display: flex; align-items: center; justify-content: center;">
+            {logo_display}
         </div>
         <div style="display: flex; gap: 15px; align-items: center;">
             <span style="color: #ffffff; font-size: 20px;">🥞</span>
@@ -137,8 +156,10 @@ st.markdown("""
         color: #f0f6fc;
         margin-bottom: 12px;
     }
+    
+    /* Aumento de padding top general para que no choque la cabecera */
     .block-container {
-        padding-top: 1rem !important;
+        padding-top: 1.5rem !important;
         padding-bottom: 2rem !important;
         padding-left: 0.6rem !important;
         padding-right: 0.6rem !important;
