@@ -10,7 +10,7 @@ from pypdf import PdfReader
 from streamlit_autorefresh import st_autorefresh
 
 # Configuración de pantalla completa (Responsive para Móviles y PC)
-st.set_page_config(page_title="Wolf Remates", layout="wide", page_icon="🏇")
+st.set_page_config(page_title="California Chrome", layout="wide", page_icon="🏇")
 
 # --- AUTOREFRESH (3 SEGUNDOS) ---
 try:
@@ -50,18 +50,17 @@ def get_image_base64(ruta_imagen):
     except Exception:
         return ""
 
-# Carga la imagen específica que solicitaste
+# Carga la imagen específica del Lobo
 img_b64 = get_image_base64("1001394095_preview_rev_1.jpg")
 
 if img_b64:
-    # Si la imagen existe, la muestra con altura controlada
+    # Si la imagen existe, la muestra
     logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" style="height: 70px; object-fit: contain;">'
 else:
-    # Texto de respaldo por si no encuentra la imagen en la carpeta
-    logo_display = '<span style="color: #f1c40f; font-size: 28px; font-weight: 900; font-style: italic;">WOLF REMATES</span>'
+    # Texto de respaldo si no encuentra la imagen
+    logo_display = '<span style="color: #f1c40f; font-size: 24px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
 
 # --- CABECERA PERSONALIZADA CON LOGOTIPO ---
-# Hemos ajustado el margin-top a 0px para que no quede tan pegado arriba
 st.markdown(f"""
     <div style="background-color: #000000; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; margin-top: 0px; margin-bottom: 10px; margin-left: -1rem; margin-right: -1rem;">
         <div style="color: #f1c40f; font-size: 28px; cursor: pointer; border: 1px solid #f1c40f; border-radius: 6px; padding: 0px 10px;">☰</div>
