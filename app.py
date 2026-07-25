@@ -3,7 +3,6 @@ import streamlit.components.v1 as components
 import pandas as pd
 import os
 import re
-import base64
 from datetime import datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pypdf import PdfReader
@@ -42,45 +41,27 @@ def obtener_siguientes_montos(monto_actual):
         siguientes = [ultimo + i * 1000 for i in range(1, 50)]
     return siguientes
 
-# --- LECTOR DE LOGOTIPO LOCAL MEJORADO ---
-def get_image_base64(nombre_archivo):
+# --- CABECERA PERSONALIZADA CON IMAGEN NATIVA DE STREAMLIT ---
+col_logo_1, col_logo_2, col_logo_3 = st.columns([1, 4, 1])
+
+with col_logo_1:
+    if st.button("☰", key="menu_hamburguesa"):
+        pass
+
+with col_logo_2:
     try:
-        ruta_directorio = os.path.dirname(os.path.abspath(__file__))
-        ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
-        
-        with open(ruta_imagen, "rb") as img_file:
-            return base64.b64encode(img_file.read()).decode('utf-8')
+        ruta_imagen = os.path.join(os.path.dirname(os.path.abspath(__file__)), "1001394095_preview_rev_1.png")
+        if os.path.exists(ruta_imagen):
+            st.image(ruta_imagen, width=280)
+        else:
+            st.warning("⚠️ No se encontró la imagen '1001394095_preview_rev_1.png' en la carpeta.")
     except Exception:
-        return ""
+        st.markdown("<h2 style='text-align: center; color: #f1c40f; font-style: italic;'>WOLF READY TO RUN</h2>", unsafe_allow_html=True)
 
-# Carga la imagen en formato PNG
-img_b64 = get_image_base64("1001394095_preview_rev_1.png")
+with col_logo_3:
+    st.markdown('<div style="text-align: right; font-size: 20px;">🥞 👤</div>', unsafe_allow_html=True)
 
-if img_b64:
-    # EFECTO HD 4K OPTIMIZADO: Máxima nitidez, brillo y contraste imponente
-    logo_display = f'''
-        <img src="data:image/png;base64,{img_b64}" style="
-            height: 200px; 
-            object-fit: contain; 
-            filter: drop-shadow(0px 0px 16px rgba(241, 196, 15, 0.6)) contrast(1.15) brightness(1.1);
-        ">
-    '''
-else:
-    logo_display = '<span style="color: #f1c40f; font-size: 26px; font-weight: 900; font-style: italic; text-shadow: 0 0 10px rgba(241,196,15,0.5);">WOLF READY TO RUN</span>'
-
-# --- CABECERA PERSONALIZADA CON LOGOTIPO DESTACADO ---
-st.markdown(f"""
-    <div style="background-color: #000000; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #222; margin-top: 0px; margin-bottom: 12px; margin-left: -1rem; margin-right: -1rem;">
-        <div style="color: #f1c40f; font-size: 28px; cursor: pointer; border: 1px solid #f1c40f; border-radius: 6px; padding: 0px 10px;">☰</div>
-        <div style="display: flex; align-items: center; justify-content: center;">
-            {logo_display}
-        </div>
-        <div style="display: flex; gap: 15px; align-items: center;">
-            <span style="color: #ffffff; font-size: 20px;">🥞</span>
-            <div style="background-color: #dddddd; border-radius: 50%; width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; font-size: 20px;">👤</div>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 0px 0px 15px 0px; border-color: #222;'>", unsafe_allow_html=True)
 
 # --- ESTILOS CSS CON TARJETAS COLORIDAS, TABLA ELEGANTE Y TABS NAVEGACIÓN ---
 st.markdown("""
@@ -164,9 +145,8 @@ st.markdown("""
         margin-bottom: 12px;
     }
     
-    /* Espaciado superior adaptado para la cabecera prominente */
     .block-container {
-        padding-top: 1.5rem !important;
+        padding-top: 1.0rem !important;
         padding-bottom: 2rem !important;
         padding-left: 0.6rem !important;
         padding-right: 0.6rem !important;
