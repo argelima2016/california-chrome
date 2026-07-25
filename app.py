@@ -56,20 +56,20 @@ def get_image_base64(nombre_archivo):
 img_b64 = get_image_base64("1001394095_preview_rev_1.png")
 
 if img_b64:
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="height: 55px; width: auto; object-fit: contain; display: block;" />'
+    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="max-height: 50px; width: auto; object-fit: contain; display: block;" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 22px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 20px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
 
-# --- CABECERA PERSONALIZADA CON LOGOTIPO (FLEXBOX ROBUSTO Y FORZADO) ---
+# --- CABECERA PERSONALIZADA CON LOGOTIPO (DISEÑO COMPACTO Y RESPONSIVE) ---
 st.markdown(f"""
-    <div style="background-color: #000000 !important; width: 100% !important; padding: 10px 15px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #222 !important; margin: -1.5rem -1rem 1rem -1rem !important; box-sizing: border-box !important;">
-        <div style="color: #f1c40f !important; font-size: 24px !important; cursor: pointer !important; border: 1px solid #f1c40f !important; border-radius: 6px !important; padding: 2px 8px !important; line-height: 1 !important;">☰</div>
-        <div style="display: flex !important; align-items: center !important; justify-content: center !important;">
+    <div style="background-color: #000000 !important; width: 100% !important; padding: 8px 12px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #222 !important; margin: -1rem -1rem 1rem -1rem !important; box-sizing: border-box !important;">
+        <div style="color: #f1c40f !important; font-size: 22px !important; cursor: pointer !important; border: 1px solid #f1c40f !important; border-radius: 4px !important; padding: 2px 6px !important; line-height: 1 !important;">☰</div>
+        <div style="display: flex !important; align-items: center !important; justify-content: center !important; flex-grow: 1; text-align: center; overflow: hidden; padding: 0 10px;">
             {logo_display}
         </div>
-        <div style="display: flex !important; gap: 12px !important; align-items: center !important;">
-            <span style="color: #ffffff !important; font-size: 18px !important;">🥞</span>
-            <div style="background-color: #dddddd !important; border-radius: 50% !important; width: 32px !important; height: 32px !important; display: flex !important; justify-content: center !important; align-items: center !important; font-size: 16px !important;">👤</div>
+        <div style="display: flex !important; gap: 10px !important; align-items: center !important;">
+            <span style="color: #ffffff !important; font-size: 16px !important;">🥞</span>
+            <div style="background-color: #dddddd !important; border-radius: 50% !important; width: 30px !important; height: 30px !important; display: flex !important; justify-content: center !important; align-items: center !important; font-size: 15px !important;">👤</div>
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -94,12 +94,12 @@ st.markdown("""
         background-color: #000000 !important;
         color: #ffffff !important;
         font-weight: 800 !important;
-        font-size: clamp(11px, 2vw, 15px) !important;
+        font-size: clamp(10px, 1.8vw, 14px) !important;
         text-transform: uppercase !important;
         border-radius: 0 !important;
         border: none !important;
         border-right: 1px solid #333333 !important;
-        padding: 16px 5px !important;
+        padding: 12px 2px !important;
         margin: 0 !important;
         transition: all 0.2s ease;
     }
@@ -115,7 +115,7 @@ st.markdown("""
     }
 
     .subasta-header {
-        font-size: clamp(20px, 4vw, 26px);
+        font-size: clamp(18px, 3.5vw, 24px);
         font-weight: 800;
         color: #f1e05a;
         margin-bottom: 4px;
@@ -156,7 +156,7 @@ st.markdown("""
     }
     
     .block-container {
-        padding-top: 1.5rem !important;
+        padding-top: 1rem !important;
         padding-bottom: 2rem !important;
         padding-left: 0.6rem !important;
         padding-right: 0.6rem !important;
@@ -539,10 +539,10 @@ with tab_remate:
                 border: 1px solid #e2e8f0 !important;
                 border-radius: 25px !important;
                 font-weight: 600 !important;
-                font-size: 12px !important;
-                padding: 0px 4px !important;
-                min-height: 28px !important;
-                height: 28px !important;
+                font-size: 11px !important;
+                padding: 0px 2px !important;
+                min-height: 26px !important;
+                height: 26px !important;
                 transition: all 0.2s ease !important;
                 line-height: 1 !important;
             }
@@ -557,10 +557,10 @@ with tab_remate:
                 border: 1px solid #0b1120 !important;
                 border-radius: 25px !important;
                 font-weight: 700 !important;
-                font-size: 12px !important;
-                padding: 0px 4px !important;
-                min-height: 28px !important;
-                height: 28px !important;
+                font-size: 11px !important;
+                padding: 0px 2px !important;
+                min-height: 26px !important;
+                height: 26px !important;
                 line-height: 1 !important;
             }
             button[kind="primary"] * { color: #ffffff !important; }
