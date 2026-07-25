@@ -4,6 +4,7 @@ import pandas as pd
 import os
 import re
 import base64
+from pathlib import Path
 from datetime import datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pypdf import PdfReader
@@ -42,30 +43,34 @@ def obtener_siguientes_montos(monto_actual):
         siguientes = [ultimo + i * 1000 for i in range(1, 50)]
     return siguientes
 
-# --- LECTOR DE LOGOTIPO LOCAL CON DEPURACIÓN ---
+# --- LECTOR DE LOGOTIPO ROBUSTO CON PATHLIB ---
 def get_image_base64(nombre_archivo):
     try:
-        ruta_directorio = os.path.dirname(os.path.abspath(__file__))
-        ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
+        ruta_script = Path(__file__).resolve().parent
+        ruta_imagen = ruta_script / nombre_archivo
         
+        if not ruta_imagen.exists():
+            print(f"⚠️ El archivo no existe en: {ruta_imagen}")
+            return ""
+            
         with open(ruta_imagen, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode('utf-8')
     except Exception as e:
-        print(f"⚠️ Aviso: No se pudo cargar el archivo '{nombre_archivo}': {e}")
+        print(f"⚠️ Error cargando la imagen: {e}")
         return ""
 
 img_b64 = get_image_base64("1001394095_preview_rev_1.png")
 
 if img_b64:
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="height: 55px; width: auto; object-fit: contain; display: block;" />'
+    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="height: 75px; width: auto; max-width: 250px; object-fit: contain; display: block; margin: 0 auto;" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 22px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1e05a; font-size: 26px; font-weight: 900; font-style: italic; letter-spacing: 1px;">CALIFORNIA CHROME</span>'
 
-# --- CABECERA PERSONALIZADA CON LOGOTIPO (FLEXBOX ROBUSTO Y FORZADO) ---
+# --- CABECERA PERSONALIZADA CON LOGOTIPO (TAMAÑO DESTACADO Y CENTRADO) ---
 st.markdown(f"""
-    <div style="background-color: #000000 !important; width: 100% !important; padding: 10px 15px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #222 !important; margin: -1.5rem -1rem 1rem -1rem !important; box-sizing: border-box !important;">
+    <div style="background-color: #000000 !important; width: 100% !important; padding: 12px 20px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #222 !important; margin: -1.5rem -1rem 1rem -1rem !important; box-sizing: border-box !important;">
         <div style="color: #f1c40f !important; font-size: 24px !important; cursor: pointer !important; border: 1px solid #f1c40f !important; border-radius: 6px !important; padding: 2px 8px !important; line-height: 1 !important;">☰</div>
-        <div style="display: flex !important; align-items: center !important; justify-content: center !important;">
+        <div style="display: flex !important; align-items: center !important; justify-content: center !important; flex-grow: 1 !important; text-align: center !important;">
             {logo_display}
         </div>
         <div style="display: flex !important; gap: 12px !important; align-items: center !important;">
