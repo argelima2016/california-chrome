@@ -4,7 +4,6 @@ import pandas as pd
 import os
 import re
 import base64
-from pathlib import Path
 from datetime import datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pypdf import PdfReader
@@ -43,15 +42,12 @@ def obtener_siguientes_montos(monto_actual):
         siguientes = [ultimo + i * 1000 for i in range(1, 50)]
     return siguientes
 
-# --- LECTOR DE LOGOTIPO ROBUSTO CON PATHLIB ---
+# --- LECTOR DE LOGOTIPO LOCAL MEJORADO ---
 def get_image_base64(nombre_archivo):
     try:
-        ruta_script = Path(__file__).resolve().parent
-        ruta_imagen = ruta_script / nombre_archivo
+        ruta_directorio = os.path.dirname(os.path.abspath(__file__))
+        ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
         
-        if not ruta_imagen.exists():
-            return ""
-            
         with open(ruta_imagen, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode('utf-8')
     except Exception:
@@ -60,29 +56,20 @@ def get_image_base64(nombre_archivo):
 img_b64 = get_image_base64("1001394095_preview_rev_1.png")
 
 if img_b64:
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="height: 65px; width: auto; max-width: 280px; object-fit: contain; display: block; margin: 0 auto;" />'
+    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="max-height: 50px; width: auto; object-fit: contain; display: block;" />'
 else:
-    logo_display = '<span style="color: #f1e05a; font-size: 26px; font-weight: 900; font-style: italic; letter-spacing: 1px;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 20px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
 
-# --- CABECERA HORIZONTAL Y CENTRADA (TAL CUAL LA IMAGEN DE REFERENCIA) ---
+# --- CABECERA PERSONALIZADA CON LOGOTIPO (DISEÑO COMPACTO Y RESPONSIVE) ---
 st.markdown(f"""
-    <div style="background-color: #000000 !important; width: 100% !important; padding: 12px 20px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 3px solid #dfc729 !important; margin: -1.5rem -1rem 1rem -1rem !important; box-sizing: border-box !important;">
-        <!-- Botón de Menú con borde dorado -->
-        <div style="border: 2px solid #dfc729 !important; border-radius: 8px !important; padding: 6px 10px !important; display: flex !important; flex-direction: column !important; justify-content: center !important; gap: 5px !important; width: 44px !important; height: 38px !important; box-sizing: border-box !important; cursor: pointer !important;">
-            <div style="width: 100% !important; height: 3px !important; background-color: #dfc729 !important; border-radius: 2px !important;"></div>
-            <div style="width: 100% !important; height: 3px !important; background-color: #dfc729 !important; border-radius: 2px !important;"></div>
-            <div style="width: 100% !important; height: 3px !important; background-color: #dfc729 !important; border-radius: 2px !important;"></div>
-        </div>
-        
-        <!-- Logotipo centrado, grande y legible -->
-        <div style="display: flex !important; align-items: center !important; justify-content: center !important; flex-grow: 1 !important; text-align: center !important;">
+    <div style="background-color: #000000 !important; width: 100% !important; padding: 8px 12px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #222 !important; margin: -1rem -1rem 1rem -1rem !important; box-sizing: border-box !important;">
+        <div style="color: #f1c40f !important; font-size: 22px !important; cursor: pointer !important; border: 1px solid #f1c40f !important; border-radius: 4px !important; padding: 2px 6px !important; line-height: 1 !important;">☰</div>
+        <div style="display: flex !important; align-items: center !important; justify-content: center !important; flex-grow: 1; text-align: center; overflow: hidden; padding: 0 10px;">
             {logo_display}
         </div>
-        
-        <!-- Iconos de la derecha (Base de datos y Avatar de usuario) -->
-        <div style="display: flex !important; gap: 15px !important; align-items: center !important;">
-            <div style="font-size: 24px !important; line-height: 1 !important; display: flex; align-items: center;">🗄️</div>
-            <div style="background-color: #d1d5db !important; border-radius: 50% !important; width: 38px !important; height: 38px !important; display: flex !important; justify-content: center !important; align-items: center !important; font-size: 20px !important; overflow: hidden !important; border: 1px solid #9ca3af !important;">👤</div>
+        <div style="display: flex !important; gap: 10px !important; align-items: center !important;">
+            <span style="color: #ffffff !important; font-size: 16px !important;">🥞</span>
+            <div style="background-color: #dddddd !important; border-radius: 50% !important; width: 30px !important; height: 30px !important; display: flex !important; justify-content: center !important; align-items: center !important; font-size: 15px !important;">👤</div>
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -107,12 +94,12 @@ st.markdown("""
         background-color: #000000 !important;
         color: #ffffff !important;
         font-weight: 800 !important;
-        font-size: clamp(11px, 2vw, 15px) !important;
+        font-size: clamp(10px, 1.8vw, 14px) !important;
         text-transform: uppercase !important;
         border-radius: 0 !important;
         border: none !important;
         border-right: 1px solid #333333 !important;
-        padding: 16px 5px !important;
+        padding: 12px 2px !important;
         margin: 0 !important;
         transition: all 0.2s ease;
     }
@@ -128,7 +115,7 @@ st.markdown("""
     }
 
     .subasta-header {
-        font-size: clamp(20px, 4vw, 26px);
+        font-size: clamp(18px, 3.5vw, 24px);
         font-weight: 800;
         color: #f1e05a;
         margin-bottom: 4px;
@@ -169,7 +156,7 @@ st.markdown("""
     }
     
     .block-container {
-        padding-top: 1.5rem !important;
+        padding-top: 1rem !important;
         padding-bottom: 2rem !important;
         padding-left: 0.6rem !important;
         padding-right: 0.6rem !important;
@@ -552,10 +539,10 @@ with tab_remate:
                 border: 1px solid #e2e8f0 !important;
                 border-radius: 25px !important;
                 font-weight: 600 !important;
-                font-size: 12px !important;
-                padding: 0px 4px !important;
-                min-height: 28px !important;
-                height: 28px !important;
+                font-size: 11px !important;
+                padding: 0px 2px !important;
+                min-height: 26px !important;
+                height: 26px !important;
                 transition: all 0.2s ease !important;
                 line-height: 1 !important;
             }
@@ -570,10 +557,10 @@ with tab_remate:
                 border: 1px solid #0b1120 !important;
                 border-radius: 25px !important;
                 font-weight: 700 !important;
-                font-size: 12px !important;
-                padding: 0px 4px !important;
-                min-height: 28px !important;
-                height: 28px !important;
+                font-size: 11px !important;
+                padding: 0px 2px !important;
+                min-height: 26px !important;
+                height: 26px !important;
                 line-height: 1 !important;
             }
             button[kind="primary"] * { color: #ffffff !important; }
