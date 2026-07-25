@@ -45,7 +45,6 @@ def obtener_siguientes_montos(monto_actual):
 # --- LECTOR DE LOGOTIPO LOCAL MEJORADO ---
 def get_image_base64(nombre_archivo):
     try:
-        # Busca exactamente en la carpeta donde está este script
         ruta_directorio = os.path.dirname(os.path.abspath(__file__))
         ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
         
@@ -58,15 +57,21 @@ def get_image_base64(nombre_archivo):
 img_b64 = get_image_base64("1001394095_preview_rev_1.png")
 
 if img_b64:
-    # Si la imagen existe, la muestra con formato PNG y tamaño AUMENTADO a 150px
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="height: 150px; object-fit: contain;">'
+    # EFECTO HD 4K: Filtros avanzados de nitidez, contraste optimizado y un brillo dorado (drop-shadow)
+    logo_display = f'''
+        <img src="data:image/png;base64,{img_b64}" style="
+            height: 180px; 
+            object-fit: contain; 
+            filter: drop-shadow(0px 0px 12px rgba(241, 196, 15, 0.4)) contrast(1.1) brightness(1.05);
+            transition: transform 0.3s ease;
+        ">
+    '''
 else:
-    # Texto de respaldo si no encuentra la imagen
-    logo_display = '<span style="color: #f1c40f; font-size: 24px; font-weight: 900; font-style: italic;">WOLF READY TO RUN</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 26px; font-weight: 900; font-style: italic; text-shadow: 0 0 10px rgba(241,196,15,0.5);">WOLF READY TO RUN</span>'
 
-# --- CABECERA PERSONALIZADA CON LOGOTIPO ---
+# --- CABECERA PERSONALIZADA CON LOGOTIPO DESTACADO ---
 st.markdown(f"""
-    <div style="background-color: #000000; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; margin-top: 0px; margin-bottom: 10px; margin-left: -1rem; margin-right: -1rem;">
+    <div style="background-color: #000000; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #222; margin-top: 0px; margin-bottom: 12px; margin-left: -1rem; margin-right: -1rem;">
         <div style="color: #f1c40f; font-size: 28px; cursor: pointer; border: 1px solid #f1c40f; border-radius: 6px; padding: 0px 10px;">☰</div>
         <div style="display: flex; align-items: center; justify-content: center;">
             {logo_display}
@@ -160,7 +165,7 @@ st.markdown("""
         margin-bottom: 12px;
     }
     
-    /* Aumento de padding top general para que no choque la cabecera */
+    /* Aumento de padding top general para que no choque la cabecera ampliada */
     .block-container {
         padding-top: 1.5rem !important;
         padding-bottom: 2rem !important;
