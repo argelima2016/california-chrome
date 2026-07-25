@@ -10,7 +10,7 @@ from pypdf import PdfReader
 from streamlit_autorefresh import st_autorefresh
 
 # Configuración de pantalla completa (Responsive para Móviles y PC)
-st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🏇")
+st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🏇")
 
 # --- AUTOREFRESH (3 SEGUNDOS) ---
 try:
@@ -45,7 +45,6 @@ def obtener_siguientes_montos(monto_actual):
 # --- LECTOR DE LOGOTIPO LOCAL MEJORADO ---
 def get_image_base64(nombre_archivo):
     try:
-        # Busca exactamente en la carpeta donde está este script
         ruta_directorio = os.path.dirname(os.path.abspath(__file__))
         ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
         
@@ -54,26 +53,23 @@ def get_image_base64(nombre_archivo):
     except Exception:
         return ""
 
-# Carga la imagen en formato PNG
 img_b64 = get_image_base64("1001394095_preview_rev_1.png")
 
 if img_b64:
-    # Si la imagen existe, la muestra con formato PNG
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="height: 70px; object-fit: contain;">'
+    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="height: 55px; width: auto; object-fit: contain; display: block;" />'
 else:
-    # Texto de respaldo si no encuentra la imagen
-    logo_display = '<span style="color: #f1c40f; font-size: 24px; font-weight: 900; font-style: italic;">WOLF READY TO RUN</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 22px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
 
-# --- CABECERA PERSONALIZADA CON LOGOTIPO ---
+# --- CABECERA PERSONALIZADA CON LOGOTIPO (FLEXBOX ROBUSTO Y FORZADO) ---
 st.markdown(f"""
-    <div style="background-color: #000000; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; margin-top: 0px; margin-bottom: 10px; margin-left: -1rem; margin-right: -1rem;">
-        <div style="color: #f1c40f; font-size: 28px; cursor: pointer; border: 1px solid #f1c40f; border-radius: 6px; padding: 0px 10px;">☰</div>
-        <div style="display: flex; align-items: center; justify-content: center;">
+    <div style="background-color: #000000 !important; width: 100% !important; padding: 10px 15px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #222 !important; margin: -1.5rem -1rem 1rem -1rem !important; box-sizing: border-box !important;">
+        <div style="color: #f1c40f !important; font-size: 24px !important; cursor: pointer !important; border: 1px solid #f1c40f !important; border-radius: 6px !important; padding: 2px 8px !important; line-height: 1 !important;">☰</div>
+        <div style="display: flex !important; align-items: center !important; justify-content: center !important;">
             {logo_display}
         </div>
-        <div style="display: flex; gap: 15px; align-items: center;">
-            <span style="color: #ffffff; font-size: 20px;">🥞</span>
-            <div style="background-color: #dddddd; border-radius: 50%; width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; font-size: 20px;">👤</div>
+        <div style="display: flex !important; gap: 12px !important; align-items: center !important;">
+            <span style="color: #ffffff !important; font-size: 18px !important;">🥞</span>
+            <div style="background-color: #dddddd !important; border-radius: 50% !important; width: 32px !important; height: 32px !important; display: flex !important; justify-content: center !important; align-items: center !important; font-size: 16px !important;">👤</div>
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -86,7 +82,6 @@ st.markdown("""
         color: #f0f6fc;
     }
     
-    /* --- ESTILOS EXACTOS DE LA BARRA DE NAVEGACIÓN (TABS) --- */
     div[data-testid="stTabs"] > div[role="tablist"] {
         background-color: #000000 !important;
         border-bottom: 1px solid #222222 !important;
@@ -160,7 +155,6 @@ st.markdown("""
         margin-bottom: 12px;
     }
     
-    /* Aumento de padding top general para que no choque la cabecera */
     .block-container {
         padding-top: 1.5rem !important;
         padding-bottom: 2rem !important;
@@ -169,7 +163,6 @@ st.markdown("""
         max-width: 100% !important;
     }
     
-    /* --- BOTONES BASE DE REGISTRO RÁPIDO --- */
     .stButton button {
         width: 100% !important;
         border-radius: 6px !important;
@@ -518,7 +511,7 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", use_container_width=True):
     st.toast("🚨 Jornada reiniciada.")
     st.rerun()
 
-# --- BARRA DE NAVEGACIÓN SUPERIOR (NUEVO FORMATO TIPO IMAGEN) ---
+# --- BARRA DE NAVEGACIÓN SUPERIOR ---
 tab_remate, tab_dupleta, tab_cuentas, tab_admin = st.tabs([
     "Remate Adelantado", "Dupleta", "Cuentas", "🔒 Zona Admin"
 ])
@@ -538,7 +531,6 @@ with tab_remate:
         if not carreras_filtradas_visibles:
             st.info("ℹ️ No hay carreras activas ni cerradas para mostrar. Selecciona carreras en el menú lateral de control.")
         else:
-            # --- INYECCIÓN DE CSS PARA PILLS USANDO BOTONES NATIVOS (MÁS PEQUEÑOS) ---
             st.markdown("""
             <style>
             button[kind="secondary"] {
@@ -641,7 +633,6 @@ with tab_remate:
                         else:
                             st.markdown(f"<div class='timer-box'>⚠️ ULTIMOS SEGUNDOS ANTES DE CIERRE ({carr_activa})</div>", unsafe_allow_html=True)
 
-            # --- TABLA DE EJEMPLARES ESTILO IMAGEN DE REFERENCIA ---
             tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa])
             
             cantidad_filas = len(st.session_state.remates[carr_activa])
@@ -739,8 +730,8 @@ with tab_dupleta:
                 with c_leg:
                     carr_leg = st.selectbox(f"Carrera {i+1}", carreras_habilitadas, key=f"c_dup_{i}")
                 with cb_leg_col:
-                    caballos_en_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
-                    cab_leg = st.selectbox(f"Ejemplar {i+1}", caballos_en_carr if caballos_en_carr else ["Sin Caballos"], key=f"cb_dup_{i}")
+                    caballos_in_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
+                    cab_leg = st.selectbox(f"Ejemplar {i+1}", caballos_in_carr if caballos_in_carr else ["Sin Caballos"], key=f"cb_dup_{i}")
                 
                 if carr_leg in carreras_usadas_en_ticket:
                     valido_legs = False
@@ -776,7 +767,7 @@ with tab_cuentas:
     st.dataframe(pd.DataFrame(datos_cuentas), use_container_width=True, hide_index=True)
     st.metric("Ganancia Casa", formatear_bs(st.session_state.ganancia_casa))
 
-# 4. ZONA DE ADMINISTRADOR (Contiene Banco, Cierre, Historial, PDF)
+# 4. ZONA DE ADMINISTRADOR
 with tab_admin:
     st.markdown("<br>", unsafe_allow_html=True)
     sub_banco, sub_cierre, sub_hist, sub_pdf = st.tabs(["✍️ Banco", "🏁 Cierre", "🧾 Historial", "📄 PDF"])
