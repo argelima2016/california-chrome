@@ -64,10 +64,10 @@ if img_b64:
 else:
     logo_display = '<span style="color: #f1e05a; font-size: 26px; font-weight: 900; font-style: italic; letter-spacing: 1px;">CALIFORNIA CHROME</span>'
 
-# --- CABECERA EXACTA ESTILO REFERENCIA (BOTÓN DORADO, LOGO GRANDE Y CENTRADO) ---
+# --- CABECERA HORIZONTAL Y CENTRADA (TAL CUAL LA IMAGEN DE REFERENCIA) ---
 st.markdown(f"""
     <div style="background-color: #000000 !important; width: 100% !important; padding: 12px 20px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 3px solid #dfc729 !important; margin: -1.5rem -1rem 1rem -1rem !important; box-sizing: border-box !important;">
-        <!-- Botón de Menú con borde y diseño idéntico a la referencia -->
+        <!-- Botón de Menú con borde dorado -->
         <div style="border: 2px solid #dfc729 !important; border-radius: 8px !important; padding: 6px 10px !important; display: flex !important; flex-direction: column !important; justify-content: center !important; gap: 5px !important; width: 44px !important; height: 38px !important; box-sizing: border-box !important; cursor: pointer !important;">
             <div style="width: 100% !important; height: 3px !important; background-color: #dfc729 !important; border-radius: 2px !important;"></div>
             <div style="width: 100% !important; height: 3px !important; background-color: #dfc729 !important; border-radius: 2px !important;"></div>
@@ -79,7 +79,7 @@ st.markdown(f"""
             {logo_display}
         </div>
         
-        <!-- Iconos de la derecha (Base de datos/pila y Avatar de usuario idénticos) -->
+        <!-- Iconos de la derecha (Base de datos y Avatar de usuario) -->
         <div style="display: flex !important; gap: 15px !important; align-items: center !important;">
             <div style="font-size: 24px !important; line-height: 1 !important; display: flex; align-items: center;">🗄️</div>
             <div style="background-color: #d1d5db !important; border-radius: 50% !important; width: 38px !important; height: 38px !important; display: flex !important; justify-content: center !important; align-items: center !important; font-size: 20px !important; overflow: hidden !important; border: 1px solid #9ca3af !important;">👤</div>
