@@ -42,20 +42,24 @@ def obtener_siguientes_montos(monto_actual):
         siguientes = [ultimo + i * 1000 for i in range(1, 50)]
     return siguientes
 
-# --- LECTOR DE LOGOTIPO LOCAL ---
-def get_image_base64(ruta_imagen):
+# --- LECTOR DE LOGOTIPO LOCAL MEJORADO ---
+def get_image_base64(nombre_archivo):
     try:
+        # Busca exactamente en la carpeta donde está este script
+        ruta_directorio = os.path.dirname(os.path.abspath(__file__))
+        ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
+        
         with open(ruta_imagen, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode('utf-8')
     except Exception:
         return ""
 
-# Carga la imagen específica del Lobo
-img_b64 = get_image_base64("1001394095_preview_rev_1.jpg")
+# Carga la imagen en formato PNG
+img_b64 = get_image_base64("1001394095_preview_rev_1.png")
 
 if img_b64:
-    # Si la imagen existe, la muestra
-    logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" style="height: 70px; object-fit: contain;">'
+    # Si la imagen existe, la muestra con formato PNG
+    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="height: 70px; object-fit: contain;">'
 else:
     # Texto de respaldo si no encuentra la imagen
     logo_display = '<span style="color: #f1c40f; font-size: 24px; font-weight: 900; font-style: italic;">WOLF READY TO RUN</span>'
