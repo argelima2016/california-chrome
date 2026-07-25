@@ -57,13 +57,12 @@ def get_image_base64(nombre_archivo):
 img_b64 = get_image_base64("1001394095_preview_rev_1.png")
 
 if img_b64:
-    # EFECTO HD 4K: Filtros avanzados de nitidez, contraste optimizado y un brillo dorado (drop-shadow)
+    # EFECTO HD 4K OPTIMIZADO: Máxima nitidez, brillo y contraste imponente
     logo_display = f'''
         <img src="data:image/png;base64,{img_b64}" style="
-            height: 180px; 
+            height: 200px; 
             object-fit: contain; 
-            filter: drop-shadow(0px 0px 12px rgba(241, 196, 15, 0.4)) contrast(1.1) brightness(1.05);
-            transition: transform 0.3s ease;
+            filter: drop-shadow(0px 0px 16px rgba(241, 196, 15, 0.6)) contrast(1.15) brightness(1.1);
         ">
     '''
 else:
@@ -165,7 +164,7 @@ st.markdown("""
         margin-bottom: 12px;
     }
     
-    /* Aumento de padding top general para que no choque la cabecera ampliada */
+    /* Espaciado superior adaptado para la cabecera prominente */
     .block-container {
         padding-top: 1.5rem !important;
         padding-bottom: 2rem !important;
