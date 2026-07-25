@@ -957,8 +957,11 @@ def get_image_base64(nombre_archivo):
 img_b64 = get_image_base64("1001394095_preview_rev_1.png")
 
 if img_b64:
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="height: 55px; width: auto; object-fit: contain; display: block;" />'
-else:
+    logo_display = f# Reemplaza tu línea actual con esta estructura:
+st.markdown(
+    '<img src="data:image/png;base64,08e8qm10EgUnloXGj46lxdyQuUiXppd3TdmopuWx0M21qZDwW2X0iLluR5TGC6M8VFusKY1o2sZtTjLURs6pM7jLlUr5TGC6M8Uv0bFASBwkWObVIVOrZVIvO8BFAsDkBw/AdtKk0wUvO8BFAsDkBw" width="100">',
+    unsafe_allow_html=True,
+)
     logo_display = '<span style="color: #f1c40f; font-size: 22px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
 
 # --- CABECERA PERSONALIZADA CON LOGOTIPO (FLEXBOX ROBUSTO Y FORZADO) ---
