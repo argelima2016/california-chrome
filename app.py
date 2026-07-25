@@ -62,20 +62,21 @@ def get_image_base64(nombre_archivo):
 img_b64 = get_image_base64("1001394095_preview_rev_1.png")
 
 if img_b64:
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="height: 75px; width: auto; max-width: 250px; object-fit: contain; display: block; margin: 0 auto;" />'
+    # Aumentamos la altura a 90px para que luzca grande y perfectamente legible tal como en tu referencia
+    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="height: 90px; width: auto; max-width: 350px; object-fit: contain; display: block; margin: 0 auto;" />'
 else:
-    logo_display = '<span style="color: #f1e05a; font-size: 26px; font-weight: 900; font-style: italic; letter-spacing: 1px;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1e05a; font-size: 30px; font-weight: 900; font-style: italic; letter-spacing: 1px;">CALIFORNIA CHROME</span>'
 
-# --- CABECERA PERSONALIZADA CON LOGOTIPO (TAMAÑO DESTACADO Y CENTRADO) ---
+# --- CABECERA PERSONALIZADA ESTILO REFERENCIA (GRANDE Y CENTRADA) ---
 st.markdown(f"""
-    <div style="background-color: #000000 !important; width: 100% !important; padding: 12px 20px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #222 !important; margin: -1.5rem -1rem 1rem -1rem !important; box-sizing: border-box !important;">
-        <div style="color: #f1c40f !important; font-size: 24px !important; cursor: pointer !important; border: 1px solid #f1c40f !important; border-radius: 6px !important; padding: 2px 8px !important; line-height: 1 !important;">☰</div>
-        <div style="display: flex !important; align-items: center !important; justify-content: center !important; flex-grow: 1 !important; text-align: center !important;">
+    <div style="background-color: #000000 !important; width: 100% !important; padding: 15px 20px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #222 !important; margin: -1.5rem -1rem 1rem -1rem !important; box-sizing: border-box !important;">
+        <div style="color: #f1c40f !important; font-size: 26px !important; cursor: pointer !important; border: 2px solid #f1c40f !important; border-radius: 8px !important; padding: 4px 10px !important; line-height: 1 !important; display: flex; align-items: center; justify-content: center;">☰</div>
+        <div style="display: flex !important; align-items: center !important; justify-content: center !important; flex-grow: 1 !important; text-align: center !important; padding: 0 10px !important;">
             {logo_display}
         </div>
-        <div style="display: flex !important; gap: 12px !important; align-items: center !important;">
-            <span style="color: #ffffff !important; font-size: 18px !important;">🥞</span>
-            <div style="background-color: #dddddd !important; border-radius: 50% !important; width: 32px !important; height: 32px !important; display: flex !important; justify-content: center !important; align-items: center !important; font-size: 16px !important;">👤</div>
+        <div style="display: flex !important; gap: 15px !important; align-items: center !important;">
+            <span style="color: #ffffff !important; font-size: 20px !important;">🥞</span>
+            <div style="background-color: #dddddd !important; border-radius: 50% !important; width: 36px !important; height: 36px !important; display: flex !important; justify-content: center !important; align-items: center !important; font-size: 18px !important;">👤</div>
         </div>
     </div>
 """, unsafe_allow_html=True)
