@@ -10,7 +10,7 @@ from pypdf import PdfReader
 from streamlit_autorefresh import st_autorefresh
 
 # Configuración de pantalla completa (Responsive para Móviles y PC)
-st.set_page_config(page_title="California Chrome", layout="wide", page_icon="🏇")
+st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🏇")
 
 # --- AUTOREFRESH (3 SEGUNDOS) ---
 try:
@@ -58,7 +58,7 @@ if img_b64:
     logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" style="height: 70px; object-fit: contain;">'
 else:
     # Texto de respaldo si no encuentra la imagen
-    logo_display = '<span style="color: #f1c40f; font-size: 24px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 24px; font-weight: 900; font-style: italic;">WOLF READY TO RUN</span>'
 
 # --- CABECERA PERSONALIZADA CON LOGOTIPO ---
 st.markdown(f"""
