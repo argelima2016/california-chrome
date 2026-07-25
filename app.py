@@ -50,33 +50,39 @@ def get_image_base64(nombre_archivo):
         ruta_imagen = ruta_script / nombre_archivo
         
         if not ruta_imagen.exists():
-            print(f"⚠️ El archivo no existe en: {ruta_imagen}")
             return ""
             
         with open(ruta_imagen, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode('utf-8')
-    except Exception as e:
-        print(f"⚠️ Error cargando la imagen: {e}")
+    except Exception:
         return ""
 
 img_b64 = get_image_base64("1001394095_preview_rev_1.png")
 
 if img_b64:
-    # Aumentamos la altura a 90px para que luzca grande y perfectamente legible tal como en tu referencia
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="height: 90px; width: auto; max-width: 350px; object-fit: contain; display: block; margin: 0 auto;" />'
+    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="height: 65px; width: auto; max-width: 280px; object-fit: contain; display: block; margin: 0 auto;" />'
 else:
-    logo_display = '<span style="color: #f1e05a; font-size: 30px; font-weight: 900; font-style: italic; letter-spacing: 1px;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1e05a; font-size: 26px; font-weight: 900; font-style: italic; letter-spacing: 1px;">CALIFORNIA CHROME</span>'
 
-# --- CABECERA PERSONALIZADA ESTILO REFERENCIA (GRANDE Y CENTRADA) ---
+# --- CABECERA EXACTA ESTILO REFERENCIA (BOTÓN DORADO, LOGO GRANDE Y CENTRADO) ---
 st.markdown(f"""
-    <div style="background-color: #000000 !important; width: 100% !important; padding: 15px 20px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #222 !important; margin: -1.5rem -1rem 1rem -1rem !important; box-sizing: border-box !important;">
-        <div style="color: #f1c40f !important; font-size: 26px !important; cursor: pointer !important; border: 2px solid #f1c40f !important; border-radius: 8px !important; padding: 4px 10px !important; line-height: 1 !important; display: flex; align-items: center; justify-content: center;">☰</div>
-        <div style="display: flex !important; align-items: center !important; justify-content: center !important; flex-grow: 1 !important; text-align: center !important; padding: 0 10px !important;">
+    <div style="background-color: #000000 !important; width: 100% !important; padding: 12px 20px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 3px solid #dfc729 !important; margin: -1.5rem -1rem 1rem -1rem !important; box-sizing: border-box !important;">
+        <!-- Botón de Menú con borde y diseño idéntico a la referencia -->
+        <div style="border: 2px solid #dfc729 !important; border-radius: 8px !important; padding: 6px 10px !important; display: flex !important; flex-direction: column !important; justify-content: center !important; gap: 5px !important; width: 44px !important; height: 38px !important; box-sizing: border-box !important; cursor: pointer !important;">
+            <div style="width: 100% !important; height: 3px !important; background-color: #dfc729 !important; border-radius: 2px !important;"></div>
+            <div style="width: 100% !important; height: 3px !important; background-color: #dfc729 !important; border-radius: 2px !important;"></div>
+            <div style="width: 100% !important; height: 3px !important; background-color: #dfc729 !important; border-radius: 2px !important;"></div>
+        </div>
+        
+        <!-- Logotipo centrado, grande y legible -->
+        <div style="display: flex !important; align-items: center !important; justify-content: center !important; flex-grow: 1 !important; text-align: center !important;">
             {logo_display}
         </div>
+        
+        <!-- Iconos de la derecha (Base de datos/pila y Avatar de usuario idénticos) -->
         <div style="display: flex !important; gap: 15px !important; align-items: center !important;">
-            <span style="color: #ffffff !important; font-size: 20px !important;">🥞</span>
-            <div style="background-color: #dddddd !important; border-radius: 50% !important; width: 36px !important; height: 36px !important; display: flex !important; justify-content: center !important; align-items: center !important; font-size: 18px !important;">👤</div>
+            <div style="font-size: 24px !important; line-height: 1 !important; display: flex; align-items: center;">🗄️</div>
+            <div style="background-color: #d1d5db !important; border-radius: 50% !important; width: 38px !important; height: 38px !important; display: flex !important; justify-content: center !important; align-items: center !important; font-size: 20px !important; overflow: hidden !important; border: 1px solid #9ca3af !important;">👤</div>
         </div>
     </div>
 """, unsafe_allow_html=True)
