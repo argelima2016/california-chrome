@@ -42,38 +42,6 @@ def obtener_siguientes_montos(monto_actual):
         siguientes = [ultimo + i * 1000 for i in range(1, 50)]
     return siguientes
 
-# --- LECTOR DE LOGOTIPO LOCAL MEJORADO ---
-def get_image_base64(nombre_archivo):
-    try:
-        ruta_directorio = os.path.dirname(os.path.abspath(__file__))
-        ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
-        
-        with open(ruta_imagen, "rb") as img_file:
-            return base64.b64encode(img_file.read()).decode('utf-8')
-    except Exception:
-        return ""
-
-img_b64 = get_image_base64("1001394095_preview_rev_1.png")
-
-if img_b64:
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="max-height: 50px; width: auto; object-fit: contain; display: block;" />'
-else:
-    logo_display = '<span style="color: #f1c40f; font-size: 20px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
-
-# --- CABECERA PERSONALIZADA CON LOGOTIPO (DISEÑO COMPACTO Y RESPONSIVE) ---
-st.markdown(f"""
-    <div style="background-color: #000000 !important; width: 100% !important; padding: 8px 12px !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #222 !important; margin: -1rem -1rem 1rem -1rem !important; box-sizing: border-box !important;">
-        <div style="color: #f1c40f !important; font-size: 22px !important; cursor: pointer !important; border: 1px solid #f1c40f !important; border-radius: 4px !important; padding: 2px 6px !important; line-height: 1 !important;">☰</div>
-        <div style="display: flex !important; align-items: center !important; justify-content: center !important; flex-grow: 1; text-align: center; overflow: hidden; padding: 0 10px;">
-            {logo_display}
-        </div>
-        <div style="display: flex !important; gap: 10px !important; align-items: center !important;">
-            <span style="color: #ffffff !important; font-size: 16px !important;">🥞</span>
-            <div style="background-color: #dddddd !important; border-radius: 50% !important; width: 30px !important; height: 30px !important; display: flex !important; justify-content: center !important; align-items: center !important; font-size: 15px !important;">👤</div>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
-
 # --- ESTILOS CSS CON TARJETAS COLORIDAS, TABLA ELEGANTE Y TABS NAVEGACIÓN ---
 st.markdown("""
     <style>
