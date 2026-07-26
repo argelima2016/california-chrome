@@ -73,7 +73,7 @@ else:
 if 'menu_principal_opcion' not in st.session_state:
     st.session_state.menu_principal_opcion = "Remates"
 
-# --- ESTILOS CSS DINÁMICOS Y ESTÉTICOS (BARRA DE PESTAÑAS HORIZONTALES SUPERIORES PREMIUM) ---
+# --- ESTILOS CSS ADAPTABLES PARA MÓVILES Y PC ---
 st.markdown("""
     <style>
     .stApp {
@@ -89,7 +89,7 @@ st.markdown("""
     .header-container {
         background-color: #000000 !important;
         width: 100% !important;
-        padding: 10px 16px !important;
+        padding: 8px 12px !important;
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
@@ -111,7 +111,7 @@ st.markdown("""
         cursor: pointer;
     }
     .header-logo-img {
-        max-height: 48px !important;
+        max-height: 45px !important;
         width: auto !important;
         object-fit: contain !important;
         display: block !important;
@@ -119,72 +119,60 @@ st.markdown("""
     .user-info-container {
         display: flex !important;
         align-items: center !important;
-        gap: 10px !important;
+        gap: 8px !important;
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
-        padding: 6px 14px !important;
-        border-radius: 25px !important;
+        padding: 4px 10px !important;
+        border-radius: 20px !important;
     }
     .user-text-info {
         display: flex !important;
         flex-direction: column !important;
         text-align: right !important;
-        line-height: 1.2 !important;
+        line-height: 1.1 !important;
     }
     .user-name {
         color: #ffffff !important;
-        font-size: 14px !important;
+        font-size: 13px !important;
         font-weight: 900 !important;
     }
     .user-balance {
         color: #58a6ff !important;
-        font-size: 13px !important;
+        font-size: 12px !important;
         font-weight: 800 !important;
     }
     .user-avatar {
         background-color: #f1c40f !important;
         color: #000000 !important;
         border-radius: 50% !important;
-        width: 34px !important;
-        height: 34px !important;
+        width: 30px !important;
+        height: 30px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 15px !important;
+        font-size: 14px !important;
         font-weight: bold !important;
     }
 
-    /* --- BARRA DE NAVEGACIÓN SUPERIOR DINÁMICA --- */
-    .nav-bar-container {
-        background-color: #0b0f15 !important;
-        width: 100% !important;
-        padding: 8px 10px !important;
-        display: flex !important;
-        justify-content: center !important;
-        gap: 8px !important;
-        border-bottom: 2px solid #21262d !important;
-        margin: 0 -1rem 1rem -1rem !important;
-        box-sizing: border-box !important;
-        flex-wrap: wrap;
-    }
-
-    /* --- OPTIMIZACIÓN DE CONTENEDOR Y BOTONES --- */
+    /* --- CONTENEDOR GENERAL --- */
     .block-container {
         padding-top: 0.8rem !important;
         padding-bottom: 2rem !important;
-        padding-left: 0.8rem !important;
-        padding-right: 0.8rem !important;
+        padding-left: 0.6rem !important;
+        padding-right: 0.6rem !important;
         max-width: 100% !important;
     }
 
+    /* --- ADAPTACIÓN DE BOTONES GENERALES PARA MÓVILES Y PC --- */
     .stButton button {
         width: 100% !important;
         border-radius: 8px !important;
         font-weight: 700 !important;
-        padding: 0.4rem 0.6rem !important;
+        padding: 0.4rem 0.2rem !important;
         min-height: 40px !important;
-        font-size: 13px !important;
-        letter-spacing: 0.5px;
+        font-size: 12px !important;
+        letter-spacing: 0.3px;
+        white-space: nowrap !important;
     }
 
     .subasta-header {
@@ -198,12 +186,12 @@ st.markdown("""
     .live-clock-banner {
         background-color: #161b22;
         border: 1px solid #30363d;
-        padding: 6px 12px;
+        padding: 6px 10px;
         border-radius: 6px;
         font-size: 13px;
         color: #58a6ff;
         font-weight: 600;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
         display: inline-block;
     }
     .timer-box {
@@ -215,7 +203,7 @@ st.markdown("""
         font-size: clamp(14px, 3.5vw, 20px);
         font-weight: bold;
         color: #ff4757;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
     .cierre-info-box {
         background-color: #161b22;
@@ -225,23 +213,27 @@ st.markdown("""
         text-align: center;
         font-size: 14px;
         color: #f0f6fc;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
 
     @media (max-width: 640px) {
         .header-container {
-            padding: 8px 10px !important;
+            padding: 6px 8px !important;
         }
         .header-logo-img {
-            max-height: 38px !important;
+            max-height: 36px !important;
         }
         .user-info-container {
-            padding: 4px 10px !important;
+            padding: 4px 8px !important;
             gap: 6px !important;
         }
-        .user-name { font-size: 12px !important; }
+        .user-name { font-size: 11px !important; }
         .user-balance { font-size: 11px !important; }
-        .user-avatar { width: 30px !important; height: 30px !important; font-size: 13px !important; }
+        .user-avatar { width: 26px !important; height: 26px !important; font-size: 12px !important; }
+        .stButton button {
+            font-size: 11px !important;
+            min-height: 36px !important;
+        }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -249,14 +241,14 @@ st.markdown("""
 # --- CABECERA SUPERIOR HTML ---
 st.markdown(f"""
     <div class="header-container">
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
             <div class="menu-icon-box">☰</div>
         </div>
         <div style="display: flex !important; align-items: center !important; justify-content: center !important; flex-grow: 1; text-align: center; overflow: hidden; padding: 0 5px;">
             {logo_display}
         </div>
         <div class="user-info-container">
-            <span style="color: #f1c40f !important; font-size: 22px !important;">🛢️</span>
+            <span style="color: #f1c40f !important; font-size: 20px !important;">🛢️</span>
             <div class="user-text-info">
                 <span class="user-name">ADMIN</span>
                 <span class="user-balance">Bs. 50.000,00</span>
@@ -266,25 +258,27 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- BARRA DE NAVEGACIÓN SUPERIOR DINÁMICA (ESTILO PESTAÑAS MODERNAS) ---
-col_nav_admin, col_nav1, col_nav2, col_nav3 = st.columns(4, gap="small")
+st.markdown("<br>", unsafe_allow_html=True)
 
-with col_nav_admin:
+# --- MENÚ PRINCIPAL SUPERIOR (ADAPTABLE A CUALQUIER PANTALLA) ---
+col_nav1, col_nav2, col_nav3, col_nav4 = st.columns(4, gap="small")
+
+with col_nav1:
     if st.button("🔒 ADMIN", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "🔒 Zona Admin" else "secondary"):
         st.session_state.menu_principal_opcion = "🔒 Zona Admin"
         st.rerun()
 
-with col_nav1:
+with col_nav2:
     if st.button("🏇 REMATES", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
         st.session_state.menu_principal_opcion = "Remates"
         st.rerun()
 
-with col_nav2:
+with col_nav3:
     if st.button("🎟️ DUPLETAS", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
         st.session_state.menu_principal_opcion = "Dupletas"
         st.rerun()
 
-with col_nav3:
+with col_nav4:
     if st.button("📊 CUENTAS", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
         st.session_state.menu_principal_opcion = "Cuentas"
         st.rerun()
@@ -642,35 +636,6 @@ if menu_principal_opcion == "Remates":
         if not carreras_filtradas_visibles:
             st.info("ℹ️ No hay carreras activas ni cerradas para mostrar. Selecciona carreras en el menú lateral de control.")
         else:
-            st.markdown("""
-            <style>
-            button[kind="secondary"] {
-                background-color: #ffffff !important;
-                color: #111111 !important;
-                border: 1px solid #e2e8f0 !important;
-                border-radius: 20px !important;
-                font-weight: 600 !important;
-                font-size: 11px !important;
-                padding: 0px 1px !important;
-                min-height: 24px !important;
-                height: 24px !important;
-            }
-            button[kind="secondary"] * { color: #111111 !important; }
-            button[kind="primary"] {
-                background-color: #0b1120 !important;
-                color: #ffffff !important;
-                border: 1px solid #0b1120 !important;
-                border-radius: 20px !important;
-                font-weight: 700 !important;
-                font-size: 11px !important;
-                padding: 0px 1px !important;
-                min-height: 24px !important;
-                height: 24px !important;
-            }
-            button[kind="primary"] * { color: #ffffff !important; }
-            </style>
-            """, unsafe_allow_html=True)
-
             if "carrera_remate_activa_seleccionada" not in st.session_state or st.session_state["carrera_remate_activa_seleccionada"] not in carreras_filtradas_visibles:
                 carr_activa = carreras_filtradas_visibles[0]
                 st.session_state["carrera_remate_activa_seleccionada"] = carr_activa
@@ -679,16 +644,16 @@ if menu_principal_opcion == "Remates":
 
             st.markdown("🔹 **Seleccionar Carrera:**")
             cantidad_carreras = len(carreras_filtradas_visibles)
-            columnas_por_fila = min(cantidad_carreras, 6) if cantidad_carreras > 0 else 1
             
-            for i in range(0, cantidad_carreras, columnas_por_fila):
-                grupo_carreras = carreras_filtradas_visibles[i:i+columnas_por_fila]
+            # --- SELECCIONADOR DE CARRERAS ADAPTABLE (GRID DINÁMICO) ---
+            # Utiliza bloques de hasta 4 columnas en PC y se reacomoda automáticamente en móviles
+            cols_por_fila = 4
+            for i in range(0, cantidad_carreras, cols_por_fila):
+                grupo_carreras = carreras_filtradas_visibles[i:i+cols_por_fila]
                 cols = st.columns(len(grupo_carreras))
-                
                 for j, c_nombre in enumerate(grupo_carreras):
                     abreviatura = obtener_abreviatura_carrera(c_nombre)
                     es_activa = (c_nombre == carr_activa)
-                    
                     with cols[j]:
                         if st.button(abreviatura, key=f"btn_pill_sel_{c_nombre}_{i}_{j}", use_container_width=True, type="primary" if es_activa else "secondary"):
                             st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
@@ -770,13 +735,16 @@ if menu_principal_opcion == "Remates":
                     st.markdown(f"🔹 **1. Seleccionar Ejemplar (Total inscritos: {len(lista_caballos_activos)}):**")
                     
                     cantidad_ejemplares = len(lista_caballos_activos)
-                    columnas_por_fila = 4
-                    num_filas = (cantidad_ejemplares + columnas_por_fila - 1) // columnas_por_fila
+                    
+                    # --- REGISTRO RÁPIDO ADAPTABLE (GRID DINÁMICO DE EJEMPLARES) ---
+                    # Se divide de forma flexible según el tamaño de la pantalla
+                    cols_ejemplares = 4 if cantidad_ejemplares >= 4 else max(1, cantidad_ejemplares)
+                    num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                     
                     idx_cab = 0
                     for f in range(num_filas):
-                        cols_fila = st.columns(columnas_por_fila)
-                        for c in range(columnas_por_fila):
+                        cols_fila = st.columns(cols_ejemplares)
+                        for c in range(cols_ejemplares):
                             if idx_cab < cantidad_ejemplares:
                                 cab_item = lista_caballos_activos[idx_cab]
                                 num_parte = cab_item.split(" - ")[0]
