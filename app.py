@@ -707,7 +707,7 @@ if menu_principal_opcion == "Remates":
                                 st.rerun()
 
 # =========================================================================
-# 2. MÓDULO DE DUPLETAS
+# 2. MÓDULO DE DUPLETAS (Con imagen visible por carrera y anti-duplicados)
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
     st.markdown("<div class='subasta-header'>🎟️ Módulo de Dupletas</div>", unsafe_allow_html=True)
@@ -729,12 +729,21 @@ elif menu_principal_opcion == "Dupletas":
         carreras_habilitadas = st.session_state.carreras_habilitadas_dupleta
         
         for i in range(num_legs):
-            c_leg, cb_leg_col = st.columns(2)
-            with c_leg:
+            st.markdown(f"---")
+            # Creamos un diseño de 3 columnas para cada selección: [Selector Carrera] [Imagen de la Carrera] [Selector Ejemplar]
+            col_carr, col_img, col_cab = st.columns([2, 1.2, 2])
+            
+            with col_carr:
                 carr_leg = st.selectbox(f"Carrera {i+1}", carreras_habilitadas, key=f"dup_sel_carrera_{i}")
+            
+            with col_img:
+                st.markdown("<p style='font-size: 11px; margin-bottom: 2px; color: #8b949e;'>Imagen Carrera</p>", unsafe_allow_html=True)
                 if carr_leg in st.session_state.imagenes_carreras:
-                    st.image(st.session_state.imagenes_carreras[carr_leg], width=120)
-            with cb_leg_col:
+                    st.image(st.session_state.imagenes_carreras[carr_leg], use_container_width=True)
+                else:
+                    st.markdown("<div style='background: #161b22; border: 1px dashed #30363d; padding: 15px; text-align: center; font-size: 10px; border-radius: 4px; color: #8b949e;'>Sin Imagen</div>", unsafe_allow_html=True)
+            
+            with col_cab:
                 caballos_in_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
                 cab_leg = st.selectbox(f"Ejemplar {i+1}", caballos_in_carr if caballos_in_carr else ["Sin Caballos"], key=f"dup_sel_ejemplar_{i}")
             
