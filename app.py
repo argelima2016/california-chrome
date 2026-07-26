@@ -42,29 +42,39 @@ def obtener_siguientes_montos(monto_actual):
         siguientes = [ultimo + i * 1000 for i in range(1, 50)]
     return siguientes
 
-# --- LECTOR DE LOGOTIPO LOCAL (WOLF READY TO RUN PNG) ---
-def get_image_base64(nombre_archivo):
-    try:
-        ruta_directorio = os.path.dirname(os.path.abspath(__file__))
-        ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
-        
-        with open(ruta_imagen, "rb") as img_file:
-            return base64.b64encode(img_file.read()).decode('utf-8')
-    except Exception:
-        return ""
+# --- LECTOR DE LOGOTIPO LOCAL (BUSCANDO ARCHIVO PNG O JPG) ---
+def get_image_base64(nombres_posibles):
+    ruta_directorio = os.path.dirname(os.path.abspath(__file__))
+    for nombre_archivo in nombres_posibles:
+        try:
+            ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
+            if os.path.exists(ruta_imagen):
+                with open(ruta_imagen, "rb") as img_file:
+                    return base64.b64encode(img_file.read()).decode('utf-8')
+        except Exception:
+            continue
+    return ""
 
-img_b64 = get_image_base64("1001394095_preview_rev_1_2.png")
+# Lista de posibles nombres para que detecte automáticamente tu archivo PNG o JPG subido
+nombres_archivos = [
+    "1001394095_preview_rev_1_2.png",
+    "1001394095_preview_rev_1_2.jpg",
+    "logo.png",
+    "logo.jpg"
+]
+
+img_b64 = get_image_base64(nombres_archivos)
 
 if img_b64:
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="max-height: 55px; width: auto; object-fit: contain; display: block;" />'
+    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="max-height: 52px; width: auto; object-fit: contain; display: block;" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 22px; font-weight: 900; font-style: italic;">WOLF READY TO RUN</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 20px; font-weight: 900; font-style: italic;">WOLF READY TO RUN</span>'
 
 # --- ESTADO INICIAL DE NAVEGACIÓN ---
 if 'menu_principal_opcion' not in st.session_state:
     st.session_state.menu_principal_opcion = "Remates"
 
-# --- CABECERA PERSONALIZADA CON LOGOTIPO NUEVO Y BLOQUE DERECHO GRANDE Y LEGIBLE ---
+# --- CABECERA PERSONALIZADA CON LOGOTIPO DE IMAGEN Y BLOQUE DERECHO GRANDE Y LEGIBLE ---
 st.markdown(f"""
     <style>
     .header-container {{
