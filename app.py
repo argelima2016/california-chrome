@@ -651,17 +651,6 @@ if menu_principal_opcion == "Remates":
 
             st.markdown("🔹 **Seleccionar Carrera:**")
             
-            # --- SELECCIONADOR DE CARRERAS CON SCROLL HORIZONTAL FLUIDO PARA MÓVILES ---
-            botones_carreras_html = '<div class="carreras-scroll-container">'
-            for c_nombre in carreras_filtradas_visibles:
-                abreviatura = obtener_abreviatura_carrera(c_nombre)
-                es_activa = (c_nombre == carr_activa)
-                bg_color = "#0b1120" if es_activa else "#ffffff"
-                txt_color = "#ffffff" if es_activa else "#111111"
-                border_color = "#f1c40f" if es_activa else "#e2e8f0"
-                
-                # Renderizamos botones táctiles fluidos mediante columnas en Streamlit dentro del contenedor
-            
             cols_carreras = st.columns(len(carreras_filtradas_visibles))
             for idx, c_nombre in enumerate(carreras_filtradas_visibles):
                 abreviatura = obtener_abreviatura_carrera(c_nombre)
@@ -748,7 +737,6 @@ if menu_principal_opcion == "Remates":
                     
                     cantidad_ejemplares = len(lista_caballos_activos)
                     
-                    # --- REGISTRO RÁPIDO HORIZONTAL ADAPTABLE (GRID DE EJEMPLARES) ---
                     cols_ejemplares = min(4, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
                     num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                     
