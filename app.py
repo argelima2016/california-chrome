@@ -69,11 +69,15 @@ if img_b64:
 else:
     logo_display = '<span style="color: #f1c40f; font-size: 18px; font-weight: 900; font-style: italic;">WOLF READY TO RUN</span>'
 
+# --- HORA ACTUAL ---
+ahora_dt = obtener_hora_venezuela_local()
+fecha_hora_texto = ahora_dt.strftime('%d/%m/%Y - %I:%M:%S %p')
+
 # --- ESTADO INICIAL DE NAVEGACIÓN ---
 if 'menu_principal_opcion' not in st.session_state:
     st.session_state.menu_principal_opcion = "Remates"
 
-# --- ESTILOS CSS ADAPTABLES PARA MÓVILES Y PC ---
+# --- ESTILOS CSS ADAPTABLES Y ELEGANTES ---
 st.markdown("""
     <style>
     .stApp {
@@ -85,7 +89,7 @@ st.markdown("""
         display: none !important;
     }
 
-    /* --- CABECERA PRINCIPAL ADAPTABLE --- */
+    /* --- CABECERA PRINCIPAL SUPERIOR (DISEÑO ESTÉTICO) --- */
     .header-container {
         background-color: #000000 !important;
         width: 100% !important;
@@ -97,11 +101,13 @@ st.markdown("""
         border-bottom: 2px solid #222 !important;
         margin: -1rem -1rem 0 -1rem !important;
         box-sizing: border-box !important;
+        flex-wrap: wrap;
+        gap: 8px;
     }
     .menu-icon-box {
         background-color: #000000 !important;
         color: #f1c40f !important;
-        font-size: 20px !important;
+        font-size: 18px !important;
         border: 2px solid #f1c40f !important;
         border-radius: 6px !important;
         padding: 2px 8px !important;
@@ -111,10 +117,23 @@ st.markdown("""
         cursor: pointer;
     }
     .header-logo-img {
-        max-height: 45px !important;
+        max-height: 42px !important;
         width: auto !important;
         object-fit: contain !important;
         display: block !important;
+    }
+    .top-clock-pill {
+        background: linear-gradient(135deg, #161b22, #0d1117);
+        border: 1px solid #30363d;
+        padding: 4px 10px;
+        border-radius: 16px;
+        font-size: 12px;
+        color: #58a6ff;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
     }
     .user-info-container {
         display: flex !important;
@@ -133,24 +152,24 @@ st.markdown("""
     }
     .user-name {
         color: #ffffff !important;
-        font-size: 13px !important;
+        font-size: 12px !important;
         font-weight: 900 !important;
     }
     .user-balance {
         color: #58a6ff !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         font-weight: 800 !important;
     }
     .user-avatar {
         background-color: #f1c40f !important;
         color: #000000 !important;
         border-radius: 50% !important;
-        width: 30px !important;
-        height: 30px !important;
+        width: 28px !important;
+        height: 28px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 14px !important;
+        font-size: 13px !important;
         font-weight: bold !important;
     }
 
@@ -163,7 +182,7 @@ st.markdown("""
         max-width: 100% !important;
     }
 
-    /* --- ADAPTACIÓN DE BOTONES GENERALES PARA MÓVILES Y PC --- */
+    /* --- BOTONES ADAPTABLES --- */
     .stButton button {
         width: 100% !important;
         border-radius: 8px !important;
@@ -182,17 +201,6 @@ st.markdown("""
         margin-bottom: 4px;
         border-bottom: 2px solid #f1e05a;
         padding-bottom: 6px;
-    }
-    .live-clock-banner {
-        background-color: #161b22;
-        border: 1px solid #30363d;
-        padding: 6px 10px;
-        border-radius: 6px;
-        font-size: 13px;
-        color: #58a6ff;
-        font-weight: 600;
-        margin-bottom: 10px;
-        display: inline-block;
     }
     .timer-box {
         background-color: #161b22;
@@ -216,29 +224,23 @@ st.markdown("""
         margin-bottom: 10px;
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 768px) {
         .header-container {
-            padding: 6px 8px !important;
+            justify-content: center !important;
+            padding: 8px !important;
+        }
+        .top-clock-pill {
+            font-size: 11px !important;
+            padding: 3px 8px !important;
         }
         .header-logo-img {
-            max-height: 36px !important;
-        }
-        .user-info-container {
-            padding: 4px 8px !important;
-            gap: 6px !important;
-        }
-        .user-name { font-size: 11px !important; }
-        .user-balance { font-size: 11px !important; }
-        .user-avatar { width: 26px !important; height: 26px !important; font-size: 12px !important; }
-        .stButton button {
-            font-size: 11px !important;
-            min-height: 36px !important;
+            max-height: 34px !important;
         }
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- CABECERA SUPERIOR HTML ---
+# --- CABECERA SUPERIOR HTML CON HORA INTEGRADA ---
 st.markdown(f"""
     <div class="header-container">
         <div style="display: flex; align-items: center; gap: 6px;">
@@ -247,13 +249,18 @@ st.markdown(f"""
         <div style="display: flex !important; align-items: center !important; justify-content: center !important; flex-grow: 1; text-align: center; overflow: hidden; padding: 0 5px;">
             {logo_display}
         </div>
-        <div class="user-info-container">
-            <span style="color: #f1c40f !important; font-size: 20px !important;">🛢️</span>
-            <div class="user-text-info">
-                <span class="user-name">ADMIN</span>
-                <span class="user-balance">Bs. 50.000,00</span>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+            <div class="top-clock-pill">
+                <span>🕒</span> <b>{fecha_hora_texto}</b>
             </div>
-            <div class="user-avatar">👤</div>
+            <div class="user-info-container">
+                <span style="color: #f1c40f !important; font-size: 18px !important;">🛢️</span>
+                <div class="user-text-info">
+                    <span class="user-name">ADMIN</span>
+                    <span class="user-balance">Bs. 50.000,00</span>
+                </div>
+                <div class="user-avatar">👤</div>
+            </div>
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -623,8 +630,6 @@ menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # 1. REMATES ADELANTADOS ACTIVOS
 if menu_principal_opcion == "Remates":
-    st.markdown(f"<div class='live-clock-banner'>📅 Fecha y Hora Actual: <b>{ahora_dt.strftime('%d/%m/%Y - %I:%M:%S %p')}</b></div>", unsafe_allow_html=True)
-    
     if not lista_carreras_disponibles:
         st.warning("⚠️ No hay carreras cargadas en el sistema.")
     else:
@@ -646,7 +651,6 @@ if menu_principal_opcion == "Remates":
             cantidad_carreras = len(carreras_filtradas_visibles)
             
             # --- SELECCIONADOR DE CARRERAS ADAPTABLE (GRID DINÁMICO) ---
-            # Utiliza bloques de hasta 4 columnas en PC y se reacomoda automáticamente en móviles
             cols_por_fila = 4
             for i in range(0, cantidad_carreras, cols_por_fila):
                 grupo_carreras = carreras_filtradas_visibles[i:i+cols_por_fila]
@@ -737,7 +741,6 @@ if menu_principal_opcion == "Remates":
                     cantidad_ejemplares = len(lista_caballos_activos)
                     
                     # --- REGISTRO RÁPIDO ADAPTABLE (GRID DINÁMICO DE EJEMPLARES) ---
-                    # Se divide de forma flexible según el tamaño de la pantalla
                     cols_ejemplares = 4 if cantidad_ejemplares >= 4 else max(1, cantidad_ejemplares)
                     num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                     
