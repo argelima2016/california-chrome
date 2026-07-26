@@ -39,10 +39,10 @@ def obtener_siguientes_montos(monto_actual):
     siguientes = [m for m in ESCALA_PUJAS if m > monto_actual]
     if not siguientes:
         ultimo = ESCALA_PUJAS[-1] if ESCALA_PUJAS else max(monto_actual, 10000)
-        siguientes = [ultimo + i * 1000 for i in range(1, 50)]
+    siguientes = [ultimo + i * 1000 for i in range(1, 50)]
     return siguientes
 
-# --- LECTOR DE LOGOTIPO LOCAL ---
+# --- LECTOR DE LOGOTIPO LOCAL (IMAGEN 2) ---
 def get_image_base64(nombre_archivo):
     try:
         ruta_directorio = os.path.dirname(os.path.abspath(__file__))
@@ -56,15 +56,15 @@ def get_image_base64(nombre_archivo):
 img_b64 = get_image_base64("1001394095_preview_rev_1.png")
 
 if img_b64:
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="max-height: 55px; width: auto; object-fit: contain; display: block;" />'
+    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="max-height: 50px; width: auto; object-fit: contain; display: block;" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 20px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 22px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
 
 # --- ESTADO INICIAL DE NAVEGACIÓN ---
 if 'menu_principal_opcion' not in st.session_state:
     st.session_state.menu_principal_opcion = "Remates"
 
-# --- CABECERA PERSONALIZADA CON BOTONES DE NAVEGACIÓN INTEGRADOS ---
+# --- CABECERA PERSONALIZADA ESTILO REFERENCIA (CON LOGO DE IMAGEN 2 Y DERECHA GRANDE Y LEGIBLE) ---
 st.markdown(f"""
     <style>
     .header-container {{
@@ -82,14 +82,51 @@ st.markdown(f"""
     .menu-icon-box {{
         background-color: #000000 !important;
         color: #f1c40f !important;
-        font-size: 22px !important;
+        font-size: 24px !important;
         border: 2px solid #f1c40f !important;
         border-radius: 8px !important;
-        padding: 2px 10px !important;
+        padding: 4px 12px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         cursor: pointer;
+    }}
+    .user-info-container {{
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        background-color: #161b22 !important;
+        border: 1px solid #30363d !important;
+        padding: 6px 14px !important;
+        border-radius: 30px !important;
+    }}
+    .user-text-info {{
+        display: flex !important;
+        flex-direction: column !important;
+        text-align: right !important;
+        line-height: 1.2 !important;
+    }}
+    .user-name {{
+        color: #ffffff !important;
+        font-size: 15px !important;
+        font-weight: 800 !important;
+    }}
+    .user-balance {{
+        color: #58a6ff !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+    }}
+    .user-avatar {{
+        background-color: #f1c40f !important;
+        color: #000000 !important;
+        border-radius: 50% !important;
+        width: 38px !important;
+        height: 38px !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
     }}
     </style>
 
@@ -100,9 +137,13 @@ st.markdown(f"""
         <div style="display: flex !important; align-items: center !important; justify-content: center !important; flex-grow: 1; text-align: center; overflow: hidden; padding: 0 10px;">
             {logo_display}
         </div>
-        <div style="display: flex !important; gap: 15px !important; align-items: center !important;">
-            <span style="color: #ffffff !important; font-size: 20px !important;">🛢️</span>
-            <div style="background-color: #e0e0e0 !important; border-radius: 50% !important; width: 34px !important; height: 34px !important; display: flex !important; justify-content: center !important; align-items: center !important; font-size: 16px !important;">👤</div>
+        <div class="user-info-container">
+            <span style="color: #f1c40f !important; font-size: 22px !important;">🛢️</span>
+            <div class="user-text-info">
+                <span class="user-name">ADMIN</span>
+                <span class="user-balance">Bs. 50.000,00</span>
+            </div>
+            <div class="user-avatar">👤</div>
         </div>
     </div>
 """, unsafe_allow_html=True)
