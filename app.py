@@ -477,7 +477,7 @@ if not st.session_state.carreras_activas_remate and lista_carreras_disponibles:
 if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_dupleta = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL (Con respuesta de navegación optimizada) ---
+# --- MENÚ PRINCIPAL HORIZONTAL (4 BOTONES) ---
 col_menu1, col_menu2, col_menu3, col_menu4 = st.columns(4, gap="small")
 
 with col_menu1:
@@ -520,35 +520,6 @@ with st.sidebar.expander("⚡ Carreras Activas para Remate", expanded=True):
 
 with st.sidebar.expander("🏠 Retención de la Casa", expanded=False):
     porcentaje_casa = st.slider("Retención (%)", 0, 50, 30, key="sb_slider_retencion_casa")
-
-with st.sidebar.expander("📅⏰ Cierres Estrictos por Carrera", expanded=False):
-    carrera_config_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="sb_selector_carrera_config")
-    fecha_sel = st.date_input("Fecha de Cierre", value=ahora_dt.date(), key=f"sb_sel_f_{carrera_config_sel}")
-    periodo_sel = st.radio("Periodo", ["AM", "PM"], key=f"sb_radio_p_{carrera_config_sel}", horizontal=True)
-    hora_12 = st.selectbox("Hora", list(range(1, 13)), key=f"sb_sel_h_{carrera_config_sel}")
-    minuto_sel = st.selectbox("Minutos", list(range(0, 60)), key=f"sb_sel_m_{carrera_config_sel}")
-    
-    h_24_conv = int(hora_12)
-    if periodo_sel == "PM" and h_24_conv < 12: h_24_conv += 12
-    elif periodo_sel == "AM" and h_24_conv == 12: h_24_conv = 0
-    
-    hora_seleccionada = time(h_24_conv, int(minuto_sel))
-    dt_cierre_completo = datetime.combine(fecha_sel, hora_seleccionada)
-    
-    col_bh1, col_bh2 = st.sidebar.columns(2)
-    with col_bh1:
-        if st.button("💾 Guardar", key=f"sb_btn_guardar_cierre_{carrera_config_sel}"):
-            st.session_state.fechas_horas_cierre_remate[carrera_config_sel] = dt_cierre_completo
-            st.session_state.estado_conteo_carrera[carrera_config_sel] = "INACTIVO"
-            st.toast(f"✅ Cierre guardado para {carrera_config_sel}")
-            st.rerun()
-    with col_bh2:
-        if st.button("🗑️ Borrar", key=f"sb_btn_borrar_cierre_{carrera_config_sel}"):
-            if carrera_config_sel in st.session_state.fechas_horas_cierre_remate:
-                del st.session_state.fechas_horas_cierre_remate[carrera_config_sel]
-            st.session_state.estado_conteo_carrera[carrera_config_sel] = "INACTIVO"
-            st.toast("🗑️ Cierre removido")
-            st.rerun()
 
 with st.sidebar.expander("🔒 Estado Dupletas", expanded=False):
     if st.session_state.dupleta_bloqueada:
@@ -799,7 +770,7 @@ elif menu_principal_opcion == "Dupletas":
                 st.caption(f"Emitido el: {t['fecha']}")
 
 # =========================================================================
-# 3. MÓDULO DE CUENTAS
+# 3. MÓDULO DE CUENTAS (Público)
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
     st.markdown("<div class='subasta-header'>📊 Cuentas y Balances</div>", unsafe_allow_html=True)
@@ -814,11 +785,19 @@ elif menu_principal_opcion == "Cuentas":
     st.metric("Ganancia Casa", formatear_bs(st.session_state.ganancia_casa))
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR
+# 4. ZONA DE ADMINISTRADOR (Centralizada)
 # =========================================================================
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Zona de Administrador</div>", unsafe_allow_html=True)
-    sub_banco, sub_cierre, sub_hist, sub_pdf, sub_img = st.tabs(["✍️ Banco", "🏁 Cierre", "🧾 Historial", "📄 PDF", "🖼️ Imágenes Carrera"])
+    
+    # Pestañas centralizadas de administración
+    sub_banco, sub_cierre, sub_saldos, sub_img, sub_pdf = st.tabs([
+        "✍️ Banco", 
+        "🏁 Cierre de Remates", 
+        "📊 Saldos Usuarios", 
+        "🖼️ Imágenes Carrera", 
+        "📄 PDF"
+    ])
     
     with sub_banco:
         st.markdown("### ✍️ Banco de Caballos por Carrera")
@@ -859,14 +838,28 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.rerun()
 
     with sub_cierre:
-        st.markdown("### 🏁 Cierre y Liquidación")
+        st.markdown("### 🏁 Cierre Estricto y Liquidación de Remates")
         carr_seleccionada_liq = st.selectbox("Gestionar Carrera", lista_carreras_disponibles, key="adm_liq_sel_carrera")
 
         with st.container(border=True):
             c_cerrada_actual = st.session_state.carreras_cerradas_remate.get(carr_seleccionada_liq, False)
             
+            col_cz1, col_cz2 = st.columns(2)
+            with col_cz1:
+                fecha_cierre_adm = st.date_input("Fecha límite", value=ahora_dt.date(), key=f"adm_f_cierre_{carr_seleccionada_liq}")
+            with col_cz2:
+                hora_cierre_adm = st.time_input("Hora límite", value=datetime.now().time(), key=f"adm_h_cierre_{carr_seleccionada_liq}")
+            
+            if st.button("💾 Guardar Hora de Cierre Estricto", key=f"adm_btn_guardar_h_{carr_seleccionada_liq}", use_container_width=True):
+                dt_cierre_estricto = datetime.combine(fecha_cierre_adm, hora_cierre_adm)
+                st.session_state.fechas_horas_cierre_remate[carr_seleccionada_liq] = dt_cierre_estricto
+                st.session_state.estado_conteo_carrera[carr_seleccionada_liq] = "INACTIVO"
+                st.toast(f"✅ Cierre estricto guardado para {carr_seleccionada_liq}")
+                st.rerun()
+
+            st.markdown("---")
             if not c_cerrada_actual:
-                if st.button("🔒 Cerrar Remate", key=f"adm_liq_cerrar_{carr_seleccionada_liq}", use_container_width=True):
+                if st.button("🔒 Cerrar Remate Manualmente", key=f"adm_liq_cerrar_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
                     st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = True
                     st.session_state.estado_conteo_carrera[carr_seleccionada_liq] = "CERRADO"
                     
@@ -884,16 +877,17 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = False
                     st.rerun()
 
+            st.markdown("---")
             if carr_seleccionada_liq in st.session_state.historial_ganadores:
-                st.success("✅ Carrera ya liquidada.")
+                st.success("✅ Esta carrera ya se encuentra liquidada.")
             else:
                 pote_carr_total = sum([info['monto'] for info in st.session_state.remates[carr_seleccionada_liq].values()])
                 monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
                 premio_final_liq = pote_carr_total - monto_casa_calc + st.session_state.get(f"rem_pote_inc_{carr_seleccionada_liq}", 0.0)
                 
-                caballo_ganador_elegido = st.selectbox("Ganador", list(st.session_state.remates[carr_seleccionada_liq].keys()), key=f"adm_liq_ganador_{carr_seleccionada_liq}")
+                caballo_ganador_elegido = st.selectbox("Seleccionar Ejemplar Ganador", list(st.session_state.remates[carr_seleccionada_liq].keys()), key=f"adm_liq_ganador_{carr_seleccionada_liq}")
                 
-                if st.button("🎯 Liquidar Premio", key=f"adm_liq_btn_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
+                if st.button("🎯 Liquidar Premio de la Carrera", key=f"adm_liq_btn_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
                     info_g = st.session_state.remates[carr_seleccionada_liq][caballo_ganador_elegido]
                     if info_g['jugador'] != "Sin Postor":
                         if info_g['jugador'] not in st.session_state.cuentas:
@@ -901,15 +895,54 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                         st.session_state.cuentas[info_g['jugador']]['Premios'] += premio_final_liq
                     st.session_state.ganancia_casa += monto_casa_calc
                     st.session_state.historial_ganadores[carr_seleccionada_liq] = {"Ganador": info_g['jugador'], "Premio": formatear_bs(premio_final_liq)}
-                    st.success("¡Liquidado!")
+                    st.success("¡Premio liquidado con éxito!")
                     st.rerun()
 
-    with sub_hist:
-        st.markdown("### 🧾 Historial de Transacciones")
-        if not st.session_state.historial_transacciones:
-            st.info("Sin transacciones.")
-        else:
-            st.dataframe(pd.DataFrame(st.session_state.historial_transacciones), use_container_width=True, hide_index=True)
+    with sub_saldos:
+        st.markdown("### 📊 Saldos y Cuentas de Todos los Usuarios")
+        datos_cuentas_adm = []
+        for jugador, vals in st.session_state.cuentas.items():
+            pujas, premios, abonos = vals['Pujas'], vals['Premios'], vals['Abonos']
+            balance_neto = pujas - abonos - premios
+            datos_cuentas_adm.append({"Jugador": jugador, "Compras": formatear_bs(pujas), "Premios": formatear_bs(premios), "Abonos/Pagos": formatear_bs(abonos), "Neto a Pagar": formatear_bs(balance_neto)})
+        st.dataframe(pd.DataFrame(datos_cuentas_adm), use_container_width=True, hide_index=True)
+        st.metric("Ganancia Total Casa", formatear_bs(st.session_state.ganancia_casa))
+
+        st.markdown("---")
+        st.markdown("#### 💵 Registrar Abono o Pago a Usuario")
+        col_ab1, col_ab2, col_ab3 = st.columns(3)
+        with col_ab1:
+            jugador_abonar = st.selectbox("Usuario", st.session_state.lista_jugadores, key="adm_abono_jugador")
+        with col_ab2:
+            monto_abono = st.number_input("Monto Abono (Bs.)", min_value=0.0, step=100.0, key="adm_abono_monto")
+        with col_ab3:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("➕ Aplicar Abono", key="adm_btn_aplicar_abono", use_container_width=True, type="primary"):
+                if jugador_abonar not in st.session_state.cuentas:
+                    st.session_state.cuentas[jugador_abonar] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                st.session_state.cuentas[jugador_abonar]['Abonos'] += monto_abono
+                st.toast(f"✅ Abono de {formatear_bs(monto_abono)} registrado a {jugador_abonar}")
+                st.rerun()
+
+    with sub_img:
+        st.markdown("### 🖼️ Cargar Imagen Representativa por Carrera (Dupletas y Remates)")
+        carr_img_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="adm_img_sel_carr")
+        
+        imagen_subida = st.file_uploader(f"Subir imagen para {carr_img_sel}", type=["png", "jpg", "jpeg"], key=f"file_img_{carr_img_sel}")
+        if imagen_subida is not None:
+            if st.button(f"💾 Guardar Imagen para {carr_img_sel}", key=f"btn_save_img_{carr_img_sel}", use_container_width=True, type="primary"):
+                st.session_state.imagenes_carreras[carr_img_sel] = imagen_subida
+                st.toast(f"✅ Imagen asignada correctamente a {carr_img_sel}")
+                st.rerun()
+
+        if carr_img_sel in st.session_state.imagenes_carreras:
+            st.markdown("---")
+            st.markdown("**Imagen actual asignada:**")
+            st.image(st.session_state.imagenes_carreras[carr_img_sel], width=300)
+            if st.button("🗑️ Eliminar Imagen", key=f"btn_del_img_{carr_img_sel}", use_container_width=True):
+                del st.session_state.imagenes_carreras[carr_img_sel]
+                st.toast("🗑️ Imagen removida")
+                st.rerun()
 
     with sub_pdf:
         st.markdown("### 📄 Lector PDF e Importador Organizado por Posición")
@@ -941,23 +974,3 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     if procesar_texto_para_remates(st.session_state.texto_completo_pdf):
                         st.success("✅ ¡Programa completo procesado y ordenado por posición!")
                         st.rerun()
-
-    with sub_img:
-        st.markdown("### 🖼️ Cargar Imagen Representativa por Carrera")
-        carr_img_sel = st.selectbox("Seleccionar Carrera para Imagen", lista_carreras_disponibles, key="adm_img_sel_carr")
-        
-        imagen_subida = st.file_uploader(f"Subir imagen para {carr_img_sel}", type=["png", "jpg", "jpeg"], key=f"file_img_{carr_img_sel}")
-        if imagen_subida is not None:
-            if st.button(f"💾 Guardar Imagen para {carr_img_sel}", key=f"btn_save_img_{carr_img_sel}", use_container_width=True, type="primary"):
-                st.session_state.imagenes_carreras[carr_img_sel] = imagen_subida
-                st.toast(f"✅ Imagen asignada correctamente a {carr_img_sel}")
-                st.rerun()
-
-        if carr_img_sel in st.session_state.imagenes_carreras:
-            st.markdown("---")
-            st.markdown("**Imagen actual asignada:**")
-            st.image(st.session_state.imagenes_carreras[carr_img_sel], width=300)
-            if st.button("🗑️ Eliminar Imagen", key=f"btn_del_img_{carr_img_sel}", use_container_width=True):
-                del st.session_state.imagenes_carreras[carr_img_sel]
-                st.toast("🗑️ Imagen removida")
-                st.rerun()
