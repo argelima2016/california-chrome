@@ -289,6 +289,8 @@ def inicializar_estado_global():
         st.session_state.texto_completo_pdf = ""
     if 'imagenes_carreras' not in st.session_state:
         st.session_state.imagenes_carreras = {}
+    if 'admin_tab_seleccionada' not in st.session_state:
+        st.session_state.admin_tab_seleccionada = "✍️ Banco"
 
 inicializar_estado_global()
 
@@ -785,21 +787,26 @@ elif menu_principal_opcion == "Cuentas":
     st.metric("Ganancia Casa", formatear_bs(st.session_state.ganancia_casa))
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR (Centralizada)
+# 4. ZONA DE ADMINISTRADOR (Centralizada y Persistente)
 # =========================================================================
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Zona de Administrador</div>", unsafe_allow_html=True)
     
-    # Pestañas centralizadas de administración
-    sub_banco, sub_cierre, sub_saldos, sub_img, sub_pdf = st.tabs([
-        "✍️ Banco", 
-        "🏁 Cierre de Remates", 
-        "📊 Saldos Usuarios", 
-        "🖼️ Imágenes Carrera", 
-        "📄 PDF"
-    ])
+    # Selector de pestañas mediante botones horizontales para evitar que Streamlit colapse el renderizado
+    opciones_admin_tabs = ["✍️ Banco", "🏁 Cierre de Remates", "📊 Saldos Usuarios", "🖼️ Imágenes Carrera", "📄 PDF"]
     
-    with sub_banco:
+    cols_adm_tabs = st.columns(len(opciones_admin_tabs))
+    for idx, tab_nombre in enumerate(opciones_admin_tabs):
+        with cols_adm_tabs[idx]:
+            es_tab_activa = (st.session_state.admin_tab_seleccionada == tab_nombre)
+            if st.button(tab_nombre, key=f"adm_tab_btn_{idx}", use_container_width=True, type="primary" if es_tab_activa else "secondary"):
+                st.session_state.admin_tab_seleccionada = tab_nombre
+                st.rerun()
+
+    st.markdown("<hr style='margin: 0.5rem 0; border-color: #30363d;'>", unsafe_allow_html=True)
+    tab_actual = st.session_state.admin_tab_seleccionada
+
+    if tab_actual == "✍️ Banco":
         st.markdown("### ✍️ Banco de Caballos por Carrera")
         carr_banco_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="adm_banco_sel_carrera")
         
@@ -837,7 +844,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                         del st.session_state.remates[carr_banco_sel][ej_item]
                     st.rerun()
 
-    with sub_cierre:
+    elif tab_actual == "🏁 Cierre de Remates":
         st.markdown("### 🏁 Cierre Estricto y Liquidación de Remates")
         carr_seleccionada_liq = st.selectbox("Gestionar Carrera", lista_carreras_disponibles, key="adm_liq_sel_carrera")
 
@@ -898,7 +905,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.success("¡Premio liquidado con éxito!")
                     st.rerun()
 
-    with sub_saldos:
+    elif tab_actual == "📊 Saldos Usuarios":
         st.markdown("### 📊 Saldos y Cuentas de Todos los Usuarios")
         datos_cuentas_adm = []
         for jugador, vals in st.session_state.cuentas.items():
@@ -924,7 +931,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast(f"✅ Abono de {formatear_bs(monto_abono)} registrado a {jugador_abonar}")
                 st.rerun()
 
-    with sub_img:
+    elif tab_actual == "🖼️ Imágenes Carrera":
         st.markdown("### 🖼️ Cargar Imagen Representativa por Carrera (Dupletas y Remates)")
         carr_img_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="adm_img_sel_carr")
         
@@ -944,7 +951,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("🗑️ Imagen removida")
                 st.rerun()
 
-    with sub_pdf:
+    elif tab_actual == "📄 PDF":
         st.markdown("### 📄 Lector PDF e Importador Organizado por Posición")
         pdf_subido = st.file_uploader("Sube el programa oficial en PDF", type=["pdf"], key="adm_pdf_uploader")
         if pdf_subido is not None:
