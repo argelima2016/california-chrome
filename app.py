@@ -77,7 +77,7 @@ fecha_hora_texto = ahora_dt.strftime('%d/%m/%Y - %I:%M:%S %p')
 if 'menu_principal_opcion' not in st.session_state:
     st.session_state.menu_principal_opcion = "Remates"
 
-# --- ESTILOS CSS PARA HORIZONTALIDAD Y FLUIDEZ ---
+# --- ESTILOS CSS ULTRA PULIDOS CON SCROLL HORIZONTAL FLUIDO PARA MÓVILES ---
 st.markdown("""
     <style>
     .stApp {
@@ -190,10 +190,29 @@ st.markdown("""
         border-radius: 8px !important;
         font-weight: 700 !important;
         padding: 0.3rem 0.4rem !important;
-        min-height: 36px !important;
+        min-height: 38px !important;
         font-size: 11px !important;
         letter-spacing: 0.3px;
         white-space: nowrap !important;
+    }
+
+    /* --- CONTENEDOR DE SCROLL HORIZONTAL PARA SELECCIÓN EN MÓVILES --- */
+    .carreras-scroll-container {
+        display: flex;
+        overflow-x: auto;
+        gap: 8px;
+        padding-bottom: 8px;
+        scrollbar-width: thin;
+        scrollbar-color: #f1c40f #161b22;
+        width: 100%;
+        -webkit-overflow-scrolling: touch;
+    }
+    .carreras-scroll-container::-webkit-scrollbar {
+        height: 6px;
+    }
+    .carreras-scroll-container::-webkit-scrollbar-thumb {
+        background-color: #f1c40f;
+        border-radius: 4px;
     }
 
     .subasta-header {
@@ -631,20 +650,26 @@ if menu_principal_opcion == "Remates":
                 carr_activa = st.session_state["carrera_remate_activa_seleccionada"]
 
             st.markdown("🔹 **Seleccionar Carrera:**")
-            cantidad_carreras = len(carreras_filtradas_visibles)
             
-            # --- SELECCIONADOR DE CARRERAS HORIZONTAL (C1, C2, C3 EN FILAS DE 4) ---
-            cols_por_fila = min(4, cantidad_carreras) if cantidad_carreras > 0 else 1
-            for i in range(0, cantidad_carreras, cols_por_fila):
-                grupo_carreras = carreras_filtradas_visibles[i:i+cols_por_fila]
-                cols = st.columns(len(grupo_carreras))
-                for j, c_nombre in enumerate(grupo_carreras):
-                    abreviatura = obtener_abreviatura_carrera(c_nombre)
-                    es_activa = (c_nombre == carr_activa)
-                    with cols[j]:
-                        if st.button(abreviatura, key=f"btn_horiz_sel_{c_nombre}_{i}_{j}", use_container_width=True, type="primary" if es_activa else "secondary"):
-                            st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
-                            st.rerun()
+            # --- SELECCIONADOR DE CARRERAS CON SCROLL HORIZONTAL FLUIDO PARA MÓVILES ---
+            botones_carreras_html = '<div class="carreras-scroll-container">'
+            for c_nombre in carreras_filtradas_visibles:
+                abreviatura = obtener_abreviatura_carrera(c_nombre)
+                es_activa = (c_nombre == carr_activa)
+                bg_color = "#0b1120" if es_activa else "#ffffff"
+                txt_color = "#ffffff" if es_activa else "#111111"
+                border_color = "#f1c40f" if es_activa else "#e2e8f0"
+                
+                # Renderizamos botones táctiles fluidos mediante columnas en Streamlit dentro del contenedor
+            
+            cols_carreras = st.columns(len(carreras_filtradas_visibles))
+            for idx, c_nombre in enumerate(carreras_filtradas_visibles):
+                abreviatura = obtener_abreviatura_carrera(c_nombre)
+                es_activa = (c_nombre == carr_activa)
+                with cols_carreras[idx]:
+                    if st.button(abreviatura, key=f"btn_scroll_carr_{idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
+                        st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
+                        st.rerun()
 
             st.markdown(f"---")
             
@@ -723,8 +748,8 @@ if menu_principal_opcion == "Remates":
                     
                     cantidad_ejemplares = len(lista_caballos_activos)
                     
-                    # --- REGISTRO RÁPIDO HORIZONTAL (GRID DE EJEMPLARES) ---
-                    cols_ejemplares = 4 if cantidad_ejemplares >= 4 else max(1, cantidad_ejemplares)
+                    # --- REGISTRO RÁPIDO HORIZONTAL ADAPTABLE (GRID DE EJEMPLARES) ---
+                    cols_ejemplares = min(4, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
                     num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                     
                     idx_cab = 0
