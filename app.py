@@ -77,7 +77,7 @@ fecha_hora_texto = ahora_dt.strftime('%d/%m/%Y - %I:%M:%S %p')
 if 'menu_principal_opcion' not in st.session_state:
     st.session_state.menu_principal_opcion = "Remates"
 
-# --- ESTILOS CSS ULTRA PULIDOS Y MODERNOS (OPTIMIZADOS PARA MÓVILES) ---
+# --- ESTILOS CSS PARA HORIZONTALIDAD Y FLUIDEZ ---
 st.markdown("""
     <style>
     .stApp {
@@ -184,16 +184,16 @@ st.markdown("""
         max-width: 100% !important;
     }
 
-    /* --- ESTILO DE BOTONES LIMPIO Y MODERNO --- */
+    /* --- ESTILO DE BOTONES LIMPIO Y HORIZONTAL --- */
     .stButton button {
         width: 100% !important;
-        border-radius: 10px !important;
+        border-radius: 8px !important;
         font-weight: 700 !important;
-        padding: 0.4rem 0.5rem !important;
-        min-height: 38px !important;
-        font-size: 12px !important;
-        letter-spacing: 0.4px;
-        transition: all 0.2s ease;
+        padding: 0.3rem 0.4rem !important;
+        min-height: 36px !important;
+        font-size: 11px !important;
+        letter-spacing: 0.3px;
+        white-space: nowrap !important;
     }
 
     .subasta-header {
@@ -253,22 +253,28 @@ st.markdown(f"""
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# --- MENÚ PRINCIPAL VERTICAL MODERNO Y ESTÉTICO ---
-if st.button("🔒 ZONA DE ADMINISTRADOR", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "🔒 Zona Admin" else "secondary"):
-    st.session_state.menu_principal_opcion = "🔒 Zona Admin"
-    st.rerun()
+# --- MENÚ PRINCIPAL HORIZONTAL (4 BOTONES EN FILA) ---
+col_menu1, col_menu2, col_menu3, col_menu4 = st.columns(4, gap="small")
 
-if st.button("🏇 REMATES DE CABALLOS", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
-    st.session_state.menu_principal_opcion = "Remates"
-    st.rerun()
+with col_menu1:
+    if st.button("🔒 ADMIN", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "🔒 Zona Admin" else "secondary"):
+        st.session_state.menu_principal_opcion = "🔒 Zona Admin"
+        st.rerun()
 
-if st.button("🎟️ MÓDULO DE DUPLETAS", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
-    st.session_state.menu_principal_opcion = "Dupletas"
-    st.rerun()
+with col_menu2:
+    if st.button("🏇 REMATES", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
+        st.session_state.menu_principal_opcion = "Remates"
+        st.rerun()
 
-if st.button("📊 CUENTAS Y BALANCES", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
-    st.session_state.menu_principal_opcion = "Cuentas"
-    st.rerun()
+with col_menu3:
+    if st.button("🎟️ DUPLETAS", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
+        st.session_state.menu_principal_opcion = "Dupletas"
+        st.rerun()
+
+with col_menu4:
+    if st.button("📊 CUENTAS", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
+        st.session_state.menu_principal_opcion = "Cuentas"
+        st.rerun()
 
 st.markdown("<hr style='margin: 0.8rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
@@ -342,8 +348,8 @@ def formatear_bs(monto):
 def obtener_abreviatura_carrera(nombre_carrera):
     match = re.search(r'\d+', nombre_carrera)
     if match:
-        return f"Carrera {match.group(0)}"
-    return nombre_carrera
+        return f"C{match.group(0)}"
+    return nombre_carrera[:3].upper()
 
 # --- FORMATEADOR HTML PARA TABLA ESTILO REFERENCIA ---
 def generar_tabla_html_remate(remates_dict):
@@ -627,12 +633,18 @@ if menu_principal_opcion == "Remates":
             st.markdown("🔹 **Seleccionar Carrera:**")
             cantidad_carreras = len(carreras_filtradas_visibles)
             
-            for c_nombre in carreras_filtradas_visibles:
-                nombre_visible = obtener_abreviatura_carrera(c_nombre)
-                es_activa = (c_nombre == carr_activa)
-                if st.button(nombre_visible, key=f"btn_vert_sel_{c_nombre}", use_container_width=True, type="primary" if es_activa else "secondary"):
-                    st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
-                    st.rerun()
+            # --- SELECCIONADOR DE CARRERAS HORIZONTAL (C1, C2, C3 EN FILAS DE 4) ---
+            cols_por_fila = min(4, cantidad_carreras) if cantidad_carreras > 0 else 1
+            for i in range(0, cantidad_carreras, cols_por_fila):
+                grupo_carreras = carreras_filtradas_visibles[i:i+cols_por_fila]
+                cols = st.columns(len(grupo_carreras))
+                for j, c_nombre in enumerate(grupo_carreras):
+                    abreviatura = obtener_abreviatura_carrera(c_nombre)
+                    es_activa = (c_nombre == carr_activa)
+                    with cols[j]:
+                        if st.button(abreviatura, key=f"btn_horiz_sel_{c_nombre}_{i}_{j}", use_container_width=True, type="primary" if es_activa else "secondary"):
+                            st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
+                            st.rerun()
 
             st.markdown(f"---")
             
@@ -711,6 +723,7 @@ if menu_principal_opcion == "Remates":
                     
                     cantidad_ejemplares = len(lista_caballos_activos)
                     
+                    # --- REGISTRO RÁPIDO HORIZONTAL (GRID DE EJEMPLARES) ---
                     cols_ejemplares = 4 if cantidad_ejemplares >= 4 else max(1, cantidad_ejemplares)
                     num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                     
