@@ -477,7 +477,7 @@ if not st.session_state.carreras_activas_remate and lista_carreras_disponibles:
 if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_dupleta = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL ---
+# --- MENÚ PRINCIPAL HORIZONTAL (Con respuesta de navegación optimizada) ---
 col_menu1, col_menu2, col_menu3, col_menu4 = st.columns(4, gap="small")
 
 with col_menu1:
@@ -707,7 +707,7 @@ if menu_principal_opcion == "Remates":
                                 st.rerun()
 
 # =========================================================================
-# 2. MÓDULO DE DUPLETAS (Con imagen visible por carrera y anti-duplicados)
+# 2. MÓDULO DE DUPLETAS
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
     st.markdown("<div class='subasta-header'>🎟️ Módulo de Dupletas</div>", unsafe_allow_html=True)
@@ -730,7 +730,6 @@ elif menu_principal_opcion == "Dupletas":
         
         for i in range(num_legs):
             st.markdown(f"---")
-            # Creamos un diseño de 3 columnas para cada selección: [Selector Carrera] [Imagen de la Carrera] [Selector Ejemplar]
             col_carr, col_img, col_cab = st.columns([2, 1.2, 2])
             
             with col_carr:
