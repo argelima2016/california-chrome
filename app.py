@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 from pypdf import PdfReader
 from streamlit_autorefresh import st_autorefresh
 
-# Configuración de pantalla completa (Responsive para Móviles y PC)
+# Configuración de pantalla completa (Responsive perfecto para Móviles y PC)
 st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺")
 
 # --- AUTOREFRESH (3 SEGUNDOS) ---
@@ -55,7 +55,6 @@ def get_image_base64(nombres_posibles):
             continue
     return ""
 
-# Lista de posibles nombres para que detecte automáticamente tu archivo PNG o JPG subido
 nombres_archivos = [
     "1001394095_preview_rev_1_2.png",
     "1001394095_preview_rev_1_2.jpg",
@@ -66,21 +65,31 @@ nombres_archivos = [
 img_b64 = get_image_base64(nombres_archivos)
 
 if img_b64:
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" style="max-height: 52px; width: auto; object-fit: contain; display: block;" />'
+    logo_display = f'<img src="data:image/png;base64,{img_b64}" class="header-logo-img" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 20px; font-weight: 900; font-style: italic;">WOLF READY TO RUN</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 18px; font-weight: 900; font-style: italic;">WOLF READY TO RUN</span>'
 
 # --- ESTADO INICIAL DE NAVEGACIÓN ---
 if 'menu_principal_opcion' not in st.session_state:
     st.session_state.menu_principal_opcion = "Remates"
 
-# --- CABECERA PERSONALIZADA CON LOGOTIPO DE IMAGEN Y BLOQUE DERECHO GRANDE Y LEGIBLE ---
-st.markdown(f"""
+# --- ESTILOS CSS UNIFICADOS Y RESPONSIVOS (CELULARES Y PC) ---
+st.markdown("""
     <style>
-    .header-container {{
+    .stApp {
+        background-color: #0e1117;
+        color: #f0f6fc;
+    }
+    
+    div[data-testid="stTabs"] {
+        display: none !important;
+    }
+
+    /* --- CABECERA PRINCIPAL ADAPTABLE --- */
+    .header-container {
         background-color: #000000 !important;
         width: 100% !important;
-        padding: 10px 15px !important;
+        padding: 8px 10px !important;
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
@@ -88,68 +97,156 @@ st.markdown(f"""
         border-bottom: 2px solid #222 !important;
         margin: -1rem -1rem 0 -1rem !important;
         box-sizing: border-box !important;
-    }}
-    .menu-icon-box {{
+    }
+    .menu-icon-box {
         background-color: #000000 !important;
         color: #f1c40f !important;
-        font-size: 24px !important;
+        font-size: 20px !important;
         border: 2px solid #f1c40f !important;
-        border-radius: 8px !important;
-        padding: 4px 12px !important;
+        border-radius: 6px !important;
+        padding: 2px 8px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         cursor: pointer;
-    }}
-    .user-info-container {{
+    }
+    .header-logo-img {
+        max-height: 42px !important;
+        width: auto !important;
+        object-fit: contain !important;
+        display: block !important;
+    }
+    .user-info-container {
         display: flex !important;
         align-items: center !important;
-        gap: 12px !important;
+        gap: 8px !important;
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
-        padding: 8px 16px !important;
-        border-radius: 30px !important;
-    }}
-    .user-text-info {{
+        padding: 4px 10px !important;
+        border-radius: 20px !important;
+    }
+    .user-text-info {
         display: flex !important;
         flex-direction: column !important;
         text-align: right !important;
-        line-height: 1.3 !important;
-    }}
-    .user-name {{
+        line-height: 1.1 !important;
+    }
+    .user-name {
         color: #ffffff !important;
-        font-size: 16px !important;
+        font-size: 13px !important;
         font-weight: 900 !important;
-        letter-spacing: 0.5px;
-    }}
-    .user-balance {{
+    }
+    .user-balance {
         color: #58a6ff !important;
-        font-size: 15px !important;
+        font-size: 12px !important;
         font-weight: 800 !important;
-    }}
-    .user-avatar {{
+    }
+    .user-avatar {
         background-color: #f1c40f !important;
         color: #000000 !important;
         border-radius: 50% !important;
-        width: 40px !important;
-        height: 40px !important;
+        width: 30px !important;
+        height: 30px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 20px !important;
+        font-size: 14px !important;
         font-weight: bold !important;
-    }}
-    </style>
+    }
 
+    /* --- OPTIMIZACIÓN DE BOTONES Y TEXTOS PARA MÓVILES --- */
+    .block-container {
+        padding-top: 0.8rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 0.4rem !important;
+        padding-right: 0.4rem !important;
+        max-width: 100% !important;
+    }
+
+    /* Forzar que los botones de Streamlit tengan un tamaño uniforme y legible en celulares */
+    .stButton button {
+        width: 100% !important;
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+        padding: 0.2rem 0.1rem !important;
+        min-height: 36px !important;
+        font-size: 12px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .subasta-header {
+        font-size: clamp(16px, 4vw, 22px);
+        font-weight: 800;
+        color: #f1e05a;
+        margin-bottom: 4px;
+        border-bottom: 2px solid #f1e05a;
+        padding-bottom: 6px;
+    }
+    .live-clock-banner {
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        color: #58a6ff;
+        font-weight: 600;
+        margin-bottom: 10px;
+        display: inline-block;
+    }
+    .timer-box {
+        background-color: #161b22;
+        border: 2px solid #ff4757;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        font-size: clamp(14px, 3.5vw, 20px);
+        font-weight: bold;
+        color: #ff4757;
+        margin-bottom: 10px;
+    }
+    .cierre-info-box {
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        padding: 8px;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 14px;
+        color: #f0f6fc;
+        margin-bottom: 10px;
+    }
+
+    /* Media query para asegurar que los selectbox y métricas no rompan en pantallas pequeñas */
+    @media (max-width: 640px) {
+        .header-container {
+            padding: 6px 8px !important;
+        }
+        .header-logo-img {
+            max-height: 34px !important;
+        }
+        .user-info-container {
+            padding: 4px 8px !important;
+            gap: 6px !important;
+        }
+        .user-name { font-size: 11px !important; }
+        .user-balance { font-size: 11px !important; }
+        .user-avatar { width: 26px !important; height: 26px !important; font-size: 12px !important; }
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# --- CABECERA SUPERIOR HTML ---
+st.markdown(f"""
     <div class="header-container">
-        <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
             <div class="menu-icon-box">☰</div>
         </div>
-        <div style="display: flex !important; align-items: center !important; justify-content: center !important; flex-grow: 1; text-align: center; overflow: hidden; padding: 0 10px;">
+        <div style="display: flex !important; align-items: center !important; justify-content: center !important; flex-grow: 1; text-align: center; overflow: hidden; padding: 0 5px;">
             {logo_display}
         </div>
         <div class="user-info-container">
-            <span style="color: #f1c40f !important; font-size: 24px !important;">🛢️</span>
+            <span style="color: #f1c40f !important; font-size: 20px !important;">🛢️</span>
             <div class="user-text-info">
                 <span class="user-name">ADMIN</span>
                 <span class="user-balance">Bs. 50.000,00</span>
@@ -159,11 +256,11 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- BOTONES SUPERIORES ESTILO TARJETA PARA NAVEGACIÓN (ZONA ADMIN A LA IZQUIERDA) ---
-col_nav_admin, col_nav1, col_nav2, col_nav3 = st.columns([2, 3, 3, 3])
+# --- BOTONES SUPERIORES DE NAVEGACIÓN ---
+col_nav_admin, col_nav1, col_nav2, col_nav3 = st.columns([1.8, 2.8, 2.8, 2.8])
 
 with col_nav_admin:
-    if st.button("🔒 ZONA ADMIN", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "🔒 Zona Admin" else "secondary"):
+    if st.button("🔒 ADMIN", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "🔒 Zona Admin" else "secondary"):
         st.session_state.menu_principal_opcion = "🔒 Zona Admin"
         st.rerun()
 
@@ -183,81 +280,6 @@ with col_nav3:
         st.rerun()
 
 st.markdown("---")
-
-# --- ESTILOS CSS GENERALES ---
-st.markdown("""
-    <style>
-    .stApp {
-        background-color: #0e1117;
-        color: #f0f6fc;
-    }
-    
-    div[data-testid="stTabs"] {
-        display: none !important;
-    }
-
-    .subasta-header {
-        font-size: clamp(18px, 3.5vw, 24px);
-        font-weight: 800;
-        color: #f1e05a;
-        margin-bottom: 4px;
-        border-bottom: 2px solid #f1e05a;
-        padding-bottom: 6px;
-    }
-    .live-clock-banner {
-        background-color: #161b22;
-        border: 1px solid #30363d;
-        padding: 6px 12px;
-        border-radius: 6px;
-        font-size: 14px;
-        color: #58a6ff;
-        font-weight: 600;
-        margin-bottom: 12px;
-        display: inline-block;
-    }
-    .timer-box {
-        background-color: #161b22;
-        border: 2px solid #ff4757;
-        padding: 12px;
-        border-radius: 8px;
-        text-align: center;
-        font-size: clamp(16px, 3.5vw, 22px);
-        font-weight: bold;
-        color: #ff4757;
-        margin-bottom: 12px;
-    }
-    .cierre-info-box {
-        background-color: #161b22;
-        border: 1px solid #30363d;
-        padding: 10px;
-        border-radius: 6px;
-        text-align: center;
-        font-size: 16px;
-        color: #f0f6fc;
-        margin-bottom: 12px;
-    }
-    
-    .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 2rem !important;
-        padding-left: 0.6rem !important;
-        padding-right: 0.6rem !important;
-        max-width: 100% !important;
-    }
-    
-    .stButton button {
-        width: 100% !important;
-        border-radius: 6px !important;
-        font-weight: 500 !important;
-        padding: 0.1rem 0.02rem !important;
-        min-height: 32px !important;
-        line-height: 1.1 !important;
-        font-size: 11px !important;
-        white-space: pre-line !important;
-        letter-spacing: 0.2px;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 # --- JUGADORES BASE ---
 @st.cache_data
@@ -347,19 +369,19 @@ def generar_tabla_html_remate(remates_dict):
         .tabla-referencia th {
             border-top: 3px solid #dfc729;
             border-bottom: 2px solid #dfc729;
-            padding: 12px 8px;
+            padding: 10px 6px;
             text-align: left;
             font-weight: 800;
             background-color: #ffffff;
             color: #000000;
-            font-size: 16px;
+            font-size: 14px;
         }
         .tabla-referencia td {
             border-bottom: 1px solid #dfc729;
-            padding: 10px 8px;
+            padding: 8px 6px;
             background-color: #fbfbfb;
             color: #111111;
-            font-size: 15px;
+            font-size: 13px;
             vertical-align: middle;
         }
         .tabla-referencia tr:nth-child(even) td {
@@ -369,10 +391,10 @@ def generar_tabla_html_remate(remates_dict):
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             font-weight: bold;
-            font-size: 15px;
+            font-size: 13px;
             border-radius: 2px;
             box-sizing: border-box;
         }
@@ -386,14 +408,14 @@ def generar_tabla_html_remate(remates_dict):
         .badge-default { background-color: #6c757d; color: #ffffff; }
     </style>
     
-    <div style="background-color: #ffffff; padding: 10px; border-radius: 8px;">
+    <div style="background-color: #ffffff; padding: 6px; border-radius: 8px; overflow-x: auto;">
         <table class="tabla-referencia">
             <thead>
                 <tr>
-                    <th style="width: 5%;">No</th>
-                    <th style="width: 35%;">Ejemplar</th>
-                    <th style="width: 30%;">Comprador</th>
-                    <th style="width: 30%;">Monto Actual</th>
+                    <th style="width: 8%;">No</th>
+                    <th style="width: 37%;">Ejemplar</th>
+                    <th style="width: 27%;">Comprador</th>
+                    <th style="width: 28%;">Monto Actual</th>
                 </tr>
             </thead>
             <tbody>
@@ -420,7 +442,7 @@ def generar_tabla_html_remate(remates_dict):
         html += f"""
                 <tr>
                     <td><span class="badge-numero {badge_class}">{num}</span></td>
-                    <td style="font-weight: 800; font-size: 16px;">{nombre_solo.upper()}</td>
+                    <td style="font-weight: 800; font-size: 14px;">{nombre_solo.upper()}</td>
                     <td>{info['jugador']}</td>
                     <td style="font-weight: bold; color: #000000;">{formatear_bs(info['monto'])}</td>
                 </tr>
@@ -616,31 +638,24 @@ if menu_principal_opcion == "Remates":
                 background-color: #ffffff !important;
                 color: #111111 !important;
                 border: 1px solid #e2e8f0 !important;
-                border-radius: 25px !important;
+                border-radius: 20px !important;
                 font-weight: 600 !important;
                 font-size: 11px !important;
-                padding: 0px 2px !important;
-                min-height: 26px !important;
-                height: 26px !important;
-                transition: all 0.2s ease !important;
-                line-height: 1 !important;
+                padding: 0px 1px !important;
+                min-height: 24px !important;
+                height: 24px !important;
             }
             button[kind="secondary"] * { color: #111111 !important; }
-            button[kind="secondary"]:hover {
-                background-color: #f1f5f9 !important;
-                border-color: #cbd5e1 !important;
-            }
             button[kind="primary"] {
                 background-color: #0b1120 !important;
                 color: #ffffff !important;
                 border: 1px solid #0b1120 !important;
-                border-radius: 25px !important;
+                border-radius: 20px !important;
                 font-weight: 700 !important;
                 font-size: 11px !important;
-                padding: 0px 2px !important;
-                min-height: 26px !important;
-                height: 26px !important;
-                line-height: 1 !important;
+                padding: 0px 1px !important;
+                min-height: 24px !important;
+                height: 24px !important;
             }
             button[kind="primary"] * { color: #ffffff !important; }
             </style>
@@ -653,11 +668,11 @@ if menu_principal_opcion == "Remates":
                 carr_activa = st.session_state["carrera_remate_activa_seleccionada"]
 
             cantidad_carreras = len(carreras_filtradas_visibles)
-            columnas_por_fila = 8
+            columnas_por_fila = min(cantidad_carreras, 6) if cantidad_carreras > 0 else 1
             
             for i in range(0, cantidad_carreras, columnas_por_fila):
                 grupo_carreras = carreras_filtradas_visibles[i:i+columnas_por_fila]
-                cols = st.columns(columnas_por_fila)
+                cols = st.columns(len(grupo_carreras))
                 
                 for j, c_nombre in enumerate(grupo_carreras):
                     abreviatura = obtener_abreviatura_carrera(c_nombre)
@@ -715,7 +730,7 @@ if menu_principal_opcion == "Remates":
             tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa])
             
             cantidad_filas = len(st.session_state.remates[carr_activa])
-            altura_dinamica = min(max(200, (cantidad_filas * 50) + 100), 700)
+            altura_dinamica = min(max(180, (cantidad_filas * 45) + 80), 600)
             
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
