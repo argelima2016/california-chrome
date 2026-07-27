@@ -486,10 +486,10 @@ if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponib
     st.session_state.carreras_habilitadas_dupleta = list(lista_carreras_disponibles)
 
 # --- MENÚ PRINCIPAL HORIZONTAL (4 BOTONES) ---
-col_menu1, col_menu2, col_menu3, col_menu4 = st.columns(4, gap="small")
+col_menu1, col_menu2, col_menu3, col_menu4 = st.columns([1, 2.5, 2.5, 2.5], gap="small")
 
 with col_menu1:
-    if st.button("🔒 ADMIN", key="menu_btn_admin_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "🔒 Zona Admin" else "secondary"):
+    if st.button("🔒", key="menu_btn_admin_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "🔒 Zona Admin" else "secondary"):
         st.session_state.menu_principal_opcion = "🔒 Zona Admin"
         st.rerun()
 
