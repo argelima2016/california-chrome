@@ -72,13 +72,13 @@ img_b64 = get_image_base64(nombres_archivos)
 if img_b64:
     logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" class="header-logo-img" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 18px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 16px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS (DISEÑO MÁS GRANDE Y LEGIBLE) ---
+# --- ESTILOS CSS (ADAPTABLES Y VISIBLES EN MÓVIL Y PC) ---
 st.markdown("""
     <style>
     .stApp {
@@ -91,7 +91,7 @@ st.markdown("""
     .header-container {
         background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
         width: 100% !important;
-        padding: 12px 18px !important;
+        padding: 10px 12px !important;
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
@@ -99,7 +99,7 @@ st.markdown("""
         border-bottom: 3px solid #30363d !important;
         margin: -1rem -1rem 0 -1rem !important;
         box-sizing: border-box !important;
-        gap: 12px;
+        gap: 6px;
     }
     .header-left-clock {
         display: flex !important;
@@ -107,33 +107,34 @@ st.markdown("""
         justify-content: center !important;
         background: #0d1117 !important;
         border: 2px solid #30363d !important;
-        padding: 6px 12px !important;
-        border-radius: 10px !important;
+        padding: 4px 8px !important;
+        border-radius: 8px !important;
         text-align: left !important;
+        flex-shrink: 0;
     }
     .clock-time {
         color: #58a6ff !important;
-        font-size: 15px !important;
+        font-size: 13px !important;
         font-weight: 900 !important;
-        letter-spacing: 0.5px;
-        line-height: 1.2;
+        letter-spacing: 0.3px;
+        line-height: 1.1;
     }
     .clock-date {
         color: #8b949e !important;
-        font-size: 11px !important;
+        font-size: 10px !important;
         font-weight: 700 !important;
-        letter-spacing: 0.3px;
     }
     .header-center-logo {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         flex: 1 !important;
-        overflow: hidden !important;
-        padding: 0 8px !important;
+        min-width: 0 !important;
+        padding: 0 4px !important;
     }
     .header-logo-img {
-        max-height: 110px !important;
+        max-height: 75px !important;
+        max-width: 100% !important;
         width: auto !important;
         object-fit: contain !important;
         display: block !important;
@@ -142,41 +143,42 @@ st.markdown("""
     .user-info-container {
         display: flex !important;
         align-items: center !important;
-        gap: 12px !important;
+        gap: 8px !important;
         background-color: #161b22 !important;
         border: 2px solid #30363d !important;
-        padding: 6px 14px !important;
-        border-radius: 25px !important;
+        padding: 4px 10px !important;
+        border-radius: 20px !important;
+        flex-shrink: 0;
     }
     .user-text-info {
         display: flex !important;
         flex-direction: column !important;
         text-align: right !important;
-        line-height: 1.2 !important;
+        line-height: 1.1 !important;
     }
     .user-name {
         color: #ffffff !important;
-        font-size: 13px !important;
+        font-size: 11px !important;
         font-weight: 900 !important;
-        letter-spacing: 0.3px;
     }
     .user-balance {
         color: #58a6ff !important;
-        font-size: 13px !important;
+        font-size: 11px !important;
         font-weight: 900 !important;
     }
     .user-avatar {
         background-color: #f1c40f !important;
         color: #000000 !important;
         border-radius: 50% !important;
-        width: 44px !important;
-        height: 44px !important;
+        width: 36px !important;
+        height: 36px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 20px !important;
+        font-size: 16px !important;
         font-weight: bold !important;
         box-shadow: 0px 3px 6px rgba(0,0,0,0.6);
+        flex-shrink: 0;
     }
     .block-container {
         padding-top: 0.4rem !important;
@@ -316,7 +318,7 @@ elif neto_usuario < 0:
 else:
     etiqueta_balance = "Al día: Bs. 0,00"
 
-# --- CABECERA SUPERIOR GRANDE Y LEGIBLE ---
+# --- CABECERA SUPERIOR OPTIMIZADA PARA MÓVIL Y PC ---
 st.markdown(f"""
     <div class="header-container">
         <div class="header-left-clock">
@@ -1247,6 +1249,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             value="",
             height=220,
             key="text_area_web_copiado",
+5.0
             placeholder="Primera Carrera - 1.200 mts - 02:00 PM\n1 - Rey David\n2 - Gran Amigo\n\nSegunda Carrera - 1.400 mts - 02:30 PM\n1 - Rayo Negro"
         )
         if st.button("🚀 Procesar Contenido Pegado", key="btn_procesar_texto_pegado", use_container_width=True, type="primary"):
