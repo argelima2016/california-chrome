@@ -269,6 +269,8 @@ def cargar_jugadores_base():
 def inicializar_estado_global():
     if 'menu_principal_opcion' not in st.session_state:
         st.session_state.menu_principal_opcion = "Remates"
+    if 'sub_remate_opcion' not in st.session_state:
+        st.session_state.sub_remate_opcion = "En Vivo"
     if 'usuario_activo' not in st.session_state:
         st.session_state.usuario_activo = "LUIS"
     if 'lista_jugadores' not in st.session_state:
@@ -305,6 +307,8 @@ def inicializar_estado_global():
         st.session_state.dupleta_bloqueada = False
     if 'carreras_activas_remate' not in st.session_state:
         st.session_state.carreras_activas_remate = []
+    if 'carreras_bloqueadas_remate' not in st.session_state:
+        st.session_state.carreras_bloqueadas_remate = {}
     if 'programa_pdf_bytes' not in st.session_state:
         st.session_state.programa_pdf_bytes = None
     if 'programa_pdf_nombre' not in st.session_state:
@@ -328,7 +332,7 @@ def obtener_abreviatura_carrera(nombre_carrera):
         return f"C{match.group(0)}"
     return nombre_carrera[:3].upper()
 
-def generar_tabla_html_remate(remates_dict):
+def generar_tabla_html_remate(remates_dict, modo_ciego=False):
     html = """
     <style>
         .tabla-referencia {
@@ -407,12 +411,15 @@ def generar_tabla_html_remate(remates_dict):
         elif num == 7: badge_class = "badge-7"
         else: badge_class = "badge-default"
         
+        comprador_display = "🔒 OCULTO (Ciego)" if modo_ciego else info['jugador']
+        monto_display = "🔒 OCULTO" if modo_ciego else formatear_bs(info['monto'])
+        
         html += f"""
                 <tr>
                     <td><span class="badge-numero {badge_class}">{num}</span></td>
                     <td style="font-weight: 800; font-size: 12px;">{nombre_solo.upper()}</td>
-                    <td>{info['jugador']}</td>
-                    <td style="font-weight: bold; color: #000000;">{formatear_bs(info['monto'])}</td>
+                    <td>{comprador_display}</td>
+                    <td style="font-weight: bold; color: #000000;">{monto_display}</td>
                 </tr>
         """
     html += """
@@ -597,19 +604,45 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# 1. MÓDULO DE REMATES
+# 1. MÓDULO DE REMATES (3 OPCIONES: ADELANTADOS, CIEGOS, EN VIVO)
 # =========================================================================
 if menu_principal_opcion == "Remates":
+    # Selector de las 3 opciones de remate solicitadas
+    col_so1, col_so2, col_so3 = st.columns(3, gap="small")
+    with col_so1:
+        if st.button("⏱️ Adelantados", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
+            st.session_state.sub_remate_opcion = "Adelantados"
+            st.rerun()
+    with col_so2:
+        if st.button("🙈 Ciegos", key="sub_rem_ciegos", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Ciegos" else "secondary"):
+            st.session_state.sub_remate_opcion = "Ciegos"
+            st.rerun()
+    with col_so3:
+        if st.button("⚡ En Vivo", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
+            st.session_state.sub_remate_opcion = "En Vivo"
+            st.rerun()
+
+    st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+
+    modo_actual_remate = st.session_state.sub_remate_opcion
+    st.markdown(f"### 🏇 Modo de Remate: **{modo_actual_remate.upper()}**")
+
     if not lista_carreras_disponibles:
         st.warning("⚠️ No hay carreras cargadas en el sistema.")
     else:
-        carreras_filtradas_visibles = [
-            c for c in lista_carreras_disponibles 
-            if (c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False)
-        ]
+        # Filtrar carreras permitidas según la activación y bloqueo estricto en la Zona Admin
+        carreras_filtradas_visibles = []
+        for c in lista_carreras_disponibles:
+            bloqueada_info = st.session_state.carreras_bloqueadas_remate.get(c, {})
+            esta_bloqueada_general = bloqueada_info.get("bloqueada", False)
+            bloq_modo = bloqueada_info.get(modo_actual_remate, False)
+
+            if not esta_bloqueada_general and not bloq_modo:
+                if (c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False):
+                    carreras_filtradas_visibles.append(c)
         
         if not carreras_filtradas_visibles:
-            st.info("ℹ️ No hay carreras activas ni cerradas para mostrar. Selecciona carreras en el menú lateral.")
+            st.info("ℹ️ No hay carreras activas o habilitadas para este modo de remate. Configúralas en la Zona Admin (Banco).")
         else:
             if "carrera_remate_activa_seleccionada" not in st.session_state or st.session_state["carrera_remate_activa_seleccionada"] not in carreras_filtradas_visibles:
                 carr_activa = carreras_filtradas_visibles[0]
@@ -638,7 +671,7 @@ if menu_principal_opcion == "Remates":
             if carrera_cerrada:
                 st.error(f"🔴 La carrera **{carr_activa}** se encuentra **CERRADA** para nuevas pujas.")
             else:
-                st.success(f"🟢 Panel activo y abierto para: **{carr_activa}**")
+                st.success(f"🟢 Panel activo y abierto para: **{carr_activa}** ({modo_actual_remate})")
 
             # --- MOSTRAR CONDICIÓN, HORA Y DISTANCIA ---
             if carr_activa not in st.session_state.detalles_carreras:
@@ -683,7 +716,9 @@ if menu_principal_opcion == "Remates":
                         if restantes_10s > 0:
                             st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa})</div>", unsafe_allow_html=True)
 
-            tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa])
+            # Si es modo Ciegos, ocultar montos y compradores en la tabla
+            es_ciego = (modo_actual_remate == "Ciegos")
+            tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], modo_ciego=es_ciego)
             cantidad_filas = len(st.session_state.remates[carr_activa])
             altura_dinamica = min(max(150, (cantidad_filas * 38) + 60), 450)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
@@ -744,7 +779,7 @@ if menu_principal_opcion == "Remates":
                                 st.session_state.historial_jugadas.append({
                                     "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
                                     "jugador": st.session_state.usuario_activo,
-                                    "tipo": "Remate",
+                                    "tipo": f"Remate ({modo_actual_remate})",
                                     "carrera": carr_activa,
                                     "detalle": caballo_seleccionado,
                                     "monto": monto_puja
@@ -857,7 +892,7 @@ elif menu_principal_opcion == "Dupletas":
                 st.caption(f"Emitido el: {t['fecha']}")
 
 # =========================================================================
-# 3. MÓDULO DE CUENTAS (SOLO DEUDA E HISTORIAL DEL JUGADOR ACTIVO)
+# 3. MÓDULO DE CUENTAS
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
     st.markdown("<div class='subasta-header'>📊 Mis Cuentas y Estado de Deuda</div>", unsafe_allow_html=True)
@@ -898,7 +933,7 @@ elif menu_principal_opcion == "Cuentas":
         st.dataframe(pd.DataFrame(datos_historial), use_container_width=True, hide_index=True)
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR
+# 4. ZONA DE ADMINISTRADOR (BANCO DE CARRERAS, ACTIVACIÓN Y BLOQUEO)
 # =========================================================================
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Zona de Administrador</div>", unsafe_allow_html=True)
@@ -917,14 +952,36 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     tab_actual = st.session_state.admin_tab_seleccionada
 
     if tab_actual == "✍️ Banco":
-        st.markdown("### ✍️ Banco de Caballos y Edición de Condición, Hora y Distancia")
+        st.markdown("### ✍️ Banco de Carreras: Activación, Bloqueo y Edición")
         carr_banco_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="adm_banco_sel_carrera")
         
         if carr_banco_sel not in st.session_state.banco_caballos_por_carrera:
             st.session_state.banco_caballos_por_carrera[carr_banco_sel] = []
         if carr_banco_sel not in st.session_state.detalles_carreras:
             st.session_state.detalles_carreras[carr_banco_sel] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM"}
+        if carr_banco_sel not in st.session_state.carreras_bloqueadas_remate:
+            st.session_state.carreras_bloqueadas_remate[carr_banco_sel] = {"bloqueada": False, "Adelantados": False, "Ciegos": False, "En Vivo": False}
 
+        # --- GESTIÓN DE ACTIVACIÓN Y BLOQUEO POR MODALIDAD ---
+        with st.container(border=True):
+            st.markdown(f"⚙️ **Control de Estado para {carr_banco_sel}**")
+            bloq_actual = st.session_state.carreras_bloqueadas_remate[carr_banco_sel]
+            
+            b_gen = st.checkbox("Bloquear Carrera Completamente", value=bloq_actual.get("bloqueada", False), key=f"bloq_gen_{carr_banco_sel}")
+            b_adel = st.checkbox("Bloquear solo en Adelantados", value=bloq_actual.get("Adelantados", False), key=f"bloq_adel_{carr_banco_sel}")
+            b_cieg = st.checkbox("Bloquear solo en Ciegos", value=bloq_actual.get("Ciegos", False), key=f"bloq_cieg_{carr_banco_sel}")
+            b_env = st.checkbox("Bloquear solo en En Vivo", value=bloq_actual.get("En Vivo", False), key=f"bloq_env_{carr_banco_sel}")
+            
+            if st.button("💾 Guardar Bloqueos / Accesos", key=f"btn_save_bloq_{carr_banco_sel}", use_container_width=True, type="primary"):
+                st.session_state.carreras_bloqueadas_remate[carr_banco_sel] = {
+                    "bloqueada": b_gen, "Adelantados": b_adel, "Ciegos": b_cieg, "En Vivo": b_env
+                }
+                st.toast("✅ ¡Configuración de bloqueo actualizada!")
+                st.rerun()
+
+        st.markdown("---")
+
+        # --- EDICIÓN DE CONDICIÓN, HORA Y DISTANCIA ---
         det_actuales = st.session_state.detalles_carreras[carr_banco_sel]
         with st.container(border=True):
             st.markdown(f"🛠️ **Editar Detalles de {carr_banco_sel}**")
