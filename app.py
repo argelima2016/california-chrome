@@ -212,7 +212,7 @@ st.markdown("""
         color: #ff4757;
         margin-bottom: 8px;
     }
-    .c cierre-info-box {
+    .cierre-info-box {
         background-color: #161b22;
         border: 1px solid #30363d;
         padding: 4px;
@@ -638,24 +638,11 @@ if menu_principal_opcion == "Remates":
             else:
                 st.success(f"🟢 Panel activo y abierto para: **{carr_activa}**")
 
-            # --- MOSTRAR Y EDITAR CONDICIÓN, HORA Y DISTANCIA EN LA TABLA DE REMATES ---
+            # --- MOSTRAR CONDICIÓN, HORA Y DISTANCIA EN LA TABLA DE REMATES ---
             if carr_activa not in st.session_state.detalles_carreras:
                 st.session_state.detalles_carreras[carr_activa] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM"}
             
             detalles_carr = st.session_state.detalles_carreras[carr_activa]
-
-            with st.expander(f"📝 Editar Condición, Hora y Distancia ({carr_activa})", expanded=False):
-                nuevo_cond = st.text_input("Condición", value=detalles_carr.get('condicion', ''), key=f"edit_cond_{carr_activa}")
-                col_ed1, col_ed2 = st.columns(2)
-                with col_ed1:
-                    nuevo_dist = st.text_input("Distancia", value=detalles_carr.get('distancia', ''), key=f"edit_dist_{carr_activa}")
-                with col_ed2:
-                    nuevo_hora = st.text_input("Hora", value=detalles_carr.get('hora', ''), key=f"edit_hora_{carr_activa}")
-                
-                if st.button("💾 Guardar Cambios de Carrera", key=f"btn_save_det_{carr_activa}", use_container_width=True, type="primary"):
-                    st.session_state.detalles_carreras[carr_activa] = {"condicion": nuevo_cond, "distancia": nuevo_dist, "hora": nuevo_hora}
-                    st.toast("✅ ¡Detalles de la carrera actualizados!")
-                    st.rerun()
 
             st.markdown(f"""
                 <div class="carrera-condicion-card">
@@ -884,12 +871,32 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     tab_actual = st.session_state.admin_tab_seleccionada
 
     if tab_actual == "✍️ Banco":
-        st.markdown("### ✍️ Banco de Caballos por Carrera")
+        st.markdown("### ✍️ Banco de Caballos y Edición de Carreras")
         carr_banco_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="adm_banco_sel_carrera")
         
         if carr_banco_sel not in st.session_state.banco_caballos_por_carrera:
             st.session_state.banco_caballos_por_carrera[carr_banco_sel] = []
+        if carr_banco_sel not in st.session_state.detalles_carreras:
+            st.session_state.detalles_carreras[carr_banco_sel] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM"}
+
+        # --- EDICIÓN DE CONDICIÓN, HORA Y DISTANCIA DESDE EL BANCO ---
+        det_actuales = st.session_state.detalles_carreras[carr_banco_sel]
+        with st.container(border=True):
+            st.markdown(f"🛠️ **Editar Detalles de {carr_banco_sel}**")
+            edit_cond = st.text_input("Condición de la carrera", value=det_actuales.get('condicion', ''), key=f"banco_cond_{carr_banco_sel}")
+            col_b1, col_b2 = st.columns(2)
+            with col_b1:
+                edit_dist = st.text_input("Distancia", value=det_actuales.get('distancia', ''), key=f"banco_dist_{carr_banco_sel}")
+            with col_b2:
+                edit_hora = st.text_input("Hora", value=det_actuales.get('hora', ''), key=f"banco_hora_{carr_banco_sel}")
             
+            if st.button("💾 Guardar Detalles de Carrera", key=f"btn_save_banco_det_{carr_banco_sel}", use_container_width=True, type="primary"):
+                st.session_state.detalles_carreras[carr_banco_sel] = {"condicion": edit_cond, "distancia": edit_dist, "hora": edit_hora}
+                st.toast("✅ ¡Detalles guardados con éxito!")
+                st.rerun()
+
+        st.markdown("---")
+        st.markdown("#### 🐎 Ejemplares Inscritos")
         with st.container(border=True):
             nuevo_nom_banco = st.text_input("Nombre del Ejemplar", placeholder="Ej: Rey David", key=f"adm_banco_input_{carr_banco_sel}")
             if st.button("💾 Agregar al Banco", key=f"adm_banco_btn_add_{carr_banco_sel}", use_container_width=True, type="primary"):
