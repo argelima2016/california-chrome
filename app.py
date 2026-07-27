@@ -1007,38 +1007,13 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.rerun()
 
     elif tab_actual == "📄 Importar Web/Texto":
-        st.markdown("### 🌐 Importar Inscritos desde una Página Web")
-        url_web = st.text_input("🔗 URL de la página de inscritos:", placeholder="https://ejemplo.com/programa", key="input_url_web_bs")
-        if st.button("🌐 Extraer e Importar desde la URL", key="btn_extraer_bs_url", use_container_width=True, type="primary"):
-            if url_web.strip():
-                try:
-                    with st.spinner("Leyendo la página web..."):
-                        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-                        resp = requests.get(url_web.strip(), headers=headers, timeout=15)
-                        if resp.status_code == 200:
-                            soup = BeautifulSoup(resp.text, 'html.parser')
-                            for script in soup(["script", "style"]):
-                                script.extract()
-                            texto_web = soup.get_text(separator='\n')
-                            
-                            if procesar_texto_flexible(texto_web):
-                                st.success("✅ ¡Carreras y ejemplares extraídos con éxito desde la URL!")
-                                st.rerun()
-                            else:
-                                st.warning("⚠️ No se pudieron detectar carreras automáticamente con el formato de la página. Usa el cuadro de texto de abajo para pegar el contenido copiado directamente.")
-                        else:
-                            st.error(f"❌ Error de acceso web. Código HTTP: {resp.status_code}")
-                except Exception as e:
-                    st.error(f"❌ Error al conectar: {e}")
-            else:
-                st.warning("⚠️ Ingresa una URL válida.")
-
-        st.markdown("---")
-        st.markdown("O pega el texto copiado de la página web:")
+        st.markdown("### 🌐 Importar Inscritos y Condiciones por Texto")
+        st.markdown("Pega el texto copiado de la página web (cada carrera con su condición, distancia, hora y sus ejemplares):")
+        
         texto_copiado_web = st.text_area(
             "Contenido copiado:",
             value="",
-            height=200,
+            height=220,
             key="text_area_web_copiado",
             placeholder="Primera Carrera - Condición: Clásico - 1.200 mts - 02:00 PM\n1 - Rey David\n2 - Gran Amigo"
         )
@@ -1047,5 +1022,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if procesar_texto_flexible(texto_copiado_web):
                     st.success("✅ ¡Inscritos organizados por carrera con éxito!")
                     st.rerun()
+                else:
+                    st.warning("⚠️ Asegúrate de incluir el nombre de la carrera (ej: 'Primera Carrera') seguido de los ejemplares numerados (ej: '1 - Nombre').")
             else:
                 st.warning("⚠️ El campo de texto está vacío.")
