@@ -332,7 +332,7 @@ def obtener_abreviatura_carrera(nombre_carrera):
         return f"C{match.group(0)}"
     return nombre_carrera[:3].upper()
 
-def generar_tabla_html_remate(remates_dict, modo_ciego=False):
+def generar_tabla_html_remate(remates_dict):
     html = """
     <style>
         .tabla-referencia {
@@ -411,15 +411,12 @@ def generar_tabla_html_remate(remates_dict, modo_ciego=False):
         elif num == 7: badge_class = "badge-7"
         else: badge_class = "badge-default"
         
-        comprador_display = "🔒 OCULTO (Ciego)" if modo_ciego else info['jugador']
-        monto_display = "🔒 OCULTO" if modo_ciego else formatear_bs(info['monto'])
-        
         html += f"""
                 <tr>
                     <td><span class="badge-numero {badge_class}">{num}</span></td>
                     <td style="font-weight: 800; font-size: 12px;">{nombre_solo.upper()}</td>
-                    <td>{comprador_display}</td>
-                    <td style="font-weight: bold; color: #000000;">{monto_display}</td>
+                    <td>{info['jugador']}</td>
+                    <td style="font-weight: bold; color: #000000;">{formatear_bs(info['monto'])}</td>
                 </tr>
         """
     html += """
@@ -481,7 +478,12 @@ def procesar_texto_flexible(texto_a_procesar):
                 if match_h:
                     hora = match_h.group(1).upper()
 
-                detalles_temporal[carrera_actual_detectada] = {"condicion": cond, "distancia": dist, "hora": hora}
+                detalles_temporal[carrera_actual_detectada] = {
+                    "condicion": cond, 
+                    "distancia": dist, 
+                    "hora": hora,
+                    "monto_fijo_ciego": 500.0  # Monto fijo inicial por defecto para remate ciego
+                }
                 continue
 
             if carrera_actual_detectada:
@@ -527,7 +529,7 @@ if not st.session_state.remates:
         carr_nombre = f"Carrera {i}"
         st.session_state.banco_caballos_por_carrera[carr_nombre] = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
         st.session_state.remates[carr_nombre] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
-        st.session_state.detalles_carreras[carr_nombre] = {"condicion": "Condición estándar", "distancia": "1200 mts", "hora": "02:00 PM"}
+        st.session_state.detalles_carreras[carr_nombre] = {"condicion": "Condición estándar", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0}
 
 lista_carreras_disponibles = list(st.session_state.remates.keys())
 
@@ -625,7 +627,6 @@ if menu_principal_opcion == "Remates":
 
     modo_actual_remate = st.session_state.sub_remate_opcion
 
-    # Verificar si esta modalidad global está bloqueada desde la Zona Admin
     if st.session_state.bloqueo_modalidades_remate.get(modo_actual_remate, False):
         st.error(f"🔒 **BLOQUEADO:** El módulo de remates **{modo_actual_remate}** se encuentra bloqueado por el administrador.")
     else:
@@ -673,7 +674,7 @@ if menu_principal_opcion == "Remates":
 
                 # --- MOSTRAR CONDICIÓN, HORA Y DISTANCIA ---
                 if carr_activa not in st.session_state.detalles_carreras:
-                    st.session_state.detalles_carreras[carr_activa] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM"}
+                    st.session_state.detalles_carreras[carr_activa] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0}
                 
                 detalles_carr = st.session_state.detalles_carreras[carr_activa]
 
@@ -682,6 +683,7 @@ if menu_principal_opcion == "Remates":
                         <b>🏁 {carr_activa}</b><br>
                         🏷️ <b>Condición:</b> {detalles_carr.get('condicion', 'N/A')}<br>
                         📏 <b>Distancia:</b> {detalles_carr.get('distancia', 'N/A')} &nbsp;|&nbsp; ⏰ <b>Hora:</b> {detalles_carr.get('hora', 'N/A')}
+                        {f"<br>💰 <b>Monto Fijo (Ciego):</b> {formatear_bs(detalles_carr.get('monto_fijo_ciego', 500.0))}" if modo_actual_remate == "Ciegos" else ""}
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -714,8 +716,8 @@ if menu_principal_opcion == "Remates":
                             if restantes_10s > 0:
                                 st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa})</div>", unsafe_allow_html=True)
 
-                es_ciego = (modo_actual_remate == "Ciegos")
-                tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], modo_ciego=es_ciego)
+                # En Remate Ciego SE VE el comprador y el monto fijo fijado (ya no se oculta)
+                tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], modo_ciego=False)
                 cantidad_filas = len(st.session_state.remates[carr_activa])
                 altura_dinamica = min(max(150, (cantidad_filas * 38) + 60), 450)
                 components.html(tabla_html, height=altura_dinamica, scrolling=True)
@@ -731,60 +733,96 @@ if menu_principal_opcion == "Remates":
                 st.metric(f"🏆 Premio Total ({carr_activa})", formatear_bs(premio_total_calculado))
 
                 with st.container(border=True):
-                    st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
-                    lista_caballos_activos = list(st.session_state.remates[carr_activa].keys())
-                    
-                    if not lista_caballos_activos:
-                        st.warning("Sin ejemplares inscritos en esta carrera.")
-                    else:
-                        k_sel_cab = f"rem_caballo_activo_click_{carr_activa}"
-                        if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
-                            st.session_state[k_sel_cab] = lista_caballos_activos[0]
-                            
-                        st.markdown(f"🔹 **1. Seleccionar Ejemplar (Total inscritos: {len(lista_caballos_activos)}):**")
-                        cantidad_ejemplares = len(lista_caballos_activos)
-                        cols_ejemplares = min(4, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
-                        num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
-                        
-                        idx_cab = 0
-                        for f in range(num_filas):
-                            cols_fila = st.columns(cols_ejemplares, gap="small")
-                            for c in range(cols_ejemplares):
-                                if idx_cab < cantidad_ejemplares:
-                                    cab_item = lista_caballos_activos[idx_cab]
-                                    num_parte = cab_item.split(" - ")[0]
-                                    with cols_fila[c]:
-                                        if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{idx_cab}", use_container_width=True):
-                                            st.session_state[k_sel_cab] = cab_item
-                                    idx_cab += 1
-                        
-                        caballo_seleccionado = st.session_state[k_sel_cab]
-                        st.info(f"Ejemplar activo en {carr_activa}: **{caballo_seleccionado}**")
+                    if modo_actual_remate == "Ciegos":
+                        st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
+                        monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
+                        st.info(f"💰 Monto fijo preestablecido para esta carrera: **{formatear_bs(monto_fijo_carrera)}**")
 
-                        puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
-                        opciones_escala = obtener_siguientes_montos(puja_actual)
-                        monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{carr_activa}_{caballo_seleccionado}")
-                        
-                        if carrera_cerrada:
-                            st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary", disabled=True)
+                        lista_caballos_activos = list(st.session_state.remates[carr_activa].keys())
+                        if not lista_caballos_activos:
+                            st.warning("Sin ejemplares inscritos.")
                         else:
-                            if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary"):
-                                if monto_puja <= puja_actual:
-                                    st.error("El monto debe ser mayor a la puja actual.")
-                                else:
-                                    st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
+                            caballo_seleccionado_ciego = st.selectbox("Seleccionar Ejemplar a Comprar", lista_caballos_activos, key=f"sel_cab_ciego_{carr_activa}")
+                            
+                            if carrera_cerrada:
+                                st.button("🔨 Asignar Ejemplar (Cerrado)", key=f"btn_ciego_cerrado_{carr_activa}", use_container_width=True, type="primary", disabled=True)
+                            else:
+                                if st.button("🔨 Comprar / Asignar Ejemplar (Monto Fijo)", key=f"btn_ciego_conf_{carr_activa}", use_container_width=True, type="primary"):
+                                    # Registrar comprador y el monto fijo fijado
+                                    st.session_state.remates[carr_activa][caballo_seleccionado_ciego] = {
+                                        "jugador": st.session_state.usuario_activo, 
+                                        "monto": monto_fijo_carrera
+                                    }
                                     st.session_state.historial_jugadas.append({
                                         "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
                                         "jugador": st.session_state.usuario_activo,
-                                        "tipo": f"Remate ({modo_actual_remate})",
+                                        "tipo": "Remate Ciego",
                                         "carrera": carr_activa,
-                                        "detalle": caballo_seleccionado,
-                                        "monto": monto_puja
+                                        "detalle": caballo_seleccionado_ciego,
+                                        "monto": monto_fijo_carrera
                                     })
-                                    if estado_conteo == "CONTEO_10S":
-                                        st.session_state.tiempo_inicio_conteo[carr_activa] = obtener_hora_venezuela_local()
-                                    st.success("✅ ¡Puja registrada correctamente y conteo reiniciado!")
+                                    # Actualizar saldo del usuario en cuentas
+                                    if st.session_state.usuario_activo not in st.session_state.cuentas:
+                                        st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                    st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
+                                    
+                                    st.success(f"✅ ¡Ejemplar asignado a {st.session_state.usuario_activo} por {formatear_bs(monto_fijo_carrera)}!")
                                     st.rerun()
+                    else:
+                        st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
+                        lista_caballos_activos = list(st.session_state.remates[carr_activa].keys())
+                        
+                        if not lista_caballos_activos:
+                            st.warning("Sin ejemplares inscritos en esta carrera.")
+                        else:
+                            k_sel_cab = f"rem_caballo_activo_click_{carr_activa}"
+                            if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
+                                st.session_state[k_sel_cab] = lista_caballos_activos[0]
+                                
+                            st.markdown(f"🔹 **1. Seleccionar Ejemplar (Total inscritos: {len(lista_caballos_activos)}):**")
+                            cantidad_ejemplares = len(lista_caballos_activos)
+                            cols_ejemplares = min(4, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
+                            num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
+                            
+                            idx_cab = 0
+                            for f in range(num_filas):
+                                cols_fila = st.columns(cols_ejemplares, gap="small")
+                                for c in range(cols_ejemplares):
+                                    if idx_cab < cantidad_ejemplares:
+                                        cab_item = lista_caballos_activos[idx_cab]
+                                        num_parte = cab_item.split(" - ")[0]
+                                        with cols_fila[c]:
+                                            if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{idx_cab}", use_container_width=True):
+                                                st.session_state[k_sel_cab] = cab_item
+                                        idx_cab += 1
+                            
+                            caballo_seleccionado = st.session_state[k_sel_cab]
+                            st.info(f"Ejemplar activo en {carr_activa}: **{caballo_seleccionado}**")
+
+                            puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
+                            opciones_escala = obtener_siguientes_montos(puja_actual)
+                            monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{carr_activa}_{caballo_seleccionado}")
+                            
+                            if carrera_cerrada:
+                                st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary", disabled=True)
+                            else:
+                                if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary"):
+                                    if monto_puja <= puja_actual:
+                                        st.error("El monto debe ser mayor a la puja actual.")
+                                    else:
+                                        st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
+                                        st.session_state.historial_jugadas.append({
+                                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                            "jugador": st.session_state.usuario_activo,
+                                            "tipo": f"Remate ({modo_actual_remate})",
+                                            "carrera": carr_activa,
+                                            "detalle": caballo_seleccionado,
+                                            "monto": monto_puja
+                                        })
+                                        if estado_conteo == "CONTEO_10S":
+                                            st.session_state.tiempo_inicio_conteo[carr_activa] = obtener_hora_venezuela_local()
+                                        st.success("✅ ¡Puja registrada correctamente y conteo reiniciado!")
+                                        st.rerun()
 
 # =========================================================================
 # 2. MÓDULO DE DUPLETAS
@@ -951,7 +989,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     if tab_actual == "✍️ Banco":
         st.markdown("### ✍️ Banco de Carreras y Control Global de Modalidades")
         
-        # --- CONTROL GLOBAL DE BLOQUEO DE MODALIDADES ---
         with st.container(border=True):
             st.markdown("🔒 **Bloqueo Global de Módulos de Remates (Aplica a toda la jornada)**")
             bloq_mods = st.session_state.bloqueo_modalidades_remate
@@ -973,21 +1010,28 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         if carr_banco_sel not in st.session_state.banco_caballos_por_carrera:
             st.session_state.banco_caballos_por_carrera[carr_banco_sel] = []
         if carr_banco_sel not in st.session_state.detalles_carreras:
-            st.session_state.detalles_carreras[carr_banco_sel] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM"}
+            st.session_state.detalles_carreras[carr_banco_sel] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0}
 
         det_actuales = st.session_state.detalles_carreras[carr_banco_sel]
         with st.container(border=True):
-            st.markdown(f"🛠️ **Editar Detalles de {carr_banco_sel}**")
+            st.markdown(f"🛠️ **Editar Detalles y Monto Fijo (Ciego) de {carr_banco_sel}**")
             edit_cond = st.text_input("Condición de la carrera", value=det_actuales.get('condicion', ''), key=f"banco_cond_{carr_banco_sel}")
-            col_b1, col_b2 = st.columns(2)
+            col_b1, col_b2, col_b3 = st.columns(3)
             with col_b1:
                 edit_dist = st.text_input("Distancia", value=det_actuales.get('distancia', ''), key=f"banco_dist_{carr_banco_sel}")
             with col_b2:
                 edit_hora = st.text_input("Hora", value=det_actuales.get('hora', ''), key=f"banco_hora_{carr_banco_sel}")
+            with col_b3:
+                edit_monto_ciego = st.number_input("Monto Fijo (Ciego)", min_value=0.0, value=float(det_actuales.get('monto_fijo_ciego', 500.0)), step=50.0, key=f"banco_monto_ciego_{carr_banco_sel}")
             
             if st.button("💾 Guardar Detalles de Carrera", key=f"btn_save_banco_det_{carr_banco_sel}", use_container_width=True, type="primary"):
-                st.session_state.detalles_carreras[carr_banco_sel] = {"condicion": edit_cond, "distancia": edit_dist, "hora": edit_hora}
-                st.toast("✅ ¡Detalles guardados con éxito!")
+                st.session_state.detalles_carreras[carr_banco_sel] = {
+                    "condicion": edit_cond, 
+                    "distancia": edit_dist, 
+                    "hora": edit_hora, 
+                    "monto_fijo_ciego": edit_monto_ciego
+                }
+                st.toast("✅ ¡Detalles y monto fijo guardados con éxito!")
                 st.rerun()
 
         st.markdown("---")
