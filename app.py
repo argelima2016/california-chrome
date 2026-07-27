@@ -72,13 +72,13 @@ img_b64 = get_image_base64(nombres_archivos)
 if img_b64:
     logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" class="header-logo-img" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 16px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 18px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS (COMPACTOS Y MODERNOS) ---
+# --- ESTILOS CSS (DISEÑO MÁS GRANDE Y LEGIBLE) ---
 st.markdown("""
     <style>
     .stApp {
@@ -91,38 +91,37 @@ st.markdown("""
     .header-container {
         background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
         width: 100% !important;
-        padding: 10px 14px !important;
+        padding: 12px 18px !important;
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
         align-items: center !important;
-        border-bottom: 2px solid #30363d !important;
+        border-bottom: 3px solid #30363d !important;
         margin: -1rem -1rem 0 -1rem !important;
         box-sizing: border-box !important;
-        gap: 8px;
+        gap: 12px;
     }
     .header-left-clock {
         display: flex !important;
         flex-direction: column !important;
         justify-content: center !important;
         background: #0d1117 !important;
-        border: 1px solid #30363d !important;
-        padding: 4px 10px !important;
-        border-radius: 8px !important;
+        border: 2px solid #30363d !important;
+        padding: 6px 12px !important;
+        border-radius: 10px !important;
         text-align: left !important;
-        min-width: 110px;
     }
     .clock-time {
         color: #58a6ff !important;
-        font-size: 13px !important;
-        font-weight: 800 !important;
+        font-size: 15px !important;
+        font-weight: 900 !important;
         letter-spacing: 0.5px;
-        line-height: 1.1;
+        line-height: 1.2;
     }
     .clock-date {
         color: #8b949e !important;
-        font-size: 9px !important;
-        font-weight: 600 !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
         letter-spacing: 0.3px;
     }
     .header-center-logo {
@@ -131,52 +130,53 @@ st.markdown("""
         justify-content: center !important;
         flex: 1 !important;
         overflow: hidden !important;
-        padding: 0 4px !important;
+        padding: 0 8px !important;
     }
     .header-logo-img {
-        max-height: 70px !important;
+        max-height: 110px !important;
         width: auto !important;
         object-fit: contain !important;
         display: block !important;
-        filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.8));
+        filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.9));
     }
     .user-info-container {
         display: flex !important;
         align-items: center !important;
-        gap: 8px !important;
+        gap: 12px !important;
         background-color: #161b22 !important;
-        border: 1px solid #30363d !important;
-        padding: 4px 10px !important;
-        border-radius: 20px !important;
+        border: 2px solid #30363d !important;
+        padding: 6px 14px !important;
+        border-radius: 25px !important;
     }
     .user-text-info {
         display: flex !important;
         flex-direction: column !important;
         text-align: right !important;
-        line-height: 1.1 !important;
+        line-height: 1.2 !important;
     }
     .user-name {
         color: #ffffff !important;
-        font-size: 11px !important;
+        font-size: 13px !important;
         font-weight: 900 !important;
+        letter-spacing: 0.3px;
     }
     .user-balance {
         color: #58a6ff !important;
-        font-size: 11px !important;
-        font-weight: 800 !important;
+        font-size: 13px !important;
+        font-weight: 900 !important;
     }
     .user-avatar {
         background-color: #f1c40f !important;
         color: #000000 !important;
         border-radius: 50% !important;
-        width: 32px !important;
-        height: 32px !important;
+        width: 44px !important;
+        height: 44px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 14px !important;
+        font-size: 20px !important;
         font-weight: bold !important;
-        box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
+        box-shadow: 0px 3px 6px rgba(0,0,0,0.6);
     }
     .block-container {
         padding-top: 0.4rem !important;
@@ -219,16 +219,6 @@ st.markdown("""
         font-size: clamp(12px, 3vw, 16px);
         font-weight: bold;
         color: #ff4757;
-        margin-bottom: 8px;
-    }
-    .c cierre-info-box {
-        background-color: #161b22;
-        border: 1px solid #30363d;
-        padding: 4px;
-        border-radius: 4px;
-        text-align: center;
-        font-size: 11px;
-        color: #f0f6fc;
         margin-bottom: 8px;
     }
     .carrera-condicion-card {
@@ -326,7 +316,7 @@ elif neto_usuario < 0:
 else:
     etiqueta_balance = "Al día: Bs. 0,00"
 
-# --- CABECERA SUPERIOR MODERNA CON HORA/FECHA A LA IZQUIERDA, LOGO AL CENTRO Y JUGADOR A LA DERECHA ---
+# --- CABECERA SUPERIOR GRANDE Y LEGIBLE ---
 st.markdown(f"""
     <div class="header-container">
         <div class="header-left-clock">
