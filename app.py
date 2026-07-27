@@ -218,6 +218,10 @@ st.markdown("""
         color: #f0f6fc;
         margin-bottom: 10px;
     }
+    /* Forzar barra lateral a la derecha */
+    [data-testid="stSidebar"] {
+        order: 2;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -485,32 +489,32 @@ if not st.session_state.carreras_activas_remate and lista_carreras_disponibles:
 if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_dupleta = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL (4 BOTONES) ---
-col_menu1, col_menu2, col_menu3, col_menu4 = st.columns([1, 2.5, 2.5, 2.5], gap="small")
+# --- MENÚ PRINCIPAL HORIZONTAL (3 BOTONES PRINCIPALES + ACCESO ADMIN) ---
+col_menu1, col_menu2, col_menu3, col_menu_admin = st.columns([3, 3, 3, 1], gap="small")
 
 with col_menu1:
-    if st.button("🔒", key="menu_btn_admin_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "🔒 Zona Admin" else "secondary"):
-        st.session_state.menu_principal_opcion = "🔒 Zona Admin"
-        st.rerun()
-
-with col_menu2:
     if st.button("🏇 REMATES", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
         st.session_state.menu_principal_opcion = "Remates"
         st.rerun()
 
-with col_menu3:
+with col_menu2:
     if st.button("🎟️ DUPLETAS", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
         st.session_state.menu_principal_opcion = "Dupletas"
         st.rerun()
 
-with col_menu4:
+with col_menu3:
     if st.button("📊 CUENTAS", key="menu_btn_cuentas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
         st.session_state.menu_principal_opcion = "Cuentas"
         st.rerun()
 
+with col_menu_admin:
+    if st.button("🔒", key="menu_btn_admin_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "🔒 Zona Admin" else "secondary"):
+        st.session_state.menu_principal_opcion = "🔒 Zona Admin"
+        st.rerun()
+
 st.markdown("<hr style='margin: 0.8rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BARRA LATERAL ---
+# --- BARRA LATERAL (UBICADA A LA DERECHA) ---
 st.sidebar.header("barra lateral")
 ahora_dt = obtener_hora_venezuela_local()
 st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
