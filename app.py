@@ -184,10 +184,15 @@ st.markdown("""
         letter-spacing: 0.2px;
         white-space: nowrap !important;
     }
+    /* Forzar que las columnas de Streamlit no se apilen verticalmente en celulares */
     div[data-testid="column"] {
-        width: fit-content !important;
+        width: auto !important;
         flex: 1 !important;
         min-width: 0 !important;
+    }
+    div[data-testid="horizontal-block"] {
+        flex-direction: row !important;
+        align-items: center !important;
     }
     .subasta-header {
         font-size: clamp(16px, 4vw, 20px);
@@ -573,7 +578,10 @@ if menu_principal_opcion == "Remates":
                 carr_activa = st.session_state["carrera_remate_activa_seleccionada"]
 
             st.markdown("🔹 **Seleccionar Carrera:**")
-            cols_carreras = st.columns(len(carreras_filtradas_visibles))
+            
+            # --- SECCIÓN MODIFICADA: DISTRIBUCIÓN HORIZONTAL FORZADA EN MÓVIL ---
+            num_carreras = len(carreras_filtradas_visibles)
+            cols_carreras = st.columns(num_carreras if num_carreras > 0 else 1)
             for idx, c_nombre in enumerate(carreras_filtradas_visibles):
                 abreviatura = obtener_abreviatura_carrera(c_nombre)
                 es_activa = (c_nombre == carr_activa)
@@ -977,6 +985,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 placeholder="Ejemplo:\nPRIMERA CARRERA. CONDICIÓN: ...\n1 REY DAVID\n2 GRAN AMIGO..."
             )
             col_ps1, col_ps2 = st.columns(2)
+            cols_ps1:
             with col_ps1:
                 if st.button("🚀 Sincronizar y Ordenar por Posición", key="adm_pdf_btn_sync", use_container_width=True, type="primary"):
                     if procesar_texto_para_remates(texto_seleccion_usuario):
