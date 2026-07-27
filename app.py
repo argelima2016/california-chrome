@@ -332,7 +332,7 @@ def obtener_abreviatura_carrera(nombre_carrera):
         return f"C{match.group(0)}"
     return nombre_carrera[:3].upper()
 
-def generar_tabla_html_remate(remates_dict):
+def generar_tabla_html_remate(remates_dict, modo_ciego=False):
     html = """
     <style>
         .tabla-referencia {
@@ -482,7 +482,7 @@ def procesar_texto_flexible(texto_a_procesar):
                     "condicion": cond, 
                     "distancia": dist, 
                     "hora": hora,
-                    "monto_fijo_ciego": 500.0  # Monto fijo inicial por defecto para remate ciego
+                    "monto_fijo_ciego": 500.0
                 }
                 continue
 
@@ -716,8 +716,7 @@ if menu_principal_opcion == "Remates":
                             if restantes_10s > 0:
                                 st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa})</div>", unsafe_allow_html=True)
 
-                # En Remate Ciego SE VE el comprador y el monto fijo fijado (ya no se oculta)
-                tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], modo_ciego=False)
+                tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa])
                 cantidad_filas = len(st.session_state.remates[carr_activa])
                 altura_dinamica = min(max(150, (cantidad_filas * 38) + 60), 450)
                 components.html(tabla_html, height=altura_dinamica, scrolling=True)
@@ -748,7 +747,6 @@ if menu_principal_opcion == "Remates":
                                 st.button("🔨 Asignar Ejemplar (Cerrado)", key=f"btn_ciego_cerrado_{carr_activa}", use_container_width=True, type="primary", disabled=True)
                             else:
                                 if st.button("🔨 Comprar / Asignar Ejemplar (Monto Fijo)", key=f"btn_ciego_conf_{carr_activa}", use_container_width=True, type="primary"):
-                                    # Registrar comprador y el monto fijo fijado
                                     st.session_state.remates[carr_activa][caballo_seleccionado_ciego] = {
                                         "jugador": st.session_state.usuario_activo, 
                                         "monto": monto_fijo_carrera
@@ -761,7 +759,6 @@ if menu_principal_opcion == "Remates":
                                         "detalle": caballo_seleccionado_ciego,
                                         "monto": monto_fijo_carrera
                                     })
-                                    # Actualizar saldo del usuario en cuentas
                                     if st.session_state.usuario_activo not in st.session_state.cuentas:
                                         st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
                                     st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
