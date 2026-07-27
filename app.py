@@ -13,7 +13,7 @@ from pypdf import PdfReader
 from streamlit_autorefresh import st_autorefresh
 
 # Configuración de pantalla completa
-st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="WOFT READY TO RUN", layout="wide", page_icon="🐺")
 
 # --- AUTOREFRESH (3 SEGUNDOS) ---
 try:
