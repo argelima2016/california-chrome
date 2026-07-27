@@ -212,7 +212,7 @@ st.markdown("""
         color: #ff4757;
         margin-bottom: 8px;
     }
-    .cierre-info-box {
+    .c cierre-info-box {
         background-color: #161b22;
         border: 1px solid #30363d;
         padding: 4px;
