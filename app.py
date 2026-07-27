@@ -269,8 +269,6 @@ def cargar_jugadores_base():
 def inicializar_estado_global():
     if 'menu_principal_opcion' not in st.session_state:
         st.session_state.menu_principal_opcion = "Remates"
-    if 'usuario_actual_sesion' not in st.session_state:
-        st.session_state.usuario_actual_sesion = "LUIS"  # Usuario activo por defecto para el módulo Cuentas
     if 'lista_jugadores' not in st.session_state:
         st.session_state.lista_jugadores = cargar_jugadores_base()
     if 'banco_caballos_por_carrera' not in st.session_state:
@@ -293,8 +291,8 @@ def inicializar_estado_global():
         st.session_state.tiempo_inicio_conteo = {}
     if 'cuentas' not in st.session_state:
         st.session_state.cuentas = {j: {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0} for j in st.session_state.lista_jugadores}
-    if 'historial_detallado_jugadas' not in st.session_state:
-        st.session_state.historial_detallado_jugadas = []  # Registro de cada apuesta/remate/dupleta
+    if 'historial_jugadas' not in st.session_state:
+        st.session_state.historial_jugadas = []
     if 'ganancia_casa' not in st.session_state:
         st.session_state.ganancia_casa = 0.0
     if 'dupletas_tickets' not in st.session_state:
@@ -640,7 +638,7 @@ if menu_principal_opcion == "Remates":
             else:
                 st.success(f"🟢 Panel activo y abierto para: **{carr_activa}**")
 
-            # --- MOSTRAR CONDICIÓN, HORA Y DISTANCIA (SOLO LECTURA EN REMATES) ---
+            # --- MOSTRAR CONDICIÓN, HORA Y DISTANCIA ---
             if carr_activa not in st.session_state.detalles_carreras:
                 st.session_state.detalles_carreras[carr_activa] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM"}
             
@@ -741,6 +739,15 @@ if menu_principal_opcion == "Remates":
                                 st.error("El monto debe ser mayor a la puja actual.")
                             else:
                                 st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": "Sin Postor", "monto": monto_puja}
+                                # --- REGISTRAR EN EL HISTORIAL DE JUGADAS ---
+                                st.session_state.historial_jugadas.append({
+                                    "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                    "jugador": "Sin Postor",
+                                    "tipo": "Remate",
+                                    "carrera": carr_activa,
+                                    "detalle": caballo_seleccionado,
+                                    "monto": monto_puja
+                                })
                                 if estado_conteo == "CONTEO_10S":
                                     st.session_state.tiempo_inicio_conteo[carr_activa] = obtener_hora_venezuela_local()
                                 st.success("✅ ¡Puja registrada correctamente y conteo reiniciado!")
@@ -815,6 +822,15 @@ elif menu_principal_opcion == "Dupletas":
                         "id": ticket_id, "jugador": jugador_dupleta, "monto": monto_dupleta,
                         "legs": seleccion_legs, "estado": "Pendiente", "fecha": ahora_dt.strftime('%d/%m %I:%M %p')
                     })
+                    detalles_str = " ➔ ".join([f"{l['carrera']}: {l['ejemplar']}" for l in seleccion_legs])
+                    st.session_state.historial_jugadas.append({
+                        "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                        "jugador": jugador_dupleta,
+                        "tipo": "Dupleta",
+                        "carrera": "Múltiple",
+                        "detalle": f"Ticket {ticket_id} ({detalles_str})",
+                        "monto": monto_dupleta
+                    })
                     if jugador_dupleta not in st.session_state.cuentas:
                         st.session_state.cuentas[jugador_dupleta] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
                     st.session_state.cuentas[jugador_dupleta]['Pujas'] += monto_dupleta
@@ -839,22 +855,47 @@ elif menu_principal_opcion == "Dupletas":
                 st.caption(f"Emitido el: {t['fecha']}")
 
 # =========================================================================
-# 3. MÓDULO DE CUENTAS (Público)
+# 3. MÓDULO DE CUENTAS (SOLO EL JUGADOR SELECCIONADO Y SU HISTORIAL)
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
-    st.markdown("<div class='subasta-header'>📊 Cuentas y Balances</div>", unsafe_allow_html=True)
-    datos_cuentas = []
-    tot_pujas_gen = 0.0
-    for jugador, vals in st.session_state.cuentas.items():
-        pujas, premios, abonos = vals['Pujas'], vals['Premios'], vals['Abonos']
-        balance_neto = pujas - abonos - premios
-        tot_pujas_gen += pujas
-        datos_cuentas.append({"Jugador": jugador, "Compras": formatear_bs(pujas), "Premios": formatear_bs(premios), "Neto": formatear_bs(balance_neto)})
-    st.dataframe(pd.DataFrame(datos_cuentas), use_container_width=True, hide_index=True)
-    st.metric("Ganancia Casa", formatear_bs(st.session_state.ganancia_casa))
+    st.markdown("<div class='subasta-header'>📊 Cuenta y Historial de Jugador</div>", unsafe_allow_html=True)
+    
+    jugador_seleccionado = st.selectbox("👤 Seleccionar Jugador para ver Cuenta:", st.session_state.lista_jugadores, key="select_cuenta_jugador")
+    
+    if jugador_seleccionado not in st.session_state.cuentas:
+        st.session_state.cuentas[jugador_seleccionado] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+    
+    vals = st.session_state.cuentas[jugador_seleccionado]
+    pujas, premios, abonos = vals['Pujas'], vals['Premios'], vals['Abonos']
+    balance_neto = pujas - abonos - premios
+
+    col_cu1, col_cu2, col_cu3, col_cu4 = st.columns(4, gap="small")
+    col_cu1.metric("🛒 Compras/Pujas", formatear_bs(pujas))
+    col_cu2.metric("🏆 Premios", formatear_bs(premios))
+    col_cu3.metric("💳 Abonos/Pagos", formatear_bs(abonos))
+    col_cu4.metric("⚖️ Neto a Pagar", formatear_bs(balance_neto))
+
+    st.markdown("---")
+    st.markdown(f"### 📜 Historial Organizado de lo Jugado: `{jugador_seleccionado}`")
+    
+    historial_usuario = [h for h in st.session_state.historial_jugadas if h['jugador'] == jugador_seleccionado]
+
+    if not historial_usuario:
+        st.info(f"ℹ️ No hay registros de jugadas o remates para **{jugador_seleccionado}** en esta jornada.")
+    else:
+        datos_historial = []
+        for h in reversed(historial_usuario):
+            datos_historial.append({
+                "Fecha / Hora": h['fecha'],
+                "Tipo": h['tipo'],
+                "Carrera": h['carrera'],
+                "Detalle / Ejemplar": h['detalle'],
+                "Monto": formatear_bs(h['monto'])
+            })
+        st.dataframe(pd.DataFrame(datos_historial), use_container_width=True, hide_index=True)
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR (Centralizada y Persistente)
+# 4. ZONA DE ADMINISTRADOR (Centralizada y Persistente con Edición en Banco)
 # =========================================================================
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Zona de Administrador</div>", unsafe_allow_html=True)
@@ -873,7 +914,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     tab_actual = st.session_state.admin_tab_seleccionada
 
     if tab_actual == "✍️ Banco":
-        st.markdown("### ✍️ Banco de Caballos y Edición de Carreras")
+        st.markdown("### ✍️ Banco de Caballos y Edición de Condición, Hora y Distancia")
         carr_banco_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="adm_banco_sel_carrera")
         
         if carr_banco_sel not in st.session_state.banco_caballos_por_carrera:
@@ -881,7 +922,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         if carr_banco_sel not in st.session_state.detalles_carreras:
             st.session_state.detalles_carreras[carr_banco_sel] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM"}
 
-        # --- AQUÍ ESTÁ LA EDICIÓN DE CONDICIÓN, HORA Y DISTANCIA EN EL BANCO ---
+        # --- EDICIÓN DE CONDICIÓN, HORA Y DISTANCIA DESDE EL BANCO (SOLICITADO) ---
         det_actuales = st.session_state.detalles_carreras[carr_banco_sel]
         with st.container(border=True):
             st.markdown(f"🛠️ **Editar Detalles de {carr_banco_sel}**")
@@ -894,7 +935,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             
             if st.button("💾 Guardar Detalles de Carrera", key=f"btn_save_banco_det_{carr_banco_sel}", use_container_width=True, type="primary"):
                 st.session_state.detalles_carreras[carr_banco_sel] = {"condicion": edit_cond, "distancia": edit_dist, "hora": edit_hora}
-                st.toast("✅ ¡Detalles de la carrera guardados con éxito!")
+                st.toast("✅ ¡Detalles guardados con éxito!")
                 st.rerun()
 
         st.markdown("---")
@@ -1051,7 +1092,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         if st.button("🚀 Procesar Contenido Pegado", key="btn_procesar_texto_pegado", use_container_width=True, type="primary"):
             if texto_copiado_web.strip():
                 if procesar_texto_flexible(texto_copiado_web):
-                    st.success("✅ ¡Inscritos organizados por carrera con éxito!")
+                    st.success("✅ ¡Inscritos organizados por carrera y editables con éxito!")
                     st.rerun()
                 else:
                     st.warning("⚠️ Asegúrate de incluir el nombre de la carrera (ej: 'Primera Carrera' o 'Carrera 1') seguido de los ejemplares numerados (ej: '1 - Nombre').")
