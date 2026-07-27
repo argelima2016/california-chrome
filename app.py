@@ -13,7 +13,7 @@ from pypdf import PdfReader
 from streamlit_autorefresh import st_autorefresh
 
 # Configuración de pantalla completa
-st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺")
 
 # --- AUTOREFRESH (3 SEGUNDOS) ---
 try:
@@ -239,11 +239,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- JUGADORES BASE ---
-@st.cache_data
-def cargar_jugadores_base():
-    return ["CASA", "SOMBI", "LUIS", "CARLOS", "RAMON", "ALDEA", "ANGEL", "ALFONSO", "MACANO", "MIGUEL", "TOCAYO", "EL GOCHO", "PAPIRO", "CHAYO", "ALEXIS"]
-
 # --- INICIALIZACIÓN GLOBAL DE ESTADOS ---
 def inicializar_estado_global():
     if 'menu_principal_opcion' not in st.session_state:
@@ -253,9 +248,9 @@ def inicializar_estado_global():
     if 'sub_dupleta_opcion' not in st.session_state:
         st.session_state.sub_dupleta_opcion = "Dupleta"
     if 'usuario_activo' not in st.session_state:
-        st.session_state.usuario_activo = "LUIS"
-    if 'lista_jugadores' not in st.session_state:
-        st.session_state.lista_jugadores = cargar_jugadores_base()
+        st.session_state.usuario_activo = "CASA"
+    if 'lista_usuarios' not in st.session_state:
+        st.session_state.lista_usuarios = ["CASA"]
     if 'banco_caballos_por_carrera' not in st.session_state:
         st.session_state.banco_caballos_por_carrera = {}
     if 'remates' not in st.session_state:
@@ -275,7 +270,7 @@ def inicializar_estado_global():
     if 'tiempo_inicio_conteo' not in st.session_state:
         st.session_state.tiempo_inicio_conteo = {}
     if 'cuentas' not in st.session_state:
-        st.session_state.cuentas = {j: {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0} for j in st.session_state.lista_jugadores}
+        st.session_state.cuentas = {"CASA": {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}}
     if 'historial_jugadas' not in st.session_state:
         st.session_state.historial_jugadas = []
     if 'ganancia_casa' not in st.session_state:
@@ -627,7 +622,18 @@ st.sidebar.header("barra lateral")
 ahora_dt = obtener_hora_venezuela_local()
 st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
 
-with st.sidebar.expander("⚡ Carreras Activas para Remate", expanded=True):
+with st.sidebar.expander("👤 Usuario Activo y Selector", expanded=True):
+    usuario_seleccionado_sidebar = st.selectbox(
+        "Cambiar de Usuario",
+        options=st.session_state.lista_usuarios,
+        index=st.session_state.lista_usuarios.index(st.session_state.usuario_activo) if st.session_state.usuario_activo in st.session_state.lista_usuarios else 0,
+        key="sb_selectbox_usuario_activo"
+    )
+    if usuario_seleccionado_sidebar != st.session_state.usuario_activo:
+        st.session_state.usuario_activo = usuario_seleccionado_sidebar
+        st.rerun()
+
+with st.sidebar.expander("⚡ Carreras Activas para Remate", expanded=False):
     carreras_seleccionadas_activas = st.multiselect(
         "Carreras Activas",
         options=lista_carreras_disponibles,
@@ -661,7 +667,7 @@ with st.sidebar.expander("🔒 Zona Administrador", expanded=False):
 
 if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada", use_container_width=True):
     for key in list(st.session_state.keys()):
-        if key != 'banco_caballos_por_carrera':
+        if key not in ['banco_caballos_por_carrera', 'lista_usuarios']:
             del st.session_state[key]
     st.toast("🚨 Jornada reiniciada.")
     st.rerun()
@@ -1103,7 +1109,7 @@ elif menu_principal_opcion == "Cuentas":
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Zona de Administrador</div>", unsafe_allow_html=True)
     
-    opciones_admin_tabs = ["✍️ Banco", "⚙️ Config. Dupletas/Polla", "🏁 Cierre de Remates", "📊 Saldos Usuarios", "🖼️ Imágenes Carrera", "📄 Importar Web/Texto"]
+    opciones_admin_tabs = ["✍️ Banco", "👥 Registro Usuarios", "⚙️ Config. Dupletas/Polla", "🏁 Cierre de Remates", "📊 Saldos Usuarios", "🖼️ Imágenes Carrera", "📄 Importar Web/Texto"]
     
     cols_adm_tabs = st.columns(len(opciones_admin_tabs), gap="small")
     for idx, tab_nombre in enumerate(opciones_admin_tabs):
@@ -1228,6 +1234,39 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                         del st.session_state.remates[carr_banco_sel][ej_item]
                     st.rerun()
 
+    elif tab_actual == "👥 Registro Usuarios":
+        st.markdown("### 👥 Registro de Nuevos Usuarios")
+        with st.container(border=True):
+            nuevo_usuario_input = st.text_input("Nombre del Nuevo Usuario", placeholder="Ej: JUAN", key="input_nuevo_usuario_reg")
+            if st.button("➕ Registrar Usuario", key="btn_registrar_nuevo_usuario", use_container_width=True, type="primary"):
+                usuario_limpio = nuevo_usuario_input.strip().upper()
+                if not usuario_limpio:
+                    st.warning("⚠️ Escribe un nombre válido.")
+                elif usuario_limpio in st.session_state.lista_usuarios:
+                    st.error("❌ El usuario ya existe en el sistema.")
+                else:
+                    st.session_state.lista_usuarios.append(usuario_limpio)
+                    if usuario_limpio not in st.session_state.cuentas:
+                        st.session_state.cuentas[usuario_limpio] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                    st.toast(f"✅ ¡Usuario **{usuario_limpio}** registrado con éxito!")
+                    st.rerun()
+
+        st.markdown("---")
+        st.markdown("#### 📋 Lista de Usuarios Registrados Actualmente")
+        for u in st.session_state.lista_usuarios:
+            col_u1, col_u2 = st.columns([4, 1])
+            with col_u1:
+                st.markdown(f"👤 **{u}**")
+            with col_u2:
+                if u != "CASA":
+                    if st.button("🗑️", key=f"btn_del_usu_{u}", use_container_width=True):
+                        st.session_state.lista_usuarios.remove(u)
+                        if u in st.session_state.cuentas:
+                            del st.session_state.cuentas[u]
+                        if st.session_state.usuario_activo == u:
+                            st.session_state.usuario_activo = "CASA"
+                        st.rerun()
+
     elif tab_actual == "⚙️ Config. Dupletas/Polla":
         st.markdown("### ⚙️ Configuración de Carreras Habilitadas y Montos Únicos")
         
@@ -1327,20 +1366,29 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.rerun()
 
     elif tab_actual == "📊 Saldos Usuarios":
-        st.markdown("### 📊 Saldos y Cuentas de Todos los Usuarios")
-        datos_cuentas_adm = []
-        for jugador, vals in st.session_state.cuentas.items():
-            pujas, premios, abonos = vals['Pujas'], vals['Premios'], vals['Abonos']
-            balance_neto = pujas - abonos - premios
-            datos_cuentas_adm.append({"Jugador": jugador, "Compras": formatear_bs(pujas), "Premios": formatear_bs(premios), "Abonos/Pagos": formatear_bs(abonos), "Neto a Pagar": formatear_bs(balance_neto)})
-        st.dataframe(pd.DataFrame(datos_cuentas_adm), use_container_width=True, hide_index=True)
+        st.markdown("### 📊 Saldos y Cuentas de Usuarios Registrados")
+        usuarios_futuros = [u for u in st.session_state.lista_usuarios if u != "CASA"]
+        
+        if not usuarios_futuros:
+            st.info("ℹ️ No hay usuarios registrados todavía (solo está la cuenta de la Casa). Agrega nuevos usuarios desde la pestaña '👥 Registro Usuarios'.")
+        else:
+            datos_cuentas_adm = []
+            for jugador in usuarios_futuros:
+                if jugador not in st.session_state.cuentas:
+                    st.session_state.cuentas[jugador] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                vals = st.session_state.cuentas[jugador]
+                pujas, premios, abonos = vals['Pujas'], vals['Premios'], vals['Abonos']
+                balance_neto = pujas - abonos - premios
+                datos_cuentas_adm.append({"Usuario": jugador, "Compras": formatear_bs(pujas), "Premios": formatear_bs(premios), "Abonos/Pagos": formatear_bs(abonos), "Neto a Pagar": formatear_bs(balance_neto)})
+            st.dataframe(pd.DataFrame(datos_cuentas_adm), use_container_width=True, hide_index=True)
+
         st.metric("Ganancia Total Casa", formatear_bs(st.session_state.ganancia_casa))
 
         st.markdown("---")
         st.markdown("#### 💵 Registrar Abono o Pago a Usuario")
         col_ab1, col_ab2, col_ab3 = st.columns(3, gap="small")
         with col_ab1:
-            jugador_abonar = st.selectbox("Usuario", st.session_state.lista_jugadores, key="adm_abono_jugador")
+            jugador_abonar = st.selectbox("Usuario", st.session_state.lista_usuarios, key="adm_abono_jugador")
         with col_ab2:
             monto_abono = st.number_input("Monto Abono (Bs.)", min_value=0.0, step=100.0, key="adm_abono_monto")
         with col_ab3:
