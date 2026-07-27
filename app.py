@@ -269,6 +269,8 @@ def cargar_jugadores_base():
 def inicializar_estado_global():
     if 'menu_principal_opcion' not in st.session_state:
         st.session_state.menu_principal_opcion = "Remates"
+    if 'usuario_actual_sesion' not in st.session_state:
+        st.session_state.usuario_actual_sesion = "LUIS"  # Usuario activo por defecto para el módulo Cuentas
     if 'lista_jugadores' not in st.session_state:
         st.session_state.lista_jugadores = cargar_jugadores_base()
     if 'banco_caballos_por_carrera' not in st.session_state:
@@ -291,10 +293,10 @@ def inicializar_estado_global():
         st.session_state.tiempo_inicio_conteo = {}
     if 'cuentas' not in st.session_state:
         st.session_state.cuentas = {j: {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0} for j in st.session_state.lista_jugadores}
+    if 'historial_detallado_jugadas' not in st.session_state:
+        st.session_state.historial_detallado_jugadas = []  # Registro de cada apuesta/remate/dupleta
     if 'ganancia_casa' not in st.session_state:
         st.session_state.ganancia_casa = 0.0
-    if 'historial_transacciones' not in st.session_state:
-        st.session_state.historial_transacciones = []
     if 'dupletas_tickets' not in st.session_state:
         st.session_state.dupletas_tickets = []
     if 'carreras_habilitadas_dupleta' not in st.session_state:
@@ -638,7 +640,7 @@ if menu_principal_opcion == "Remates":
             else:
                 st.success(f"🟢 Panel activo y abierto para: **{carr_activa}**")
 
-            # --- MOSTRAR CONDICIÓN, HORA Y DISTANCIA EN LA TABLA DE REMATES ---
+            # --- MOSTRAR CONDICIÓN, HORA Y DISTANCIA (SOLO LECTURA EN REMATES) ---
             if carr_activa not in st.session_state.detalles_carreras:
                 st.session_state.detalles_carreras[carr_activa] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM"}
             
@@ -879,7 +881,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         if carr_banco_sel not in st.session_state.detalles_carreras:
             st.session_state.detalles_carreras[carr_banco_sel] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM"}
 
-        # --- EDICIÓN DE CONDICIÓN, HORA Y DISTANCIA DESDE EL BANCO ---
+        # --- AQUÍ ESTÁ LA EDICIÓN DE CONDICIÓN, HORA Y DISTANCIA EN EL BANCO ---
         det_actuales = st.session_state.detalles_carreras[carr_banco_sel]
         with st.container(border=True):
             st.markdown(f"🛠️ **Editar Detalles de {carr_banco_sel}**")
@@ -892,7 +894,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             
             if st.button("💾 Guardar Detalles de Carrera", key=f"btn_save_banco_det_{carr_banco_sel}", use_container_width=True, type="primary"):
                 st.session_state.detalles_carreras[carr_banco_sel] = {"condicion": edit_cond, "distancia": edit_dist, "hora": edit_hora}
-                st.toast("✅ ¡Detalles guardados con éxito!")
+                st.toast("✅ ¡Detalles de la carrera guardados con éxito!")
                 st.rerun()
 
         st.markdown("---")
@@ -1049,7 +1051,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         if st.button("🚀 Procesar Contenido Pegado", key="btn_procesar_texto_pegado", use_container_width=True, type="primary"):
             if texto_copiado_web.strip():
                 if procesar_texto_flexible(texto_copiado_web):
-                    st.success("✅ ¡Inscritos organizados por carrera y editables con éxito!")
+                    st.success("✅ ¡Inscritos organizados por carrera con éxito!")
                     st.rerun()
                 else:
                     st.warning("⚠️ Asegúrate de incluir el nombre de la carrera (ej: 'Primera Carrera' o 'Carrera 1') seguido de los ejemplares numerados (ej: '1 - Nombre').")
