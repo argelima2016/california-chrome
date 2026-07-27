@@ -13,7 +13,7 @@ from pypdf import PdfReader
 from streamlit_autorefresh import st_autorefresh
 
 # Configuración de pantalla completa
-st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
 
 # --- AUTOREFRESH (3 SEGUNDOS) ---
 try:
@@ -59,6 +59,8 @@ def get_image_base64(nombres_posibles):
     return ""
 
 nombres_archivos = [
+    "1001397336.jpg",
+    "1001397336.png",
     "1001394095_preview_rev_1_2.png",
     "1001394095_preview_rev_1_2.jpg",
     "logo.png",
@@ -70,7 +72,7 @@ img_b64 = get_image_base64(nombres_archivos)
 if img_b64:
     logo_display = f'<img src="data:image/png;base64,{img_b64}" class="header-logo-img" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 16px; font-weight: 900; font-style: italic;">WOLF READY TO RUN</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 14px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
 fecha_hora_texto = ahora_dt.strftime('%d/%m/%Y - %I:%M:%S %p')
@@ -116,10 +118,11 @@ st.markdown("""
         justify-content: center !important;
     }
     .header-logo-img {
-        max-height: 35px !important;
+        max-height: 48px !important;
         width: auto !important;
         object-fit: contain !important;
         display: block !important;
+        filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));
     }
     .top-clock-pill {
         background: #0d1117;
@@ -336,7 +339,7 @@ def obtener_abreviatura_carrera(nombre_carrera, modo_ciego=False):
                 return "1V"
             elif nombre_carrera == carreras_ciegas[1]:
                 return "6V"
-    
+     
     match = re.search(r'\d+', nombre_carrera)
     if match:
         return f"C{match.group(0)}"
@@ -1214,7 +1217,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         
         imagen_subida = st.file_uploader(f"Subir imagen para {carr_img_sel}", type=["png", "jpg", "jpeg"], key=f"file_img_{carr_img_sel}")
         if imagen_subida is not None:
-            if st.button(f"💾 Guardar Imagen para {carr_img_sel}", key=f"btn_save_img_{carr_img_sel}", use_container_width=True, type="primary"):
+            if st.button(f"💾 Guardar Imagen para {carr_img_sel}", key=f"btn_save_img_{carr_img_sel}", use_keyword_arguments=False, use_container_width=True, type="primary"):
                 st.session_state.imagenes_carreras[carr_img_sel] = imagen_subida
                 st.toast(f"✅ Imagen asignada correctamente a {carr_img_sel}")
                 st.rerun()
