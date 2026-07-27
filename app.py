@@ -13,7 +13,45 @@ from pypdf import PdfReader
 from streamlit_autorefresh import st_autorefresh
 
 # Configuración de pantalla completa
-st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
+
+# --- LECTOR DE LOGOTIPO LOCAL ---
+def get_image_base64(nombres_posibles):
+    ruta_directorio = os.path.dirname(os.path.abspath(__file__))
+    for nombre_archivo in nombres_posibles:
+        try:
+            ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
+            if os.path.exists(ruta_imagen):
+                with open(ruta_imagen, "rb") as img_file:
+                    return base64.b64encode(img_file.read()).decode('utf-8')
+        except Exception:
+            continue
+    return ""
+
+nombres_archivos = [
+    "1001397336.jpg",
+    "1001397336.png",
+    "1001394095_preview_rev_1_2.png",
+    "1001394095_preview_rev_1_2.jpg",
+    "logo.png",
+    "logo.jpg"
+]
+
+img_b64 = get_image_base64(nombres_archivos)
+
+if img_b64:
+    logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" class="header-logo-img" />'
+else:
+    logo_display = '<span style="color: #f1c40f; font-size: 16px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
+
+# --- INYECCIÓN DE ÍCONO MÓVIL Y FAVICON ---
+if img_b64:
+    st.markdown(f"""
+        <head>
+            <link rel="apple-touch-icon" href="data:image/jpeg;base64,{img_b64}">
+            <link rel="icon" type="image/x-icon" href="data:image/jpeg;base64,{img_b64}">
+        </head>
+    """, unsafe_allow_html=True)
 
 # --- AUTOREFRESH (3 SEGUNDOS) ---
 try:
@@ -44,35 +82,6 @@ def obtener_siguientes_montos(monto_actual):
         ultimo = ESCALA_PUJAS[-1] if ESCALA_PUJAS else max(monto_actual, 10000)
         siguientes = [ultimo + i * 1000 for i in range(1, 50)]
     return siguientes
-
-# --- LECTOR DE LOGOTIPO LOCAL ---
-def get_image_base64(nombres_posibles):
-    ruta_directorio = os.path.dirname(os.path.abspath(__file__))
-    for nombre_archivo in nombres_posibles:
-        try:
-            ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
-            if os.path.exists(ruta_imagen):
-                with open(ruta_imagen, "rb") as img_file:
-                    return base64.b64encode(img_file.read()).decode('utf-8')
-        except Exception:
-            continue
-    return ""
-
-nombres_archivos = [
-    "1001397336.jpg",
-    "1001397336.png",
-    "1001394095_preview_rev_1_2.png",
-    "1001394095_preview_rev_1_2.jpg",
-    "logo.png",
-    "logo.jpg"
-]
-
-img_b64 = get_image_base64(nombres_archivos)
-
-if img_b64:
-    logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" class="header-logo-img" />'
-else:
-    logo_display = '<span style="color: #f1c40f; font-size: 16px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
