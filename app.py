@@ -45,35 +45,6 @@ def obtener_siguientes_montos(monto_actual):
         siguientes = [ultimo + i * 1000 for i in range(1, 50)]
     return siguientes
 
-# --- LECTOR DE LOGOTIPO LOCAL ---
-def get_image_base64(nombres_posibles):
-    ruta_directorio = os.path.dirname(os.path.abspath(__file__))
-    for nombre_archivo in nombres_posibles:
-        try:
-            ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
-            if os.path.exists(ruta_imagen):
-                with open(ruta_imagen, "rb") as img_file:
-                    return base64.b64encode(img_file.read()).decode('utf-8')
-        except Exception:
-            continue
-    return ""
-
-nombres_archivos = [
-    "1001397336.jpg",
-    "1001397336.png",
-    "1001394095_preview_rev_1_2.png",
-    "1001394095_preview_rev_1_2.jpg",
-    "logo.png",
-    "logo.jpg"
-]
-
-img_b64 = get_image_base64(nombres_archivos)
-
-if img_b64:
-    logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" class="header-logo-img" />'
-else:
-    logo_display = '<span style="color: #f1c40f; font-size: 14px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
-
 ahora_dt = obtener_hora_venezuela_local()
 fecha_hora_texto = ahora_dt.strftime('%d/%m/%Y - %I:%M:%S %p')
 
@@ -86,91 +57,6 @@ st.markdown("""
     }
     div[data-testid="stTabs"] {
         display: none !important;
-    }
-    .header-container {
-        background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
-        width: 100% !important;
-        padding: 6px 10px !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        border-bottom: 2px solid #21262d !important;
-        margin: -1rem -1rem 0 -1rem !important;
-        box-sizing: border-box !important;
-        gap: 4px;
-    }
-    .header-top-row {
-        width: 100% !important;
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-    }
-    .menu-icon-box {
-        background-color: #161b22 !important;
-        color: #f1c40f !important;
-        font-size: 16px !important;
-        border: 1px solid #30363d !important;
-        border-radius: 6px !important;
-        padding: 2px 8px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    .header-logo-img {
-        max-height: 90px !important;
-        width: auto !important;
-        object-fit: contain !important;
-        display: block !important;
-        filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));
-    }
-    .top-clock-pill {
-        background: #0d1117;
-        border: 1px solid #30363d;
-        padding: 2px 8px;
-        border-radius: 10px;
-        font-size: 10px;
-        color: #58a6ff;
-        font-weight: 700;
-        text-align: center;
-        letter-spacing: 0.3px;
-    }
-    .user-info-container {
-        display: flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        background-color: #161b22 !important;
-        border: 1px solid #30363d !important;
-        padding: 3px 8px !important;
-        border-radius: 16px !important;
-    }
-    .user-text-info {
-        display: flex !important;
-        flex-direction: column !important;
-        text-align: right !important;
-        line-height: 1.0 !important;
-    }
-    .user-name {
-        color: #ffffff !important;
-        font-size: 10px !important;
-        font-weight: 900 !important;
-    }
-    .user-balance {
-        color: #58a6ff !important;
-        font-size: 10px !important;
-        font-weight: 800 !important;
-    }
-    .user-avatar {
-        background-color: #f1c40f !important;
-        color: #000000 !important;
-        border-radius: 50% !important;
-        width: 22px !important;
-        height: 22px !important;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        font-size: 10px !important;
-        font-weight: bold !important;
     }
     .block-container {
         padding-top: 0.4rem !important;
@@ -237,31 +123,6 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
-
-# --- CABECERA SUPERIOR MÓVIL ESTÉTICA ---
-st.markdown(f"""
-    <div class="header-container">
-        <div class="header-top-row">
-            <div class="menu-icon-box">☰</div>
-            <div style="display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 0 4px;">
-                {logo_display}
-            </div>
-            <div class="user-info-container">
-                <span style="color: #f1c40f !important; font-size: 14px !important;">🛢️</span>
-                <div class="user-text-info">
-                    <span class="user-name">ADMIN</span>
-                    <span class="user-balance">Bs. 50k</span>
-                </div>
-                <div class="user-avatar">👤</div>
-            </div>
-        </div>
-        <div class="top-clock-pill">
-            <span>🕒</span> <b>{fecha_hora_texto}</b>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
 
 # --- JUGADORES BASE ---
 @st.cache_data
