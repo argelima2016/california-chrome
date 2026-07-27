@@ -72,7 +72,7 @@ else:
 ahora_dt = obtener_hora_venezuela_local()
 fecha_hora_texto = ahora_dt.strftime('%d/%m/%Y - %I:%M:%S %p')
 
-# --- ESTILOS CSS ---
+# --- ESTILOS CSS (BOTONES Y SELECTORES MÁS COMPACTOS) ---
 st.markdown("""
     <style>
     .stApp {
@@ -85,14 +85,14 @@ st.markdown("""
     .header-container {
         background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
         width: 100% !important;
-        padding: 8px 12px !important;
+        padding: 6px 10px !important;
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
         border-bottom: 2px solid #21262d !important;
         margin: -1rem -1rem 0 -1rem !important;
         box-sizing: border-box !important;
-        gap: 6px;
+        gap: 4px;
     }
     .header-top-row {
         width: 100% !important;
@@ -104,16 +104,16 @@ st.markdown("""
     .menu-icon-box {
         background-color: #161b22 !important;
         color: #f1c40f !important;
-        font-size: 18px !important;
+        font-size: 16px !important;
         border: 1px solid #30363d !important;
-        border-radius: 8px !important;
-        padding: 4px 10px !important;
+        border-radius: 6px !important;
+        padding: 2px 8px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
     }
     .header-logo-img {
-        max-height: 40px !important;
+        max-height: 35px !important;
         width: auto !important;
         object-fit: contain !important;
         display: block !important;
@@ -121,9 +121,9 @@ st.markdown("""
     .top-clock-pill {
         background: #0d1117;
         border: 1px solid #30363d;
-        padding: 3px 10px;
-        border-radius: 12px;
-        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 10px;
         color: #58a6ff;
         font-weight: 700;
         text-align: center;
@@ -132,95 +132,98 @@ st.markdown("""
     .user-info-container {
         display: flex !important;
         align-items: center !important;
-        gap: 8px !important;
+        gap: 6px !important;
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
-        padding: 4px 10px !important;
-        border-radius: 20px !important;
+        padding: 3px 8px !important;
+        border-radius: 16px !important;
     }
     .user-text-info {
         display: flex !important;
         flex-direction: column !important;
         text-align: right !important;
-        line-height: 1.1 !important;
+        line-height: 1.0 !important;
     }
     .user-name {
         color: #ffffff !important;
-        font-size: 11px !important;
+        font-size: 10px !important;
         font-weight: 900 !important;
     }
     .user-balance {
         color: #58a6ff !important;
-        font-size: 11px !important;
+        font-size: 10px !important;
         font-weight: 800 !important;
     }
     .user-avatar {
         background-color: #f1c40f !important;
         color: #000000 !important;
         border-radius: 50% !important;
-        width: 26px !important;
-        height: 26px !important;
+        width: 22px !important;
+        height: 22px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 12px !important;
+        font-size: 10px !important;
         font-weight: bold !important;
     }
     .block-container {
-        padding-top: 0.6rem !important;
+        padding-top: 0.4rem !important;
         padding-bottom: 2rem !important;
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
+        padding-left: 0.4rem !important;
+        padding-right: 0.4rem !important;
         max-width: 100% !important;
     }
+    /* BOTONES MÁS PEQUEÑOS Y COMPACTOS EN MÓVIL */
     .stButton button {
         width: 100% !important;
-        border-radius: 6px !important;
-        font-weight: 700 !important;
-        padding: 0.15rem 0.2rem !important;
-        min-height: 30px !important;
-        max-height: 34px !important;
-        font-size: 10px !important;
-        letter-spacing: 0.2px;
+        border-radius: 4px !important;
+        font-weight: 600 !important;
+        padding: 0.1rem 0.1rem !important;
+        min-height: 24px !important;
+        max-height: 28px !important;
+        font-size: 9px !important;
+        letter-spacing: 0.1px;
         white-space: nowrap !important;
     }
     div[data-testid="column"] {
         width: auto !important;
         flex: 1 !important;
         min-width: 0 !important;
+        padding: 0 1px !important;
     }
     div[data-testid="horizontal-block"] {
         flex-direction: row !important;
         align-items: center !important;
+        gap: 2px !important;
     }
     .subasta-header {
-        font-size: clamp(16px, 4vw, 20px);
+        font-size: clamp(14px, 3.5vw, 18px);
         font-weight: 800;
         color: #f1e05a;
-        margin-bottom: 4px;
+        margin-bottom: 3px;
         border-bottom: 2px solid #f1e05a;
-        padding-bottom: 4px;
+        padding-bottom: 2px;
     }
     .timer-box {
         background-color: #161b22;
         border: 2px solid #ff4757;
-        padding: 8px;
-        border-radius: 8px;
+        padding: 6px;
+        border-radius: 6px;
         text-align: center;
-        font-size: clamp(14px, 3.5vw, 18px);
+        font-size: clamp(12px, 3vw, 16px);
         font-weight: bold;
         color: #ff4757;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
     .cierre-info-box {
         background-color: #161b22;
         border: 1px solid #30363d;
-        padding: 6px;
-        border-radius: 6px;
+        padding: 4px;
+        border-radius: 4px;
         text-align: center;
-        font-size: 13px;
+        font-size: 11px;
         color: #f0f6fc;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -234,7 +237,7 @@ st.markdown(f"""
                 {logo_display}
             </div>
             <div class="user-info-container">
-                <span style="color: #f1c40f !important; font-size: 16px !important;">🛢️</span>
+                <span style="color: #f1c40f !important; font-size: 14px !important;">🛢️</span>
                 <div class="user-text-info">
                     <span class="user-name">ADMIN</span>
                     <span class="user-balance">Bs. 50k</span>
@@ -323,34 +326,34 @@ def generar_tabla_html_remate(remates_dict):
             font-family: sans-serif;
             background-color: #ffffff;
             color: #000000;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .tabla-referencia th {
             border-top: 3px solid #dfc729;
             border-bottom: 2px solid #dfc729;
-            padding: 8px 4px;
+            padding: 6px 4px;
             text-align: left;
             font-weight: 800;
             background-color: #ffffff;
             color: #000000;
-            font-size: 13px;
+            font-size: 12px;
         }
         .tabla-referencia td {
             border-bottom: 1px solid #dfc729;
-            padding: 6px 4px;
+            padding: 5px 4px;
             background-color: #fbfbfb;
             color: #111111;
-            font-size: 12px;
+            font-size: 11px;
             vertical-align: middle;
         }
         .badge-numero {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 22px;
-            height: 22px;
+            width: 20px;
+            height: 20px;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 11px;
             border-radius: 2px;
             box-sizing: border-box;
         }
@@ -363,7 +366,7 @@ def generar_tabla_html_remate(remates_dict):
         .badge-7 { background-color: #fd7e14; color: #ffffff; }
         .badge-default { background-color: #6c757d; color: #ffffff; }
     </style>
-    <div style="background-color: #ffffff; padding: 4px; border-radius: 8px; overflow-x: auto;">
+    <div style="background-color: #ffffff; padding: 4px; border-radius: 6px; overflow-x: auto;">
         <table class="tabla-referencia">
             <thead>
                 <tr>
@@ -396,7 +399,7 @@ def generar_tabla_html_remate(remates_dict):
         html += f"""
                 <tr>
                     <td><span class="badge-numero {badge_class}">{num}</span></td>
-                    <td style="font-weight: 800; font-size: 13px;">{nombre_solo.upper()}</td>
+                    <td style="font-weight: 800; font-size: 12px;">{nombre_solo.upper()}</td>
                     <td>{info['jugador']}</td>
                     <td style="font-weight: bold; color: #000000;">{formatear_bs(info['monto'])}</td>
                 </tr>
@@ -489,7 +492,7 @@ if not st.session_state.carreras_activas_remate and lista_carreras_disponibles:
 if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_dupleta = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL (3 BOTONES PRINCIPALES) ---
+# --- MENÚ PRINCIPAL HORIZONTAL (MÁS COMPACTO) ---
 col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
 
 with col_menu1:
@@ -507,7 +510,7 @@ with col_menu3:
         st.session_state.menu_principal_opcion = "Cuentas"
         st.rerun()
 
-st.markdown("<hr style='margin: 0.8rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 0.5rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
 # --- BARRA LATERAL (IZQUIERDA) ---
 st.sidebar.header("barra lateral")
@@ -578,8 +581,9 @@ if menu_principal_opcion == "Remates":
 
             st.markdown("🔹 **Seleccionar Carrera:**")
             
+            # --- SELECCIONADOR DE CARRERAS COMPACTO Y HORIZONTAL ---
             num_carreras = len(carreras_filtradas_visibles)
-            cols_carreras = st.columns(num_carreras if num_carreras > 0 else 1)
+            cols_carreras = st.columns(num_carreras if num_carreras > 0 else 1, gap="small")
             for idx, c_nombre in enumerate(carreras_filtradas_visibles):
                 abreviatura = obtener_abreviatura_carrera(c_nombre)
                 es_activa = (c_nombre == carr_activa)
@@ -631,7 +635,7 @@ if menu_principal_opcion == "Remates":
 
             tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa])
             cantidad_filas = len(st.session_state.remates[carr_activa])
-            altura_dinamica = min(max(180, (cantidad_filas * 45) + 80), 550)
+            altura_dinamica = min(max(150, (cantidad_filas * 38) + 60), 450)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
             total_pote = sum([info['monto'] for info in st.session_state.remates[carr_activa].values()])
@@ -662,7 +666,7 @@ if menu_principal_opcion == "Remates":
                     
                     idx_cab = 0
                     for f in range(num_filas):
-                        cols_fila = st.columns(cols_ejemplares)
+                        cols_fila = st.columns(cols_ejemplares, gap="small")
                         for c in range(cols_ejemplares):
                             if idx_cab < cantidad_ejemplares:
                                 cab_item = lista_caballos_activos[idx_cab]
@@ -807,7 +811,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     
     opciones_admin_tabs = ["✍️ Banco", "🏁 Cierre de Remates", "📊 Saldos Usuarios", "🖼️ Imágenes Carrera", "📄 PDF"]
     
-    cols_adm_tabs = st.columns(len(opciones_admin_tabs))
+    cols_adm_tabs = st.columns(len(opciones_admin_tabs), gap="small")
     for idx, tab_nombre in enumerate(opciones_admin_tabs):
         with cols_adm_tabs[idx]:
             es_tab_activa = (st.session_state.admin_tab_seleccionada == tab_nombre)
@@ -929,7 +933,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
         st.markdown("---")
         st.markdown("#### 💵 Registrar Abono o Pago a Usuario")
-        col_ab1, col_ab2, col_ab3 = st.columns(3)
+        col_ab1, col_ab2, col_ab3 = st.columns(3, gap="small")
         with col_ab1:
             jugador_abonar = st.selectbox("Usuario", st.session_state.lista_jugadores, key="adm_abono_jugador")
         with col_ab2:
@@ -982,7 +986,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 key="adm_pdf_text_area_segmento",
                 placeholder="Ejemplo:\nPRIMERA CARRERA. CONDICIÓN: ...\n1 REY DAVID\n2 GRAN AMIGO..."
             )
-            col_ps1, col_ps2 = st.columns(2)
+            col_ps1, col_ps2 = st.columns(2, gap="small")
             with col_ps1:
                 if st.button("🚀 Sincronizar y Ordenar por Posición", key="adm_pdf_btn_sync", use_container_width=True, type="primary"):
                     if procesar_texto_para_remates(texto_seleccion_usuario):
