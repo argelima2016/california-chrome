@@ -13,7 +13,7 @@ from pypdf import PdfReader
 from streamlit_autorefresh import st_autorefresh
 
 # Configuración de pantalla completa
-st.set_page_config(page_title="WOFT READY TO RUN", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
 
 # --- AUTOREFRESH (3 SEGUNDOS) ---
 try:
@@ -72,12 +72,13 @@ img_b64 = get_image_base64(nombres_archivos)
 if img_b64:
     logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" class="header-logo-img" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 14px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 16px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
-fecha_hora_texto = ahora_dt.strftime('%d/%m/%Y - %I:%M:%S %p')
+hora_texto = ahora_dt.strftime('%I:%M:%S %p')
+fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS (COMPACTOS PARA MÓVIL) ---
+# --- ESTILOS CSS (COMPACTOS Y MODERNOS) ---
 st.markdown("""
     <style>
     .stApp {
@@ -90,60 +91,63 @@ st.markdown("""
     .header-container {
         background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
         width: 100% !important;
-        padding: 6px 10px !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        border-bottom: 2px solid #21262d !important;
-        margin: -1rem -1rem 0 -1rem !important;
-        box-sizing: border-box !important;
-        gap: 4px;
-    }
-    .header-top-row {
-        width: 100% !important;
+        padding: 10px 14px !important;
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
         align-items: center !important;
+        border-bottom: 2px solid #30363d !important;
+        margin: -1rem -1rem 0 -1rem !important;
+        box-sizing: border-box !important;
+        gap: 8px;
     }
-    .menu-icon-box {
-        background-color: #161b22 !important;
-        color: #f1c40f !important;
-        font-size: 16px !important;
+    .header-left-clock {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        background: #0d1117 !important;
         border: 1px solid #30363d !important;
-        border-radius: 6px !important;
         padding: 4px 10px !important;
+        border-radius: 8px !important;
+        text-align: left !important;
+        min-width: 110px;
+    }
+    .clock-time {
+        color: #58a6ff !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.5px;
+        line-height: 1.1;
+    }
+    .clock-date {
+        color: #8b949e !important;
+        font-size: 9px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.3px;
+    }
+    .header-center-logo {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        font-weight: bold;
+        flex: 1 !important;
+        overflow: hidden !important;
+        padding: 0 4px !important;
     }
     .header-logo-img {
-        max-height: 55px !important;
+        max-height: 70px !important;
         width: auto !important;
         object-fit: contain !important;
         display: block !important;
-        filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));
-    }
-    .top-clock-pill {
-        background: #0d1117;
-        border: 1px solid #30363d;
-        padding: 2px 8px;
-        border-radius: 10px;
-        font-size: 10px;
-        color: #58a6ff;
-        font-weight: 700;
-        text-align: center;
-        letter-spacing: 0.3px;
+        filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.8));
     }
     .user-info-container {
         display: flex !important;
         align-items: center !important;
-        gap: 6px !important;
+        gap: 8px !important;
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
-        padding: 3px 8px !important;
-        border-radius: 16px !important;
+        padding: 4px 10px !important;
+        border-radius: 20px !important;
     }
     .user-text-info {
         display: flex !important;
@@ -153,25 +157,26 @@ st.markdown("""
     }
     .user-name {
         color: #ffffff !important;
-        font-size: 10px !important;
+        font-size: 11px !important;
         font-weight: 900 !important;
     }
     .user-balance {
         color: #58a6ff !important;
-        font-size: 10px !important;
+        font-size: 11px !important;
         font-weight: 800 !important;
     }
     .user-avatar {
         background-color: #f1c40f !important;
         color: #000000 !important;
         border-radius: 50% !important;
-        width: 22px !important;
-        height: 22px !important;
+        width: 32px !important;
+        height: 32px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 10px !important;
+        font-size: 14px !important;
         font-weight: bold !important;
+        box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
     }
     .block-container {
         padding-top: 0.4rem !important;
@@ -216,7 +221,7 @@ st.markdown("""
         color: #ff4757;
         margin-bottom: 8px;
     }
-    .cierre-info-box {
+    .c cierre-info-box {
         background-color: #161b22;
         border: 1px solid #30363d;
         padding: 4px;
@@ -321,24 +326,22 @@ elif neto_usuario < 0:
 else:
     etiqueta_balance = "Al día: Bs. 0,00"
 
-# --- CABECERA SUPERIOR RESTAURADA ---
+# --- CABECERA SUPERIOR MODERNA CON HORA/FECHA A LA IZQUIERDA, LOGO AL CENTRO Y JUGADOR A LA DERECHA ---
 st.markdown(f"""
     <div class="header-container">
-        <div class="header-top-row">
-            <div class="menu-icon-box">☰ Barra Lateral</div>
-            <div style="display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 0 4px;">
-                {logo_display}
-            </div>
-            <div class="user-info-container">
-                <div class="user-text-info">
-                    <span class="user-name">{usuario_en_sesion}</span>
-                    <span class="user-balance">{etiqueta_balance}</span>
-                </div>
-                <div class="user-avatar">👤</div>
-            </div>
+        <div class="header-left-clock">
+            <span class="clock-time">🕒 {hora_texto}</span>
+            <span class="clock-date">📅 {fecha_texto}</span>
         </div>
-        <div class="top-clock-pill">
-            <span>🕒</span> <b>{fecha_hora_texto}</b>
+        <div class="header-center-logo">
+            {logo_display}
+        </div>
+        <div class="user-info-container">
+            <div class="user-text-info">
+                <span class="user-name">{usuario_en_sesion}</span>
+                <span class="user-balance">{etiqueta_balance}</span>
+            </div>
+            <div class="user-avatar">👤</div>
         </div>
     </div>
 """, unsafe_allow_html=True)
