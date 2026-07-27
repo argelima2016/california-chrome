@@ -429,28 +429,51 @@ def procesar_texto_para_remates(texto_a_procesar):
         lineas = texto_a_procesar.split('\n')
         carrera_actual_detectada = None
         banco_temporal = {}
-        patron_carrera = re.compile(
-            r'(?:carrera|primera|segunda|tercera|cuarta|quinta|sexta|septima|octava|novena|decima|\d+)\s*(?:ª|º|\.)?\s*carrera', 
-            re.IGNORECASE
-        )
+        
+        # Mapeo textual para números de carreras
+        map_numeros = {
+            'primera': 1, 'segunda': 2, 'tercera': 3, 'cuarta': 4,
+            'quinta': 5, 'sexta': 6, 'septima': 7, 'octava': 8,
+            'novena': 9, 'decima': 10, 'undecima': 11, 'duodecima': 12
+        }
+
         for linea in lineas:
             linea_limpia = linea.strip()
             if not linea_limpia:
                 continue
-            match_carr = patron_carrera.search(linea_limpia)
-            if match_carr or ("carrera" in linea_limpia.lower() and len(linea_limpia) < 35):
-                for c_n in range(1, 15):
-                    if str(c_n) in linea_limpia or f"carrera {c_n}" in linea_limpia.lower() or f"{c_n}ra" in linea_limpia.lower() or f"{c_n}da" in linea_limpia.lower() or f"{c_n}ta" in linea_limpia.lower():
-                        carrera_actual_detectada = f"Carrera {c_n}"
-                        if carrera_actual_detectada not in banco_temporal:
-                            banco_temporal[carrera_actual_detectada] = []
-                        break
+            
+            linea_lower = linea_limpia.lower()
+            
+            # Detectar si la línea corresponde a una carrera
+            if "carrera" in linea_lower or any(k in linea_lower for k in map_numeros.keys()):
+                # Buscar número explícito en dígitos (ej: "1era carrera", "Carrera 3")
+                match_digito = re.search(r'(\d+)', linea_lower)
+                if match_digito and ("carrera" in linea_lower or len(linea_limpia) < 40):
+                    num_carr = int(match_digito.group(1))
+                    carrera_actual_detectada = f"Carrera {num_carr}"
+                    if carrera_actual_detectada not in banco_temporal:
+                        banco_temporal[carrera_actual_detectada] = []
+                    continue
+                else:
+                # Buscar número en palabras (ej: "primera carrera")
+                    encontrado_palabra = False
+                    for palabra, num in map_numeros.items():
+                        if palabra in linea_lower:
+                            carrera_actual_detectada = f"Carrera {num}"
+                            if carrera_actual_detectada not in banco_temporal:
+                                banco_temporal[carrera_actual_detectada] = []
+                            encontrado_palabra = True
+                            break
+                    if encontrado_palabra:
+                        continue
+
+            # Si ya tenemos una carrera activa, buscar los ejemplares (ej: "1 - REY DAVID" o "1. REY DAVID")
             if carrera_actual_detectada:
                 match_ejemplar = re.match(r'^(?:[Pp][Oo][Ss]\.?\s*)?(\d{1,2})[\s\-\.\)]+(.+)', linea_limpia)
                 if match_ejemplar:
                     num_pos = int(match_ejemplar.group(1))
                     nom_ej = match_ejemplar.group(2).strip()
-                    palabras_excluir = ['retirado', 'jinete', 'entrenador', 'distancia', 'premio', 'propietario', 'condicion', 'hipodromo', 'metros', 'haras', 'stud', 'aprox']
+                    palabras_excluir = ['retirado', 'jinete', 'entrenador', 'distancia', 'premio', 'propietario', 'condicion', 'hipodromo', 'metros', 'haras', 'stud', 'aprox', 'ejemplar']
                     if 1 <= num_pos <= 25 and len(nom_ej) > 1 and not any(p in nom_ej.lower() for p in palabras_excluir):
                         formato_ej = f"{num_pos} - {nom_ej.title()}"
                         if formato_ej not in banco_temporal[carrera_actual_detectada]:
