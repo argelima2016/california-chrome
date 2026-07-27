@@ -792,6 +792,26 @@ if menu_principal_opcion == "Remates":
             altura_dinamica = min(max(150, (cantidad_filas * 38) + 60), 450)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
+            # --- HISTORIAL DE PUJAS DEBAJO DE LA TABLA ---
+            with st.expander(f"📜 Historial de Pujas - {carr_activa} ({modo_actual_remate})", expanded=False):
+                historial_carrera_actual = [
+                    h for h in st.session_state.historial_jugadas 
+                    if h.get('carrera') == carr_activa and "Remate" in h.get('type', h.get('tipo', ''))
+                ]
+                if not historial_carrera_actual:
+                    st.info(f"ℹ️ No hay registros de pujas o compras para {carr_activa} en esta modalidad.")
+                else:
+                    datos_h_carr = []
+                    for h in reversed(historial_carrera_actual):
+                        datos_h_carr.append({
+                            "Fecha / Hora": h.get('fecha', ''),
+                            "Modo": h.get('tipo', ''),
+                            "Jugador": h.get('jugador', ''),
+                            "Ejemplar": h.get('detalle', ''),
+                            "Monto": formatear_bs(h.get('monto', 0.0))
+                        })
+                    st.dataframe(pd.DataFrame(datos_h_carr), use_container_width=True, hide_index=True)
+
             total_pote = sum([info['monto'] for info in st.session_state.remates[carr_activa].values()])
             monto_casa = total_pote * (porcentaje_casa / 100)
             pote_neto_base = total_pote - monto_casa
@@ -825,7 +845,7 @@ if menu_principal_opcion == "Remates":
                                 st.session_state.historial_jugadas.append({
                                     "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
                                     "jugador": st.session_state.usuario_activo,
-                                    "tipo": "Remate Ciego",
+                                    "tipo": f"Remate Ciego ({modo_actual_remate})",
                                     "carrera": carr_activa,
                                     "detalle": caballo_seleccionado_ciego,
                                     "monto": monto_fijo_carrera
