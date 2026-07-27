@@ -328,7 +328,16 @@ def formatear_bs(monto):
     numero_formateado = f"{monto:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return f"Bs. {numero_formateado}"
 
-def obtener_abreviatura_carrera(nombre_carrera):
+def obtener_abreviatura_carrera(nombre_carrera, modo_ciego=False):
+    if modo_ciego:
+        # En remate ciego identificamos exactamente con 1V y 6V según el orden configurado
+        carreras_ciegas = st.session_state.carreras_por_modalidad.get("Ciegos", [])
+        if len(carreras_ciegas) >= 2:
+            if nombre_carrera == carreras_ciegas[0]:
+                return "1V"
+            elif nombre_carrera == carreras_ciegas[1]:
+                return "6V"
+    
     match = re.search(r'\d+', nombre_carrera)
     if match:
         return f"C{match.group(0)}"
@@ -648,6 +657,7 @@ if menu_principal_opcion == "Remates":
     if not lista_carreras_disponibles:
         st.warning("⚠️ No hay carreras cargadas en el sistema.")
     else:
+        # En Remates Ciegos se restringe estrictamente a máximo 2 carreras seleccionadas desde el Banco
         carreras_modalidad_permitidas = st.session_state.carreras_por_modalidad.get(modo_actual_remate, lista_carreras_disponibles)
         if modo_actual_remate == "Ciegos" and len(carreras_modalidad_permitidas) > 2:
             carreras_modalidad_permitidas = carreras_modalidad_permitidas[:2]
@@ -671,7 +681,9 @@ if menu_principal_opcion == "Remates":
             num_carreras = len(carreras_filtradas_visibles)
             cols_carreras = st.columns(num_carreras if num_carreras > 0 else 1, gap="small")
             for idx, c_nombre in enumerate(carreras_filtradas_visibles):
-                abreviatura = obtener_abreviatura_carrera(c_nombre)
+                # Si es Remate Ciego, se identifica con 1V y 6V
+                es_modo_ciego = (modo_actual_remate == "Ciegos")
+                abreviatura = obtener_abreviatura_carrera(c_nombre, modo_ciego=es_modo_ciego)
                 es_activa = (c_nombre == carr_activa)
                 with cols_carreras[idx]:
                     if st.button(abreviatura, key=f"rem_btn_sel_carr_{idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
@@ -1001,8 +1013,9 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     tab_actual = st.session_state.admin_tab_seleccionada
 
     if tab_actual == "✍️ Banco":
-        st.markdown("### ✍️ Banco de Carreras y Configuración Semanal")
+        st.markdown("### ✍️ Banco de Carreras: Configuración y Asignación de Modalidades")
         
+        # --- CONFIGURACIÓN DE CUÁNTAS CARRERAS VAN A CORRER EN LA SEMANA ---
         with st.container(border=True):
             st.markdown("📅 **Configuración General de la Semana**")
             nueva_cantidad_carreras = st.number_input(
@@ -1025,6 +1038,30 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.rerun()
 
         st.markdown("---")
+
+        # --- SELECCIONADOR DE CARRERAS ACTIVAS PARA REMATE CIEGO ---
+        with st.container(border=True):
+            st.markdown("🙈 **Seleccionar las 2 Carreras Activas para Remate Ciego**")
+            carreras_existentes = list(st.session_state.remates.keys())
+            carreras_ciego_actuales = st.session_state.carreras_por_modalidad.get("Ciegos", [])
+            
+            carreras_ciego_seleccionadas = st.multiselect(
+                "Elige exactamente 2 carreras para el Ciego:",
+                options=carreras_existentes,
+                default=[c for c in carreras_ciego_actuales if c in carreras_existentes],
+                max_selections=2,
+                key="multiselect_carreras_ciego"
+            )
+            
+            if st.button("💾 Guardar Carreras para Remate Ciego", key="btn_save_carr_ciego", use_container_width=True, type="primary"):
+                if len(carreras_ciego_seleccionadas) != 2:
+                    st.error("⚠️ Debes seleccionar exactamente 2 carreras para el Remate Ciego.")
+                else:
+                    st.session_state.carreras_por_modalidad["Ciegos"] = carreras_ciego_seleccionadas
+                    st.toast("✅ ¡Carreras de Remate Ciego guardadas (identificadas como 1V y 6V)!")
+                    st.rerun()
+
+        st.markdown("---")
         carr_banco_sel = st.selectbox("Seleccionar Carrera para Configurar y Editar", lista_carreras_disponibles, key="adm_banco_sel_carrera")
         
         if carr_banco_sel not in st.session_state.banco_caballos_por_carrera:
@@ -1032,49 +1069,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         if carr_banco_sel not in st.session_state.detalles_carreras:
             st.session_state.detalles_carreras[carr_banco_sel] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0}
 
-        with st.container(border=True):
-            st.markdown(f"⚙️ **Activación de Modalidades para `{carr_banco_sel}`:**")
-            
-            for mod in ["Adelantados", "Ciegos", "En Vivo"]:
-                if carr_banco_sel not in st.session_state.carreras_por_modalidad[mod]:
-                    if carr_banco_sel in lista_carreras_disponibles and not st.session_state.carreras_por_modalidad[mod]:
-                        st.session_state.carreras_por_modalidad[mod].append(carr_banco_sel)
-
-            act_adel = st.checkbox("Activa en Remates Adelantados", value=(carr_banco_sel in st.session_state.carreras_por_modalidad["Adelantados"]), key=f"chk_adel_{carr_banco_sel}")
-            
-            carreras_ciegas_actuales = st.session_state.carreras_por_modalidad["Ciegos"]
-            es_ciego_activo = (carr_banco_sel in carreras_ciegas_actuales)
-            
-            if not es_ciego_activo and len(carreras_ciegas_actuales) >= 2:
-                st.markdown("<p style='color: #ff4757; font-size: 11px;'>⚠️ Ya hay 2 carreras activas en Remate Ciego (límite máximo permitido).</p>", unsafe_allow_html=True)
-                act_cieg = st.checkbox("Activa en Remates Ciegos", value=False, disabled=True, key=f"chk_cieg_{carr_banco_sel}")
-            else:
-                act_cieg = st.checkbox("Activa en Remates Ciegos", value=es_ciego_activo, key=f"chk_cieg_{carr_banco_sel}")
-
-            act_envv = st.checkbox("Activa en Remates En Vivo", value=(carr_banco_sel in st.session_state.carreras_por_modalidad["En Vivo"]), key=f"chk_envv_{carr_banco_sel}")
-
-            if st.button("💾 Guardar Modalidades Activas", key=f"btn_save_mods_{carr_banco_sel}", use_container_width=True, type="primary"):
-                if act_adel and carr_banco_sel not in st.session_state.carreras_por_modalidad["Adelantados"]:
-                    st.session_state.carreras_por_modalidad["Adelantados"].append(carr_banco_sel)
-                elif not act_adel and carr_banco_sel in st.session_state.carreras_por_modalidad["Adelantados"]:
-                    st.session_state.carreras_por_modalidad["Adelantados"].remove(carr_banco_sel)
-
-                if act_cieg and carr_banco_sel not in st.session_state.carreras_por_modalidad["Ciegos"]:
-                    if len(st.session_state.carreras_por_modalidad["Ciegos"]) < 2:
-                        st.session_state.carreras_por_modalidad["Ciegos"].append(carr_banco_sel)
-                elif not act_cieg and carr_banco_sel in st.session_state.carreras_por_modalidad["Ciegos"]:
-                    st.session_state.carreras_por_modalidad["Ciegos"].remove(carr_banco_sel)
-
-                if act_envv and carr_banco_sel not in st.session_state.carreras_por_modalidad["En Vivo"]:
-                    st.session_state.carreras_por_modalidad["En Vivo"].append(carr_banco_sel)
-                elif not act_envv and carr_banco_sel in st.session_state.carreras_por_modalidad["En Vivo"]:
-                    st.session_state.carreras_por_modalidad["En Vivo"].remove(carr_banco_sel)
-
-                st.toast(f"✅ ¡Modalidades actualizadas para {carr_banco_sel}!")
-                st.rerun()
-
-        st.markdown("---")
-
+        # --- EDICIÓN DE CONDICIÓN, HORA, DISTANCIA Y MONTO CIEGO ---
         det_actuales = st.session_state.detalles_carreras[carr_banco_sel]
         with st.container(border=True):
             st.markdown(f"🛠️ **Editar Detalles y Monto Fijo (Ciego) de {carr_banco_sel}**")
