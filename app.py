@@ -13,7 +13,7 @@ from pypdf import PdfReader
 from streamlit_autorefresh import st_autorefresh
 
 # Configuración de pantalla completa
-st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺")
 
 # --- AUTOREFRESH (3 SEGUNDOS) ---
 try:
@@ -70,7 +70,7 @@ nombres_archivos = [
 img_b64 = get_image_base64(nombres_archivos)
 
 if img_b64:
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" class="header-logo-img" />'
+    logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" class="header-logo-img" />'
 else:
     logo_display = '<span style="color: #f1c40f; font-size: 14px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
 
@@ -118,7 +118,7 @@ st.markdown("""
         justify-content: center !important;
     }
     .header-logo-img {
-        max-height: 48px !important;
+        max-height: 80px !important;
         width: auto !important;
         object-fit: contain !important;
         display: block !important;
@@ -1217,7 +1217,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         
         imagen_subida = st.file_uploader(f"Subir imagen para {carr_img_sel}", type=["png", "jpg", "jpeg"], key=f"file_img_{carr_img_sel}")
         if imagen_subida is not None:
-            if st.button(f"💾 Guardar Imagen para {carr_img_sel}", key=f"btn_save_img_{carr_img_sel}", use_keyword_arguments=False, use_container_width=True, type="primary"):
+            if st.button(f"💾 Guardar Imagen para {carr_img_sel}", key=f"btn_save_img_{carr_img_sel}", use_container_width=True, type="primary"):
                 st.session_state.imagenes_carreras[carr_img_sel] = imagen_subida
                 st.toast(f"✅ Imagen asignada correctamente a {carr_img_sel}")
                 st.rerun()
