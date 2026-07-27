@@ -221,6 +221,16 @@ st.markdown("""
         color: #f0f6fc;
         margin-bottom: 8px;
     }
+    .carrera-condicion-card {
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        color: #f0f6fc;
+        margin-bottom: 10px;
+        line-height: 1.4;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -264,6 +274,8 @@ def inicializar_estado_global():
         st.session_state.banco_caballos_por_carrera = {}
     if 'remates' not in st.session_state:
         st.session_state.remates = {}
+    if 'detalles_carreras' not in st.session_state:
+        st.session_state.detalles_carreras = {}  # Guarda Condición, Hora y Distancia por carrera
     if 'historial_ganadores' not in st.session_state:
         st.session_state.historial_ganadores = {}
     if 'carreras_cerradas_remate' not in st.session_state:
@@ -429,8 +441,8 @@ def procesar_texto_para_remates(texto_a_procesar):
         lineas = texto_a_procesar.split('\n')
         carrera_actual_detectada = None
         banco_temporal = {}
+        detalles_temporal = {}
         
-        # Mapeo textual para números de carreras
         map_numeros = {
             'primera': 1, 'segunda': 2, 'tercera': 3, 'cuarta': 4,
             'quinta': 5, 'sexta': 6, 'septima': 7, 'octava': 8,
@@ -446,29 +458,43 @@ def procesar_texto_para_remates(texto_a_procesar):
             
             # Detectar si la línea corresponde a una carrera
             if "carrera" in linea_lower or any(k in linea_lower for k in map_numeros.keys()):
-                # Buscar número explícito en dígitos (ej: "1era carrera", "Carrera 3")
                 match_digito = re.search(r'(\d+)', linea_lower)
                 if match_digito and ("carrera" in linea_lower or len(linea_limpia) < 40):
                     num_carr = int(match_digito.group(1))
                     carrera_actual_detectada = f"Carrera {num_carr}"
                     if carrera_actual_detectada not in banco_temporal:
                         banco_temporal[carrera_actual_detectada] = []
+                    if carrera_actual_detectada not in detalles_temporal:
+                        detalles_temporal[carrera_actual_detectada] = {"condicion": "No especificada", "distancia": "No especificada", "hora": "No especificada"}
+                    
+                    # Intentar capturar detalles adicionales en la misma línea o cerca (distancia / hora)
+                    if "mts" in linea_lower or "metros" in linea_lower or "1" in linea_lower or "2" in linea_lower:
+                        detalles_temporal[carrera_actual_detectada]["condicion"] = linea_limpia
                     continue
                 else:
-                # Buscar número en palabras (ej: "primera carrera")
                     encontrado_palabra = False
                     for palabra, num in map_numeros.items():
                         if palabra in linea_lower:
                             carrera_actual_detectada = f"Carrera {num}"
                             if carrera_actual_detectada not in banco_temporal:
                                 banco_temporal[carrera_actual_detectada] = []
+                            if carrera_actual_detectada not in detalles_temporal:
+                                detalles_temporal[carrera_actual_detectada] = {"condicion": linea_limpia, "distancia": "No especificada", "hora": "No especificada"}
                             encontrado_palabra = True
                             break
                     if encontrado_palabra:
                         continue
 
-            # Si ya tenemos una carrera activa, buscar los ejemplares (ej: "1 - REY DAVID" o "1. REY DAVID")
+            # Buscar distancia (ej: 1200 metros, 1.100 mts) y hora en las líneas cercanas a la carrera
             if carrera_actual_detectada:
+                if "mts" in linea_lower or "metros" in linea_lower or "1." in linea_lower or "1," in linea_lower:
+                    if detalles_temporal[carrera_actual_detectada]["distancia"] == "No especificada":
+                        detalles_temporal[carrera_actual_detectada]["distancia"] = linea_limpia
+                if re.search(r'\d{1,2}:\d{2}', linea_lower):
+                    match_h = re.search(r'\d{1,2}:\d{2}\s*(?:am|pm)?', linea_lower)
+                    if match_h:
+                        detalles_temporal[carrera_actual_detectada]["hora"] = match_h.group(0).upper()
+
                 match_ejemplar = re.match(r'^(?:[Pp][Oo][Ss]\.?\s*)?(\d{1,2})[\s\-\.\)]+(.+)', linea_limpia)
                 if match_ejemplar:
                     num_pos = int(match_ejemplar.group(1))
@@ -483,6 +509,7 @@ def procesar_texto_para_remates(texto_a_procesar):
             for c_key in banco_temporal:
                 banco_temporal[c_key].sort(key=lambda x: int(re.match(r'^(\d+)', x).group(1)))
             st.session_state.banco_caballos_por_carrera = banco_temporal
+            st.session_state.detalles_carreras = detalles_temporal
             for c_key, c_vals in banco_temporal.items():
                 if c_key not in st.session_state.remates:
                     st.session_state.remates[c_key] = {}
@@ -502,6 +529,7 @@ if not st.session_state.remates:
         carr_nombre = f"Carrera {i}"
         st.session_state.banco_caballos_por_carrera[carr_nombre] = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
         st.session_state.remates[carr_nombre] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
+        st.session_state.detalles_carreras[carr_nombre] = {"condicion": "Condición de prueba", "distancia": "1200 mts", "hora": "02:00 PM"}
 
 lista_carreras_disponibles = list(st.session_state.remates.keys())
 
@@ -621,7 +649,16 @@ if menu_principal_opcion == "Remates":
             else:
                 st.success(f"🟢 Panel activo y abierto para: **{carr_activa}**")
 
-            st.markdown(f"### 🏁 {carr_activa}")
+            # --- MOSTRAR CONDICIÓN, HORA Y DISTANCIA DE LA CARRERA ---
+            detalles_carr = st.session_state.detalles_carreras.get(carr_activa, {"condicion": "Condición general", "distancia": "Por definir", "hora": "Por definir"})
+            st.markdown(f"""
+                <div class="carrera-condicion-card">
+                    <b>🏁 {carr_activa}</b><br>
+                    🏷️ <b>Condición:</b> {detalles_carr.get('condicion', 'N/A')}<br>
+                    📏 <b>Distancia:</b> {detalles_carr.get('distancia', 'N/A')} &nbsp;|&nbsp; ⏰ <b>Hora:</b> {detalles_carr.get('hora', 'N/A')}
+                </div>
+            """, unsafe_allow_html=True)
+
             dt_limite = st.session_state.fechas_horas_cierre_remate.get(carr_activa)
             estado_conteo = st.session_state.estado_conteo_carrera.get(carr_activa, "INACTIVO")
             
