@@ -6,6 +6,7 @@ import re
 import base64
 import requests
 import io
+from bs4 import BeautifulSoup
 from datetime import datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pypdf import PdfReader
@@ -211,7 +212,7 @@ st.markdown("""
         color: #ff4757;
         margin-bottom: 8px;
     }
-    .cierre-info-box {
+    .c cierre-info-box {
         background-color: #161b22;
         border: 1px solid #30363d;
         padding: 4px;
@@ -1000,35 +1001,45 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.rerun()
 
     elif tab_actual == "📄 Importar Web/Texto":
-        st.markdown("### 🌐 Importar Inscritos desde una Página Web o Texto")
-        st.markdown("Pega aquí abajo el contenido copiado directamente de la página web de inscritos (o la URL de una página de texto plano):")
+        st.markdown("### 🌐 Extraer Inscritos Directamente desde una Página Web")
+        st.markdown("Pega el enlace de la página web (URL) para extraer automáticamente todo el contenido de texto y organizarlo:")
         
-        url_web = st.text_input("🔗 URL de página web (Texto plano):", placeholder="https://ejemplo.com/inscritos.txt", key="input_url_web")
-        if st.button("🌐 Extraer desde URL", key="btn_extraer_url", use_container_width=True):
+        url_web = st.text_input("🔗 URL de la página web:", placeholder="https://ejemplo.com/programa-carreras", key="input_url_web_bs")
+        if st.button("🌐 Extraer desde la Página Web", key="btn_extraer_bs_url", use_container_width=True, type="primary"):
             if url_web.strip():
                 try:
-                    with st.spinner("Conectando con la página web..."):
-                        resp = requests.get(url_web.strip(), timeout=15)
+                    with st.spinner("Extrayendo contenido de la página web..."):
+                        headers = {'User-Agent': 'Mozilla/5.0'}
+                        resp = requests.get(url_web.strip(), headers=headers, timeout=15)
                         if resp.status_code == 200:
-                            if procesar_texto_para_remates(resp.text):
+                            # Usar BeautifulSoup para limpiar etiquetas HTML y extraer solo el texto limpio
+                            soup = BeautifulSoup(resp.text, 'html.parser')
+                            for script in soup(["script", "style"]):
+                                script.extract()
+                            texto_limpio_web = soup.get_text(separator='\n')
+                            
+                            if procesar_texto_para_remates(texto_limpio_web):
                                 st.success("✅ ¡Inscritos extraídos y organizados correctamente desde la web!")
                                 st.rerun()
+                            else:
+                                st.warning("⚠️ No se pudieron detectar carreras o ejemplares con el formato estándar en esa página.")
                         else:
-                            st.error(f"❌ Error al conectar. Código HTTP: {resp.status_code}")
+                            st.error(f"❌ Error al conectar con la página. Código HTTP: {resp.status_code}")
                 except Exception as e:
                     st.error(f"❌ Error al consultar la URL: {e}")
             else:
                 st.warning("⚠️ Ingresa una URL válida.")
 
         st.markdown("---")
+        st.markdown("O si prefieres, puedes pegar el texto directamente:")
         texto_copiado_web = st.text_area(
-            "O pega el texto copiado de la página web:",
+            "Texto copiado de la web:",
             value="",
-            height=220,
+            height=200,
             key="text_area_web_copiado",
             placeholder="Ejemplo:\nPrimera Carrera\n1. Rey David\n2. Gran Amigo..."
         )
-        if st.button("🚀 Procesar Texto Pegado", key="btn_procesar_texto_pegado", use_container_width=True, type="primary"):
+        if st.button("🚀 Procesar Texto Pegado", key="btn_procesar_texto_pegado", use_container_width=True):
             if texto_copiado_web.strip():
                 if procesar_texto_para_remates(texto_copiado_web):
                     st.success("✅ ¡Texto procesado y carreras organizadas con éxito!")
