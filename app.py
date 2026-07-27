@@ -175,13 +175,19 @@ st.markdown("""
     }
     .stButton button {
         width: 100% !important;
-        border-radius: 8px !important;
+        border-radius: 6px !important;
         font-weight: 700 !important;
-        padding: 0.3rem 0.4rem !important;
-        min-height: 38px !important;
-        font-size: 11px !important;
-        letter-spacing: 0.3px;
+        padding: 0.15rem 0.2rem !important;
+        min-height: 30px !important;
+        max-height: 34px !important;
+        font-size: 10px !important;
+        letter-spacing: 0.2px;
         white-space: nowrap !important;
+    }
+    div[data-testid="column"] {
+        width: fit-content !important;
+        flex: 1 !important;
+        min-width: 0 !important;
     }
     .subasta-header {
         font-size: clamp(16px, 4vw, 20px);
@@ -947,7 +953,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             st.image(st.session_state.imagenes_carreras[carr_img_sel], width=300)
             if st.button("🗑️ Eliminar Imagen", key=f"btn_del_img_{carr_img_sel}", use_container_width=True):
                 del st.session_state.imagenes_carreras[carr_img_sel]
-                st.toast("🗑️ Imagen removida")
+                st.toast("🗑️ Removida")
                 st.rerun()
 
     elif tab_actual == "📄 PDF":
