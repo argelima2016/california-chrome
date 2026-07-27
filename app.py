@@ -307,8 +307,10 @@ def inicializar_estado_global():
         st.session_state.dupleta_bloqueada = False
     if 'carreras_activas_remate' not in st.session_state:
         st.session_state.carreras_activas_remate = []
-    if 'bloqueo_modalidades_remate' not in st.session_state:
-        st.session_state.bloqueo_modalidades_remate = {"Adelantados": False, "Ciegos": False, "En Vivo": False}
+    if 'carreras_por_modalidad' not in st.session_state:
+        st.session_state.carreras_por_modalidad = {"Adelantados": [], "Ciegos": [], "En Vivo": []}
+    if 'total_carreras_semana' not in st.session_state:
+        st.session_state.total_carreras_semana = 10
     if 'programa_pdf_bytes' not in st.session_state:
         st.session_state.programa_pdf_bytes = None
     if 'programa_pdf_nombre' not in st.session_state:
@@ -519,13 +521,17 @@ def procesar_texto_flexible(texto_a_procesar):
             todas_carr = list(banco_temporal.keys())
             st.session_state.carreras_activas_remate = list(todas_carr)
             st.session_state.carreras_habilitadas_dupleta = list(todas_carr)
+            st.session_state.total_carreras_semana = len(todas_carr)
+            for mod in st.session_state.carreras_por_modalidad:
+                if not st.session_state.carreras_por_modalidad[mod]:
+                    st.session_state.carreras_por_modalidad[mod] = list(todas_carr)
             return True
     except Exception as e:
         st.error(f"Error procesando el texto: {e}")
     return False
 
 if not st.session_state.remates:
-    for i in range(1, 11):
+    for i in range(1, st.session_state.total_carreras_semana + 1):
         carr_nombre = f"Carrera {i}"
         st.session_state.banco_caballos_por_carrera[carr_nombre] = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
         st.session_state.remates[carr_nombre] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
@@ -538,6 +544,10 @@ if not st.session_state.carreras_activas_remate and lista_carreras_disponibles:
 
 if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_dupleta = list(lista_carreras_disponibles)
+
+for mod in ["Adelantados", "Ciegos", "En Vivo"]:
+    if not st.session_state.carreras_por_modalidad.get(mod) and lista_carreras_disponibles:
+        st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
 # --- MENÚ PRINCIPAL HORIZONTAL (MÁS COMPACTO) ---
 col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
@@ -627,199 +637,199 @@ if menu_principal_opcion == "Remates":
 
     modo_actual_remate = st.session_state.sub_remate_opcion
 
-    if st.session_state.bloqueo_modalidades_remate.get(modo_actual_remate, False):
-        st.error(f"🔒 **BLOQUEADO:** El módulo de remates **{modo_actual_remate}** se encuentra bloqueado por el administrador.")
+    st.markdown(f"### 🏇 Modo de Remate: **{modo_actual_remate.upper()}**")
+
+    if not lista_carreras_disponibles:
+        st.warning("⚠️ No hay carreras cargadas en el sistema.")
     else:
-        st.markdown(f"### 🏇 Modo de Remate: **{modo_actual_remate.upper()}**")
-
-        if not lista_carreras_disponibles:
-            st.warning("⚠️ No hay carreras cargadas en el sistema.")
+        # Filtrar estrictamente según lo configurado en el Banco de Carreras
+        carreras_modalidad_permitidas = st.session_state.carreras_por_modalidad.get(modo_actual_remate, lista_carreras_disponibles)
+        
+        carreras_filtradas_visibles = [
+            c for c in lista_carreras_disponibles 
+            if c in carreras_modalidad_permitidas and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
+        ]
+        
+        if not carreras_filtradas_visibles:
+            st.info(f"ℹ️ No hay carreras seleccionadas para la modalidad **{modo_actual_remate}**. Configúralas en la Zona Admin (Banco de Carreras).")
         else:
-            carreras_filtradas_visibles = [
-                c for c in lista_carreras_disponibles 
-                if (c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False)
-            ]
-            
-            if not carreras_filtradas_visibles:
-                st.info("ℹ️ No hay carreras activas ni cerradas para mostrar. Selecciona carreras en el menú lateral.")
+            if "carrera_remate_activa_seleccionada" not in st.session_state or st.session_state["carrera_remate_activa_seleccionada"] not in carreras_filtradas_visibles:
+                carr_activa = carreras_filtradas_visibles[0]
+                st.session_state["carrera_remate_activa_seleccionada"] = carr_activa
             else:
-                if "carrera_remate_activa_seleccionada" not in st.session_state or st.session_state["carrera_remate_activa_seleccionada"] not in carreras_filtradas_visibles:
-                    carr_activa = carreras_filtradas_visibles[0]
-                    st.session_state["carrera_remate_activa_seleccionada"] = carr_activa
-                else:
-                    carr_activa = st.session_state["carrera_remate_activa_seleccionada"]
+                carr_activa = st.session_state["carrera_remate_activa_seleccionada"]
 
-                st.markdown("🔹 **Seleccionar Carrera:**")
-                
-                num_carreras = len(carreras_filtradas_visibles)
-                cols_carreras = st.columns(num_carreras if num_carreras > 0 else 1, gap="small")
-                for idx, c_nombre in enumerate(carreras_filtradas_visibles):
-                    abreviatura = obtener_abreviatura_carrera(c_nombre)
-                    es_activa = (c_nombre == carr_activa)
-                    with cols_carreras[idx]:
-                        if st.button(abreviatura, key=f"rem_btn_sel_carr_{idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
-                            st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
-                            st.rerun()
+            st.markdown("🔹 **Seleccionar Carrera:**")
+            
+            num_carreras = len(carreras_filtradas_visibles)
+            cols_carreras = st.columns(num_carreras if num_carreras > 0 else 1, gap="small")
+            for idx, c_nombre in enumerate(carreras_filtradas_visibles):
+                abreviatura = obtener_abreviatura_carrera(c_nombre)
+                es_activa = (c_nombre == carr_activa)
+                with cols_carreras[idx]:
+                    if st.button(abreviatura, key=f"rem_btn_sel_carr_{idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
+                        st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
+                        st.rerun()
 
-                st.markdown(f"---")
+            st.markdown(f"---")
 
-                if carr_activa in st.session_state.imagenes_carreras:
-                    st.image(st.session_state.imagenes_carreras[carr_activa], caption=f"Imagen oficial - {carr_activa}", use_container_width=True)
+            if carr_activa in st.session_state.imagenes_carreras:
+                st.image(st.session_state.imagenes_carreras[carr_activa], caption=f"Imagen oficial - {carr_activa}", use_container_width=True)
 
-                carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
-                if carrera_cerrada:
-                    st.error(f"🔴 La carrera **{carr_activa}** se encuentra **CERRADA** para nuevas pujas.")
-                else:
-                    st.success(f"🟢 Panel activo y abierto para: **{carr_activa}** ({modo_actual_remate})")
+            carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
+            if carrera_cerrada:
+                st.error(f"🔴 La carrera **{carr_activa}** se encuentra **CERRADA** para nuevas pujas.")
+            else:
+                st.success(f"🟢 Panel activo y abierto para: **{carr_activa}** ({modo_actual_remate})")
 
-                # --- MOSTRAR CONDICIÓN, HORA Y DISTANCIA ---
-                if carr_activa not in st.session_state.detalles_carreras:
-                    st.session_state.detalles_carreras[carr_activa] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0}
-                
-                detalles_carr = st.session_state.detalles_carreras[carr_activa]
+            # --- MOSTRAR CONDICIÓN, HORA Y DISTANCIA ---
+            if carr_activa not in st.session_state.detalles_carreras:
+                st.session_state.detalles_carreras[carr_activa] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0}
+            
+            detalles_carr = st.session_state.detalles_carreras[carr_activa]
 
-                st.markdown(f"""
-                    <div class="carrera-condicion-card">
-                        <b>🏁 {carr_activa}</b><br>
-                        🏷️ <b>Condición:</b> {detalles_carr.get('condicion', 'N/A')}<br>
-                        📏 <b>Distancia:</b> {detalles_carr.get('distancia', 'N/A')} &nbsp;|&nbsp; ⏰ <b>Hora:</b> {detalles_carr.get('hora', 'N/A')}
-                        {f"<br>💰 <b>Monto Fijo (Ciego):</b> {formatear_bs(detalles_carr.get('monto_fijo_ciego', 500.0))}" if modo_actual_remate == "Ciegos" else ""}
-                    </div>
-                """, unsafe_allow_html=True)
+            st.markdown(f"""
+                <div class="carrera-condicion-card">
+                    <b>🏁 {carr_activa}</b><br>
+                    🏷️ <b>Condición:</b> {detalles_carr.get('condicion', 'N/A')}<br>
+                    📏 <b>Distancia:</b> {detalles_carr.get('distancia', 'N/A')} &nbsp;|&nbsp; ⏰ <b>Hora:</b> {detalles_carr.get('hora', 'N/A')}
+                    {f"<br>💰 <b>Monto Fijo (Ciego):</b> {formatear_bs(detalles_carr.get('monto_fijo_ciego', 500.0))}" if modo_actual_remate == "Ciegos" else ""}
+                </div>
+            """, unsafe_allow_html=True)
 
-                dt_limite = st.session_state.fechas_horas_cierre_remate.get(carr_activa)
-                estado_conteo = st.session_state.estado_conteo_carrera.get(carr_activa, "INACTIVO")
-                
-                if dt_limite:
-                    st.markdown(f"<div class='cierre-info-box'>⏰ Cierre Estricto: <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+            dt_limite = st.session_state.fechas_horas_cierre_remate.get(carr_activa)
+            estado_conteo = st.session_state.estado_conteo_carrera.get(carr_activa, "INACTIVO")
+            
+            if dt_limite:
+                st.markdown(f"<div class='cierre-info-box'>⏰ Cierre Estricto: <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
 
-                if dt_limite and not carrera_cerrada:
-                    diferencia_segundos = (dt_limite - ahora_dt).total_seconds()
-                    if estado_conteo == "INACTIVO":
-                        if 0 < diferencia_segundos <= 10:
-                            st.session_state.estado_conteo_carrera[carr_activa] = "CONTEO_10S"
-                            st.session_state.tiempo_inicio_conteo[carr_activa] = ahora_dt
-                            st.rerun()
-                        elif diferencia_segundos <= 0:
-                            st.session_state.carreras_cerradas_remate[carr_activa] = True
-                            st.session_state.estado_conteo_carrera[carr_activa] = "CERRADO"
-                            st.rerun()
-                    elif estado_conteo == "CONTEO_10S":
-                        tiempo_inicio = st.session_state.tiempo_inicio_conteo.get(carr_activa, ahora_dt)
-                        transcurridos = (ahora_dt - tiempo_inicio).total_seconds()
-                        if transcurridos >= 12:
-                            st.session_state.carreras_cerradas_remate[carr_activa] = True
-                            st.session_state.estado_conteo_carrera[carr_activa] = "CERRADO"
-                            st.rerun()
+            if dt_limite and not carrera_cerrada:
+                diferencia_segundos = (dt_limite - ahora_dt).total_seconds()
+                if estado_conteo == "INACTIVO":
+                    if 0 < diferencia_segundos <= 10:
+                        st.session_state.estado_conteo_carrera[carr_activa] = "CONTEO_10S"
+                        st.session_state.tiempo_inicio_conteo[carr_activa] = ahora_dt
+                        st.rerun()
+                    elif diferencia_segundos <= 0:
+                        st.session_state.carreras_cerradas_remate[carr_activa] = True
+                        st.session_state.estado_conteo_carrera[carr_activa] = "CERRADO"
+                        st.rerun()
+                elif estado_conteo == "CONTEO_10S":
+                    tiempo_inicio = st.session_state.tiempo_inicio_conteo.get(carr_activa, ahora_dt)
+                    transcurridos = (ahora_dt - tiempo_inicio).total_seconds()
+                    if transcurridos >= 12:
+                        st.session_state.carreras_cerradas_remate[carr_activa] = True
+                        st.session_state.estado_conteo_carrera[carr_activa] = "CERRADO"
+                        st.rerun()
+                    else:
+                        restantes_10s = max(0, 10 - int(transcurridos))
+                        if restantes_10s > 0:
+                            st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa})</div>", unsafe_allow_html=True)
+
+            tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa])
+            cantidad_filas = len(st.session_state.remates[carr_activa])
+            altura_dinamica = min(max(150, (cantidad_filas * 38) + 60), 450)
+            components.html(tabla_html, height=altura_dinamica, scrolling=True)
+            
+            total_pote = sum([info['monto'] for info in st.session_state.remates[carr_activa].values()])
+            monto_casa = total_pote * (porcentaje_casa / 100)
+            pote_neto_base = total_pote - monto_casa
+
+            c_m1, c_m2 = st.columns(2)
+            c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
+            pote_incentivo_extra = c_m2.number_input("🎁 Extra", min_value=0.0, value=0.0, step=50.0, key=f"rem_pote_inc_{carr_activa}")
+            premio_total_calculado = pote_neto_base + pote_incentivo_extra
+            st.metric(f"🏆 Premio Total ({carr_activa})", formatear_bs(premio_total_calculado))
+
+            with st.container(border=True):
+                if modo_actual_remate == "Ciegos":
+                    st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
+                    monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
+                    st.info(f"💰 Monto fijo preestablecido para esta carrera: **{formatear_bs(monto_fijo_carrera)}**")
+
+                    lista_caballos_activos = list(st.session_state.remates[carr_activa].keys())
+                    if not lista_caballos_activos:
+                        st.warning("Sin ejemplares inscritos.")
+                    else:
+                        caballo_seleccionado_ciego = st.selectbox("Seleccionar Ejemplar a Comprar", lista_caballos_activos, key=f"sel_cab_ciego_{carr_activa}")
+                        
+                        if carrera_cerrada:
+                            st.button("🔨 Asignar Ejemplar (Cerrado)", key=f"btn_ciego_cerrado_{carr_activa}", use_container_width=True, type="primary", disabled=True)
                         else:
-                            restantes_10s = max(0, 10 - int(transcurridos))
-                            if restantes_10s > 0:
-                                st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa})</div>", unsafe_allow_html=True)
-
-                tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa])
-                cantidad_filas = len(st.session_state.remates[carr_activa])
-                altura_dinamica = min(max(150, (cantidad_filas * 38) + 60), 450)
-                components.html(tabla_html, height=altura_dinamica, scrolling=True)
-                
-                total_pote = sum([info['monto'] for info in st.session_state.remates[carr_activa].values()])
-                monto_casa = total_pote * (porcentaje_casa / 100)
-                pote_neto_base = total_pote - monto_casa
-
-                c_m1, c_m2 = st.columns(2)
-                c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
-                pote_incentivo_extra = c_m2.number_input("🎁 Extra", min_value=0.0, value=0.0, step=50.0, key=f"rem_pote_inc_{carr_activa}")
-                premio_total_calculado = pote_neto_base + pote_incentivo_extra
-                st.metric(f"🏆 Premio Total ({carr_activa})", formatear_bs(premio_total_calculado))
-
-                with st.container(border=True):
-                    if modo_actual_remate == "Ciegos":
-                        st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
-                        monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
-                        st.info(f"💰 Monto fijo preestablecido para esta carrera: **{formatear_bs(monto_fijo_carrera)}**")
-
-                        lista_caballos_activos = list(st.session_state.remates[carr_activa].keys())
-                        if not lista_caballos_activos:
-                            st.warning("Sin ejemplares inscritos.")
-                        else:
-                            caballo_seleccionado_ciego = st.selectbox("Seleccionar Ejemplar a Comprar", lista_caballos_activos, key=f"sel_cab_ciego_{carr_activa}")
+                            if st.button("🔨 Comprar / Asignar Ejemplar (Monto Fijo)", key=f"btn_ciego_conf_{carr_activa}", use_container_width=True, type="primary"):
+                                st.session_state.remates[carr_activa][caballo_seleccionado_ciego] = {
+                                    "jugador": st.session_state.usuario_activo, 
+                                    "monto": monto_fijo_carrera
+                                }
+                                st.session_state.historial_jugadas.append({
+                                    "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                    "jugador": st.session_state.usuario_activo,
+                                    "tipo": "Remate Ciego",
+                                    "carrera": carr_activa,
+                                    "detalle": caballo_seleccionado_ciego,
+                                    "monto": monto_fijo_carrera
+                                })
+                                if st.session_state.usuario_activo not in st.session_state.cuentas:
+                                    st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
+                                
+                                st.success(f"✅ ¡Ejemplar asignado a {st.session_state.usuario_activo} por {formatear_bs(monto_fijo_carrera)}!")
+                                st.rerun()
+                else:
+                    st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
+                    lista_caballos_activos = list(st.session_state.remates[carr_activa].keys())
+                    
+                    if not lista_caballos_activos:
+                        st.warning("Sin ejemplares inscritos en esta carrera.")
+                    else:
+                        k_sel_cab = f"rem_caballo_activo_click_{carr_activa}"
+                        if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
+                            st.session_state[k_sel_cab] = lista_caballos_activos[0]
                             
-                            if carrera_cerrada:
-                                st.button("🔨 Asignar Ejemplar (Cerrado)", key=f"btn_ciego_cerrado_{carr_activa}", use_container_width=True, type="primary", disabled=True)
-                            else:
-                                if st.button("🔨 Comprar / Asignar Ejemplar (Monto Fijo)", key=f"btn_ciego_conf_{carr_activa}", use_container_width=True, type="primary"):
-                                    st.session_state.remates[carr_activa][caballo_seleccionado_ciego] = {
-                                        "jugador": st.session_state.usuario_activo, 
-                                        "monto": monto_fijo_carrera
-                                    }
+                        st.markdown(f"🔹 **1. Seleccionar Ejemplar (Total inscritos: {len(lista_caballos_activos)}):**")
+                        cantidad_ejemplares = len(lista_caballos_activos)
+                        cols_ejemplares = min(4, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
+                        num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
+                        
+                        idx_cab = 0
+                        for f in range(num_filas):
+                            cols_fila = st.columns(cols_ejemplares, gap="small")
+                            for c in range(cols_ejemplares):
+                                if idx_cab < cantidad_ejemplares:
+                                    cab_item = lista_caballos_activos[idx_cab]
+                                    num_parte = cab_item.split(" - ")[0]
+                                    with cols_fila[c]:
+                                        if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{idx_cab}", use_container_width=True):
+                                            st.session_state[k_sel_cab] = cab_item
+                                    idx_cab += 1
+                        
+                        caballo_seleccionado = st.session_state[k_sel_cab]
+                        st.info(f"Ejemplar activo en {carr_activa}: **{caballo_seleccionado}**")
+
+                        puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
+                        opciones_escala = obtener_siguientes_montos(puja_actual)
+                        monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{carr_activa}_{caballo_seleccionado}")
+                        
+                        if carrera_cerrada:
+                            st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary", disabled=True)
+                        else:
+                            if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary"):
+                                if monto_puja <= puja_actual:
+                                    st.error("El monto debe ser mayor a la puja actual.")
+                                else:
+                                    st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
                                     st.session_state.historial_jugadas.append({
                                         "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
                                         "jugador": st.session_state.usuario_activo,
-                                        "tipo": "Remate Ciego",
+                                        "tipo": f"Remate ({modo_actual_remate})",
                                         "carrera": carr_activa,
-                                        "detalle": caballo_seleccionado_ciego,
-                                        "monto": monto_fijo_carrera
+                                        "detalle": caballo_seleccionado,
+                                        "monto": monto_puja
                                     })
-                                    if st.session_state.usuario_activo not in st.session_state.cuentas:
-                                        st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                                    st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
-                                    
-                                    st.success(f"✅ ¡Ejemplar asignado a {st.session_state.usuario_activo} por {formatear_bs(monto_fijo_carrera)}!")
+                                    if estado_conteo == "CONTEO_10S":
+                                        st.session_state.tiempo_inicio_conteo[carr_activa] = obtener_hora_venezuela_local()
+                                    st.success("✅ ¡Puja registrada correctamente y conteo reiniciado!")
                                     st.rerun()
-                    else:
-                        st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
-                        lista_caballos_activos = list(st.session_state.remates[carr_activa].keys())
-                        
-                        if not lista_caballos_activos:
-                            st.warning("Sin ejemplares inscritos en esta carrera.")
-                        else:
-                            k_sel_cab = f"rem_caballo_activo_click_{carr_activa}"
-                            if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
-                                st.session_state[k_sel_cab] = lista_caballos_activos[0]
-                                
-                            st.markdown(f"🔹 **1. Seleccionar Ejemplar (Total inscritos: {len(lista_caballos_activos)}):**")
-                            cantidad_ejemplares = len(lista_caballos_activos)
-                            cols_ejemplares = min(4, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
-                            num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
-                            
-                            idx_cab = 0
-                            for f in range(num_filas):
-                                cols_fila = st.columns(cols_ejemplares, gap="small")
-                                for c in range(cols_ejemplares):
-                                    if idx_cab < cantidad_ejemplares:
-                                        cab_item = lista_caballos_activos[idx_cab]
-                                        num_parte = cab_item.split(" - ")[0]
-                                        with cols_fila[c]:
-                                            if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{idx_cab}", use_container_width=True):
-                                                st.session_state[k_sel_cab] = cab_item
-                                        idx_cab += 1
-                            
-                            caballo_seleccionado = st.session_state[k_sel_cab]
-                            st.info(f"Ejemplar activo en {carr_activa}: **{caballo_seleccionado}**")
-
-                            puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
-                            opciones_escala = obtener_siguientes_montos(puja_actual)
-                            monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{carr_activa}_{caballo_seleccionado}")
-                            
-                            if carrera_cerrada:
-                                st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary", disabled=True)
-                            else:
-                                if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary"):
-                                    if monto_puja <= puja_actual:
-                                        st.error("El monto debe ser mayor a la puja actual.")
-                                    else:
-                                        st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
-                                        st.session_state.historial_jugadas.append({
-                                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                            "jugador": st.session_state.usuario_activo,
-                                            "tipo": f"Remate ({modo_actual_remate})",
-                                            "carrera": carr_activa,
-                                            "detalle": caballo_seleccionado,
-                                            "monto": monto_puja
-                                        })
-                                        if estado_conteo == "CONTEO_10S":
-                                            st.session_state.tiempo_inicio_conteo[carr_activa] = obtener_hora_venezuela_local()
-                                        st.success("✅ ¡Puja registrada correctamente y conteo reiniciado!")
-                                        st.rerun()
 
 # =========================================================================
 # 2. MÓDULO DE DUPLETAS
@@ -965,7 +975,7 @@ elif menu_principal_opcion == "Cuentas":
         st.dataframe(pd.DataFrame(datos_historial), use_container_width=True, hide_index=True)
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR
+# 4. ZONA DE ADMINISTRADOR (BANCO DE CARRERAS Y CONFIGURACIÓN SEMANAL)
 # =========================================================================
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Zona de Administrador</div>", unsafe_allow_html=True)
@@ -984,31 +994,75 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     tab_actual = st.session_state.admin_tab_seleccionada
 
     if tab_actual == "✍️ Banco":
-        st.markdown("### ✍️ Banco de Caballos y Control Global de Modalidades")
+        st.markdown("### ✍️ Banco de Carreras: Configuración y Asignación de Modalidades")
         
+        # --- CONFIGURACIÓN DE CUÁNTAS CARRERAS VAN A CORRER EN LA SEMANA ---
         with st.container(border=True):
-            st.markdown("🔒 **Bloqueo Global de Módulos de Remates (Aplica a toda la jornada)**")
-            bloq_mods = st.session_state.bloqueo_modalidades_remate
-            
-            b_adel_glob = st.checkbox("Bloquear Remates Adelantados (Global)", value=bloq_mods.get("Adelantados", False), key="b_glob_adel")
-            b_cieg_glob = st.checkbox("Bloquear Remates Ciegos (Global)", value=bloq_mods.get("Ciegos", False), key="b_glob_cieg")
-            b_env_glob = st.checkbox("Bloquear Remates En Vivo (Global)", value=bloq_mods.get("En Vivo", False), key="b_glob_env")
-            
-            if st.button("💾 Guardar Bloqueos Globales", key="btn_save_glob_bloq", use_container_width=True, type="primary"):
-                st.session_state.bloqueo_modalidades_remate = {
-                    "Adelantados": b_adel_glob, "Ciegos": b_cieg_glob, "En Vivo": b_env_glob
-                }
-                st.toast("✅ ¡Bloqueos globales de modalidades actualizados!")
+            st.markdown("📅 **Configuración General de la Semana**")
+            nueva_cantidad_carreras = st.number_input(
+                "¿Cuántas carreras van a correr esta semana?", 
+                min_value=1, 
+                max_value=25, 
+                value=int(st.session_state.total_carreras_semana), 
+                step=1, 
+                key="input_total_carreras_semana"
+            )
+            if st.button("💾 Actualizar Cantidad de Carreras", key="btn_actualizar_cant_carreras", use_container_width=True, type="primary"):
+                st.session_state.total_carreras_semana = nueva_cantidad_carreras
+                # Sincronizar o ajustar el banco si faltan carreras
+                for i in range(1, nueva_cantidad_carreras + 1):
+                    c_n = f"Carrera {i}"
+                    if c_n not in st.session_state.banco_caballos_por_carrera:
+                        st.session_state.banco_caballos_por_carrera[c_n] = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
+                        st.session_state.remates[c_n] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
+                        st.session_state.detalles_carreras[c_n] = {"condicion": "Condición estándar", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0}
+                st.toast(f"✅ ¡Jornada ajustada a {nueva_cantidad_carreras} carreras!")
                 st.rerun()
 
         st.markdown("---")
-        carr_banco_sel = st.selectbox("Seleccionar Carrera para Editar", lista_carreras_disponibles, key="adm_banco_sel_carrera")
+
+        carr_banco_sel = st.selectbox("Seleccionar Carrera para Configurar y Editar", lista_carreras_disponibles, key="adm_banco_sel_carrera")
         
         if carr_banco_sel not in st.session_state.banco_caballos_por_carrera:
             st.session_state.banco_caballos_por_carrera[carr_banco_sel] = []
         if carr_banco_sel not in st.session_state.detalles_carreras:
             st.session_state.detalles_carreras[carr_banco_sel] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0}
 
+        # --- SELECCIONADOR DE MODALIDADES ACTIVAS PARA CADA CARRERA EN EL BANCO ---
+        with st.container(border=True):
+            st.markdown(f"⚙️ **Activación de Modalidades para `{carr_banco_sel}`:**")
+            
+            for mod in ["Adelantados", "Ciegos", "En Vivo"]:
+                if carr_banco_sel not in st.session_state.carreras_por_modalidad[mod]:
+                    if carr_banco_sel in lista_carreras_disponibles and not st.session_state.carreras_por_modalidad[mod]:
+                        st.session_state.carreras_por_modalidad[mod].append(carr_banco_sel)
+
+            act_adel = st.checkbox("Activa en Remates Adelantados", value=(carr_banco_sel in st.session_state.carreras_por_modalidad["Adelantados"]), key=f"chk_adel_{carr_banco_sel}")
+            act_cieg = st.checkbox("Activa en Remates Ciegos", value=(carr_banco_sel in st.session_state.carreras_por_modalidad["Ciegos"]), key=f"chk_cieg_{carr_banco_sel}")
+            act_envv = st.checkbox("Activa en Remates En Vivo", value=(carr_banco_sel in st.session_state.carreras_por_modalidad["En Vivo"]), key=f"chk_envv_{carr_banco_sel}")
+
+            if st.button("💾 Guardar Modalidades Activas", key=f"btn_save_mods_{carr_banco_sel}", use_container_width=True, type="primary"):
+                if act_adel and carr_banco_sel not in st.session_state.carreras_por_modalidad["Adelantados"]:
+                    st.session_state.carreras_por_modalidad["Adelantados"].append(carr_banco_sel)
+                elif not act_adel and carr_banco_sel in st.session_state.carreras_por_modalidad["Adelantados"]:
+                    st.session_state.carreras_por_modalidad["Adelantados"].remove(carr_banco_sel)
+
+                if act_cieg and carr_banco_sel not in st.session_state.carreras_por_modalidad["Ciegos"]:
+                    st.session_state.carreras_por_modalidad["Ciegos"].append(carr_banco_sel)
+                elif not act_cieg and carr_banco_sel in st.session_state.carreras_por_modalidad["Ciegos"]:
+                    st.session_state.carreras_por_modalidad["Ciegos"].remove(carr_banco_sel)
+
+                if act_envv and carr_banco_sel not in st.session_state.carreras_por_modalidad["En Vivo"]:
+                    st.session_state.carreras_por_modalidad["En Vivo"].append(carr_banco_sel)
+                elif not act_envv and carr_banco_sel in st.session_state.carreras_por_modalidad["En Vivo"]:
+                    st.session_state.carreras_por_modalidad["En Vivo"].remove(carr_banco_sel)
+
+                st.toast(f"✅ ¡Modalidades actualizadas para {carr_banco_sel}!")
+                st.rerun()
+
+        st.markdown("---")
+
+        # --- EDICIÓN DE CONDICIÓN, HORA, DISTANCIA Y MONTO CIEGO ---
         det_actuales = st.session_state.detalles_carreras[carr_banco_sel]
         with st.container(border=True):
             st.markdown(f"🛠️ **Editar Detalles y Monto Fijo (Ciego) de {carr_banco_sel}**")
