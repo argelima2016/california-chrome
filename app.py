@@ -440,37 +440,45 @@ def procesar_texto_flexible(texto_a_procesar):
             
             linea_lower = linea_limpia.lower()
             
+            # --- DETECCIÓN AMPLIADA DE CARRERAS ---
+            es_nueva_carrera = False
+            num_carr = None
+
             if "carrera" in linea_lower or any(k in linea_lower for k in map_numeros.keys()):
                 match_digito = re.search(r'(\d+)', linea_lower)
-                if match_digito and ("carrera" in linea_lower or len(linea_limpia) < 45):
+                if match_digito and ("carrera" in linea_lower or len(linea_limpia) < 50):
                     num_carr = int(match_digito.group(1))
-                    carrera_actual_detectada = f"Carrera {num_carr}"
+                    es_nueva_carrera = True
                 else:
                     for palabra, num in map_numeros.items():
                         if palabra in linea_lower:
-                            carrera_actual_detectada = f"Carrera {num}"
+                            num_carr = num
+                            es_nueva_carrera = True
                             break
 
-                if carrera_actual_detectada:
-                    if carrera_actual_detectada not in banco_temporal:
-                        banco_temporal[carrera_actual_detectada] = []
-                    
-                    cond = linea_limpia
-                    dist = "Por definir"
-                    hora = "Por definir"
+            if es_nueva_carrera and num_carr:
+                carrera_actual_detectada = f"Carrera {num_carr}"
+                if carrera_actual_detectada not in banco_temporal:
+                    banco_temporal[carrera_actual_detectada] = []
+                
+                cond = linea_limpia
+                dist = "Por definir"
+                hora = "Por definir"
 
-                    match_dist = re.search(r'(\d+[\.,]?\d*\s*(?:mts|metros|mt))', linea_lower)
-                    if match_dist:
-                        dist = match_dist.group(1).upper()
+                match_dist = re.search(r'(\d+[\.,]?\d*\s*(?:mts|metros|mt))', linea_lower)
+                if match_dist:
+                    dist = match_dist.group(1).upper()
 
-                    match_h = re.search(r'(\d{1,2}:\d{2}\s*(?:am|pm)?)', linea_lower)
-                    if match_h:
-                        hora = match_h.group(1).upper()
+                match_h = re.search(r'(\d{1,2}:\d{2}\s*(?:am|pm)?)', linea_lower)
+                if match_h:
+                    hora = match_h.group(1).upper()
 
-                    detalles_temporal[carrera_actual_detectada] = {"condicion": cond, "distancia": dist, "hora": hora}
-                    continue
+                detalles_temporal[carrera_actual_detectada] = {"condicion": cond, "distancia": dist, "hora": hora}
+                continue
 
+            # --- DETECCIÓN DE EJEMPLARES ---
             if carrera_actual_detectada:
+                # Capturar distancia u hora suelta si aparece cerca
                 if "mts" in linea_lower or "metros" in linea_lower:
                     if detalles_temporal[carrera_actual_detectada]["distancia"] == "Por definir":
                         detalles_temporal[carrera_actual_detectada]["distancia"] = linea_limpia
@@ -479,6 +487,7 @@ def procesar_texto_flexible(texto_a_procesar):
                     if match_h2 and detalles_temporal[carrera_actual_detectada]["hora"] == "Por definir":
                         detalles_temporal[carrera_actual_detectada]["hora"] = match_h2.group(0).upper()
 
+                # Reconocer formato de ejemplar: "1 - Nombre", "1. Nombre", "1 Nombre"
                 match_ejemplar = re.match(r'^(?:[Pp][Oo][Ss]\.?\s*)?(\d{1,2})[\s\-\.\)]+(.+)', linea_limpia)
                 if match_ejemplar:
                     num_pos = int(match_ejemplar.group(1))
@@ -1008,14 +1017,14 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
     elif tab_actual == "📄 Importar Web/Texto":
         st.markdown("### 🌐 Importar Inscritos y Condiciones por Texto")
-        st.markdown("Pega el texto copiado de la página web (cada carrera con su condición, distancia, hora y sus ejemplares):")
+        st.markdown("Pega el texto copiado de la página web de inscritos (ej: 'Primera Carrera' o 'Carrera 1', seguido de los ejemplares):")
         
         texto_copiado_web = st.text_area(
             "Contenido copiado:",
             value="",
             height=220,
             key="text_area_web_copiado",
-            placeholder="Primera Carrera - Condición: Clásico - 1.200 mts - 02:00 PM\n1 - Rey David\n2 - Gran Amigo"
+            placeholder="Primera Carrera - 1.200 mts - 02:00 PM\n1 - Rey David\n2 - Gran Amigo\n\nSegunda Carrera - 1.400 mts - 02:30 PM\n1 - Rayo Negro"
         )
         if st.button("🚀 Procesar Contenido Pegado", key="btn_procesar_texto_pegado", use_container_width=True, type="primary"):
             if texto_copiado_web.strip():
@@ -1023,6 +1032,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.success("✅ ¡Inscritos organizados por carrera con éxito!")
                     st.rerun()
                 else:
-                    st.warning("⚠️ Asegúrate de incluir el nombre de la carrera (ej: 'Primera Carrera') seguido de los ejemplares numerados (ej: '1 - Nombre').")
+                    st.warning("⚠️ Asegúrate de incluir el nombre de la carrera (ej: 'Primera Carrera' o 'Carrera 1') seguido de los ejemplares numerados (ej: '1 - Nombre').")
             else:
                 st.warning("⚠️ El campo de texto está vacío.")
