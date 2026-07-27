@@ -792,7 +792,6 @@ elif menu_principal_opcion == "Cuentas":
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Zona de Administrador</div>", unsafe_allow_html=True)
     
-    # Selector de pestañas mediante botones horizontales para evitar que Streamlit colapse el renderizado
     opciones_admin_tabs = ["✍️ Banco", "🏁 Cierre de Remates", "📊 Saldos Usuarios", "🖼️ Imágenes Carrera", "📄 PDF"]
     
     cols_adm_tabs = st.columns(len(opciones_admin_tabs))
