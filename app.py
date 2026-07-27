@@ -440,7 +440,6 @@ def procesar_texto_flexible(texto_a_procesar):
             
             linea_lower = linea_limpia.lower()
             
-            # --- DETECCIÓN AMPLIADA DE CARRERAS ---
             es_nueva_carrera = False
             num_carr = None
 
@@ -462,8 +461,8 @@ def procesar_texto_flexible(texto_a_procesar):
                     banco_temporal[carrera_actual_detectada] = []
                 
                 cond = linea_limpia
-                dist = "Por definir"
-                hora = "Por definir"
+                dist = "1200 mts"
+                hora = "02:00 PM"
 
                 match_dist = re.search(r'(\d+[\.,]?\d*\s*(?:mts|metros|mt))', linea_lower)
                 if match_dist:
@@ -476,18 +475,15 @@ def procesar_texto_flexible(texto_a_procesar):
                 detalles_temporal[carrera_actual_detectada] = {"condicion": cond, "distancia": dist, "hora": hora}
                 continue
 
-            # --- DETECCIÓN DE EJEMPLARES ---
             if carrera_actual_detectada:
-                # Capturar distancia u hora suelta si aparece cerca
                 if "mts" in linea_lower or "metros" in linea_lower:
-                    if detalles_temporal[carrera_actual_detectada]["distancia"] == "Por definir":
+                    if detalles_temporal[carrera_actual_detectada]["distancia"] == "1200 mts":
                         detalles_temporal[carrera_actual_detectada]["distancia"] = linea_limpia
                 if re.search(r'\d{1,2}:\d{2}', linea_lower):
                     match_h2 = re.search(r'\d{1,2}:\d{2}\s*(?:am|pm)?', linea_lower)
-                    if match_h2 and detalles_temporal[carrera_actual_detectada]["hora"] == "Por definir":
+                    if match_h2 and detalles_temporal[carrera_actual_detectada]["hora"] == "02:00 PM":
                         detalles_temporal[carrera_actual_detectada]["hora"] = match_h2.group(0).upper()
 
-                # Reconocer formato de ejemplar: "1 - Nombre", "1. Nombre", "1 Nombre"
                 match_ejemplar = re.match(r'^(?:[Pp][Oo][Ss]\.?\s*)?(\d{1,2})[\s\-\.\)]+(.+)', linea_limpia)
                 if match_ejemplar:
                     num_pos = int(match_ejemplar.group(1))
@@ -642,8 +638,25 @@ if menu_principal_opcion == "Remates":
             else:
                 st.success(f"🟢 Panel activo y abierto para: **{carr_activa}**")
 
-            # --- MOSTRAR CONDICIÓN, HORA Y DISTANCIA EN LA TABLA DE REMATES ---
-            detalles_carr = st.session_state.detalles_carreras.get(carr_activa, {"condicion": "Condición general", "distancia": "Por definir", "hora": "Por definir"})
+            # --- MOSTRAR Y EDITAR CONDICIÓN, HORA Y DISTANCIA EN LA TABLA DE REMATES ---
+            if carr_activa not in st.session_state.detalles_carreras:
+                st.session_state.detalles_carreras[carr_activa] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM"}
+            
+            detalles_carr = st.session_state.detalles_carreras[carr_activa]
+
+            with st.expander(f"📝 Editar Condición, Hora y Distancia ({carr_activa})", expanded=False):
+                nuevo_cond = st.text_input("Condición", value=detalles_carr.get('condicion', ''), key=f"edit_cond_{carr_activa}")
+                col_ed1, col_ed2 = st.columns(2)
+                with col_ed1:
+                    nuevo_dist = st.text_input("Distancia", value=detalles_carr.get('distancia', ''), key=f"edit_dist_{carr_activa}")
+                with col_ed2:
+                    nuevo_hora = st.text_input("Hora", value=detalles_carr.get('hora', ''), key=f"edit_hora_{carr_activa}")
+                
+                if st.button("💾 Guardar Cambios de Carrera", key=f"btn_save_det_{carr_activa}", use_container_width=True, type="primary"):
+                    st.session_state.detalles_carreras[carr_activa] = {"condicion": nuevo_cond, "distancia": nuevo_dist, "hora": nuevo_hora}
+                    st.toast("✅ ¡Detalles de la carrera actualizados!")
+                    st.rerun()
+
             st.markdown(f"""
                 <div class="carrera-condicion-card">
                     <b>🏁 {carr_activa}</b><br>
@@ -1016,8 +1029,8 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.rerun()
 
     elif tab_actual == "📄 Importar Web/Texto":
-        st.markdown("### 🌐 Importar Inscritos y Condiciones por Texto")
-        st.markdown("Pega el texto copiado de la página web de inscritos (ej: 'Primera Carrera' o 'Carrera 1', seguido de los ejemplares):")
+        st.markdown("### 🌐 Importar Inscritos, Condición, Hora y Distancia")
+        st.markdown("Pega aquí el texto con los datos de las carreras y ejemplares:")
         
         texto_copiado_web = st.text_area(
             "Contenido copiado:",
@@ -1029,7 +1042,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         if st.button("🚀 Procesar Contenido Pegado", key="btn_procesar_texto_pegado", use_container_width=True, type="primary"):
             if texto_copiado_web.strip():
                 if procesar_texto_flexible(texto_copiado_web):
-                    st.success("✅ ¡Inscritos organizados por carrera con éxito!")
+                    st.success("✅ ¡Inscritos organizados por carrera y editables con éxito!")
                     st.rerun()
                 else:
                     st.warning("⚠️ Asegúrate de incluir el nombre de la carrera (ej: 'Primera Carrera' o 'Carrera 1') seguido de los ejemplares numerados (ej: '1 - Nombre').")
