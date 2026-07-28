@@ -72,69 +72,94 @@ img_b64 = get_image_base64(nombres_archivos)
 if img_b64:
     logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" class="header-logo-img" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 16px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 13px; font-weight: 900; font-style: italic; white-space: nowrap;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS ---
+# --- ESTILOS CSS REVISADOS (CORRECCIÓN DE TRASLAPE Y JERARQUÍA DE BOTONES) ---
 st.markdown("""
     <style>
     .stApp {
         background-color: #080a0f;
         color: #f0f6fc;
     }
+    
+    /* OCULTAR ELEMENTOS FLOTANTES DE STREAMLIT QUE CAUSAN TRASLAPE (SHARE, MENU, STAR) */
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
+    div[data-testid="stToolbar"] {
+        display: none !important;
+    }
+    div[data-testid="stDecoration"] {
+        display: none !important;
+    }
+    div[data-testid="stStatusWidget"] {
+        display: none !important;
+    }
+    #MainMenu {
+        visibility: hidden !important;
+    }
+    footer {
+        visibility: hidden !important;
+    }
+
     div[data-testid="stTabs"] {
         display: none !important;
     }
+    
+    /* MARGEN SUPERIOR PARA EVITAR COLISIÓN CON BARRAS DE NAVEGACIÓN DE MÓVILES */
     .block-container {
-        padding-top: 0.4rem !important;
+        padding-top: 3.2rem !important;
         padding-bottom: 2rem !important;
-        padding-left: 0.8rem !important;
-        padding-right: 0.8rem !important;
-        max-width: 1400px !important;
+        padding-left: 0.3rem !important;
+        padding-right: 0.3rem !important;
+        max-width: 1200px !important;
         margin: 0 auto !important;
     }
-    header[data-testid="stHeader"] {
-        background: transparent !important;
-    }
+
+    /* CONTENEDOR HEADER SUPERIOR UNIFICADO Y AISLADO */
     .header-container {
-        background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
+        background: linear-gradient(180deg, #0d1117 0%, #161b22 100%) !important;
         width: 100% !important;
-        padding: 10px 20px !important;
+        padding: 6px 10px !important;
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
         align-items: center !important;
-        border-bottom: 2px solid #30363d !important;
+        border: 1px solid #30363d !important;
         border-radius: 8px !important;
         box-sizing: border-box !important;
-        gap: 15px;
-        margin-bottom: 12px !important;
+        gap: 6px;
+        margin-bottom: 10px !important;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.6);
     }
+
     .header-left-clock {
         display: flex !important;
         flex-direction: column !important;
         justify-content: center !important;
-        background: #0d1117 !important;
+        background: #080a0f !important;
         border: 1px solid #30363d !important;
-        padding: 6px 12px !important;
-        border-radius: 8px !important;
+        padding: 4px 8px !important;
+        border-radius: 6px !important;
         text-align: left !important;
         flex-shrink: 0;
     }
     .clock-time {
         color: #58a6ff !important;
-        font-size: 14px !important;
+        font-size: 11px !important;
         font-weight: 800 !important;
-        line-height: 1.15;
+        line-height: 1.1;
     }
     .clock-date {
         color: #8b949e !important;
-        font-size: 10px !important;
+        font-size: 9px !important;
         font-weight: 600 !important;
     }
+
     .header-center-logo {
         display: flex !important;
         align-items: center !important;
@@ -143,23 +168,26 @@ st.markdown("""
         min-width: 0 !important;
         overflow: hidden !important;
         padding: 0 4px !important;
+        text-align: center;
     }
     .header-logo-img {
-        max-height: 80px !important;
+        max-height: 42px !important;
         max-width: 100% !important;
         width: auto !important;
         object-fit: contain !important;
         display: block !important;
         filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.9));
     }
+
+    /* CONTENEDOR USUARIO AISLADO Y RESPONSIVO */
     .user-info-container {
         display: flex !important;
         align-items: center !important;
-        gap: 10px !important;
-        background-color: #161b22 !important;
+        gap: 6px !important;
+        background-color: #080a0f !important;
         border: 1px solid #30363d !important;
-        padding: 5px 12px !important;
-        border-radius: 20px !important;
+        padding: 4px 8px !important;
+        border-radius: 16px !important;
         flex-shrink: 0;
     }
     .user-text-info {
@@ -170,47 +198,125 @@ st.markdown("""
     }
     .user-name {
         color: #ffffff !important;
-        font-size: 11px !important;
+        font-size: 10px !important;
         font-weight: 800 !important;
     }
     .user-balance {
-        color: #58a6ff !important;
-        font-size: 11px !important;
+        color: #2ed573 !important;
+        font-size: 9px !important;
         font-weight: 800 !important;
     }
     .user-avatar {
         background-color: #f1c40f !important;
         color: #000000 !important;
         border-radius: 50% !important;
-        width: 36px !important;
-        height: 36px !important;
+        width: 26px !important;
+        height: 26px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 16px !important;
+        font-size: 12px !important;
         font-weight: bold !important;
         box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
         flex-shrink: 0;
     }
-    div.row-widget.stHorizontal > div {
-        gap: 6px !important;
-    }
-    .stButton button {
+
+    /* BARRA DE NAVEGACIÓN Y JERARQUÍA DE BOTONES (ESTILO CASINO CASAS DE APUESTAS) */
+    .barra-casino {
         width: 100% !important;
+        max-width: 800px !important;
+        margin: 0 auto 10px auto !important;
+    }
+
+    .barra-casino div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        background-color: #161b22 !important;
+        border: 1px solid #30363d !important;
         border-radius: 6px !important;
-        font-weight: 700 !important;
-        padding: 0.2rem 0.4rem !important;
-        min-height: 32px !important;
-        font-size: 12px !important;
-        letter-spacing: 0.2px;
-        white-space: nowrap !important;
+        gap: 0px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.5);
     }
-    div[data-testid="column"] {
-        width: auto !important;
-        flex: 1 !important;
+
+    .barra-casino div[data-testid="column"], 
+    .barra-casino div[data-testid="stColumn"] {
+        flex: 1 1 0% !important;
+        width: 33.333% !important;
         min-width: 0 !important;
-        padding: 0 3px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-right: 1px solid #21262d !important;
     }
+
+    .barra-casino div[data-testid="column"]:last-child, 
+    .barra-casino div[data-testid="stColumn"]:last-child {
+        border-right: none !important;
+    }
+
+    .barra-casino .stButton {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    /* BOTONES SECUNDARIOS (VISIBLES, CON BORDE SÚTIL Y MÁS CLAROS) */
+    .barra-casino .stButton > button {
+        background-color: #1c212d !important;
+        color: #f0f6fc !important;
+        border: none !important;
+        border-radius: 0px !important;
+        box-shadow: none !important;
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        min-height: 42px !important;
+        height: 42px !important;
+        padding: 0 4px !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+        overflow: hidden !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+
+    .barra-casino .stButton > button:hover {
+        background-color: #21262d !important;
+        color: #f1c40f !important;
+        cursor: pointer !important;
+    }
+
+    /* BOTONES PRIMARIOS/ACTIVOS (CALL TO ACTION EN ROJO CRMESÍ SUAVE / DORADO) */
+    .barra-casino .stButton > button[kind="primary"] {
+        background: linear-gradient(180deg, #d63031 0%, #b22222 100%) !important;
+        color: #ffffff !important;
+        border-bottom: 3px solid #ff7675 !important;
+        font-weight: 900 !important;
+    }
+
+    @media (min-width: 992px) {
+        .block-container {
+            padding-top: 2rem !important;
+        }
+        .clock-time { font-size: 12px !important; }
+        .clock-date { font-size: 10px !important; }
+        .user-name { font-size: 11px !important; }
+        .user-balance { font-size: 10px !important; }
+        .barra-casino .stButton > button {
+            font-size: 12px !important;
+            min-height: 44px !important;
+            height: 44px !important;
+        }
+    }
+
     .subasta-header {
         font-size: clamp(14px, 3.5vw, 18px);
         font-weight: 800;
@@ -251,17 +357,17 @@ st.markdown("""
     }
     .incentivo-elegante-titulo {
         color: #f1c40f;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.8px;
-        margin-bottom: 3px;
+        letter-spacing: 0.6px;
+        margin-bottom: 2px;
     }
     .incentivo-elegante-monto {
         color: #ffffff;
-        font-size: 18px;
+        font-size: 17px;
         font-weight: 800;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.2px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -361,7 +467,7 @@ elif neto_usuario < 0:
 else:
     etiqueta_balance = "Al día: Bs. 0,00"
 
-# --- CABECERA SUPERIOR OPTIMIZADA ---
+# --- CABECERA SUPERIOR REESTRUCTURADA SIN TRASLAPE ---
 st.markdown(f"""
     <div class="header-container">
         <div class="header-left-clock">
@@ -625,27 +731,28 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL ---
-col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
+# --- MENÚ PRINCIPAL TIPO BARRA NEGRA SÓLIDA UNIFICADA ---
+st.markdown('<div class="barra-casino">', unsafe_allow_html=True)
+col_m1, col_m2, col_m3 = st.columns(3)
 
-with col_menu1:
+with col_m1:
     if st.button("REMATES", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
         st.session_state.menu_principal_opcion = "Remates"
         st.rerun()
 
-with col_menu2:
-    if st.button("DUPLETAS/POLLAS HÍPICAS", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
+with col_m2:
+    if st.button("DUPLETAS / POLLAS", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
         st.session_state.menu_principal_opcion = "Dupletas"
         st.rerun()
 
-with col_menu3:
+with col_m3:
     if st.button("CUENTAS", key="menu_btn_cuentas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
         st.session_state.menu_principal_opcion = "Cuentas"
         st.rerun()
 
-st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-# --- CARRUSEL AUTOMÁTICO DE IMÁGENES DEL HIPÓDROMO LA RINCONADA (8 SEGUNDOS) ---
+# --- CARRUSEL ESTILO BETCHAT / TRIUNFOBET ---
 ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
 
 nombres_banners_posibles = [
@@ -670,28 +777,62 @@ if lista_b64_banners:
     js_images_array = str(lista_b64_banners)
     html_slider = f"""
     <style>
-        .banner-slider-container {{
+        .triunfo-banner-wrapper {{
+            position: relative;
             width: 100%;
             max-width: 1200px;
-            height: 240px;
+            height: 140px;
             margin: 0 auto 12px auto;
             border-radius: 8px;
             overflow: hidden;
-            border: 2px solid #f1c40f;
-            box-shadow: 0px 4px 14px rgba(0,0,0,0.8);
-            position: relative;
-            background-color: #0d1117;
+            background: linear-gradient(115deg, #090b10 65%, #f1c40f 65%);
+            border: 1px solid #22252e;
+            box-shadow: 0px 8px 20px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }}
-        .banner-slide-img {{
-            width: 100%;
+        .triunfo-arrow {{
+            color: #f1c40f;
+            font-size: 22px;
+            font-weight: 900;
+            padding: 0 12px;
+            user-select: none;
+            cursor: pointer;
+            z-index: 5;
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.8);
+        }}
+        .triunfo-slide-box {{
+            flex: 1;
             height: 100%;
-            object-fit: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }}
+        .triunfo-slide-img {{
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
             transition: opacity 1.2s ease-in-out;
             display: block;
         }}
+        @media (min-width: 992px) {{
+            .triunfo-banner-wrapper {{
+                height: 200px;
+            }}
+            .triunfo-arrow {{
+                font-size: 32px;
+                padding: 0 20px;
+            }}
+        }}
     </style>
-    <div class="banner-slider-container">
-        <img id="rinconada-slide" class="banner-slide-img" src="{lista_b64_banners[0]}" />
+    <div class="triunfo-banner-wrapper">
+        <div class="triunfo-arrow">&lt;</div>
+        <div class="triunfo-slide-box">
+            <img id="rinconada-slide" class="triunfo-slide-img" src="{lista_b64_banners[0]}" />
+        </div>
+        <div class="triunfo-arrow">&gt;</div>
     </div>
     <script>
         (function() {{
@@ -711,16 +852,114 @@ if lista_b64_banners:
         }})();
     </script>
     """
-    components.html(html_slider, height=255)
+    components.html(html_slider, height=210)
 else:
-    st.markdown("""
-        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); border: 2px solid #f1c40f; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px;">
-            <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
-            <p style="color: #8b949e; font-size: 12px; margin: 4px 0 0 0;">¡La pasión del hipismo venezolano en vivo!</p>
+    # --- BANNER PROMOCIONAL BETCHAT ---
+    html_betchat_style = """
+    <style>
+        .betchat-container {
+            width: 100%;
+            max-width: 1200px;
+            height: 140px;
+            margin: 0 auto 12px auto;
+            border-radius: 8px;
+            overflow: hidden;
+            background: linear-gradient(115deg, #0a0c10 62%, #f1c40f 62%);
+            border: 1px solid #2a2e39;
+            box-shadow: 0px 8px 20px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .betchat-arrow {
+            color: #f1c40f;
+            font-size: 22px;
+            font-weight: 900;
+            user-select: none;
+        }
+        .betchat-card {
+            background-color: #12161f;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 10px 14px;
+            max-width: 60%;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.7);
+        }
+        .betchat-tag {
+            color: #8b949e;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .betchat-title {
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 900;
+            margin: 2px 0;
+            line-height: 1.1;
+        }
+        .betchat-title span {
+            color: #f1c40f;
+        }
+        .betchat-sub {
+            color: #c9d1d9;
+            font-size: 10px;
+            margin-top: 3px;
+            line-height: 1.2;
+        }
+        .betchat-right-graphic {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #000000;
+            font-weight: 900;
+            padding-right: 15px;
+            text-align: center;
+        }
+        .betchat-icon {
+            font-size: 28px;
+            line-height: 1;
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));
+        }
+        .betchat-badge {
+            background-color: #000000;
+            color: #f1c40f;
+            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+        }
+        @media (min-width: 992px) {
+            .betchat-container { height: 180px; padding: 0 25px; }
+            .betchat-arrow { font-size: 32px; }
+            .betchat-card { padding: 16px 24px; max-width: 55%; }
+            .betchat-title { font-size: 22px; }
+            .betchat-sub { font-size: 13px; }
+            .betchat-icon { font-size: 48px; }
+            .betchat-badge { font-size: 11px; padding: 4px 12px; }
+        }
+    </style>
+    <div class="betchat-container">
+        <div class="betchat-arrow">&lt;</div>
+        <div class="betchat-card">
+            <div class="betchat-tag">JORNADA HÍPICA OFICIAL</div>
+            <div class="betchat-title">HIPÓDROMO <span>LA RINCONADA</span></div>
+            <div class="betchat-sub">Intercambia pronósticos, participa en remates en vivo y sigue las jugadas desde un solo lugar.</div>
         </div>
-    """, unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
+        <div class="betchat-right-graphic">
+            <div class="betchat-icon">🏇</div>
+            <div class="betchat-badge">EN VIVO</div>
+        </div>
+        <div class="betchat-arrow" style="color: #000000;">&gt;</div>
+    </div>
+    """
+    components.html(html_betchat_style, height=190)
 
 # --- BARRA LATERAL (IZQUIERDA) ---
 st.sidebar.header("barra lateral")
@@ -807,24 +1046,26 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# 1. MÓDULO DE REMATES (3 OPCIONES: ADELANTADOS, CIEGOS, EN VIVO)
+# 1. MÓDULO DE REMATES
 # =========================================================================
 if menu_principal_opcion == "Remates":
-    col_so1, col_so2, col_so3 = st.columns(3, gap="small")
+    st.markdown('<div class="barra-casino">', unsafe_allow_html=True)
+    col_so1, col_so2, col_so3 = st.columns(3)
+    
     with col_so1:
-        if st.button("⏱️ Adelantados", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
+        if st.button("ADELANTADOS", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
             st.session_state.sub_remate_opcion = "Adelantados"
             st.rerun()
     with col_so2:
-        if st.button("🙈 Ciegos", key="sub_rem_ciegos", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Ciegos" else "secondary"):
+        if st.button("CIEGOS", key="sub_rem_ciegos", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Ciegos" else "secondary"):
             st.session_state.sub_remate_opcion = "Ciegos"
             st.rerun()
     with col_so3:
-        if st.button("⚡ En Vivo", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
+        if st.button("EN VIVO", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
             st.session_state.sub_remate_opcion = "En Vivo"
             st.rerun()
-
-    st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+            
+    st.markdown('</div>', unsafe_allow_html=True)
 
     modo_actual_remate = st.session_state.sub_remate_opcion
 
@@ -854,12 +1095,13 @@ if menu_principal_opcion == "Remates":
             st.markdown("🔹 **Seleccionar Carrera:**")
             
             num_carreras = len(carreras_filtradas_visibles)
-            cols_carreras = st.columns(num_carreras if num_carreras > 0 else 1, gap="small")
+            cols_carreras = st.columns(min(6, num_carreras) if num_carreras > 0 else 1, gap="small")
             for idx, c_nombre in enumerate(carreras_filtradas_visibles):
                 es_modo_ciego = (modo_actual_remate == "Ciegos")
                 abreviatura = obtener_abreviatura_carrera(c_nombre, modo_ciego=es_modo_ciego)
                 es_activa = (c_nombre == carr_activa)
-                with cols_carreras[idx]:
+                c_target = cols_carreras[idx % len(cols_carreras)]
+                with c_target:
                     if st.button(abreviatura, key=f"rem_btn_sel_carr_{idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
                         st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
                         st.rerun()
@@ -923,7 +1165,7 @@ if menu_principal_opcion == "Remates":
             altura_dinamica = min(max(140, (cantidad_filas * 32) + 50), 420)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
-            # --- SELECCIONAR EJEMPLAR GANADOR DEBAJO DE LA TABLA (COMPACTO Y ELEGANTE) ---
+            # --- SELECCIONAR EJEMPLAR GANADOR DEBAJO DE LA TABLA ---
             with st.container(border=True):
                 st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Ganador - {carr_activa}</p>", unsafe_allow_html=True)
                 if carr_activa in st.session_state.historial_ganadores:
@@ -1091,21 +1333,23 @@ if menu_principal_opcion == "Remates":
 # 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
-    col_d1, col_d2, col_d3 = st.columns(3, gap="small")
+    st.markdown('<div class="barra-casino">', unsafe_allow_html=True)
+    col_d1, col_d2, col_d3 = st.columns(3)
+    
     with col_d1:
-        if st.button("🎟️ Dupleta", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
+        if st.button("DUPLETA", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Dupleta"
             st.rerun()
     with col_d2:
-        if st.button("🎟️ Tripleta", key="sub_dup_tripleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Tripleta" else "secondary"):
+        if st.button("TRIPLETA", key="sub_dup_tripleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Tripleta" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Tripleta"
             st.rerun()
     with col_d3:
-        if st.button("🏇 Polla Hípica", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Polla Hipica" else "secondary"):
+        if st.button("POLLA HÍPICA", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Polla Hipica" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Polla Hipica"
             st.rerun()
 
-    st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     sub_dup_actual = st.session_state.sub_dupleta_opcion
 
     st.markdown(f"<div class='subasta-header'>🎟️ Módulo de {sub_dup_actual}</div>", unsafe_allow_html=True)
@@ -1151,7 +1395,7 @@ elif menu_principal_opcion == "Dupletas":
                     if carr_leg in st.session_state.imagenes_carreras:
                         st.image(st.session_state.imagenes_carreras[carr_leg], use_container_width=True)
                     else:
-                        st.markdown("<div style='background: #161b22; border: 1px dashed #30363d; padding: 6px; text-align: center; font-size: 9px; border-radius: 4px; color: #8b949e; margin-bottom: 4px;'>Sin Imagen</div>", unsafe_allow_html=True)
+                        st.markdown("<div style='background: #161b22; border: 1px dashed #30363d; padding: 4px; text-align: center; font-size: 9px; border-radius: 4px; color: #8b949e; margin-bottom: 4px;'>Sin Imagen</div>", unsafe_allow_html=True)
                     
                     caballos_in_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
                     cab_leg = st.selectbox(f"Ejemplar {carr_leg}", caballos_in_carr if caballos_in_carr else ["Sin Caballos"], key=f"{sub_dup_actual.lower()}_sel_ejemplar_horizontal_{i}", label_visibility="collapsed")
@@ -1336,7 +1580,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             else:
                 carreras_activas_actuales = st.session_state.carreras_activas_remate
                 
-                cols_grid = st.columns(min(4, len(carreras_disponibles_todas)), gap="small")
+                cols_grid = st.columns(min(5, len(carreras_disponibles_todas)), gap="small")
                 nuevas_activas = []
                 
                 for i, carr_n in enumerate(carreras_disponibles_todas):
@@ -1618,12 +1862,10 @@ if url_live_video:
     st.markdown("<br><hr style='border-color: #30363d;'>", unsafe_allow_html=True)
     st.markdown("### 📺 TRANSMISIÓN EN VIVO DE LAS CARRERAS")
     
-    # Extraer ID si es un enlace estándar de YouTube
     yt_match = re.search(r'(?:v=|\/embed\/|youtu\.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})', url_live_video)
     
     if yt_match:
         yt_id = yt_match.group(1)
-        # Formato de URL adaptable de YouTube que funciona perfecto tanto en Streamlit Móvil como en PC
         embed_url = f"https://www.youtube.com/embed/{yt_id}?playsinline=1"
         try:
             st.video(embed_url)
