@@ -645,7 +645,7 @@ with col_menu3:
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- CARRUSEL AUTOMÁTICO DE IMÁGENES DEL HIPÓDROMO LA RINCONADA ---
+# --- CARRUSEL AUTOMÁTICO DE IMÁGENES DEL HIPÓDROMO LA RINCONADA (8 SEGUNDOS) ---
 ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
 
 nombres_banners_posibles = [
@@ -721,17 +721,6 @@ else:
     """, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
-
-# --- TRANSMISIÓN DE VIDEO EN VIVO (CONFIGURADA DESDE ZONA ADMIN) ---
-url_live_video = st.session_state.get('url_video_en_vivo', '').strip()
-
-if url_live_video:
-    st.markdown("### 📺 TRANSMISIÓN EN VIVO DE LAS CARRERAS")
-    try:
-        st.video(url_live_video)
-    except Exception:
-        st.warning("⚠️ No se pudo cargar el video con la URL proporcionada. Verifica el enlace en Zona Admin.")
-    st.markdown("<hr style='margin: 0.8rem 0; border-color: #30363d;'>", unsafe_allow_html=True)
 
 # --- BARRA LATERAL (IZQUIERDA) ---
 st.sidebar.header("barra lateral")
@@ -1099,7 +1088,7 @@ if menu_principal_opcion == "Remates":
                                     st.rerun()
 
 # =========================================================================
-# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA
+# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA (DISEÑO HORIZONTAL)
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
     col_d1, col_d2, col_d3 = st.columns(3, gap="small")
@@ -1125,6 +1114,7 @@ elif menu_principal_opcion == "Dupletas":
 
     monto_unico_seccion = st.session_state.config_montos_especiales.get(sub_dup_actual, 500.0)
 
+    # Filtrar estrictamente las carreras según lo configurado en la Zona Admin para cada sección
     if sub_dup_actual == "Dupleta":
         pote_total = sum([t['monto'] for t in st.session_state.dupletas_tickets])
         st.metric("💰 Pote Acumulado Dupletas", formatear_bs(pote_total))
@@ -1146,7 +1136,7 @@ elif menu_principal_opcion == "Dupletas":
         st.warning(f"⚠️ No hay carreras habilitadas para **{sub_dup_actual}**. Configúralas en la Zona Admin (Config. Dupletas/Polla).")
     else:
         with st.container(border=True):
-            st.markdown(f"🎯 **Armado de Ticket Horizontal (Carreras establecidas en Zona Admin):**")
+            st.markdown(f"🎯 **Armado de Ticket Horizontal (Carreras established en Zona Admin):**")
             
             seleccion_legs = []
             carreras_usadas_en_ticket = set()
@@ -1526,7 +1516,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Configuración de carreras habilitadas guardada con éxito!")
                 st.rerun()
 
-    # --- NUEVA PESTAÑA: CONFIGURAR VIDEO EN VIVO ---
     elif tab_actual == "📺 Video En Vivo":
         st.markdown("### 📺 Configuración de Transmisión de Video en Vivo")
         with st.container(border=True):
@@ -1620,3 +1609,16 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.warning("⚠️ Asegúrate de incluir el nombre de cada carrera (ej: 'Primera Carrera' o 'Carrera 1') seguido de los ejemplares numerados (ej: '1 - Nombre').")
             else:
                 st.warning("⚠️ El campo de texto está vacío.")
+
+# =========================================================================
+# TRANSMISIÓN EN VIVO DE LAS CARRERAS (UBICADA EN LA PARTE INFERIOR DE LA APP)
+# =========================================================================
+url_live_video = st.session_state.get('url_video_en_vivo', '').strip()
+
+if url_live_video:
+    st.markdown("<br><hr style='border-color: #30363d;'>", unsafe_allow_html=True)
+    st.markdown("### 📺 TRANSMISIÓN EN VIVO DE LAS CARRERAS")
+    try:
+        st.video(url_live_video)
+    except Exception:
+        st.warning("⚠️ No se pudo cargar el video con la URL proporcionada. Verifica el enlace en la Zona Admin.")
