@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS EXACTOS AL DISEÑO SOLICITADO ---
+# --- ESTILOS CSS CON ANULACIÓN DE COLAPSO MÓVIL STREAMLIT ---
 st.markdown("""
     <style>
     .stApp {
@@ -91,8 +91,8 @@ st.markdown("""
     .block-container {
         padding-top: 2rem !important;
         padding-bottom: 1.5rem !important;
-        padding-left: 0.2rem !important;
-        padding-right: 0.2rem !important;
+        padding-left: 0.1rem !important;
+        padding-right: 0.1rem !important;
         max-width: 1200px !important;
         margin: 0 auto !important;
     }
@@ -108,7 +108,7 @@ st.markdown("""
         justify-content: space-between !important;
         align-items: center !important;
         border-bottom: 2px solid #30363d !important;
-        border-radius: 6px !important;
+        border-radius: 4px !important;
         box-sizing: border-box !important;
         gap: 4px;
         margin-bottom: 8px !important;
@@ -194,7 +194,12 @@ st.markdown("""
         flex-shrink: 0;
     }
 
-    /* ESTILO BARRA NEGRA TIPO CASINO/APUESTAS (IDENTICA A LA IMAGEN) */
+    /* BARRA NEGRA CASINO CONTINUA (ANULACIÓN ESTRICTA DE MEDIA QUERY MÓVIL) */
+    .barra-casino {
+        width: 100% !important;
+        margin-bottom: 8px !important;
+    }
+
     .barra-casino div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
@@ -205,19 +210,37 @@ st.markdown("""
         border-radius: 0px !important;
         gap: 0px !important;
         width: 100% !important;
-        margin-bottom: 8px !important;
+        margin: 0 !important;
         padding: 0 !important;
     }
 
-    .barra-casino div[data-testid="column"] {
-        flex: 1 1 0px !important;
+    /* FORZAR 3 COLUMNAS EN MÓVILES (NO APILAR) */
+    @media (max-width: 992px) {
+        .barra-casino div[data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+        }
+        .barra-casino div[data-testid="column"], 
+        .barra-casino div[data-testid="stColumn"] {
+            width: 33.333% !important;
+            flex: 1 1 0% !important;
+            min-width: 0 !important;
+        }
+    }
+
+    .barra-casino div[data-testid="column"], 
+    .barra-casino div[data-testid="stColumn"] {
+        flex: 1 1 0% !important;
+        width: 33.333% !important;
         min-width: 0 !important;
         padding: 0 !important;
         margin: 0 !important;
         border-right: 1px solid #333333 !important;
     }
 
-    .barra-casino div[data-testid="column"]:last-child {
+    .barra-casino div[data-testid="column"]:last-child, 
+    .barra-casino div[data-testid="stColumn"]:last-child {
         border-right: none !important;
     }
 
@@ -226,19 +249,19 @@ st.markdown("""
         margin: 0 !important;
     }
 
-    .barra-casino .stButton button {
+    .barra-casino .stButton > button {
         background-color: #000000 !important;
         color: #ffffff !important;
         border: none !important;
         border-radius: 0px !important;
         box-shadow: none !important;
-        font-size: 11px !important;
+        font-size: 10px !important;
         font-weight: 900 !important;
-        letter-spacing: 0.5px !important;
+        letter-spacing: 0.2px !important;
         text-transform: uppercase !important;
-        min-height: 44px !important;
-        height: 44px !important;
-        padding: 0 4px !important;
+        min-height: 42px !important;
+        height: 42px !important;
+        padding: 0 2px !important;
         white-space: nowrap !important;
         text-overflow: ellipsis !important;
         overflow: hidden !important;
@@ -249,9 +272,9 @@ st.markdown("""
         transition: background-color 0.2s ease !important;
     }
 
-    /* ESTADO SELECCIONADO (HIGHLIGHT) */
-    .barra-casino .stButton button[kind="primary"] {
-        background-color: #1f242d !important;
+    /* ESTADO ACTIVO */
+    .barra-casino .stButton > button[kind="primary"] {
+        background-color: #222222 !important;
         color: #f1c40f !important;
         border-bottom: 3px solid #f1c40f !important;
     }
@@ -670,7 +693,7 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL TIPO BARRA NEGRA SOLIDA ---
+# --- MENÚ PRINCIPAL TIPO BARRA NEGRA SÓLIDA CONTINUA ---
 st.markdown('<div class="barra-casino">', unsafe_allow_html=True)
 col_m1, col_m2, col_m3 = st.columns(3)
 
@@ -721,7 +744,7 @@ if lista_b64_banners:
             max-width: 1200px;
             height: 200px;
             margin: 0 auto 8px auto;
-            border-radius: 6px;
+            border-radius: 4px;
             overflow: hidden;
             border: 2px solid #f1c40f;
             box-shadow: 0px 4px 14px rgba(0,0,0,0.8);
@@ -760,7 +783,7 @@ if lista_b64_banners:
     components.html(html_slider, height=215)
 else:
     st.markdown("""
-        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); border: 2px solid #f1c40f; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 8px;">
+        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); border: 2px solid #f1c40f; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 8px;">
             <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px; font-size: 14px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
             <p style="color: #8b949e; font-size: 10px; margin: 2px 0 0 0;">¡La pasión del hipismo venezolano en vivo!</p>
         </div>
@@ -851,7 +874,7 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# 1. MÓDULO DE REMATES (SUBMENÚ BARRA NEGRA NEGRA SOLIDA)
+# 1. MÓDULO DE REMATES (SUBMENÚ BARRA NEGRA SÓLIDA)
 # =========================================================================
 if menu_principal_opcion == "Remates":
     st.markdown('<div class="barra-casino">', unsafe_allow_html=True)
