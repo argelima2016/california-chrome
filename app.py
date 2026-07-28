@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS (DISEÑO HORIZONTAL COMPACTO Y ADAPTADO A PANTALLA) ---
+# --- ESTILOS CSS (BOTONES PRINCIPALES MÁS PEQUEÑOS Y JUNTOS) ---
 st.markdown("""
     <style>
     .stApp {
@@ -191,13 +191,17 @@ st.markdown("""
         box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
         flex-shrink: 0;
     }
+    /* Estilo exclusivo para hacer los botones de navegación superiores más compactos y sin espacio excesivo */
+    div.row-widget.stHorizontal > div {
+        gap: 4px !important;
+    }
     .stButton button {
         width: 100% !important;
         border-radius: 4px !important;
         font-weight: 600 !important;
-        padding: 0.1rem 0.1rem !important;
-        min-height: 26px !important;
-        max-height: 32px !important;
+        padding: 0.05rem 0.05rem !important;
+        min-height: 22px !important;
+        max-height: 28px !important;
         font-size: 10px !important;
         letter-spacing: 0.1px;
         white-space: nowrap !important;
@@ -206,7 +210,7 @@ st.markdown("""
         width: auto !important;
         flex: 1 !important;
         min-width: 0 !important;
-        padding: 0 2px !important;
+        padding: 0 1px !important;
     }
     .subasta-header {
         font-size: clamp(14px, 3.5vw, 17px);
@@ -622,8 +626,8 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL (ADAPTADO A PANTALLA) ---
-col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
+# --- MENÚ PRINCIPAL HORIZONTAL (MUY COMPACTO, JUNTOS Y ADAPTADOS) ---
+col_menu1, col_menu2, col_menu3 = st.columns([1, 1.2, 1], gap="small")
 
 with col_menu1:
     if st.button("🏇 REMATES", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
@@ -640,7 +644,7 @@ with col_menu3:
         st.session_state.menu_principal_opcion = "Cuentas"
         st.rerun()
 
-st.markdown("<hr style='margin: 0.5rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 0.4rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
 # --- BARRA LATERAL (IZQUIERDA) ---
 st.sidebar.header("barra lateral")
@@ -843,9 +847,9 @@ if menu_principal_opcion == "Remates":
             altura_dinamica = min(max(140, (cantidad_filas * 32) + 50), 420)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
-            # --- SELECCIONAR EJEMPLAR GANADOR DEBAJO DE LA TABLA (COMPACTO Y HORIZONTAL) ---
+            # --- SELECCIONAR EJEMPLAR GANADOR DEBAJO DE LA TABLA (COMPACTO Y ELEGANTE) ---
             with st.container(border=True):
-                st.markdown(f"<p style='font-size: 12px; font-weight: 700; margin-bottom: 3px; color: #f1e05a;'>🎯 Ganador - {carr_activa}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Ganador - {carr_activa}</p>", unsafe_allow_html=True)
                 if carr_activa in st.session_state.historial_ganadores:
                     info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
                     st.success(f"✅ Ganador: **{info_ganador_prev.get('Ganador', 'N/A')}** | Premio: **{info_ganador_prev.get('Premio', '0')}**")
