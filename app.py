@@ -918,10 +918,10 @@ if menu_principal_opcion == "Remates":
                     if not caballos_disponibles_ciego:
                         st.warning("⚠️ Todos los ejemplares de esta carrera ya han sido adquiridos.")
                     else:
-                        st.markdown("🎲 **Panel Didáctico (Elige un número/icono compacto para asignar):**")
+                        st.markdown("🎲 **Panel Didáctico (Elige un número para asignar):**")
                         
-                        # Cuadrícula ultra compacta y elegante de botones pequeños estilo mini fichas
-                        cols_ciego_grid = st.columns(min(6, len(caballos_disponibles_ciego)), gap="small")
+                        # Cuadrícula ultra compacta con botones pequeños y cortos
+                        cols_ciego_grid = st.columns(min(8, len(caballos_disponibles_ciego)), gap="small")
                         for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
                             c_idx = idx_cb % len(cols_ciego_grid)
                             num_cb_parte = cb_disp.split(" - ")[0]
@@ -929,7 +929,8 @@ if menu_principal_opcion == "Remates":
                                 if carrera_cerrada:
                                     st.button(f"🔒#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, disabled=True)
                                 else:
-                                    if st.button(f"#{num_parte_btn := num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, type="primary"):
+                                    if st.button(f"#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, type="primary"):
+                        # Se utiliza la variable directamente en el botón para evitar asignaciones inválidas de sintaxis
                                         st.session_state.remates[carr_activa][cb_disp] = {
                                             "jugador": st.session_state.usuario_activo, 
                                             "monto": monto_fijo_carrera
@@ -946,7 +947,7 @@ if menu_principal_opcion == "Remates":
                                             st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
                                         st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
                                         
-                                        st.success(f"🎉 #{num_parte_btn} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
+                                        st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
                                         st.rerun()
                 else:
                     st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
@@ -961,7 +962,7 @@ if menu_principal_opcion == "Remates":
                             
                         st.markdown(f"🔹 **1. Seleccionar Ejemplar (Total inscritos: {len(lista_caballos_activos)}):**")
                         cantidad_ejemplares = len(lista_caballos_activos)
-                        cols_ejemplares = min(5, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
+                        cols_ejemplares = min(6, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
                         num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                         
                         idx_cab = 0
