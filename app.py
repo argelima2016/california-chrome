@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS (DISEÑO MÁS PEQUEÑO, ELEGANTE Y COMPACTO) ---
+# --- ESTILOS CSS (DISEÑOS COMPACTOS Y ELEGANTES PARA REMATES Y BOTONES CORTOS) ---
 st.markdown("""
     <style>
     .stApp {
@@ -636,7 +636,7 @@ with col_menu3:
         st.session_state.menu_principal_opcion = "Cuentas"
         st.rerun()
 
-st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 0.5rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
 # --- BARRA LATERAL (IZQUIERDA) ---
 st.sidebar.header("barra lateral")
@@ -918,30 +918,36 @@ if menu_principal_opcion == "Remates":
                     if not caballos_disponibles_ciego:
                         st.warning("⚠️ Todos los ejemplares de esta carrera ya han sido adquiridos.")
                     else:
-                        caballo_seleccionado_ciego = st.selectbox("Seleccionar Ejemplar Disponible a Comprar", caballos_disponibles_ciego, key=f"sel_cab_ciego_{carr_activa}")
+                        st.markdown("🎲 **Panel Didáctico (Elige un número/icono compacto para asignar):**")
                         
-                        if carrera_cerrada:
-                            st.button("🔨 Asignar Ejemplar (Cerrado)", key=f"btn_ciego_cerrado_{carr_activa}", use_container_width=True, type="primary", disabled=True)
-                        else:
-                            if st.button("🔨 Comprar / Asignar Ejemplar (Monto Fijo)", key=f"btn_ciego_conf_{carr_activa}", use_container_width=True, type="primary"):
-                                st.session_state.remates[carr_activa][caballo_seleccionado_ciego] = {
-                                    "jugador": st.session_state.usuario_activo, 
-                                    "monto": monto_fijo_carrera
-                                }
-                                st.session_state.historial_jugadas.append({
-                                    "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                    "jugador": st.session_state.usuario_activo,
-                                    "tipo": f"Remate Ciego ({modo_actual_remate})",
-                                    "carrera": carr_activa,
-                                    "detalle": caballo_seleccionado_ciego,
-                                    "monto": monto_fijo_carrera
-                                })
-                                if st.session_state.usuario_activo not in st.session_state.cuentas:
-                                    st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                                st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
-                                
-                                st.success(f"✅ ¡Ejemplar asignado a {st.session_state.usuario_activo} por {formatear_bs(monto_fijo_carrera)}!")
-                                st.rerun()
+                        # Cuadrícula ultra compacta y elegante de botones pequeños estilo mini fichas
+                        cols_ciego_grid = st.columns(min(6, len(caballos_disponibles_ciego)), gap="small")
+                        for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
+                            c_idx = idx_cb % len(cols_ciego_grid)
+                            num_cb_parte = cb_disp.split(" - ")[0]
+                            with cols_ciego_grid[c_idx]:
+                                if carrera_cerrada:
+                                    st.button(f"🔒#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, disabled=True)
+                                else:
+                                    if st.button(f"#{num_parte_btn := num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, type="primary"):
+                                        st.session_state.remates[carr_activa][cb_disp] = {
+                                            "jugador": st.session_state.usuario_activo, 
+                                            "monto": monto_fijo_carrera
+                                        }
+                                        st.session_state.historial_jugadas.append({
+                                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                            "jugador": st.session_state.usuario_activo,
+                                            "tipo": f"Remate Ciego ({modo_actual_remate})",
+                                            "carrera": carr_activa,
+                                            "detalle": cb_disp,
+                                            "monto": monto_fijo_carrera
+                                        })
+                                        if st.session_state.usuario_activo not in st.session_state.cuentas:
+                                            st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                        st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
+                                        
+                                        st.success(f"🎉 #{num_parte_btn} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
+                                        st.rerun()
                 else:
                     st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
                     lista_caballos_activos = list(st.session_state.remates[carr_activa].keys())
@@ -955,7 +961,7 @@ if menu_principal_opcion == "Remates":
                             
                         st.markdown(f"🔹 **1. Seleccionar Ejemplar (Total inscritos: {len(lista_caballos_activos)}):**")
                         cantidad_ejemplares = len(lista_caballos_activos)
-                        cols_ejemplares = min(4, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
+                        cols_ejemplares = min(5, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
                         num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                         
                         idx_cab = 0
