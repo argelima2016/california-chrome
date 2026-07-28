@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS (DISEÑOS COMPACTOS Y ELEGANTES PARA REMATES Y BOTONES CORTOS) ---
+# --- ESTILOS CSS (CORREGIDO ESPACIADO IZQUIERDO Y DISEÑO FLUIDO) ---
 st.markdown("""
     <style>
     .stApp {
@@ -88,6 +88,18 @@ st.markdown("""
     div[data-testid="stTabs"] {
         display: none !important;
     }
+    /* Eliminar cualquier margen superior/izquierdo que cause espacios vacíos en Streamlit */
+    .block-container {
+        padding-top: 0.3rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 0.6rem !important;
+        padding-right: 0.6rem !important;
+        max-width: 100% !important;
+    }
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+    }
+    /* Cabecera superior adaptada de lado a lado sin espacios */
     .header-container {
         background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
         width: 100% !important;
@@ -97,7 +109,8 @@ st.markdown("""
         justify-content: space-between !important;
         align-items: center !important;
         border-bottom: 2px solid #30363d !important;
-        margin: -1rem -1rem 0 -1rem !important;
+        margin: -4rem -4rem 0 -4rem !important;
+        width: calc(100% + 8rem) !important;
         box-sizing: border-box !important;
         gap: 10px;
     }
@@ -179,13 +192,6 @@ st.markdown("""
         font-weight: bold !important;
         box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
         flex-shrink: 0;
-    }
-    .block-container {
-        padding-top: 0.3rem !important;
-        padding-bottom: 2rem !important;
-        padding-left: 0.3rem !important;
-        padding-right: 0.3rem !important;
-        max-width: 100% !important;
     }
     .stButton button {
         width: 100% !important;
@@ -352,7 +358,7 @@ elif neto_usuario < 0:
 else:
     etiqueta_balance = "Al día: Bs. 0,00"
 
-# --- CABECERA SUPERIOR OPTIMIZADA (GRANDE, LEGIBLE Y ADAPTABLE MÓVIL/PC) ---
+# --- CABECERA SUPERIOR OPTIMIZADA (LADO A LADO SIN ESPACIOS IZQUIERDOS) ---
 st.markdown(f"""
     <div class="header-container">
         <div class="header-left-clock">
@@ -920,7 +926,7 @@ if menu_principal_opcion == "Remates":
                     else:
                         st.markdown("🎲 **Panel Didáctico (Elige un número para asignar):**")
                         
-                        # Cuadrícula ultra compacta con botones pequeños y cortos
+                        # Cuadrícula ultra compacta con botones pequeños, cortos y elegantes
                         cols_ciego_grid = st.columns(min(8, len(caballos_disponibles_ciego)), gap="small")
                         for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
                             c_idx = idx_cb % len(cols_ciego_grid)
@@ -930,7 +936,6 @@ if menu_principal_opcion == "Remates":
                                     st.button(f"🔒#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, disabled=True)
                                 else:
                                     if st.button(f"#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, type="primary"):
-                        # Se utiliza la variable directamente en el botón para evitar asignaciones inválidas de sintaxis
                                         st.session_state.remates[carr_activa][cb_disp] = {
                                             "jugador": st.session_state.usuario_activo, 
                                             "monto": monto_fijo_carrera
