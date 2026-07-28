@@ -913,6 +913,9 @@ if menu_principal_opcion == "Remates":
                     st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
                     monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
 
+                    # Diccionario interno de asignación rápida para hacer el remate ciego ultra didáctico e interactivo estilo "caja misteriosa / bolillero"
+                    estado_key_ciego = f"ciego_seleccion_activa_{carr_activa}"
+                    
                     caballos_disponibles_ciego = [
                         cab for cab, info in st.session_state.remates[carr_activa].items() 
                         if info['jugador'] == "Sin Postor" or info['monto'] <= 0
@@ -921,30 +924,35 @@ if menu_principal_opcion == "Remates":
                     if not caballos_disponibles_ciego:
                         st.warning("⚠️ Todos los ejemplares de esta carrera ya han sido adquiridos.")
                     else:
-                        caballo_seleccionado_ciego = st.selectbox("Seleccionar Ejemplar Disponible a Comprar", caballos_disponibles_ciego, key=f"sel_cab_ciego_{carr_activa}")
+                        st.markdown("🎲 **Panel Didáctico de Asignación Ciega (Haz clic en un ejemplar libre para asignarlo):**")
                         
-                        if carrera_cerrada:
-                            st.button("🔨 Asignar Ejemplar (Cerrado)", key=f"btn_ciego_cerrado_{carr_activa}", use_container_width=True, type="primary", disabled=True)
-                        else:
-                            if st.button("🔨 Comprar / Asignar Ejemplar (Monto Fijo)", key=f"btn_ciego_conf_{carr_activa}", use_container_width=True, type="primary"):
-                                st.session_state.remates[carr_activa][caballo_seleccionado_ciego] = {
-                                    "jugador": st.session_state.usuario_activo, 
-                                    "monto": monto_fijo_carrera
-                                }
-                                st.session_state.historial_jugadas.append({
-                                    "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                    "jugador": st.session_state.usuario_activo,
-                                    "tipo": f"Remate Ciego ({modo_actual_remate})",
-                                    "carrera": carr_activa,
-                                    "detalle": caballo_seleccionado_ciego,
-                                    "monto": monto_fijo_carrera
-                                })
-                                if st.session_state.usuario_activo not in st.session_state.cuentas:
-                                    st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                                st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
-                                
-                                st.success(f"✅ ¡Ejemplar asignado a {st.session_state.usuario_activo} por {formatear_bs(monto_fijo_carrera)}!")
-                                st.rerun()
+                        cols_ciego_grid = st.columns(min(3, len(caballos_disponibles_ciego)), gap="small")
+                        for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
+                            c_idx = idx_cb % len(cols_ciego_grid)
+                            num_cb_parte = cb_disp.split(" - ")[0]
+                            with cols_ciego_grid[c_idx]:
+                                if carrera_cerrada:
+                                    st.button(f"🔒 #{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, disabled=True)
+                                else:
+                                    if st.button(f"✨ Asignar #{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, type="primary"):
+                                        st.session_state.remates[carr_activa][cb_disp] = {
+                                            "jugador": st.session_state.usuario_activo, 
+                                            "monto": monto_fijo_carrera
+                                        }
+                                        st.session_state.historial_jugadas.append({
+                                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                            "jugador": st.session_state.usuario_activo,
+                                            "tipo": f"Remate Ciego ({modo_actual_remate})",
+                                            "carrera": carr_activa,
+                                            "detalle": cb_disp,
+                                            "monto": monto_fijo_carrera
+                                        })
+                                        if st.session_state.usuario_activo not in st.session_state.cuentas:
+                                            st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                        st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
+                                        
+                                        st.success(f"🎉 ¡Ejemplar **{cb_disp}** asignado a **{st.session_state.usuario_activo}** por {formatear_bs(monto_fijo_carrera)}!")
+                                        st.rerun()
                 else:
                     st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
                     lista_caballos_activos = list(st.session_state.remates[carr_activa].keys())
@@ -1062,7 +1070,6 @@ elif menu_principal_opcion == "Dupletas":
                 st.markdown(f"---")
                 col_carr, col_img, col_cab = st.columns([2, 1.2, 2])
                 with col_carr:
-                    # Se muestra estricta e inalterablemente la carrera establecida
                     st.markdown(f"**{carr_leg}**")
                 with col_img:
                     if carr_leg in st.session_state.imagenes_carreras:
@@ -1499,7 +1506,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             placeholder="Primera Carrera - 1.200 mts - 02:00 PM\n1 - Rey David\n2 - Gran Amigo\n\nSegunda Carrera - 1.400 mts - 02:30 PM\n1 - Rayo Negro"
         )
         if st.button("🚀 Procesar Contenido Pegado", key="btn_procesar_texto_pegado", use_container_width=True, type="primary"):
-            if texto_copiado_web.strip():
+            if texto_copiado_web.format():
                 if procesar_texto_flexible(texto_copiado_web):
                     st.success("✅ ¡Inscritos organizados por carrera y editables con éxito!")
                     st.rerun()
