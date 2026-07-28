@@ -75,10 +75,10 @@ else:
     logo_display = '<span style="color: #f1c40f; font-size: 12px; font-weight: 900; font-style: italic; white-space: nowrap;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
-hora_texto = me_time = ahora_dt.strftime('%I:%M:%S %p')
+hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS REVISADOS (MENÚ PLANO CON DIVISIONES VERTICALES) ---
+# --- ESTILOS CSS EXACTOS AL DISEÑO SOLICITADO ---
 st.markdown("""
     <style>
     .stApp {
@@ -91,8 +91,8 @@ st.markdown("""
     .block-container {
         padding-top: 2rem !important;
         padding-bottom: 1.5rem !important;
-        padding-left: 0.3rem !important;
-        padding-right: 0.3rem !important;
+        padding-left: 0.2rem !important;
+        padding-right: 0.2rem !important;
         max-width: 1200px !important;
         margin: 0 auto !important;
     }
@@ -108,7 +108,7 @@ st.markdown("""
         justify-content: space-between !important;
         align-items: center !important;
         border-bottom: 2px solid #30363d !important;
-        border-radius: 8px !important;
+        border-radius: 6px !important;
         box-sizing: border-box !important;
         gap: 4px;
         margin-bottom: 8px !important;
@@ -120,7 +120,7 @@ st.markdown("""
         background: #0d1117 !important;
         border: 1px solid #30363d !important;
         padding: 3px 5px !important;
-        border-radius: 6px !important;
+        border-radius: 4px !important;
         text-align: left !important;
         flex-shrink: 0;
     }
@@ -194,58 +194,66 @@ st.markdown("""
         flex-shrink: 0;
     }
 
-    /* ESTILO PARA MENÚ PLANO CON DIVISIÓN VERTICAL Y SIN BURBUJAS */
-    .menu-bar-plano div[data-testid="stHorizontalBlock"] {
+    /* ESTILO BARRA NEGRA TIPO CASINO/APUESTAS (IDENTICA A LA IMAGEN) */
+    .barra-casino div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        align-items: center !important;
-        background: #0d1117 !important;
-        border: 1px solid #30363d !important;
-        border-radius: 6px !important;
-        padding: 0 !important;
-        margin-bottom: 6px !important;
+        align-items: stretch !important;
+        background-color: #000000 !important;
+        border: 1px solid #222222 !important;
+        border-radius: 0px !important;
+        gap: 0px !important;
         width: 100% !important;
+        margin-bottom: 8px !important;
+        padding: 0 !important;
     }
 
-    .menu-bar-plano div[data-testid="column"] {
+    .barra-casino div[data-testid="column"] {
         flex: 1 1 0px !important;
         min-width: 0 !important;
         padding: 0 !important;
-        border-right: 1px solid #30363d !important;
         margin: 0 !important;
+        border-right: 1px solid #333333 !important;
     }
 
-    .menu-bar-plano div[data-testid="column"]:last-child {
+    .barra-casino div[data-testid="column"]:last-child {
         border-right: none !important;
     }
 
-    .menu-bar-plano .stButton {
+    .barra-casino .stButton {
         width: 100% !important;
         margin: 0 !important;
     }
 
-    .menu-bar-plano .stButton button {
-        background: transparent !important;
+    .barra-casino .stButton button {
+        background-color: #000000 !important;
+        color: #ffffff !important;
         border: none !important;
+        border-radius: 0px !important;
         box-shadow: none !important;
-        border-radius: 0 !important;
-        color: #8b949e !important;
-        font-size: 10px !important;
-        font-weight: 800 !important;
-        min-height: 38px !important;
-        height: 38px !important;
-        padding: 0 2px !important;
+        font-size: 11px !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        min-height: 44px !important;
+        height: 44px !important;
+        padding: 0 4px !important;
         white-space: nowrap !important;
         text-overflow: ellipsis !important;
         overflow: hidden !important;
-        transition: all 0.2s ease !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        transition: background-color 0.2s ease !important;
     }
 
-    .menu-bar-plano .stButton button[kind="primary"] {
+    /* ESTADO SELECCIONADO (HIGHLIGHT) */
+    .barra-casino .stButton button[kind="primary"] {
+        background-color: #1f242d !important;
         color: #f1c40f !important;
-        background: rgba(241, 196, 15, 0.12) !important;
-        border-bottom: 2px solid #f1c40f !important;
+        border-bottom: 3px solid #f1c40f !important;
     }
 
     .subasta-header {
@@ -662,8 +670,8 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL ESTRUCTURADO EN BARRA PLANO SIN BURBUJAS CON RAYAS VERTICALES ---
-st.markdown('<div class="menu-bar-plano">', unsafe_allow_html=True)
+# --- MENÚ PRINCIPAL TIPO BARRA NEGRA SOLIDA ---
+st.markdown('<div class="barra-casino">', unsafe_allow_html=True)
 col_m1, col_m2, col_m3 = st.columns(3)
 
 with col_m1:
@@ -713,7 +721,7 @@ if lista_b64_banners:
             max-width: 1200px;
             height: 200px;
             margin: 0 auto 8px auto;
-            border-radius: 8px;
+            border-radius: 6px;
             overflow: hidden;
             border: 2px solid #f1c40f;
             box-shadow: 0px 4px 14px rgba(0,0,0,0.8);
@@ -843,22 +851,22 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# 1. MÓDULO DE REMATES (3 OPCIONES PLANAS Y SEPARADAS CON LÍNEAS VERTICALES)
+# 1. MÓDULO DE REMATES (SUBMENÚ BARRA NEGRA NEGRA SOLIDA)
 # =========================================================================
 if menu_principal_opcion == "Remates":
-    st.markdown('<div class="menu-bar-plano">', unsafe_allow_html=True)
+    st.markdown('<div class="barra-casino">', unsafe_allow_html=True)
     col_so1, col_so2, col_so3 = st.columns(3)
     
     with col_so1:
-        if st.button("⏱️ Adelantados", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
+        if st.button("ADELANTADOS", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
             st.session_state.sub_remate_opcion = "Adelantados"
             st.rerun()
     with col_so2:
-        if st.button("🙈 Ciegos", key="sub_rem_ciegos", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Ciegos" else "secondary"):
+        if st.button("CIEGOS", key="sub_rem_ciegos", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Ciegos" else "secondary"):
             st.session_state.sub_remate_opcion = "Ciegos"
             st.rerun()
     with col_so3:
-        if st.button("⚡ En Vivo", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
+        if st.button("EN VIVO", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
             st.session_state.sub_remate_opcion = "En Vivo"
             st.rerun()
             
@@ -1130,19 +1138,19 @@ if menu_principal_opcion == "Remates":
 # 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
-    st.markdown('<div class="menu-bar-plano">', unsafe_allow_html=True)
+    st.markdown('<div class="barra-casino">', unsafe_allow_html=True)
     col_d1, col_d2, col_d3 = st.columns(3)
     
     with col_d1:
-        if st.button("🎟️ Dupleta", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
+        if st.button("DUPLETA", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Dupleta"
             st.rerun()
     with col_d2:
-        if st.button("🎟️ Tripleta", key="sub_dup_tripleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Tripleta" else "secondary"):
+        if st.button("TRIPLETA", key="sub_dup_tripleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Tripleta" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Tripleta"
             st.rerun()
     with col_d3:
-        if st.button("🏇 Polla Hípica", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Polla Hipica" else "secondary"):
+        if st.button("POLLA HÍPICA", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Polla Hipica" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Polla Hipica"
             st.rerun()
 
