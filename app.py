@@ -72,13 +72,13 @@ img_b64 = get_image_base64(nombres_archivos)
 if img_b64:
     logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" class="header-logo-img" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 14px; font-weight: 900; font-style: italic; white-space: nowrap;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 13px; font-weight: 900; font-style: italic; white-space: nowrap;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS REVISADOS Y ADAPTADOS PARA MÓVIL ---
+# --- ESTILOS CSS REVISADOS (SIN DESBORDAMIENTO) ---
 st.markdown("""
     <style>
     .stApp {
@@ -89,10 +89,10 @@ st.markdown("""
         display: none !important;
     }
     .block-container {
-        padding-top: 2.5rem !important;
+        padding-top: 2.2rem !important;
         padding-bottom: 2rem !important;
-        padding-left: 0.4rem !important;
-        padding-right: 0.4rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
         max-width: 1400px !important;
         margin: 0 auto !important;
     }
@@ -102,7 +102,7 @@ st.markdown("""
     .header-container {
         background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
         width: 100% !important;
-        padding: 8px 10px !important;
+        padding: 6px 8px !important;
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
@@ -110,8 +110,8 @@ st.markdown("""
         border-bottom: 2px solid #30363d !important;
         border-radius: 8px !important;
         box-sizing: border-box !important;
-        gap: 6px;
-        margin-bottom: 12px !important;
+        gap: 4px;
+        margin-bottom: 10px !important;
     }
     .header-left-clock {
         display: flex !important;
@@ -119,20 +119,20 @@ st.markdown("""
         justify-content: center !important;
         background: #0d1117 !important;
         border: 1px solid #30363d !important;
-        padding: 4px 8px !important;
+        padding: 4px 6px !important;
         border-radius: 6px !important;
         text-align: left !important;
         flex-shrink: 0;
     }
     .clock-time {
         color: #58a6ff !important;
-        font-size: 11px !important;
+        font-size: 10px !important;
         font-weight: 800 !important;
-        line-height: 1.15;
+        line-height: 1.1;
     }
     .clock-date {
         color: #8b949e !important;
-        font-size: 9px !important;
+        font-size: 8px !important;
         font-weight: 600 !important;
     }
     .header-center-logo {
@@ -146,7 +146,7 @@ st.markdown("""
         text-align: center;
     }
     .header-logo-img {
-        max-height: 50px !important;
+        max-height: 45px !important;
         max-width: 100% !important;
         width: auto !important;
         object-fit: contain !important;
@@ -156,18 +156,18 @@ st.markdown("""
     .user-info-container {
         display: flex !important;
         align-items: center !important;
-        gap: 6px !important;
+        gap: 4px !important;
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
-        padding: 4px 8px !important;
-        border-radius: 16px !important;
+        padding: 4px 6px !important;
+        border-radius: 14px !important;
         flex-shrink: 0;
     }
     .user-text-info {
         display: flex !important;
         flex-direction: column !important;
         text-align: right !important;
-        line-height: 1.15 !important;
+        line-height: 1.1 !important;
     }
     .user-name {
         color: #ffffff !important;
@@ -176,49 +176,62 @@ st.markdown("""
     }
     .user-balance {
         color: #58a6ff !important;
-        font-size: 9px !important;
+        font-size: 8px !important;
         font-weight: 800 !important;
     }
     .user-avatar {
         background-color: #f1c40f !important;
         color: #000000 !important;
         border-radius: 50% !important;
-        width: 28px !important;
-        height: 28px !important;
+        width: 24px !important;
+        height: 24px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 13px !important;
+        font-size: 11px !important;
         font-weight: bold !important;
         box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
         flex-shrink: 0;
     }
     
-    /* FORZAR NAVEGACIÓN HORIZONTAL EN PANTALLAS MÓVILES */
+    /* AJUSTE MULTIDISPOSITIVO CONTENIDO DENTRO DE PANTALLA */
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 4px !important;
+        flex-wrap: wrap !important; /* Permite ajuste si la pantalla es muy angosta */
+        gap: 6px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+        flex: 1 1 30% !important; /* Reparte en 3 partes equitativas */
+        min-width: 0 !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .stButton {
         width: 100% !important;
     }
-    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-        width: 0 !important;
-        flex: 1 1 0px !important;
-        min-width: 0 !important;
-        padding: 0 !important;
-    }
+
     .stButton button {
         width: 100% !important;
         border-radius: 6px !important;
-        font-weight: 700 !important;
-        padding: 0.25rem 0.2rem !important;
-        min-height: 36px !important;
-        font-size: 10px !important;
-        letter-spacing: 0px;
-        white-space: nowrap !important;
-        text-overflow: ellipsis !important;
-        overflow: hidden !important;
+        font-weight: 800 !important;
+        padding: 6px 2px !important;
+        min-height: 42px !important;
+        font-size: 11px !important;
+        line-height: 1.2 !important;
+        white-space: normal !important; /* Permite salto de línea interno si no cabe el texto */
+        word-break: break-word !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        box-sizing: border-box !important;
     }
 
     .subasta-header {
@@ -635,7 +648,7 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL ---
+# --- MENÚ PRINCIPAL HORIZONTAL EN CAJA Y CONTROLADO ---
 col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
 
 with col_menu1:
@@ -644,7 +657,7 @@ with col_menu1:
         st.rerun()
 
 with col_menu2:
-    if st.button("DUPLETAS/POLLAS HÍPICAS", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
+    if st.button("DUPLETAS / POLLAS", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
         st.session_state.menu_principal_opcion = "Dupletas"
         st.rerun()
 
@@ -683,8 +696,8 @@ if lista_b64_banners:
         .banner-slider-container {{
             width: 100%;
             max-width: 1200px;
-            height: 240px;
-            margin: 0 auto 12px auto;
+            height: 220px;
+            margin: 0 auto 10px auto;
             border-radius: 8px;
             overflow: hidden;
             border: 2px solid #f1c40f;
@@ -721,12 +734,12 @@ if lista_b64_banners:
         }})();
     </script>
     """
-    components.html(html_slider, height=255)
+    components.html(html_slider, height=235)
 else:
     st.markdown("""
-        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); border: 2px solid #f1c40f; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px;">
+        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); border: 2px solid #f1c40f; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 10px;">
             <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
-            <p style="color: #8b949e; font-size: 12px; margin: 4px 0 0 0;">¡La pasión del hipismo venezolano en vivo!</p>
+            <p style="color: #8b949e; font-size: 11px; margin: 4px 0 0 0;">¡La pasión del hipismo venezolano en vivo!</p>
         </div>
     """, unsafe_allow_html=True)
 
