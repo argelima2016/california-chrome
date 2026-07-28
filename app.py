@@ -912,7 +912,6 @@ if menu_principal_opcion == "Remates":
                 if modo_actual_remate == "Ciegos":
                     st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
                     monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
-                    st.info(f"💰 Monto fijo preestablecido para esta carrera (configurable en Zona Admin -> Banco): **{formatear_bs(monto_fijo_carrera)}**")
 
                     caballos_disponibles_ciego = [
                         cab for cab, info in st.session_state.remates[carr_activa].items() 
@@ -1053,102 +1052,133 @@ elif menu_principal_opcion == "Dupletas":
     if not carreras_permitidas:
         st.warning(f"⚠️ No hay carreras habilitadas para **{sub_dup_actual}**. Configúralas en la Zona Admin.")
     else:
+        # Claves de estado para congelar/fijar las selecciones de la dupleta una vez emitido el ticket
+        k_emitido_estado = f"dupleta_emitido_flag_{sub_dup_actual}"
+        k_guardada_legs = f"dupleta_guardada_legs_{sub_dup_actual}"
+        
+        ticket_ya_emitido = st.session_state.get(k_emitido_estado, False)
+
         with st.container(border=True):
             seleccion_legs = []
             carreras_usadas_en_ticket = set()
             valido_legs = True
             
-            if sub_dup_actual == "Polla Hipica":
-                st.markdown("🎯 **Selección de Ejemplares para la Polla Hípica (Todas las carreras habilitadas):**")
-                for i, carr_leg in enumerate(carreras_permitidas):
-                    st.markdown(f"---")
-                    col_carr, col_img, col_cab = st.columns([2, 1.2, 2])
-                    with col_carr:
-                        st.markdown(f"**{carr_leg}**")
-                    with col_img:
-                        if carr_leg in st.session_state.imagenes_carreras:
-                            st.image(st.session_state.imagenes_carreras[carr_leg], use_container_width=True)
-                        else:
-                            st.markdown("<div style='background: #161b22; border: 1px dashed #30363d; padding: 10px; text-align: center; font-size: 10px; border-radius: 4px; color: #8b949e;'>Sin Imagen</div>", unsafe_allow_html=True)
-                    with col_cab:
-                        caballos_in_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
-                        cab_leg = st.selectbox(f"Ejemplar para {carr_leg}", caballos_in_carr if caballos_in_carr else ["Sin Caballos"], key=f"polla_sel_ejemplar_{i}")
-                    seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
+            if ticket_ya_emitido and k_guardada_legs in st.session_state:
+                # Mostrar selecciones fijas (congeladas)
+                st.info("🔒 **Tus selecciones actuales ya están fijas.** Si deseas realizar una nueva jugada, emite el ticket o reinicia el formulario.")
+                seleccion_legs = st.session_state[k_guardada_legs]
+                
+                if sub_dup_actual == "Polla Hipica":
+                    for l_item in seleccion_legs:
+                        st.markdown(f"✅ **{l_item['carrera']}** ➔ Ejemplar: `{l_item['ejemplar']}`")
+                else:
+                    for l_item in seleccion_legs:
+                        st.markdown(f"✅ **{l_item['carrera']}** ➔ Ejemplar: `{l_item['ejemplar']}`")
             else:
-                for i in range(num_legs):
-                    st.markdown(f"---")
-                    col_carr, col_img, col_cab = st.columns([2, 1.2, 2])
-                    with col_carr:
-                        carr_leg = st.selectbox(f"Carrera {i+1}", carreras_permitidas, key=f"{sub_dup_actual.lower()}_sel_carrera_{i}")
-                    with col_img:
-                        st.markdown("<p style='font-size: 11px; margin-bottom: 2px; color: #8b949e;'>Imagen Carrera</p>", unsafe_allow_html=True)
-                        if carr_leg in st.session_state.imagenes_carreras:
-                            st.image(st.session_state.imagenes_carreras[carr_leg], use_container_width=True)
-                        else:
-                            st.markdown("<div style='background: #161b22; border: 1px dashed #30363d; padding: 15px; text-align: center; font-size: 10px; border-radius: 4px; color: #8b949e;'>Sin Imagen</div>", unsafe_allow_html=True)
-                    with col_cab:
-                        caballos_in_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
-                        cab_leg = st.selectbox(f"Ejemplar {i+1}", caballos_in_carr if caballos_in_carr else ["Sin Caballos"], key=f"{sub_dup_actual.lower()}_sel_ejemplar_{i}")
-                    
-                    if carr_leg in carreras_usadas_en_ticket:
-                        valido_legs = False
-                    carreras_usadas_en_ticket.add(carr_leg)
-                    seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
+                # Selectores interactivos normales
+                if sub_dup_actual == "Polla Hipica":
+                    st.markdown("🎯 **Selección de Ejemplares para la Polla Hípica (Todas las carreras habilitadas):**")
+                    for i, carr_leg in enumerate(carreras_permitidas):
+                        st.markdown(f"---")
+                        col_carr, col_img, col_cab = st.columns([2, 1.2, 2])
+                        with col_carr:
+                            st.markdown(f"**{carr_leg}**")
+                        with col_img:
+                            if carr_leg in st.session_state.imagenes_carreras:
+                                st.image(st.session_state.imagenes_carreras[carr_leg], use_container_width=True)
+                            else:
+                                st.markdown("<div style='background: #161b22; border: 1px dashed #30363d; padding: 10px; text-align: center; font-size: 10px; border-radius: 4px; color: #8b949e;'>Sin Imagen</div>", unsafe_allow_html=True)
+                        with col_cab:
+                            caballos_in_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
+                            cab_leg = st.selectbox(f"Ejemplar para {carr_leg}", caballos_in_carr if caballos_in_carr else ["Sin Caballos"], key=f"polla_sel_ejemplar_{i}")
+                        seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
+                else:
+                    for i in range(num_legs):
+                        st.markdown(f"---")
+                        col_carr, col_img, col_cab = st.columns([2, 1.2, 2])
+                        with col_carr:
+                            carr_leg = st.selectbox(f"Carrera {i+1}", carreras_permitidas, key=f"{sub_dup_actual.lower()}_sel_carrera_{i}")
+                        with col_img:
+                            st.markdown("<p style='font-size: 11px; margin-bottom: 2px; color: #8b949e;'>Imagen Carrera</p>", unsafe_allow_html=True)
+                            if carr_leg in st.session_state.imagenes_carreras:
+                                st.image(st.session_state.imagenes_carreras[carr_leg], use_container_width=True)
+                            else:
+                                st.markdown("<div style='background: #161b22; border: 1px dashed #30363d; padding: 15px; text-align: center; font-size: 10px; border-radius: 4px; color: #8b949e;'>Sin Imagen</div>", unsafe_allow_html=True)
+                        with col_cab:
+                            caballos_in_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
+                            cab_leg = st.selectbox(f"Ejemplar {i+1}", caballos_in_carr if caballos_in_carr else ["Sin Caballos"], key=f"{sub_dup_actual.lower()}_sel_ejemplar_{i}")
+                        
+                        if carr_leg in carreras_usadas_en_ticket:
+                            valido_legs = False
+                        carreras_usadas_en_ticket.add(carr_leg)
+                        seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
 
         if not st.session_state.dupleta_bloqueada:
-            if st.button(f"🚀 Emitir Ticket de {sub_dup_actual}", key=f"btn_emitir_{sub_dup_actual}", use_container_width=True, type="primary"):
-                if not valido_legs:
-                    st.error("⚠️ No puedes repetir carreras en el mismo ticket.")
-                else:
-                    legs_ordenadas = sorted(seleccion_legs, key=lambda x: x['carrera'])
-                    firma_combinacion = tuple((l['carrera'], l['ejemplar']) for l in legs_ordenadas)
-
-                    lista_tickets_activo = (
-                        st.session_state.dupletas_tickets if sub_dup_actual == "Dupleta" else
-                        st.session_state.tripleta_tickets if sub_dup_actual == "Tripleta" else
-                        st.session_state.polla_tickets
-                    )
-
-                    duplicado = False
-                    for t in lista_tickets_activo:
-                        t_legs_ordenadas = sorted(t['legs'], key=lambda x: x['carrera'])
-                        t_firma = tuple((l['carrera'], l['ejemplar']) for l in t_legs_ordenadas)
-                        if t_firma == firma_combinacion:
-                            duplicado = True
-                            break
-
-                    if duplicado:
-                        st.error("❌ **BLOQUEADO:** Ya existe un ticket con exactamente esta misma combinación. No se permiten combinaciones repetidas.")
+            if not ticket_ya_emitido:
+                if st.button(f"🚀 Emitir Ticket de {sub_dup_actual}", key=f"btn_emitir_{sub_dup_actual}", use_container_width=True, type="primary"):
+                    if not valido_legs:
+                        st.error("⚠️ No puedes repetir carreras en el mismo ticket.")
                     else:
-                        prefijo_id = "DUP" if sub_dup_actual == "Dupleta" else ("TRIP" if sub_dup_actual == "Tripleta" else "POLL")
-                        ticket_id = f"{prefijo_id}-{len(lista_tickets_activo) + 1:04d}"
-                        
-                        nuevo_ticket_dict = {
-                            "id": ticket_id, "jugador": jugador_ticket, "monto": monto_unico_seccion,
-                            "legs": seleccion_legs, "estado": "Pendiente", "fecha": ahora_dt.strftime('%d/%m %I:%M %p')
-                        }
+                        legs_ordenadas = sorted(seleccion_legs, key=lambda x: x['carrera'])
+                        firma_combinacion = tuple((l['carrera'], l['ejemplar']) for l in legs_ordenadas)
 
-                        if sub_dup_actual == "Dupleta":
-                            st.session_state.dupletas_tickets.append(nuevo_ticket_dict)
-                        elif sub_dup_actual == "Tripleta":
-                            st.session_state.tripleta_tickets.append(nuevo_ticket_dict)
+                        lista_tickets_activo = (
+                            st.session_state.dupletas_tickets if sub_dup_actual == "Dupleta" else
+                            st.session_state.tripleta_tickets if sub_dup_actual == "Tripleta" else
+                            st.session_state.polla_tickets
+                        )
+
+                        duplicado = False
+                        for t in lista_tickets_activo:
+                            t_legs_ordenadas = sorted(t['legs'], key=lambda x: x['carrera'])
+                            t_firma = tuple((l['carrera'], l['ejemplar']) for l in t_legs_ordenadas)
+                            if t_firma == firma_combinacion:
+                                duplicado = True
+                                break
+
+                        if duplicado:
+                            st.error("❌ **BLOQUEADO:** Ya existe un ticket con exactamente esta misma combinación. No se permiten combinaciones repetidas.")
                         else:
-                            st.session_state.polla_tickets.append(nuevo_ticket_dict)
+                            prefijo_id = "DUP" if sub_dup_actual == "Dupleta" else ("TRIP" if sub_dup_actual == "Tripleta" else "POLL")
+                            ticket_id = f"{prefijo_id}-{len(lista_tickets_activo) + 1:04d}"
+                            
+                            nuevo_ticket_dict = {
+                                "id": ticket_id, "jugador": jugador_ticket, "monto": monto_unico_seccion,
+                                "legs": seleccion_legs, "estado": "Pendiente", "fecha": ahora_dt.strftime('%d/%m %I:%M %p')
+                            }
 
-                        detalles_str = " ➔ ".join([f"{l['carrera']}: {l['ejemplar']}" for l in seleccion_legs])
-                        st.session_state.historial_jugadas.append({
-                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                            "jugador": jugador_ticket,
-                            "tipo": sub_dup_actual,
-                            "carrera": "Múltiple",
-                            "detalle": f"Ticket {ticket_id} ({detalles_str})",
-                            "monto": monto_unico_seccion
-                        })
-                        if jugador_ticket not in st.session_state.cuentas:
-                            st.session_state.cuentas[jugador_ticket] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                        st.session_state.cuentas[jugador_ticket]['Pujas'] += monto_unico_seccion
-                        st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito!")
-                        st.rerun()
+                            if sub_dup_actual == "Dupleta":
+                                st.session_state.dupletas_tickets.append(nuevo_ticket_dict)
+                            elif sub_dup_actual == "Tripleta":
+                                st.session_state.tripleta_tickets.append(nuevo_ticket_dict)
+                            else:
+                                st.session_state.polla_tickets.append(nuevo_ticket_dict)
+
+                            detalles_str = " ➔ ".join([f"{l['carrera']}: {l['ejemplar']}" for l in seleccion_legs])
+                            st.session_state.historial_jugadas.append({
+                                "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                "jugador": jugador_ticket,
+                                "tipo": sub_dup_actual,
+                                "carrera": "Múltiple",
+                                "detalle": f"Ticket {ticket_id} ({detalles_str})",
+                                "monto": monto_unico_seccion
+                            })
+                            if jugador_ticket not in st.session_state.cuentas:
+                                st.session_state.cuentas[jugador_ticket] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                            st.session_state.cuentas[jugador_ticket]['Pujas'] += monto_unico_seccion
+                            
+                            # Fijar selecciones y marcar como emitido
+                            st.session_state[k_emitido_estado] = True
+                            st.session_state[k_guardada_legs] = seleccion_legs
+                            
+                            st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito!")
+                            st.rerun()
+            else:
+                if st.button("🔄 Nueva Selección / Otro Ticket", key=f"btn_reset_legs_{sub_dup_actual}", use_container_width=True):
+                    st.session_state[k_emitido_estado] = False
+                    if k_guardada_legs in st.session_state:
+                        del st.session_state[k_guardada_legs]
+                    st.rerun()
 
     st.markdown("---")
     st.markdown(f"### 📋 Tickets de {sub_dup_actual} Emitidos en la Jornada")
