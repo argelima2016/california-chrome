@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS REVISADOS (CORRECCIÓN DE TRASLAPE Y JERARQUÍA DE BOTONES) ---
+# --- ESTILOS CSS REVISADOS (BOTONES COMPACTOS, ESTILIZADOS Y MODERNOS) ---
 st.markdown("""
     <style>
     .stApp {
@@ -86,31 +86,15 @@ st.markdown("""
         color: #f0f6fc;
     }
     
-    /* OCULTAR ELEMENTOS FLOTANTES DE STREAMLIT QUE CAUSAN TRASLAPE (SHARE, MENU, STAR) */
-    header[data-testid="stHeader"] {
+    header[data-testid="stHeader"], 
+    div[data-testid="stToolbar"], 
+    div[data-testid="stDecoration"], 
+    div[data-testid="stStatusWidget"], 
+    #MainMenu, footer, div[data-testid="stTabs"] {
         display: none !important;
-    }
-    div[data-testid="stToolbar"] {
-        display: none !important;
-    }
-    div[data-testid="stDecoration"] {
-        display: none !important;
-    }
-    div[data-testid="stStatusWidget"] {
-        display: none !important;
-    }
-    #MainMenu {
-        visibility: hidden !important;
-    }
-    footer {
         visibility: hidden !important;
     }
 
-    div[data-testid="stTabs"] {
-        display: none !important;
-    }
-    
-    /* MARGEN SUPERIOR PARA EVITAR COLISIÓN CON BARRAS DE NAVEGACIÓN DE MÓVILES */
     .block-container {
         padding-top: 3.2rem !important;
         padding-bottom: 2rem !important;
@@ -120,7 +104,7 @@ st.markdown("""
         margin: 0 auto !important;
     }
 
-    /* CONTENEDOR HEADER SUPERIOR UNIFICADO Y AISLADO */
+    /* HEADER SUPERIOR */
     .header-container {
         background: linear-gradient(180deg, #0d1117 0%, #161b22 100%) !important;
         width: 100% !important;
@@ -136,7 +120,6 @@ st.markdown("""
         margin-bottom: 10px !important;
         box-shadow: 0px 4px 12px rgba(0,0,0,0.6);
     }
-
     .header-left-clock {
         display: flex !important;
         flex-direction: column !important;
@@ -159,7 +142,6 @@ st.markdown("""
         font-size: 9px !important;
         font-weight: 600 !important;
     }
-
     .header-center-logo {
         display: flex !important;
         align-items: center !important;
@@ -178,8 +160,6 @@ st.markdown("""
         display: block !important;
         filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.9));
     }
-
-    /* CONTENEDOR USUARIO AISLADO Y RESPONSIVO */
     .user-info-container {
         display: flex !important;
         align-items: center !important;
@@ -221,7 +201,7 @@ st.markdown("""
         flex-shrink: 0;
     }
 
-    /* BARRA DE NAVEGACIÓN Y JERARQUÍA DE BOTONES (ESTILO CASINO CASAS DE APUESTAS) */
+    /* BARRA NEGRA CASINO CONTINUA (MENU PRINCIPAL / SUBMENUS) */
     .barra-casino {
         width: 100% !important;
         max-width: 800px !important;
@@ -264,57 +244,66 @@ st.markdown("""
         margin: 0 !important;
     }
 
-    /* BOTONES SECUNDARIOS (VISIBLES, CON BORDE SÚTIL Y MÁS CLAROS) */
-    .barra-casino .stButton > button {
-        background-color: #1c212d !important;
+    /* ESTILO GENERAL DE TODOS LOS BOTONES EN LA APP (NUEVA MEJORA VISUAL) */
+    .stButton > button {
+        background: #1c212d !important;
         color: #f0f6fc !important;
-        border: none !important;
-        border-radius: 0px !important;
-        box-shadow: none !important;
+        border: 1px solid #30363d !important;
+        border-radius: 6px !important;
         font-size: 11px !important;
-        font-weight: 800 !important;
-        letter-spacing: 0.5px !important;
-        text-transform: uppercase !important;
-        min-height: 42px !important;
-        height: 42px !important;
-        padding: 0 4px !important;
-        white-space: nowrap !important;
-        text-overflow: ellipsis !important;
-        overflow: hidden !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.3px !important;
+        min-height: 36px !important;
+        height: 36px !important;
+        padding: 2px 8px !important;
+        box-shadow: 0px 2px 4px rgba(0,0,0,0.3) !important;
+        transition: all 0.18s ease-in-out !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         text-align: center !important;
-        transition: all 0.2s ease-in-out !important;
     }
 
-    .barra-casino .stButton > button:hover {
-        background-color: #21262d !important;
+    .stButton > button:hover {
+        background: #262c3a !important;
         color: #f1c40f !important;
+        border-color: #f1c40f !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0px 4px 8px rgba(241, 196, 15, 0.2) !important;
         cursor: pointer !important;
     }
 
-    /* BOTONES PRIMARIOS/ACTIVOS (CALL TO ACTION EN ROJO CRMESÍ SUAVE / DORADO) */
+    .stButton > button:active {
+        transform: translateY(0px) !important;
+    }
+
+    /* BOTONES PRIMARIOS (ACCIONES PRINCIPALES / SELECCIONADO) */
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(180deg, #f1c40f 0%, #d4ac0d 100%) !important;
+        color: #000000 !important;
+        border: 1px solid #f1c40f !important;
+        font-weight: 900 !important;
+        box-shadow: 0px 3px 8px rgba(241, 196, 15, 0.3) !important;
+    }
+
+    .stButton > button[kind="primary"]:hover {
+        background: linear-gradient(180deg, #f39c12 0%, #b7950b 100%) !important;
+        color: #000000 !important;
+    }
+
+    /* BARRAS TIPO CASINO (NO BORDES REDONDEADOS) */
+    .barra-casino .stButton > button {
+        border-radius: 0px !important;
+        border: none !important;
+        background: #161b22 !important;
+        min-height: 40px !important;
+        height: 40px !important;
+    }
+
     .barra-casino .stButton > button[kind="primary"] {
         background: linear-gradient(180deg, #d63031 0%, #b22222 100%) !important;
         color: #ffffff !important;
         border-bottom: 3px solid #ff7675 !important;
-        font-weight: 900 !important;
-    }
-
-    @media (min-width: 992px) {
-        .block-container {
-            padding-top: 2rem !important;
-        }
-        .clock-time { font-size: 12px !important; }
-        .clock-date { font-size: 10px !important; }
-        .user-name { font-size: 11px !important; }
-        .user-balance { font-size: 10px !important; }
-        .barra-casino .stButton > button {
-            font-size: 12px !important;
-            min-height: 44px !important;
-            height: 44px !important;
-        }
     }
 
     .subasta-header {
@@ -467,7 +456,7 @@ elif neto_usuario < 0:
 else:
     etiqueta_balance = "Al día: Bs. 0,00"
 
-# --- CABECERA SUPERIOR REESTRUCTURADA SIN TRASLAPE ---
+# --- CABECERA SUPERIOR ---
 st.markdown(f"""
     <div class="header-container">
         <div class="header-left-clock">
@@ -731,7 +720,7 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL TIPO BARRA NEGRA SÓLIDA UNIFICADA ---
+# --- MENÚ PRINCIPAL ---
 st.markdown('<div class="barra-casino">', unsafe_allow_html=True)
 col_m1, col_m2, col_m3 = st.columns(3)
 
