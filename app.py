@@ -518,7 +518,8 @@ def procesar_texto_flexible(texto_a_procesar):
                     "condicion": cond, 
                     "distancia": dist, 
                     "hora": hora,
-                    "monto_fijo_ciego": 500.0
+                    "monto_fijo_ciego": 500.0,
+                    "incentivo": 0.0
                 }
                 continue
 
@@ -574,7 +575,7 @@ if not st.session_state.remates:
         carr_nombre = f"Carrera {i}"
         st.session_state.banco_caballos_por_carrera[carr_nombre] = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
         st.session_state.remates[carr_nombre] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
-        st.session_state.detalles_carreras[carr_nombre] = {"condicion": "Condición estándar", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0}
+        st.session_state.detalles_carreras[carr_nombre] = {"condicion": "Condición estándar", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0, "incentivo": 0.0}
 
 lista_carreras_disponibles = list(st.session_state.remates.keys())
 
@@ -772,7 +773,7 @@ if menu_principal_opcion == "Remates":
 
             # --- MOSTRAR CONDICIÓN, HORA Y DISTANCIA ---
             if carr_activa not in st.session_state.detalles_carreras:
-                st.session_state.detalles_carreras[carr_activa] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0}
+                st.session_state.detalles_carreras[carr_activa] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0, "incentivo": 0.0}
             
             detalles_carr = st.session_state.detalles_carreras[carr_activa]
 
@@ -834,8 +835,8 @@ if menu_principal_opcion == "Remates":
                         if st.button("🏆 Liquidar Premio", key=f"rem_btn_liquidar_{carr_activa}", use_container_width=True, type="primary"):
                             pote_carr_total = sum([info['monto'] for info in st.session_state.remates[carr_activa].values()])
                             monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
-                            extra_pote = st.session_state.get(f"rem_pote_inc_{carr_activa}", 0.0)
-                            premio_final_liq = pote_carr_total - monto_casa_calc + extra_pote
+                            incentivo_establecido = float(detalles_carr.get('incentivo', 0.0))
+                            premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_establecido
                             
                             info_g = st.session_state.remates[carr_activa][caballo_ganador_elegido]
                             if info_g['jugador'] != "Sin Postor":
@@ -870,12 +871,13 @@ if menu_principal_opcion == "Remates":
             total_pote = sum([info['monto'] for info in st.session_state.remates[carr_activa].values()])
             monto_casa = total_pote * (porcentaje_casa / 100)
             pote_neto_base = total_pote - monto_casa
+            incentivo_actual = float(detalles_carr.get('incentivo', 0.0))
+            premio_total_calculado = pote_neto_base + incentivo_actual
 
-            c_m1, c_m2 = st.columns(2)
-            c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
-            pote_incentivo_extra = c_m2.number_input("🎁 Extra", min_value=0.0, value=0.0, step=50.0, key=f"rem_pote_inc_{carr_activa}")
-            premio_total_calculado = pote_neto_base + pote_incentivo_extra
+            st.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
             st.metric(f"🏆 Premio Total ({carr_activa})", formatear_bs(premio_total_calculado))
+            if incentivo_actual > 0:
+                st.caption(f"🎁 Incentivo incluido: {formatear_bs(incentivo_actual)}")
 
             with st.container(border=True):
                 if modo_actual_remate == "Ciegos":
@@ -1221,7 +1223,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     if c_n not in st.session_state.banco_caballos_por_carrera:
                         st.session_state.banco_caballos_por_carrera[c_n] = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
                         st.session_state.remates[c_n] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
-                        st.session_state.detalles_carreras[c_n] = {"condicion": "Condición estándar", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0}
+                        st.session_state.detalles_carreras[c_n] = {"condicion": "Condición estándar", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0, "incentivo": 0.0}
                 st.toast(f"✅ ¡Jornada ajustada a {nueva_cantidad_carreras} carreras!")
                 st.rerun()
 
@@ -1289,7 +1291,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 for idx_c_ciega, c_ciega_nombre in enumerate(carreras_ciego_seleccionadas):
                     etiqueta_v = "1V (Primera Válida)" if idx_c_ciega == 0 else "6V (Segunda Válida)"
                     if c_ciega_nombre not in st.session_state.detalles_carreras:
-                        st.session_state.detalles_carreras[c_ciega_nombre] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0}
+                        st.session_state.detalles_carreras[c_ciega_nombre] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0, "incentivo": 0.0}
                     
                     monto_actual_cfg = float(st.session_state.detalles_carreras[c_ciega_nombre].get('monto_fijo_ciego', 500.0))
                     nuevo_monto_ciego_val = st.number_input(
@@ -1307,28 +1309,31 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         if carr_banco_sel not in st.session_state.banco_caballos_por_carrera:
             st.session_state.banco_caballos_por_carrera[carr_banco_sel] = []
         if carr_banco_sel not in st.session_state.detalles_carreras:
-            st.session_state.detalles_carreras[carr_banco_sel] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0}
+            st.session_state.detalles_carreras[carr_banco_sel] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0, "incentivo": 0.0}
 
         det_actuales = st.session_state.detalles_carreras[carr_banco_sel]
         with st.container(border=True):
-            st.markdown(f"🛠️ **Editar Detalles y Monto Fijo (Ciego) de {carr_banco_sel}**")
+            st.markdown(f"🛠️ **Editar Detalles, Monto Fijo (Ciego) e Incentivo de {carr_banco_sel}**")
             edit_cond = st.text_input("Condición de la carrera", value=det_actuales.get('condicion', ''), key=f"banco_cond_{carr_banco_sel}")
-            col_b1, col_b2, col_b3 = st.columns(3)
+            col_b1, col_b2, col_b3, col_b4 = st.columns(4)
             with col_b1:
                 edit_dist = st.text_input("Distancia", value=det_actuales.get('distancia', ''), key=f"banco_dist_{carr_banco_sel}")
             with col_b2:
                 edit_hora = st.text_input("Hora", value=det_actuales.get('hora', ''), key=f"banco_hora_{carr_banco_sel}")
             with col_b3:
                 edit_monto_ciego = st.number_input("Monto Fijo (Ciego)", min_value=0.0, value=float(det_actuales.get('monto_fijo_ciego', 500.0)), step=50.0, key=f"banco_monto_ciego_{carr_banco_sel}")
+            with col_b4:
+                edit_incentivo = st.number_input("Incentivo (Extra)", min_value=0.0, value=float(det_actuales.get('incentivo', 0.0)), step=50.0, key=f"banco_incentivo_{carr_banco_sel}")
             
             if st.button("💾 Guardar Detalles de Carrera", key=f"btn_save_banco_det_{carr_banco_sel}", use_container_width=True, type="primary"):
                 st.session_state.detalles_carreras[carr_banco_sel] = {
                     "condicion": edit_cond, 
                     "distancia": edit_dist, 
                     "hora": edit_hora, 
-                    "monto_fijo_ciego": edit_monto_ciego
+                    "monto_fijo_ciego": edit_monto_ciego,
+                    "incentivo": edit_incentivo
                 }
-                st.toast("✅ ¡Detalles y monto fijo guardados con éxito!")
+                st.toast("✅ ¡Detalles, monto fijo e incentivo guardados con éxito!")
                 st.rerun()
 
         st.markdown("---")
