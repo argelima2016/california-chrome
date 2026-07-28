@@ -1033,17 +1033,14 @@ elif menu_principal_opcion == "Dupletas":
         pote_total = sum([t['monto'] for t in st.session_state.dupletas_tickets])
         st.metric("💰 Pote Acumulado Dupletas", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
-        num_legs = 2
     elif sub_dup_actual == "Tripleta":
         pote_total = sum([t['monto'] for t in st.session_state.tripleta_tickets])
         st.metric("💰 Pote Acumulado Tripletas", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
-        num_legs = 3
     else:
         pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
         st.metric("💰 Pote Acumulado Polla Hípica", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
-        num_legs = len(carreras_permitidas) if carreras_permitidas else 1
 
     with st.container(border=True):
         jugador_ticket = st.session_state.usuario_activo
@@ -1054,47 +1051,32 @@ elif menu_principal_opcion == "Dupletas":
         st.warning(f"⚠️ No hay carreras habilitadas para **{sub_dup_actual}**. Configúralas en la Zona Admin (Config. Dupletas/Polla).")
     else:
         with st.container(border=True):
+            st.markdown(f"🎯 **Selección de Ejemplares (Carreras establecidas previamente en Zona Admin):**")
+            
             seleccion_legs = []
             carreras_usadas_en_ticket = set()
             valido_legs = True
             
-            if sub_dup_actual == "Polla Hipica":
-                st.markdown(f"🎯 **Selección de Ejemplares para la Polla Hípica (Carreras habilitadas: {len(carreras_permitidas)}):**")
-                for i, carr_leg in enumerate(carreras_permitidas):
-                    st.markdown(f"---")
-                    col_carr, col_img, col_cab = st.columns([2, 1.2, 2])
-                    with col_carr:
-                        st.markdown(f"**{carr_leg}**")
-                    with col_img:
-                        if carr_leg in st.session_state.imagenes_carreras:
-                            st.image(st.session_state.imagenes_carreras[carr_leg], use_container_width=True)
-                        else:
-                            st.markdown("<div style='background: #161b22; border: 1px dashed #30363d; padding: 10px; text-align: center; font-size: 10px; border-radius: 4px; color: #8b949e;'>Sin Imagen</div>", unsafe_allow_html=True)
-                    with col_cab:
-                        caballos_in_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
-                        cab_leg = st.selectbox(f"Ejemplar para {carr_leg}", caballos_in_carr if caballos_in_carr else ["Sin Caballos"], key=f"polla_sel_ejemplar_{i}")
-                    seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
-            else:
-                st.markdown(f"🎯 **Selecciona carreras y ejemplares para tu {sub_dup_actual} (Legs requeridas: {num_legs}):**")
-                for i in range(min(num_legs, len(carreras_permitidas))):
-                    st.markdown(f"---")
-                    col_carr, col_img, col_cab = st.columns([2, 1.2, 2])
-                    with col_carr:
-                        carr_leg = st.selectbox(f"Carrera {i+1}", carreras_permitidas, key=f"{sub_dup_actual.lower()}_sel_carrera_{i}")
-                    with col_img:
-                        st.markdown("<p style='font-size: 11px; margin-bottom: 2px; color: #8b949e;'>Imagen Carrera</p>", unsafe_allow_html=True)
-                        if carr_leg in st.session_state.imagenes_carreras:
-                            st.image(st.session_state.imagenes_carreras[carr_leg], use_container_width=True)
-                        else:
-                            st.markdown("<div style='background: #161b22; border: 1px dashed #30363d; padding: 15px; text-align: center; font-size: 10px; border-radius: 4px; color: #8b949e;'>Sin Imagen</div>", unsafe_allow_html=True)
-                    with col_cab:
-                        caballos_in_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
-                        cab_leg = st.selectbox(f"Ejemplar {i+1}", caballos_in_carr if caballos_in_carr else ["Sin Caballos"], key=f"{sub_dup_actual.lower()}_sel_ejemplar_{i}")
-                    
-                    if carr_leg in carreras_usadas_en_ticket:
-                        valido_legs = False
-                    carreras_usadas_en_ticket.add(carr_leg)
-                    seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
+            # Mostrar directamente cada carrera establecida sin selector desplegable para cambiarla
+            for i, carr_leg in enumerate(carreras_permitidas):
+                st.markdown(f"---")
+                col_carr, col_img, col_cab = st.columns([2, 1.2, 2])
+                with col_carr:
+                    # Se muestra estricta e inalterablemente la carrera establecida
+                    st.markdown(f"**{carr_leg}**")
+                with col_img:
+                    if carr_leg in st.session_state.imagenes_carreras:
+                        st.image(st.session_state.imagenes_carreras[carr_leg], use_container_width=True)
+                    else:
+                        st.markdown("<div style='background: #161b22; border: 1px dashed #30363d; padding: 10px; text-align: center; font-size: 10px; border-radius: 4px; color: #8b949e;'>Sin Imagen</div>", unsafe_allow_html=True)
+                with col_cab:
+                    caballos_in_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
+                    cab_leg = st.selectbox(f"Ejemplar para {carr_leg}", caballos_in_carr if caballos_in_carr else ["Sin Caballos"], key=f"{sub_dup_actual.lower()}_sel_ejemplar_fijo_{i}")
+                
+                if carr_leg in carreras_usadas_en_ticket:
+                    valido_legs = False
+                carreras_usadas_en_ticket.add(carr_leg)
+                seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
 
         if not st.session_state.dupleta_bloqueada:
             if st.button(f"🚀 Emitir Ticket de {sub_dup_actual}", key=f"btn_emitir_{sub_dup_actual}", use_container_width=True, type="primary"):
