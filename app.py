@@ -826,7 +826,7 @@ if menu_principal_opcion == "Remates":
                 if modo_actual_remate == "Ciegos":
                     st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
                     monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
-                    st.info(f"💰 Monto fijo preestablecido para esta carrera: **{formatear_bs(monto_fijo_carrera)}**")
+                    st.info(f"💰 Monto fijo preestablecido para esta carrera (configurable en Zona Admin -> Banco): **{formatear_bs(monto_fijo_carrera)}**")
 
                     lista_caballos_activos = list(st.session_state.remates[carr_activa].keys())
                     if not lista_caballos_activos:
@@ -1191,6 +1191,25 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.toast("✅ ¡Carreras de Remate Ciego guardadas con éxito!")
                     st.rerun()
 
+            # --- ASIGNACIÓN DE MONTO FIJO PARA LAS 2 CARRERAS CIEGAS ---
+            if len(carreras_ciego_seleccionadas) == 2:
+                st.markdown("---")
+                st.markdown("💰 **Definir Monto Fijo para cada Carrera Ciega (1V y 6V)**")
+                for idx_c_ciega, c_ciega_nombre in enumerate(carreras_ciego_seleccionadas):
+                    etiqueta_v = "1V (Primera Válida)" if idx_c_ciega == 0 else "6V (Segunda Válida)"
+                    if c_ciega_nombre not in st.session_state.detalles_carreras:
+                        st.session_state.detalles_carreras[c_ciega_nombre] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0}
+                    
+                    monto_actual_cfg = float(st.session_state.detalles_carreras[c_ciega_nombre].get('monto_fijo_ciego', 500.0))
+                    nuevo_monto_ciego_val = st.number_input(
+                        f"Monto Fijo para {etiqueta_v} ({c_ciega_nombre}) (Bs.)",
+                        min_value=0.0,
+                        value=monto_actual_cfg,
+                        step=50.0,
+                        key=f"input_monto_fijo_ciego_admin_{c_ciega_nombre}"
+                    )
+                    st.session_state.detalles_carreras[c_ciega_nombre]['monto_fijo_ciego'] = nuevo_monto_ciego_val
+
         st.markdown("---")
         carr_banco_sel = st.selectbox("Seleccionar Carrera para Configurar y Editar", lista_carreras_disponibles, key="adm_banco_sel_carrera")
         
@@ -1457,6 +1476,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.success("✅ ¡Inscritos organizados por carrera y editables con éxito!")
                     st.rerun()
                 else:
-                    st.warning("⚠️ Asegúrate de incluir el nombre de la carrera (ej: 'Primera Carrera' o 'Carrera 1') seguido de los ejemplares numerados (ej: '1 - Nombre').")
+                    st.warning("⚠️ Asegúrate de incluir el nombre de cada carrera (ej: 'Primera Carrera' o 'Carrera 1') seguido de los ejemplares numerados (ej: '1 - Nombre').")
             else:
                 st.warning("⚠️ El campo de texto está vacío.")
