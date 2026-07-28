@@ -170,12 +170,12 @@ st.markdown("""
     }
     .user-name {
         color: #ffffff !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         font-weight: 800 !important;
     }
     .user-balance {
         color: #58a6ff !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         font-weight: 800 !important;
     }
     .user-avatar {
@@ -1610,7 +1610,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.warning("⚠️ El campo de texto está vacío.")
 
 # =========================================================================
-# TRANSMISIÓN EN VIVO DE LAS CARRERAS (REPRODUCTOR COMPATIBLE CON MÓVIL Y PC)
+# TRANSMISIÓN EN VIVO DE LAS CARRERAS (REPRODUCTOR COMPATIBLE Y ADAPTADO)
 # =========================================================================
 url_live_video = st.session_state.get('url_video_en_vivo', '').strip()
 
@@ -1623,20 +1623,13 @@ if url_live_video:
     
     if yt_match:
         yt_id = yt_match.group(1)
-        # Renderizar en iframe optimizado con muted=1, playsinline=1 para asegurar reproduccion fluida en Android/iOS
-        embed_html = f"""
-        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; border: 2px solid #f1c40f; box-shadow: 0 4px 12px rgba(0,0,0,0.8);">
-            <iframe 
-                src="https://www.youtube.com/embed/{yt_id}?autoplay=1&mute=1&playsinline=1&enablejsapi=1" 
-                style="position: absolute; top:0; left: 0; width: 100%; height: 100%; border: 0;" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                allowfullscreen>
-            </iframe>
-        </div>
-        """
-        components.html(embed_html, height=400)
+        # Formato de URL adaptable de YouTube que funciona perfecto tanto en Streamlit Móvil como en PC
+        embed_url = f"https://www.youtube.com/embed/{yt_id}?playsinline=1"
+        try:
+            st.video(embed_url)
+        except Exception:
+            st.video(url_live_video)
     else:
-        # Si es archivo directo de video (ej MP4/HLS/Stream URL)
         try:
             st.video(url_live_video)
         except Exception:
