@@ -310,7 +310,7 @@ def inicializar_estado_global():
     if 'imagenes_carreras' not in st.session_state:
         st.session_state.imagenes_carreras = {}
     if 'admin_tab_seleccionada' not in st.session_state:
-        st.session_state.admin_tab_seleccionada = "✍️ Banco"
+        st.session_state.admin_tab_seleccionada = "✍️ Banco de Caballos"
 
 inicializar_estado_global()
 
@@ -686,27 +686,6 @@ with st.sidebar.expander("🏁 Cierre y Liquidación de Remates", expanded=False
             st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = False
             st.rerun()
 
-    st.markdown("---")
-    if carr_seleccionada_liq in st.session_state.historial_ganadores:
-        st.success("✅ Esta carrera ya se encuentra liquidada.")
-    else:
-        pote_carr_total = sum([info['monto'] for info in st.session_state.remates[carr_seleccionada_liq].values()])
-        monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
-        premio_final_liq = pote_carr_total - monto_casa_calc + st.session_state.get(f"rem_pote_inc_{carr_seleccionada_liq}", 0.0)
-        
-        caballo_ganador_elegido = st.selectbox("Seleccionar Ejemplar Ganador", list(st.session_state.remates[carr_seleccionada_liq].keys()), key=f"sb_liq_ganador_{carr_seleccionada_liq}")
-        
-        if st.button("🎯 Liquidar Premio de la Carrera", key=f"sb_liq_btn_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
-            info_g = st.session_state.remates[carr_seleccionada_liq][caballo_ganador_elegido]
-            if info_g['jugador'] != "Sin Postor":
-                if info_g['jugador'] not in st.session_state.cuentas:
-                    st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                st.session_state.cuentas[info_g['jugador']]['Premios'] += premio_final_liq
-            st.session_state.ganancia_casa += monto_casa_calc
-            st.session_state.historial_ganadores[carr_seleccionada_liq] = {"Ganador": info_g['jugador'], "Premio": formatear_bs(premio_final_liq)}
-            st.success("¡Premio liquidado con éxito!")
-            st.rerun()
-
 with st.sidebar.expander("🔒 Zona Administrador", expanded=False):
     es_admin_activo = (st.session_state.menu_principal_opcion == "🔒 Zona Admin")
     if st.button("⚙️ Entrar a Zona Admin", key="sb_btn_ir_admin", use_container_width=True, type="primary" if es_admin_activo else "secondary"):
@@ -840,6 +819,32 @@ if menu_principal_opcion == "Remates":
             altura_dinamica = min(max(150, (cantidad_filas * 38) + 60), 450)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
+            # --- SELECCIONAR EJEMPLAR GANADOR DEBAJO DE LA TABLA ---
+            with st.container(border=True):
+                st.markdown(f"🎯 **Seleccionar Ejemplar Ganador - {carr_activa}**")
+                if carr_activa in st.session_state.historial_ganadores:
+                    info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
+                    st.success(f"✅ Carrera liquidada. Ganador: **{info_ganador_prev.get('Ganador', 'N/A')}** | Premio: **{info_ganador_prev.get('Premio', '0')}**")
+                else:
+                    caballos_lista_ganador = list(st.session_state.remates[carr_activa].keys())
+                    caballo_ganador_elegido = st.selectbox("Ejemplar Ganador de la Carrera", caballos_lista_ganador, key=f"rem_sel_ganador_{carr_activa}")
+                    
+                    if st.button("🏆 Liquidar Premio de la Carrera", key=f"rem_btn_liquidar_{carr_activa}", use_container_width=True, type="primary"):
+                        pote_carr_total = sum([info['monto'] for info in st.session_state.remates[carr_activa].values()])
+                        monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
+                        extra_pote = st.session_state.get(f"rem_pote_inc_{carr_activa}", 0.0)
+                        premio_final_liq = pote_carr_total - monto_casa_calc + extra_pote
+                        
+                        info_g = st.session_state.remates[carr_activa][caballo_ganador_elegido]
+                        if info_g['jugador'] != "Sin Postor":
+                            if info_g['jugador'] not in st.session_state.cuentas:
+                                st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                            st.session_state.cuentas[info_g['jugador']]['Premios'] += premio_final_liq
+                        st.session_state.ganancia_casa += monto_casa_calc
+                        st.session_state.historial_ganadores[carr_activa] = {"Ganador": info_g['jugador'], "Premio": formatear_bs(premio_final_liq)}
+                        st.success(f"✅ ¡Premio liquidado con éxito a **{info_g['jugador']}**!")
+                        st.rerun()
+
             # --- HISTORIAL DE PUJAS DEBAJO DE LA TABLA ---
             with st.expander(f"📜 Historial de Pujas - {carr_activa} ({modo_actual_remate})", expanded=False):
                 historial_carrera_actual = [
@@ -1229,7 +1234,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             if not carreras_disponibles_todas:
                 st.warning("⚠️ No hay carreras en el banco. Importa contenido o crea la jornada primero.")
             else:
-                # Contenedor interactivo con columnas dinámicas o casillas didácticas
                 carreras_activas_actuales = st.session_state.carreras_activas_remate
                 
                 cols_grid = st.columns(min(4, len(carreras_disponibles_todas)), gap="small")
