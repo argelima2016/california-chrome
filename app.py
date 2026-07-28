@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS CON EL DISEÑO DE CÁPSULA EXACTO A LA IMAGEN ---
+# --- ESTILOS CSS CON EL DISEÑO DE CÁPSULA EXACTO ---
 st.markdown("""
     <style>
     .stApp {
@@ -201,7 +201,7 @@ st.markdown("""
         flex-shrink: 0;
     }
 
-    /* BARRAS MENÚ / SUBMENÚ EXACTAMENTE COMO LA CAPTURA DE PANTALLA */
+    /* BARRAS MENÚ / SUBMENÚ CÁPSULA */
     .barra-casino {
         width: 100% !important;
         max-width: 800px !important;
@@ -946,11 +946,11 @@ else:
     components.html(html_betchat_style, height=190)
 
 # --- BARRA LATERAL (IZQUIERDA) ---
-st.sidebar.header("barra lateral")
+st.sidebar.header("Barra Lateral")
 ahora_dt = obtener_hora_venezuela_local()
 st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
 
-with st.sidebar.expander("👤 Usuario Activo y Selector", expanded=True):
+with st.sidebar.expander("👤 Selector y Usuario Activo", expanded=True):
     usuario_seleccionado_sidebar = st.selectbox(
         "Cambiar de Usuario",
         options=st.session_state.lista_usuarios,
@@ -1816,7 +1816,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("🗑️ Removida")
                 st.rerun()
 
-    elif tab_actual == "📄 Importار Web/Texto":
+    elif tab_actual == "📄 Importar Web/Texto":
         st.markdown("### 🌐 Importar Inscritos, Condición, Hora y Distancia")
         st.markdown("Pega aquí el texto con los datos de las carreras y ejemplares:")
         
