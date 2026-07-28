@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS (DISEÑO ESTILO CASA DE APUESTAS PROFESIONAL) ---
+# --- ESTILOS CSS ---
 st.markdown("""
     <style>
     .stApp {
@@ -622,7 +622,7 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL (MODELO SOLICITADO) ---
+# --- MENÚ PRINCIPAL HORIZONTAL (CAMBIADO A: REMATES | DUPLETAS/POLLAS HÍPICAS | CUENTAS) ---
 col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
 
 with col_menu1:
@@ -636,23 +636,81 @@ with col_menu2:
         st.rerun()
 
 with col_menu3:
-    if st.button("CASINO EN VIVO", key="menu_btn_cuentas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
+    if st.button("CUENTAS", key="menu_btn_cuentas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
         st.session_state.menu_principal_opcion = "Cuentas"
         st.rerun()
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BANNER / IMAGEN REFERENTE DE INH HIPÓDROMO DE LA RINCONADA ---
+# --- CARRUSEL AUTOMÁTICO DE IMÁGENES DEL HIPÓDROMO LA RINCONADA (CAMBIA CADA POCOS SEGUNDOS) ---
 ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
-imagen_rinconada_encontrada = False
-for nombre_banner in ["1001398058.jpg", "1001398058.png", "rinconada.jpg", "rinconada.png"]:
-    ruta_banner = os.path.join(ruta_actual_dir, nombre_banner)
-    if os.path.exists(ruta_banner):
-        st.image(ruta_banner, use_container_width=True)
-        imagen_rinconada_encontrada = True
-        break
 
-if not imagen_rinconada_encontrada:
+# Buscar dinámicamente imágenes disponibles de La Rinconada
+nombres_banners_posibles = [
+    "1001398079.jpg", "1001398079.png",
+    "1001398078.jpg", "1001398078.png",
+    "1001398058.jpg", "1001398058.png",
+    "rinconada.jpg", "rinconada.png"
+]
+
+lista_b64_banners = []
+for n_b in nombres_banners_posibles:
+    r_b = os.path.join(ruta_actual_dir, n_b)
+    if os.path.exists(r_b):
+        try:
+            with open(r_b, "rb") as f_b:
+                b64_str = base64.b64encode(f_b.read()).decode('utf-8')
+                lista_b64_banners.append(f"data:image/jpeg;base64,{b64_str}")
+        except Exception:
+            continue
+
+if lista_b64_banners:
+    # Generar carrusel automático fluido en HTML/JS puro
+    js_images_array = str(lista_b64_banners)
+    html_slider = f"""
+    <style>
+        .banner-slider-container {{
+            width: 100%;
+            height: 180px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #f1c40f;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.8);
+            position: relative;
+            background-color: #0d1117;
+            margin-bottom: 10px;
+        }}
+        .banner-slide-img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 1s ease-in-out;
+            display: block;
+        }}
+    </style>
+    <div class="banner-slider-container">
+        <img id="rinconada-slide" class="banner-slide-img" src="{lista_b64_banners[0]}" />
+    </div>
+    <script>
+        (function() {{
+            var images = {js_images_array};
+            var index = 0;
+            var imgElement = document.getElementById("rinconada-slide");
+            if(images.length > 1) {{
+                setInterval(function() {{
+                    index = (index + 1) % images.length;
+                    imgElement.style.opacity = 0.2;
+                    setTimeout(function() {{
+                        imgElement.src = images[index];
+                        imgElement.style.opacity = 1;
+                    }}, 300);
+                }}, 4000);
+            }}
+        }})();
+    </script>
+    """
+    components.html(html_slider, height=195)
+else:
     st.markdown("""
         <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); border: 2px solid #f1c40f; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px;">
             <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
@@ -1082,7 +1140,6 @@ elif menu_principal_opcion == "Dupletas":
             carreras_usadas_en_ticket = set()
             valido_legs = True
             
-            # ORGANIZAR LAS CARRERAS EN COLUMNAS HORIZONTALES PARA QUE SE AJUSTEN A LA PANTALLA
             num_carrs_permitidas = len(carreras_permitidas)
             cols_horizontales = st.columns(min(num_carrs_permitidas, 4) if num_carrs_permitidas > 0 else 1, gap="small")
             
@@ -1197,7 +1254,6 @@ elif menu_principal_opcion == "Cuentas":
     pujas, premios, abonos = vals['Pujas'], vals['Premios'], vals['Abonos']
     balance_neto = pujas - abonos - premios
 
-    # Tarjetas métricas horizontales compactas
     col_cu1, col_cu2, col_cu3, col_cu4 = st.columns(4, gap="small")
     col_cu1.metric("🛒 Compras/Pujas", formatear_bs(pujas))
     col_cu2.metric("🏆 Premios", formatear_bs(premios))
