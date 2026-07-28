@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS (CORREGIDO ESPACIADO IZQUIERDO Y DISEÑO FLUIDO) ---
+# --- ESTILOS CSS (DISEÑO EQUILIBRADO Y PERFECTAMENTE AJUSTADO) ---
 st.markdown("""
     <style>
     .stApp {
@@ -88,31 +88,29 @@ st.markdown("""
     div[data-testid="stTabs"] {
         display: none !important;
     }
-    /* Eliminar cualquier margen superior/izquierdo que cause espacios vacíos en Streamlit */
     .block-container {
-        padding-top: 0.3rem !important;
+        padding-top: 0.5rem !important;
         padding-bottom: 2rem !important;
-        padding-left: 0.6rem !important;
-        padding-right: 0.6rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
         max-width: 100% !important;
     }
     header[data-testid="stHeader"] {
         background: transparent !important;
     }
-    /* Cabecera superior adaptada de lado a lado sin espacios */
     .header-container {
         background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
         width: 100% !important;
-        padding: 8px 14px !important;
+        padding: 10px 16px !important;
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
         align-items: center !important;
         border-bottom: 2px solid #30363d !important;
-        margin: -4rem -4rem 0 -4rem !important;
-        width: calc(100% + 8rem) !important;
+        margin: -1rem -1rem 0 -1rem !important;
+        width: calc(100% + 2rem) !important;
         box-sizing: border-box !important;
-        gap: 10px;
+        gap: 12px;
     }
     .header-left-clock {
         display: flex !important;
@@ -120,16 +118,16 @@ st.markdown("""
         justify-content: center !important;
         background: #0d1117 !important;
         border: 1px solid #30363d !important;
-        padding: 4px 8px !important;
+        padding: 5px 10px !important;
         border-radius: 8px !important;
         text-align: left !important;
         flex-shrink: 0;
     }
     .clock-time {
         color: #58a6ff !important;
-        font-size: 13px !important;
+        font-size: 14px !important;
         font-weight: 800 !important;
-        line-height: 1.1;
+        line-height: 1.15;
     }
     .clock-date {
         color: #8b949e !important;
@@ -143,10 +141,10 @@ st.markdown("""
         flex: 1 !important;
         min-width: 0 !important;
         overflow: hidden !important;
-        padding: 0 4px !important;
+        padding: 0 6px !important;
     }
     .header-logo-img {
-        max-height: 70px !important;
+        max-height: 85px !important;
         max-width: 100% !important;
         width: auto !important;
         object-fit: contain !important;
@@ -156,39 +154,39 @@ st.markdown("""
     .user-info-container {
         display: flex !important;
         align-items: center !important;
-        gap: 8px !important;
+        gap: 10px !important;
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
-        padding: 4px 10px !important;
-        border-radius: 20px !important;
+        padding: 5px 12px !important;
+        border-radius: 22px !important;
         flex-shrink: 0;
     }
     .user-text-info {
         display: flex !important;
         flex-direction: column !important;
         text-align: right !important;
-        line-height: 1.1 !important;
+        line-height: 1.15 !important;
     }
     .user-name {
         color: #ffffff !important;
-        font-size: 11px !important;
+        font-size: 12px !important;
         font-weight: 800 !important;
     }
     .user-balance {
         color: #58a6ff !important;
-        font-size: 11px !important;
+        font-size: 12px !important;
         font-weight: 800 !important;
     }
     .user-avatar {
         background-color: #f1c40f !important;
         color: #000000 !important;
         border-radius: 50% !important;
-        width: 34px !important;
-        height: 34px !important;
+        width: 38px !important;
+        height: 38px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 15px !important;
+        font-size: 17px !important;
         font-weight: bold !important;
         box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
         flex-shrink: 0;
@@ -197,10 +195,10 @@ st.markdown("""
         width: 100% !important;
         border-radius: 4px !important;
         font-weight: 600 !important;
-        padding: 0.05rem 0.05rem !important;
-        min-height: 22px !important;
-        max-height: 26px !important;
-        font-size: 9px !important;
+        padding: 0.1rem 0.1rem !important;
+        min-height: 26px !important;
+        max-height: 32px !important;
+        font-size: 10px !important;
         letter-spacing: 0.1px;
         white-space: nowrap !important;
     }
@@ -208,57 +206,57 @@ st.markdown("""
         width: auto !important;
         flex: 1 !important;
         min-width: 0 !important;
-        padding: 0 1px !important;
+        padding: 0 2px !important;
     }
     .subasta-header {
-        font-size: clamp(13px, 3vw, 16px);
+        font-size: clamp(14px, 3.5vw, 17px);
         font-weight: 800;
         color: #f1e05a;
-        margin-bottom: 2px;
-        border-bottom: 1.5px solid #f1e05a;
-        padding-bottom: 2px;
+        margin-bottom: 4px;
+        border-bottom: 2px solid #f1e05a;
+        padding-bottom: 3px;
     }
     .timer-box {
         background-color: #161b22;
         border: 1px solid #ff4757;
-        padding: 4px;
-        border-radius: 4px;
+        padding: 5px;
+        border-radius: 5px;
         text-align: center;
-        font-size: clamp(11px, 2.5vw, 14px);
+        font-size: clamp(12px, 3vw, 15px);
         font-weight: bold;
         color: #ff4757;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
     }
     .carrera-condicion-card {
         background-color: #161b22;
         border: 1px solid #30363d;
-        padding: 6px 10px;
-        border-radius: 5px;
-        font-size: 11px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
         color: #f0f6fc;
-        margin-bottom: 8px;
-        line-height: 1.3;
+        margin-bottom: 10px;
+        line-height: 1.4;
     }
     .incentivo-elegante {
         background: linear-gradient(135deg, #0d1117 100%, #161b22 0%);
         border: 1px solid #f1c40f;
-        padding: 8px 12px;
+        padding: 10px 14px;
         border-radius: 6px;
         text-align: center;
-        margin: 6px 0;
+        margin: 8px 0;
         box-shadow: 0px 2px 8px rgba(241, 196, 15, 0.15);
     }
     .incentivo-elegante-titulo {
         color: #f1c40f;
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.8px;
-        margin-bottom: 2px;
+        margin-bottom: 3px;
     }
     .incentivo-elegante-monto {
         color: #ffffff;
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 800;
         letter-spacing: 0.3px;
     }
@@ -358,7 +356,7 @@ elif neto_usuario < 0:
 else:
     etiqueta_balance = "Al día: Bs. 0,00"
 
-# --- CABECERA SUPERIOR OPTIMIZADA (LADO A LADO SIN ESPACIOS IZQUIERDOS) ---
+# --- CABECERA SUPERIOR OPTIMIZADA (FLUIDA Y BIEN AJUSTADA) ---
 st.markdown(f"""
     <div class="header-container">
         <div class="header-left-clock">
@@ -403,34 +401,34 @@ def generar_tabla_html_remate(remates_dict):
             font-family: sans-serif;
             background-color: #ffffff;
             color: #000000;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
         .tabla-referencia th {
             border-top: 2px solid #dfc729;
             border-bottom: 1px solid #dfc729;
-            padding: 4px 3px;
+            padding: 5px 4px;
             text-align: left;
             font-weight: 800;
             background-color: #ffffff;
             color: #000000;
-            font-size: 11px;
+            font-size: 12px;
         }
         .tabla-referencia td {
             border-bottom: 1px solid #dfc729;
-            padding: 4px 3px;
+            padding: 5px 4px;
             background-color: #fbfbfb;
             color: #111111;
-            font-size: 10px;
+            font-size: 11px;
             vertical-align: middle;
         }
         .badge-numero {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             font-weight: bold;
-            font-size: 10px;
+            font-size: 11px;
             border-radius: 2px;
             box-sizing: border-box;
         }
@@ -443,7 +441,7 @@ def generar_tabla_html_remate(remates_dict):
         .badge-7 { background-color: #fd7e14; color: #ffffff; }
         .badge-default { background-color: #6c757d; color: #ffffff; }
     </style>
-    <div style="background-color: #ffffff; padding: 2px; border-radius: 5px; overflow-x: auto;">
+    <div style="background-color: #ffffff; padding: 3px; border-radius: 6px; overflow-x: auto;">
         <table class="tabla-referencia">
             <thead>
                 <tr>
@@ -476,7 +474,7 @@ def generar_tabla_html_remate(remates_dict):
         html += f"""
                 <tr>
                     <td><span class="badge-numero {badge_class}">{num}</span></td>
-                    <td style="font-weight: 800; font-size: 11px;">{nombre_solo.upper()}</td>
+                    <td style="font-weight: 800; font-size: 12px;">{nombre_solo.upper()}</td>
                     <td>{info['jugador']}</td>
                     <td style="font-weight: bold; color: #000000;">{formatear_bs(info['monto'])}</td>
                 </tr>
@@ -746,7 +744,7 @@ if menu_principal_opcion == "Remates":
             st.session_state.sub_remate_opcion = "En Vivo"
             st.rerun()
 
-    st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
     modo_actual_remate = st.session_state.sub_remate_opcion
 
@@ -842,12 +840,12 @@ if menu_principal_opcion == "Remates":
 
             tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa])
             cantidad_filas = len(st.session_state.remates[carr_activa])
-            altura_dinamica = min(max(130, (cantidad_filas * 32) + 50), 400)
+            altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
             # --- SELECCIONAR EJEMPLAR GANADOR DEBAJO DE LA TABLA (COMPACTO Y ELEGANTE) ---
             with st.container(border=True):
-                st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Ganador - {carr_activa}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size: 12px; font-weight: 700; margin-bottom: 3px; color: #f1e05a;'>🎯 Ganador - {carr_activa}</p>", unsafe_allow_html=True)
                 if carr_activa in st.session_state.historial_ganadores:
                     info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
                     st.success(f"✅ Ganador: **{info_ganador_prev.get('Ganador', 'N/A')}** | Premio: **{info_ganador_prev.get('Premio', '0')}**")
@@ -926,7 +924,6 @@ if menu_principal_opcion == "Remates":
                     else:
                         st.markdown("🎲 **Panel Didáctico (Elige un número para asignar):**")
                         
-                        # Cuadrícula ultra compacta con botones pequeños, cortos y elegantes
                         cols_ciego_grid = st.columns(min(8, len(caballos_disponibles_ciego)), gap="small")
                         for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
                             c_idx = idx_cb % len(cols_ciego_grid)
@@ -1066,7 +1063,6 @@ elif menu_principal_opcion == "Dupletas":
             carreras_usadas_en_ticket = set()
             valido_legs = True
             
-            # Mostrar directamente cada carrera establecida sin selector desplegable para cambiarla
             for i, carr_leg in enumerate(carreras_permitidas):
                 st.markdown(f"---")
                 col_carr, col_img, col_cab = st.columns([2, 1.2, 2])
@@ -1504,7 +1500,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             value="",
             height=220,
             key="text_area_web_copiado",
-            placeholder="Primera Carrera - 1.200 mts - 02:00 PM\n1 - Rey David\n2 - Gran Amigo\n\nSegunda Carrera - 1.400 mts - 02:30 PM\n1 - Rayo Negro"
+            placeholder="Primera Carrera - 1.200 mts - `02:00 PM`\n1 - Rey David\n2 - Gran Amigo\n\nSegunda Carrera - 1.400 mts - 02:30 PM\n1 - Rayo Negro"
         )
         if st.button("🚀 Procesar Contenido Pegado", key="btn_procesar_texto_pegado", use_container_width=True, type="primary"):
             if texto_copiado_web.strip():
