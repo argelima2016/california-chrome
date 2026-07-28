@@ -338,6 +338,8 @@ def inicializar_estado_global():
         st.session_state.imagenes_carreras = {}
     if 'admin_tab_seleccionada' not in st.session_state:
         st.session_state.admin_tab_seleccionada = "✍️ Banco de Caballos"
+    if 'url_video_en_vivo' not in st.session_state:
+        st.session_state.url_video_en_vivo = ""
 
 inicializar_estado_global()
 
@@ -623,7 +625,7 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL (MODELO SOLICITADO) ---
+# --- MENÚ PRINCIPAL HORIZONTAL ---
 col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
 
 with col_menu1:
@@ -643,7 +645,7 @@ with col_menu3:
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- CARRUSEL AUTOMÁTICO DE IMÁGENES DEL HIPÓDROMO LA RINCONADA (8 SEGUNDOS Y ADAPTADO A PC) ---
+# --- CARRUSEL AUTOMÁTICO DE IMÁGENES DEL HIPÓDROMO LA RINCONADA ---
 ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
 
 nombres_banners_posibles = [
@@ -704,7 +706,7 @@ if lista_b64_banners:
                         imgElement.src = images[index];
                         imgElement.style.opacity = 1;
                     }}, 400);
-                }}, 8000); // Cambio pausado a 8 segundos
+                }}, 8000);
             }}
         }})();
     </script>
@@ -719,6 +721,17 @@ else:
     """, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
+
+# --- TRANSMISIÓN DE VIDEO EN VIVO (CONFIGURADA DESDE ZONA ADMIN) ---
+url_live_video = st.session_state.get('url_video_en_vivo', '').strip()
+
+if url_live_video:
+    st.markdown("### 📺 TRANSMISIÓN EN VIVO DE LAS CARRERAS")
+    try:
+        st.video(url_live_video)
+    except Exception:
+        st.warning("⚠️ No se pudo cargar el video con la URL proporcionada. Verifica el enlace en Zona Admin.")
+    st.markdown("<hr style='margin: 0.8rem 0; border-color: #30363d;'>", unsafe_allow_html=True)
 
 # --- BARRA LATERAL (IZQUIERDA) ---
 st.sidebar.header("barra lateral")
@@ -1086,7 +1099,7 @@ if menu_principal_opcion == "Remates":
                                     st.rerun()
 
 # =========================================================================
-# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA (DISEÑO HORIZONTAL)
+# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
     col_d1, col_d2, col_d3 = st.columns(3, gap="small")
@@ -1284,7 +1297,7 @@ elif menu_principal_opcion == "Cuentas":
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Zona de Administrador</div>", unsafe_allow_html=True)
     
-    opciones_admin_tabs = ["✍️ Banco de Caballos", "👥 Registro Usuarios", "⚙️ Config. Dupletas/Polla", "📊 Saldos Usuarios", "🖼️ Imágenes Carrera", "📄 Importar Web/Texto"]
+    opciones_admin_tabs = ["✍️ Banco de Caballos", "👥 Registro Usuarios", "⚙️ Config. Dupletas/Polla", "📺 Video En Vivo", "📊 Saldos Usuarios", "🖼️ Imágenes Carrera", "📄 Importar Web/Texto"]
     
     cols_adm_tabs = st.columns(len(opciones_admin_tabs), gap="small")
     for idx, tab_nombre in enumerate(opciones_admin_tabs):
@@ -1512,6 +1525,25 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.session_state.carreras_habilitadas_polla = sel_polla_hab
                 st.toast("✅ ¡Configuración de carreras habilitadas guardada con éxito!")
                 st.rerun()
+
+    # --- NUEVA PESTAÑA: CONFIGURAR VIDEO EN VIVO ---
+    elif tab_actual == "📺 Video En Vivo":
+        st.markdown("### 📺 Configuración de Transmisión de Video en Vivo")
+        with st.container(border=True):
+            st.markdown("Pega la URL del video en vivo (YouTube, enlace de transmisión, MP4, etc.):")
+            nueva_url_video = st.text_input("URL del Video en Vivo", value=st.session_state.get('url_video_en_vivo', ''), placeholder="Ej: https://www.youtube.com/watch?v=XXXXXXX", key="input_live_video_url")
+            
+            col_v1, col_v2 = st.columns(2)
+            with col_v1:
+                if st.button("💾 Guardar Transmisión", key="btn_save_video_url", use_container_width=True, type="primary"):
+                    st.session_state.url_video_en_vivo = nueva_url_video.strip()
+                    st.toast("✅ ¡URL de transmisión guardada y activa!")
+                    st.rerun()
+            with col_v2:
+                if st.button("🗑️ Desactivar Transmisión", key="btn_clear_video_url", use_container_width=True):
+                    st.session_state.url_video_en_vivo = ""
+                    st.toast("🗑️ Transmisión desactivada.")
+                    st.rerun()
 
     elif tab_actual == "📊 Saldos Usuarios":
         st.markdown("### 📊 Saldos y Cuentas de Usuarios Registrados")
