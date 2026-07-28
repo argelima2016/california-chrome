@@ -213,9 +213,9 @@ st.markdown("""
         flex-direction: row !important;
         flex-wrap: nowrap !important;
         align-items: stretch !important;
-        background-color: #21252d !important; /* Fondo de la cápsula unificada */
-        border: 1px solid #484d5d !important;    /* Borde exterior fino gris */
-        border-radius: 10px !important;         /* Esquinas redondeadas estilo píldora */
+        background-color: #21252d !important;
+        border: 1px solid #484d5d !important;
+        border-radius: 10px !important;
         gap: 0px !important;
         width: 100% !important;
         margin: 0 !important;
@@ -231,7 +231,7 @@ st.markdown("""
         min-width: 0 !important;
         padding: 0 !important;
         margin: 0 !important;
-        border-right: 1px solid #484d5d !important; /* Rayas divisorias internas */
+        border-right: 1px solid #484d5d !important;
     }
 
     .barra-casino div[data-testid="column"]:last-child, 
@@ -244,7 +244,6 @@ st.markdown("""
         margin: 0 !important;
     }
 
-    /* OPCIÓN NO SELECCIONADA */
     .barra-casino .stButton > button {
         background-color: transparent !important;
         color: #ffffff !important;
@@ -253,7 +252,7 @@ st.markdown("""
         box-shadow: none !important;
         font-size: 13px !important;
         font-weight: 500 !important;
-        text-transform: none !important; /* Tipo Oración como en la imagen */
+        text-transform: none !important;
         min-height: 42px !important;
         height: 42px !important;
         padding: 0 4px !important;
@@ -273,9 +272,8 @@ st.markdown("""
         cursor: pointer !important;
     }
 
-    /* OPCIÓN SELECCIONADA (ESTILO EN VIVO / DESTACADO DE LA IMAGEN) */
     .barra-casino .stButton > button[kind="primary"] {
-        background-color: #3e4454 !important; /* Tono gris claro resaltado */
+        background-color: #3e4454 !important;
         color: #ffffff !important;
         font-weight: 600 !important;
         border: none !important;
@@ -717,7 +715,7 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL (CÁPSULA UNIFICADA) ---
+# --- MENÚ PRINCIPAL ---
 st.markdown('<div class="barra-casino">', unsafe_allow_html=True)
 col_m1, col_m2, col_m3 = st.columns(3)
 
@@ -727,7 +725,7 @@ with col_m1:
         st.rerun()
 
 with col_m2:
-    if st.button("Dupletas / Pollas", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
+    if st.button("Dupleta", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
         st.session_state.menu_principal_opcion = "Dupletas"
         st.rerun()
 
@@ -1818,7 +1816,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("🗑️ Removida")
                 st.rerun()
 
-    elif tab_actual == "📄 Importar Web/Texto":
+    elif tab_actual == "📄 Importار Web/Texto":
         st.markdown("### 🌐 Importar Inscritos, Condición, Hora y Distancia")
         st.markdown("Pega aquí el texto con los datos de las carreras y ejemplares:")
         
