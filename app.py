@@ -1088,7 +1088,7 @@ if menu_principal_opcion == "Remates":
                                     st.rerun()
 
 # =========================================================================
-# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA (DISEÑO HORIZONTAL)
+# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
     col_d1, col_d2, col_d3 = st.columns(3, gap="small")
@@ -1114,7 +1114,6 @@ elif menu_principal_opcion == "Dupletas":
 
     monto_unico_seccion = st.session_state.config_montos_especiales.get(sub_dup_actual, 500.0)
 
-    # Filtrar estrictamente las carreras según lo configurado en la Zona Admin para cada sección
     if sub_dup_actual == "Dupleta":
         pote_total = sum([t['monto'] for t in st.session_state.dupletas_tickets])
         st.metric("💰 Pote Acumulado Dupletas", formatear_bs(pote_total))
@@ -1136,7 +1135,7 @@ elif menu_principal_opcion == "Dupletas":
         st.warning(f"⚠️ No hay carreras habilitadas para **{sub_dup_actual}**. Configúralas en la Zona Admin (Config. Dupletas/Polla).")
     else:
         with st.container(border=True):
-            st.markdown(f"🎯 **Armado de Ticket Horizontal (Carreras established en Zona Admin):**")
+            st.markdown(f"🎯 **Armado de Ticket Horizontal (Carreras establecidas en Zona Admin):**")
             
             seleccion_legs = []
             carreras_usadas_en_ticket = set()
@@ -1611,14 +1610,34 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.warning("⚠️ El campo de texto está vacío.")
 
 # =========================================================================
-# TRANSMISIÓN EN VIVO DE LAS CARRERAS (UBICADA EN LA PARTE INFERIOR DE LA APP)
+# TRANSMISIÓN EN VIVO DE LAS CARRERAS (REPRODUCTOR COMPATIBLE CON MÓVIL Y PC)
 # =========================================================================
 url_live_video = st.session_state.get('url_video_en_vivo', '').strip()
 
 if url_live_video:
     st.markdown("<br><hr style='border-color: #30363d;'>", unsafe_allow_html=True)
     st.markdown("### 📺 TRANSMISIÓN EN VIVO DE LAS CARRERAS")
-    try:
-        st.video(url_live_video)
-    except Exception:
-        st.warning("⚠️ No se pudo cargar el video con la URL proporcionada. Verifica el enlace en la Zona Admin.")
+    
+    # Extraer ID si es un enlace estándar de YouTube
+    yt_match = re.search(r'(?:v=|\/embed\/|youtu\.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})', url_live_video)
+    
+    if yt_match:
+        yt_id = yt_match.group(1)
+        # Renderizar en iframe optimizado con muted=1, playsinline=1 para asegurar reproduccion fluida en Android/iOS
+        embed_html = f"""
+        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; border: 2px solid #f1c40f; box-shadow: 0 4px 12px rgba(0,0,0,0.8);">
+            <iframe 
+                src="https://www.youtube.com/embed/{yt_id}?autoplay=1&mute=1&playsinline=1&enablejsapi=1" 
+                style="position: absolute; top:0; left: 0; width: 100%; height: 100%; border: 0;" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                allowfullscreen>
+            </iframe>
+        </div>
+        """
+        components.html(embed_html, height=400)
+    else:
+        # Si es archivo directo de video (ej MP4/HLS/Stream URL)
+        try:
+            st.video(url_live_video)
+        except Exception:
+            st.warning("⚠️ No se pudo cargar el video con la URL proporcionada. Verifica el enlace en la Zona Admin.")
