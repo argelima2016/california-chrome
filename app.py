@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS (DISEÑO MÁS GRANDE Y LEGIBLE PARA MÓVIL Y PC) ---
+# --- ESTILOS CSS (DISEÑO MÁS PEQUEÑO, ELEGANTE Y COMPACTO) ---
 st.markdown("""
     <style>
     .stApp {
@@ -91,39 +91,37 @@ st.markdown("""
     .header-container {
         background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
         width: 100% !important;
-        padding: 12px 18px !important;
+        padding: 8px 14px !important;
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
         align-items: center !important;
-        border-bottom: 3px solid #30363d !important;
+        border-bottom: 2px solid #30363d !important;
         margin: -1rem -1rem 0 -1rem !important;
         box-sizing: border-box !important;
-        gap: 12px;
+        gap: 10px;
     }
     .header-left-clock {
         display: flex !important;
         flex-direction: column !important;
         justify-content: center !important;
         background: #0d1117 !important;
-        border: 2px solid #30363d !important;
-        padding: 6px 12px !important;
-        border-radius: 10px !important;
+        border: 1px solid #30363d !important;
+        padding: 4px 8px !important;
+        border-radius: 8px !important;
         text-align: left !important;
         flex-shrink: 0;
     }
     .clock-time {
         color: #58a6ff !important;
-        font-size: 15px !important;
-        font-weight: 900 !important;
-        letter-spacing: 0.5px;
-        line-height: 1.2;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        line-height: 1.1;
     }
     .clock-date {
         color: #8b949e !important;
-        font-size: 11px !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.3px;
+        font-size: 10px !important;
+        font-weight: 600 !important;
     }
     .header-center-logo {
         display: flex !important;
@@ -132,71 +130,70 @@ st.markdown("""
         flex: 1 !important;
         min-width: 0 !important;
         overflow: hidden !important;
-        padding: 0 8px !important;
+        padding: 0 4px !important;
     }
     .header-logo-img {
-        max-height: 100px !important;
+        max-height: 70px !important;
         max-width: 100% !important;
         width: auto !important;
         object-fit: contain !important;
         display: block !important;
-        filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.9));
+        filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.9));
     }
     .user-info-container {
         display: flex !important;
         align-items: center !important;
-        gap: 12px !important;
+        gap: 8px !important;
         background-color: #161b22 !important;
-        border: 2px solid #30363d !important;
-        padding: 6px 14px !important;
-        border-radius: 25px !important;
+        border: 1px solid #30363d !important;
+        padding: 4px 10px !important;
+        border-radius: 20px !important;
         flex-shrink: 0;
     }
     .user-text-info {
         display: flex !important;
         flex-direction: column !important;
         text-align: right !important;
-        line-height: 1.2 !important;
+        line-height: 1.1 !important;
     }
     .user-name {
         color: #ffffff !important;
-        font-size: 13px !important;
-        font-weight: 900 !important;
-        letter-spacing: 0.3px;
+        font-size: 11px !important;
+        font-weight: 800 !important;
     }
     .user-balance {
         color: #58a6ff !important;
-        font-size: 13px !important;
-        font-weight: 900 !important;
+        font-size: 11px !important;
+        font-weight: 800 !important;
     }
     .user-avatar {
         background-color: #f1c40f !important;
         color: #000000 !important;
         border-radius: 50% !important;
-        width: 44px !important;
-        height: 44px !important;
+        width: 34px !important;
+        height: 34px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 20px !important;
+        font-size: 15px !important;
         font-weight: bold !important;
-        box-shadow: 0px 3px 6px rgba(0,0,0,0.6);
+        box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
         flex-shrink: 0;
     }
     .block-container {
-        padding-top: 0.4rem !important;
+        padding-top: 0.3rem !important;
         padding-bottom: 2rem !important;
-        padding-left: 0.4rem !important;
-        padding-right: 0.4rem !important;
+        padding-left: 0.3rem !important;
+        padding-right: 0.3rem !important;
         max-width: 100% !important;
     }
     .stButton button {
         width: 100% !important;
         border-radius: 4px !important;
         font-weight: 600 !important;
-        padding: 0.1rem 0.1rem !important;
-        min-height: 24px !important;
-        max-height: 28px !important;
+        padding: 0.05rem 0.05rem !important;
+        min-height: 22px !important;
+        max-height: 26px !important;
         font-size: 9px !important;
         letter-spacing: 0.1px;
         white-space: nowrap !important;
@@ -208,56 +205,56 @@ st.markdown("""
         padding: 0 1px !important;
     }
     .subasta-header {
-        font-size: clamp(14px, 3.5vw, 18px);
+        font-size: clamp(13px, 3vw, 16px);
         font-weight: 800;
         color: #f1e05a;
-        margin-bottom: 3px;
-        border-bottom: 2px solid #f1e05a;
+        margin-bottom: 2px;
+        border-bottom: 1.5px solid #f1e05a;
         padding-bottom: 2px;
     }
     .timer-box {
         background-color: #161b22;
-        border: 2px solid #ff4757;
-        padding: 6px;
-        border-radius: 6px;
+        border: 1px solid #ff4757;
+        padding: 4px;
+        border-radius: 4px;
         text-align: center;
-        font-size: clamp(12px, 3vw, 16px);
+        font-size: clamp(11px, 2.5vw, 14px);
         font-weight: bold;
         color: #ff4757;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
     .carrera-condicion-card {
         background-color: #161b22;
         border: 1px solid #30363d;
+        padding: 6px 10px;
+        border-radius: 5px;
+        font-size: 11px;
+        color: #f0f6fc;
+        margin-bottom: 8px;
+        line-height: 1.3;
+    }
+    .incentivo-elegante {
+        background: linear-gradient(135deg, #0d1117 100%, #161b22 0%);
+        border: 1px solid #f1c40f;
         padding: 8px 12px;
         border-radius: 6px;
-        font-size: 12px;
-        color: #f0f6fc;
-        margin-bottom: 10px;
-        line-height: 1.4;
-    }
-    .incentivo-grande {
-        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-        border: 2px solid #f1c40f;
-        padding: 12px;
-        border-radius: 8px;
         text-align: center;
-        margin: 10px 0;
-        box-shadow: 0px 4px 12px rgba(241, 196, 15, 0.2);
+        margin: 6px 0;
+        box-shadow: 0px 2px 8px rgba(241, 196, 15, 0.15);
     }
-    .incentivo-grande-titulo {
+    .incentivo-elegante-titulo {
         color: #f1c40f;
-        font-size: 14px;
-        font-weight: 800;
+        font-size: 11px;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 4px;
+        letter-spacing: 0.8px;
+        margin-bottom: 2px;
     }
-    .incentivo-grande-monto {
+    .incentivo-elegante-monto {
         color: #ffffff;
-        font-size: 24px;
-        font-weight: 900;
-        letter-spacing: 0.5px;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -400,39 +397,39 @@ def generar_tabla_html_remate(remates_dict):
             font-family: sans-serif;
             background-color: #ffffff;
             color: #000000;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .tabla-referencia th {
-            border-top: 3px solid #dfc729;
-            border-bottom: 2px solid #dfc729;
-            padding: 6px 4px;
+            border-top: 2px solid #dfc729;
+            border-bottom: 1px solid #dfc729;
+            padding: 4px 3px;
             text-align: left;
             font-weight: 800;
             background-color: #ffffff;
             color: #000000;
-            font-size: 12px;
+            font-size: 11px;
         }
         .tabla-referencia td {
             border-bottom: 1px solid #dfc729;
-            padding: 5px 4px;
+            padding: 4px 3px;
             background-color: #fbfbfb;
             color: #111111;
-            font-size: 11px;
+            font-size: 10px;
             vertical-align: middle;
         }
         .badge-numero {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 10px;
             border-radius: 2px;
             box-sizing: border-box;
         }
         .badge-1 { background-color: #e3242b; color: #ffffff; }
-        .badge-2 { background-color: #ffffff; color: #000000; border: 2px solid #000000; }
+        .badge-2 { background-color: #ffffff; color: #000000; border: 1.5px solid #000000; }
         .badge-3 { background-color: #1d11c0; color: #ffffff; }
         .badge-4 { background-color: #f1c40f; color: #000000; }
         .badge-5 { background-color: #28a745; color: #ffffff; }
@@ -440,7 +437,7 @@ def generar_tabla_html_remate(remates_dict):
         .badge-7 { background-color: #fd7e14; color: #ffffff; }
         .badge-default { background-color: #6c757d; color: #ffffff; }
     </style>
-    <div style="background-color: #ffffff; padding: 4px; border-radius: 6px; overflow-x: auto;">
+    <div style="background-color: #ffffff; padding: 2px; border-radius: 5px; overflow-x: auto;">
         <table class="tabla-referencia">
             <thead>
                 <tr>
@@ -473,7 +470,7 @@ def generar_tabla_html_remate(remates_dict):
         html += f"""
                 <tr>
                     <td><span class="badge-numero {badge_class}">{num}</span></td>
-                    <td style="font-weight: 800; font-size: 12px;">{nombre_solo.upper()}</td>
+                    <td style="font-weight: 800; font-size: 11px;">{nombre_solo.upper()}</td>
                     <td>{info['jugador']}</td>
                     <td style="font-weight: bold; color: #000000;">{formatear_bs(info['monto'])}</td>
                 </tr>
@@ -639,7 +636,7 @@ with col_menu3:
         st.session_state.menu_principal_opcion = "Cuentas"
         st.rerun()
 
-st.markdown("<hr style='margin: 0.5rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
 # --- BARRA LATERAL (IZQUIERDA) ---
 st.sidebar.header("barra lateral")
@@ -743,7 +740,7 @@ if menu_principal_opcion == "Remates":
             st.session_state.sub_remate_opcion = "En Vivo"
             st.rerun()
 
-    st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
     modo_actual_remate = st.session_state.sub_remate_opcion
 
@@ -839,12 +836,12 @@ if menu_principal_opcion == "Remates":
 
             tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa])
             cantidad_filas = len(st.session_state.remates[carr_activa])
-            altura_dinamica = min(max(150, (cantidad_filas * 38) + 60), 450)
+            altura_dinamica = min(max(130, (cantidad_filas * 32) + 50), 400)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
-            # --- SELECCIONAR EJEMPLAR GANADOR DEBAJO DE LA TABLA (COMPACTO) ---
+            # --- SELECCIONAR EJEMPLAR GANADOR DEBAJO DE LA TABLA (COMPACTO Y ELEGANTE) ---
             with st.container(border=True):
-                st.markdown(f"<p style='font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #f1e05a;'>🎯 Ganador - {carr_activa}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Ganador - {carr_activa}</p>", unsafe_allow_html=True)
                 if carr_activa in st.session_state.historial_ganadores:
                     info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
                     st.success(f"✅ Ganador: **{info_ganador_prev.get('Ganador', 'N/A')}** | Premio: **{info_ganador_prev.get('Premio', '0')}**")
@@ -854,7 +851,7 @@ if menu_principal_opcion == "Remates":
                     with col_g1:
                         caballo_ganador_elegido = st.selectbox("Ejemplar Ganador", caballos_lista_ganador, key=f"rem_sel_ganador_{carr_activa}", label_visibility="collapsed")
                     with col_g2:
-                        if st.button("🏆 Liquidar Premio", key=f"rem_btn_liquidar_{carr_activa}", use_container_width=True, type="primary"):
+                        if st.button("🏆 Liquidar", key=f"rem_btn_liquidar_{carr_activa}", use_container_width=True, type="primary"):
                             pote_carr_total = sum([info['monto'] for info in st.session_state.remates[carr_activa].values()])
                             monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
                             incentivo_establecido = float(detalles_carr.get('incentivo', 0.0))
@@ -902,9 +899,9 @@ if menu_principal_opcion == "Remates":
 
             if incentivo_actual > 0:
                 st.markdown(f"""
-                    <div class="incentivo-grande">
-                        <div class="incentivo-grande-titulo">🎁 Incentivo Ya Establecido</div>
-                        <div class="incentivo-grande-monto">{formatear_bs(incentivo_actual)}</div>
+                    <div class="incentivo-elegante">
+                        <div class="incentivo-elegante-titulo">🎁 Incentivo Ya Establecido</div>
+                        <div class="incentivo-elegante-monto">{formatear_bs(incentivo_actual)}</div>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -913,9 +910,6 @@ if menu_principal_opcion == "Remates":
                     st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
                     monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
 
-                    # Diccionario interno de asignación rápida para hacer el remate ciego ultra didáctico e interactivo estilo "caja misteriosa / bolillero"
-                    estado_key_ciego = f"ciego_seleccion_activa_{carr_activa}"
-                    
                     caballos_disponibles_ciego = [
                         cab for cab, info in st.session_state.remates[carr_activa].items() 
                         if info['jugador'] == "Sin Postor" or info['monto'] <= 0
@@ -924,35 +918,30 @@ if menu_principal_opcion == "Remates":
                     if not caballos_disponibles_ciego:
                         st.warning("⚠️ Todos los ejemplares de esta carrera ya han sido adquiridos.")
                     else:
-                        st.markdown("🎲 **Panel Didáctico de Asignación Ciega (Haz clic en un ejemplar libre para asignarlo):**")
+                        caballo_seleccionado_ciego = st.selectbox("Seleccionar Ejemplar Disponible a Comprar", caballos_disponibles_ciego, key=f"sel_cab_ciego_{carr_activa}")
                         
-                        cols_ciego_grid = st.columns(min(3, len(caballos_disponibles_ciego)), gap="small")
-                        for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
-                            c_idx = idx_cb % len(cols_ciego_grid)
-                            num_cb_parte = cb_disp.split(" - ")[0]
-                            with cols_ciego_grid[c_idx]:
-                                if carrera_cerrada:
-                                    st.button(f"🔒 #{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, disabled=True)
-                                else:
-                                    if st.button(f"✨ Asignar #{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, type="primary"):
-                                        st.session_state.remates[carr_activa][cb_disp] = {
-                                            "jugador": st.session_state.usuario_activo, 
-                                            "monto": monto_fijo_carrera
-                                        }
-                                        st.session_state.historial_jugadas.append({
-                                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                            "jugador": st.session_state.usuario_activo,
-                                            "tipo": f"Remate Ciego ({modo_actual_remate})",
-                                            "carrera": carr_activa,
-                                            "detalle": cb_disp,
-                                            "monto": monto_fijo_carrera
-                                        })
-                                        if st.session_state.usuario_activo not in st.session_state.cuentas:
-                                            st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                                        st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
-                                        
-                                        st.success(f"🎉 ¡Ejemplar **{cb_disp}** asignado a **{st.session_state.usuario_activo}** por {formatear_bs(monto_fijo_carrera)}!")
-                                        st.rerun()
+                        if carrera_cerrada:
+                            st.button("🔨 Asignar Ejemplar (Cerrado)", key=f"btn_ciego_cerrado_{carr_activa}", use_container_width=True, type="primary", disabled=True)
+                        else:
+                            if st.button("🔨 Comprar / Asignar Ejemplar (Monto Fijo)", key=f"btn_ciego_conf_{carr_activa}", use_container_width=True, type="primary"):
+                                st.session_state.remates[carr_activa][caballo_seleccionado_ciego] = {
+                                    "jugador": st.session_state.usuario_activo, 
+                                    "monto": monto_fijo_carrera
+                                }
+                                st.session_state.historial_jugadas.append({
+                                    "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                    "jugador": st.session_state.usuario_activo,
+                                    "tipo": f"Remate Ciego ({modo_actual_remate})",
+                                    "carrera": carr_activa,
+                                    "detalle": caballo_seleccionado_ciego,
+                                    "monto": monto_fijo_carrera
+                                })
+                                if st.session_state.usuario_activo not in st.session_state.cuentas:
+                                    st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
+                                
+                                st.success(f"✅ ¡Ejemplar asignado a {st.session_state.usuario_activo} por {formatear_bs(monto_fijo_carrera)}!")
+                                st.rerun()
                 else:
                     st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
                     lista_caballos_activos = list(st.session_state.remates[carr_activa].keys())
@@ -1506,7 +1495,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             placeholder="Primera Carrera - 1.200 mts - 02:00 PM\n1 - Rey David\n2 - Gran Amigo\n\nSegunda Carrera - 1.400 mts - 02:30 PM\n1 - Rayo Negro"
         )
         if st.button("🚀 Procesar Contenido Pegado", key="btn_procesar_texto_pegado", use_container_width=True, type="primary"):
-            if texto_copiado_web.format():
+            if texto_copiado_web.strip():
                 if procesar_texto_flexible(texto_copiado_web):
                     st.success("✅ ¡Inscritos organizados por carrera y editables con éxito!")
                     st.rerun()
