@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS CON ANULACIÓN DE COLAPSO MÓVIL STREAMLIT ---
+# --- ESTILOS CSS OPTIMIZADOS ---
 st.markdown("""
     <style>
     .stApp {
@@ -89,7 +89,7 @@ st.markdown("""
         display: none !important;
     }
     .block-container {
-        padding-top: 2rem !important;
+        padding-top: 1.8rem !important;
         padding-bottom: 1.5rem !important;
         padding-left: 0.1rem !important;
         padding-right: 0.1rem !important;
@@ -194,7 +194,7 @@ st.markdown("""
         flex-shrink: 0;
     }
 
-    /* BARRA NEGRA CASINO CONTINUA (ANULACIÓN ESTRICTA DE MEDIA QUERY MÓVIL) */
+    /* BARRA NEGRA CASINO CONTINUA (3 COLUMNAS MÓVIL) */
     .barra-casino {
         width: 100% !important;
         margin-bottom: 8px !important;
@@ -214,7 +214,6 @@ st.markdown("""
         padding: 0 !important;
     }
 
-    /* FORZAR 3 COLUMNAS EN MÓVILES (NO APILAR) */
     @media (max-width: 992px) {
         .barra-casino div[data-testid="stHorizontalBlock"] {
             display: flex !important;
@@ -259,8 +258,8 @@ st.markdown("""
         font-weight: 900 !important;
         letter-spacing: 0.2px !important;
         text-transform: uppercase !important;
-        min-height: 42px !important;
-        height: 42px !important;
+        min-height: 40px !important;
+        height: 40px !important;
         padding: 0 2px !important;
         white-space: nowrap !important;
         text-overflow: ellipsis !important;
@@ -272,7 +271,6 @@ st.markdown("""
         transition: background-color 0.2s ease !important;
     }
 
-    /* ESTADO ACTIVO */
     .barra-casino .stButton > button[kind="primary"] {
         background-color: #222222 !important;
         color: #f1c40f !important;
@@ -429,7 +427,7 @@ elif neto_usuario < 0:
 else:
     etiqueta_balance = "Al día: Bs. 0,00"
 
-# --- CABECERA SUPERIOR OPTIMIZADA ---
+# --- CABECERA SUPERIOR ---
 st.markdown(f"""
     <div class="header-container">
         <div class="header-left-clock">
@@ -714,7 +712,7 @@ with col_m3:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# --- CARRUSEL AUTOMÁTICO DE IMÁGENES DEL HIPÓDROMO LA RINCONADA (8 SEGUNDOS) ---
+# --- CARRUSEL AUTOMÁTICO OPTIMIZADO (SIN BORDE AMARILLO, ALTURA REDUCIDA Y SOMBRA ELEGANTE) ---
 ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
 
 nombres_banners_posibles = [
@@ -742,12 +740,12 @@ if lista_b64_banners:
         .banner-slider-container {{
             width: 100%;
             max-width: 1200px;
-            height: 200px;
+            height: 120px;
             margin: 0 auto 8px auto;
-            border-radius: 4px;
+            border-radius: 10px;
             overflow: hidden;
-            border: 2px solid #f1c40f;
-            box-shadow: 0px 4px 14px rgba(0,0,0,0.8);
+            border: 1px solid #30363d;
+            box-shadow: 0px 6px 16px rgba(0,0,0,0.6);
             position: relative;
             background-color: #0d1117;
         }}
@@ -757,6 +755,11 @@ if lista_b64_banners:
             object-fit: cover;
             transition: opacity 1.2s ease-in-out;
             display: block;
+        }}
+        @media (min-width: 768px) {{
+            .banner-slider-container {{
+                height: 150px;
+            }}
         }}
     </style>
     <div class="banner-slider-container">
@@ -780,11 +783,11 @@ if lista_b64_banners:
         }})();
     </script>
     """
-    components.html(html_slider, height=215)
+    components.html(html_slider, height=130)
 else:
     st.markdown("""
-        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); border: 2px solid #f1c40f; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 8px;">
-            <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px; font-size: 14px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
+        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); border: 1px solid #30363d; padding: 8px 12px; border-radius: 10px; text-align: center; margin-bottom: 8px; box-shadow: 0px 6px 16px rgba(0,0,0,0.6);">
+            <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px; font-size: 13px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
             <p style="color: #8b949e; font-size: 10px; margin: 2px 0 0 0;">¡La pasión del hipismo venezolano en vivo!</p>
         </div>
     """, unsafe_allow_html=True)
@@ -874,7 +877,7 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# 1. MÓDULO DE REMATES (SUBMENÚ BARRA NEGRA SÓLIDA)
+# 1. MÓDULO DE REMATES
 # =========================================================================
 if menu_principal_opcion == "Remates":
     st.markdown('<div class="barra-casino">', unsafe_allow_html=True)
@@ -1691,7 +1694,6 @@ if url_live_video:
     st.markdown("<br><hr style='border-color: #30363d;'>", unsafe_allow_html=True)
     st.markdown("### 📺 TRANSMISIÓN EN VIVO DE LAS CARRERAS")
     
-    # Extraer ID si es un enlace estándar de YouTube
     yt_match = re.search(r'(?:v=|\/embed\/|youtu\.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})', url_live_video)
     
     if yt_match:
