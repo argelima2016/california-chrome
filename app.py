@@ -622,16 +622,16 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL (ESTILO APUESTAS DEPORTIVAS / HIPISMO / CASINO) ---
+# --- MENÚ PRINCIPAL HORIZONTAL (MODELO SOLICITADO) ---
 col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
 
 with col_menu1:
-    if st.button("APUESTAS DEPORTIVAS", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
+    if st.button("REMATES", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
         st.session_state.menu_principal_opcion = "Remates"
         st.rerun()
 
 with col_menu2:
-    if st.button("HIPISMO", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
+    if st.button("DUPLETAS/POLLAS HÍPICAS", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
         st.session_state.menu_principal_opcion = "Dupletas"
         st.rerun()
 
@@ -653,7 +653,6 @@ for nombre_banner in ["1001398058.jpg", "1001398058.png", "rinconada.jpg", "rinc
         break
 
 if not imagen_rinconada_encontrada:
-    # Si la imagen no está guardada localmente todavía, mostramos un contenedor elegante simulando el banner hípico
     st.markdown("""
         <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); border: 2px solid #f1c40f; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px;">
             <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
