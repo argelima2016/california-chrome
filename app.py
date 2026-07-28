@@ -633,17 +633,6 @@ with st.sidebar.expander("👤 Usuario Activo y Selector", expanded=True):
         st.session_state.usuario_activo = usuario_seleccionado_sidebar
         st.rerun()
 
-with st.sidebar.expander("⚡ Carreras Activas para Remate", expanded=False):
-    carreras_seleccionadas_activas = st.multiselect(
-        "Carreras Activas",
-        options=lista_carreras_disponibles,
-        default=[c for c in st.session_state.carreras_activas_remate if c in lista_carreras_disponibles],
-        key="sb_multiselect_carreras_activas"
-    )
-    if carreras_seleccionadas_activas != st.session_state.carreras_activas_remate:
-        st.session_state.carreras_activas_remate = carreras_seleccionadas_activas
-        st.rerun()
-
 with st.sidebar.expander("🏠 Retención de la Casa", expanded=False):
     porcentaje_casa = st.slider("Retención (%)", 0, 50, 30, key="sb_slider_retencion_casa")
 
@@ -770,7 +759,7 @@ if menu_principal_opcion == "Remates":
         ]
         
         if not carreras_filtradas_visibles:
-            st.info(f"ℹ️ No hay carreras seleccionadas para la modalidad **{modo_actual_remate}**. Configúralas en la Zona Admin (Banco de Carreras).")
+            st.info(f"ℹ️ No hay carreras habilitadas para la modalidad **{modo_actual_remate}**. Habilítalas en Zona Admin -> Banco de Caballos.")
         else:
             if "carrera_remate_activa_seleccionada" not in st.session_state or st.session_state["carrera_remate_activa_seleccionada"] not in carreras_filtradas_visibles:
                 carr_activa = carreras_filtradas_visibles[0]
@@ -887,7 +876,6 @@ if menu_principal_opcion == "Remates":
                     monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
                     st.info(f"💰 Monto fijo preestablecido para esta carrera (configurable en Zona Admin -> Banco): **{formatear_bs(monto_fijo_carrera)}**")
 
-                    # Filtrar únicamente los ejemplares que TODAVÍA NO tienen comprador (Sin Postor o monto 0)
                     caballos_disponibles_ciego = [
                         cab for cab, info in st.session_state.remates[carr_activa].items() 
                         if info['jugador'] == "Sin Postor" or info['monto'] <= 0
@@ -1193,7 +1181,7 @@ elif menu_principal_opcion == "Cuentas":
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Zona de Administrador</div>", unsafe_allow_html=True)
     
-    opciones_admin_tabs = ["✍️ Banco", "👥 Registro Usuarios", "⚙️ Config. Dupletas/Polla", "📊 Saldos Usuarios", "🖼️ Imágenes Carrera", "📄 Importar Web/Texto"]
+    opciones_admin_tabs = ["✍️ Banco de Caballos", "👥 Registro Usuarios", "⚙️ Config. Dupletas/Polla", "📊 Saldos Usuarios", "🖼️ Imágenes Carrera", "📄 Importar Web/Texto"]
     
     cols_adm_tabs = st.columns(len(opciones_admin_tabs), gap="small")
     for idx, tab_nombre in enumerate(opciones_admin_tabs):
@@ -1206,8 +1194,8 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<hr style='margin: 0.5rem 0; border-color: #30363d;'>", unsafe_allow_html=True)
     tab_actual = st.session_state.admin_tab_seleccionada
 
-    if tab_actual == "✍️ Banco":
-        st.markdown("### ✍️ Banco de Carreras y Configuración Semanal")
+    if tab_actual == "✍️ Banco de Caballos":
+        st.markdown("### ✍️ Banco de Caballos, Carreras Activas y Configuración Semanal")
         
         with st.container(border=True):
             st.markdown("📅 **Configuración General de la Semana**")
@@ -1232,7 +1220,40 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
         st.markdown("---")
 
-        # --- SELECCIONADOR DE LAS 2 CARRERAS PARA REMATE CIEGO Y SU MONTO FIJO ---
+        # --- PANEL DIDÁCTICO DE CARRERAS ACTIVAS PARA REMATE ---
+        with st.container(border=True):
+            st.markdown("⚡ **Panel Didáctico: Selección de Carreras Activas para Remate**")
+            st.info("💡 Marca las casillas de las carreras que deseas activar o desactivar para los remates de la jornada de forma visual e intuitiva.")
+            
+            carreras_disponibles_todas = list(st.session_state.remates.keys())
+            if not carreras_disponibles_todas:
+                st.warning("⚠️ No hay carreras en el banco. Importa contenido o crea la jornada primero.")
+            else:
+                # Contenedor interactivo con columnas dinámicas o casillas didácticas
+                carreras_activas_actuales = st.session_state.carreras_activas_remate
+                
+                cols_grid = st.columns(min(4, len(carreras_disponibles_todas)), gap="small")
+                nuevas_activas = []
+                
+                for i, carr_n in enumerate(carreras_disponibles_todas):
+                    col_idx = i % len(cols_grid)
+                    with cols_grid[col_idx]:
+                        estado_marcado = st.checkbox(
+                            f"🏁 {carr_n}", 
+                            value=(carr_n in carreras_activas_actuales),
+                            key=f"chk_didactico_activa_{carr_n}"
+                        )
+                        if estado_marcado:
+                            nuevas_activas.append(carr_n)
+                
+                if st.button("💾 Guardar Carreras Activas Seleccionadas", key="btn_save_activas_didactico", use_container_width=True, type="primary"):
+                    st.session_state.carreras_activas_remate = nuevas_activas
+                    st.toast("✅ ¡Carreras activas actualizadas con éxito!")
+                    st.rerun()
+
+        st.markdown("---")
+
+        # --- SELECCIONADOR DE LAS 2 CARRERAS PARA REMATE CIEGO ---
         with st.container(border=True):
             st.markdown("🙈 **Selección de las 2 Carreras Activas para Remate Ciego (Identificadas como 1V y 6V)**")
             carreras_existentes = list(st.session_state.remates.keys())
