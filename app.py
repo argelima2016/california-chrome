@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS CON BARRAS AJUSTADAS EXACTAMENTE AL TAMAÑO DEL TEXTO ---
+# --- ESTILOS CSS CON EL DISEÑO DE CÁPSULA EXACTO A LA IMAGEN ---
 st.markdown("""
     <style>
     .stApp {
@@ -201,39 +201,37 @@ st.markdown("""
         flex-shrink: 0;
     }
 
-    /* BARRA NEGRA COMPACTA AJUSTADA STRICTAMENTE AL TAMAÑO DEL TEXTO */
+    /* BARRAS MENÚ / SUBMENÚ EXACTAMENTE COMO LA CAPTURA DE PANTALLA */
     .barra-casino {
-        display: flex !important;
-        justify-content: center !important;
         width: 100% !important;
+        max-width: 800px !important;
         margin: 0 auto 10px auto !important;
     }
 
     .barra-casino div[data-testid="stHorizontalBlock"] {
-        display: inline-flex !important;
+        display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
         align-items: stretch !important;
-        background-color: #161b22 !important;
-        border: 1px solid #30363d !important;
-        border-radius: 6px !important;
+        background-color: #21252d !important; /* Fondo de la cápsula unificada */
+        border: 1px solid #484d5d !important;    /* Borde exterior fino gris */
+        border-radius: 10px !important;         /* Esquinas redondeadas estilo píldora */
         gap: 0px !important;
-        width: fit-content !important; /* SE AJUSTA AL TAMAÑO DEL TEXTO */
-        max-width: 100% !important;
-        margin: 0 auto !important;
+        width: 100% !important;
+        margin: 0 !important;
         padding: 0 !important;
         overflow: hidden !important;
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.5);
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.5);
     }
 
     .barra-casino div[data-testid="column"], 
     .barra-casino div[data-testid="stColumn"] {
-        flex: 0 0 auto !important; /* EVITA QUE SE EXPANDA EN ESPACIOS VACÍOS */
-        width: auto !important;
+        flex: 1 1 0% !important;
+        width: 33.333% !important;
         min-width: 0 !important;
         padding: 0 !important;
         margin: 0 !important;
-        border-right: 1px solid #21262d !important;
+        border-right: 1px solid #484d5d !important; /* Rayas divisorias internas */
     }
 
     .barra-casino div[data-testid="column"]:last-child, 
@@ -242,45 +240,49 @@ st.markdown("""
     }
 
     .barra-casino .stButton {
-        width: auto !important;
+        width: 100% !important;
         margin: 0 !important;
     }
 
+    /* OPCIÓN NO SELECCIONADA */
     .barra-casino .stButton > button {
-        background-color: #1c212d !important;
-        color: #f0f6fc !important;
+        background-color: transparent !important;
+        color: #ffffff !important;
         border: none !important;
         border-radius: 0px !important;
         box-shadow: none !important;
-        font-size: 11px !important;
-        font-weight: 800 !important;
-        letter-spacing: 0.3px !important;
-        text-transform: uppercase !important;
-        min-height: 38px !important;
-        height: 38px !important;
-        padding: 0 12px !important; /* ESPACIO AJUSTADO INTERNO */
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        text-transform: none !important; /* Tipo Oración como en la imagen */
+        min-height: 42px !important;
+        height: 42px !important;
+        padding: 0 4px !important;
         white-space: nowrap !important;
-        display: inline-flex !important;
+        text-overflow: ellipsis !important;
+        overflow: hidden !important;
+        display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         text-align: center !important;
-        transition: all 0.2s ease-in-out !important;
+        transition: background-color 0.2s ease !important;
     }
 
     .barra-casino .stButton > button:hover {
-        background-color: #21262d !important;
-        color: #f1c40f !important;
+        background-color: #2d323e !important;
+        color: #ffffff !important;
         cursor: pointer !important;
     }
 
+    /* OPCIÓN SELECCIONADA (ESTILO EN VIVO / DESTACADO DE LA IMAGEN) */
     .barra-casino .stButton > button[kind="primary"] {
-        background: linear-gradient(180deg, #d63031 0%, #b22222 100%) !important;
+        background-color: #3e4454 !important; /* Tono gris claro resaltado */
         color: #ffffff !important;
-        border-bottom: 3px solid #ff7675 !important;
-        font-weight: 900 !important;
+        font-weight: 600 !important;
+        border: none !important;
+        box-shadow: none !important;
     }
 
-    /* ESTILO GENERAL DE BOTONES SECUNDARIOS */
+    /* BOTONES GENERALES DE ACCIÓN EN LA APP */
     .stButton > button {
         background: #1c212d !important;
         color: #f0f6fc !important;
@@ -715,22 +717,22 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL COMPACTO ---
+# --- MENÚ PRINCIPAL (CÁPSULA UNIFICADA) ---
 st.markdown('<div class="barra-casino">', unsafe_allow_html=True)
 col_m1, col_m2, col_m3 = st.columns(3)
 
 with col_m1:
-    if st.button("REMATES", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
+    if st.button("Remates", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
         st.session_state.menu_principal_opcion = "Remates"
         st.rerun()
 
 with col_m2:
-    if st.button("DUPLETAS / POLLAS", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
+    if st.button("Dupletas / Pollas", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
         st.session_state.menu_principal_opcion = "Dupletas"
         st.rerun()
 
 with col_m3:
-    if st.button("CUENTAS", key="menu_btn_cuentas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
+    if st.button("Cuentas", key="menu_btn_cuentas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
         st.session_state.menu_principal_opcion = "Cuentas"
         st.rerun()
 
@@ -1030,22 +1032,22 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# 1. MÓDULO DE REMATES
+# 1. MÓDULO DE REMATES (SUBMENÚ CÁPSULA REPLICADO EXACTO)
 # =========================================================================
 if menu_principal_opcion == "Remates":
     st.markdown('<div class="barra-casino">', unsafe_allow_html=True)
     col_so1, col_so2, col_so3 = st.columns(3)
     
     with col_so1:
-        if st.button("ADELANTADOS", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
+        if st.button("Adelantados", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
             st.session_state.sub_remate_opcion = "Adelantados"
             st.rerun()
     with col_so2:
-        if st.button("CIEGOS", key="sub_rem_ciegos", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Ciegos" else "secondary"):
+        if st.button("Ciegos", key="sub_rem_ciegos", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Ciegos" else "secondary"):
             st.session_state.sub_remate_opcion = "Ciegos"
             st.rerun()
     with col_so3:
-        if st.button("EN VIVO", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
+        if st.button("En Vivo", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
             st.session_state.sub_remate_opcion = "En Vivo"
             st.rerun()
             
@@ -1321,15 +1323,15 @@ elif menu_principal_opcion == "Dupletas":
     col_d1, col_d2, col_d3 = st.columns(3)
     
     with col_d1:
-        if st.button("DUPLETA", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
+        if st.button("Dupleta", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Dupleta"
             st.rerun()
     with col_d2:
-        if st.button("TRIPLETA", key="sub_dup_tripleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Tripleta" else "secondary"):
+        if st.button("Tripleta", key="sub_dup_tripleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Tripleta" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Tripleta"
             st.rerun()
     with col_d3:
-        if st.button("POLLA HÍPICA", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Polla Hipica" else "secondary"):
+        if st.button("Polla Hípica", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Polla Hipica" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Polla Hipica"
             st.rerun()
 
