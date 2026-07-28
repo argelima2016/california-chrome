@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS (BOTONES PRINCIPALES MÁS PEQUEÑOS Y JUNTOS) ---
+# --- ESTILOS CSS (DISEÑO ESTILO CASA DE APUESTAS PROFESIONAL) ---
 st.markdown("""
     <style>
     .stApp {
@@ -191,17 +191,13 @@ st.markdown("""
         box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
         flex-shrink: 0;
     }
-    /* Estilo exclusivo para hacer los botones de navegación superiores más compactos y sin espacio excesivo */
-    div.row-widget.stHorizontal > div {
-        gap: 4px !important;
-    }
     .stButton button {
         width: 100% !important;
         border-radius: 4px !important;
         font-weight: 600 !important;
-        padding: 0.05rem 0.05rem !important;
-        min-height: 22px !important;
-        max-height: 28px !important;
+        padding: 0.1rem 0.1rem !important;
+        min-height: 26px !important;
+        max-height: 32px !important;
         font-size: 10px !important;
         letter-spacing: 0.1px;
         white-space: nowrap !important;
@@ -210,7 +206,7 @@ st.markdown("""
         width: auto !important;
         flex: 1 !important;
         min-width: 0 !important;
-        padding: 0 1px !important;
+        padding: 0 2px !important;
     }
     .subasta-header {
         font-size: clamp(14px, 3.5vw, 17px);
@@ -626,25 +622,46 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL (MUY COMPACTO, JUNTOS Y ADAPTADOS) ---
-col_menu1, col_menu2, col_menu3 = st.columns([1, 1.2, 1], gap="small")
+# --- MENÚ PRINCIPAL HORIZONTAL (ESTILO APUESTAS DEPORTIVAS / HIPISMO / CASINO) ---
+col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
 
 with col_menu1:
-    if st.button("🏇 REMATES", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
+    if st.button("APUESTAS DEPORTIVAS", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
         st.session_state.menu_principal_opcion = "Remates"
         st.rerun()
 
 with col_menu2:
-    if st.button("🎟️ DUPLETAS / POLLAS", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
+    if st.button("HIPISMO", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
         st.session_state.menu_principal_opcion = "Dupletas"
         st.rerun()
 
 with col_menu3:
-    if st.button("📊 CUENTAS", key="menu_btn_cuentas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
+    if st.button("CASINO EN VIVO", key="menu_btn_cuentas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
         st.session_state.menu_principal_opcion = "Cuentas"
         st.rerun()
 
-st.markdown("<hr style='margin: 0.4rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+
+# --- BANNER / IMAGEN REFERENTE DE INH HIPÓDROMO DE LA RINCONADA ---
+ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
+imagen_rinconada_encontrada = False
+for nombre_banner in ["1001398058.jpg", "1001398058.png", "rinconada.jpg", "rinconada.png"]:
+    ruta_banner = os.path.join(ruta_actual_dir, nombre_banner)
+    if os.path.exists(ruta_banner):
+        st.image(ruta_banner, use_container_width=True)
+        imagen_rinconada_encontrada = True
+        break
+
+if not imagen_rinconada_encontrada:
+    # Si la imagen no está guardada localmente todavía, mostramos un contenedor elegante simulando el banner hípico
+    st.markdown("""
+        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); border: 2px solid #f1c40f; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px;">
+            <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
+            <p style="color: #8b949e; font-size: 12px; margin: 4px 0 0 0;">¡La pasión del hipismo venezolano en vivo!</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
 
 # --- BARRA LATERAL (IZQUIERDA) ---
 st.sidebar.header("barra lateral")
