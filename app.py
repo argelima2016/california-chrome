@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS OPTIMIZADOS ---
+# --- ESTILOS CSS GENERALES ---
 st.markdown("""
     <style>
     .stApp {
@@ -712,7 +712,7 @@ with col_m3:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# --- CARRUSEL AUTOMÁTICO OPTIMIZADO (SIN BORDE AMARILLO, ALTURA REDUCIDA Y SOMBRA ELEGANTE) ---
+# --- CARRUSEL ESTILO TRIUNFOBET / BETCHAT (FONDO NEGRO + DIAGONAL AMARILLA + TARJETA PROMO) ---
 ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
 
 nombres_banners_posibles = [
@@ -737,33 +737,62 @@ if lista_b64_banners:
     js_images_array = str(lista_b64_banners)
     html_slider = f"""
     <style>
-        .banner-slider-container {{
+        .triunfo-banner-wrapper {{
+            position: relative;
             width: 100%;
             max-width: 1200px;
-            height: 120px;
+            height: 140px;
             margin: 0 auto 8px auto;
-            border-radius: 10px;
+            border-radius: 8px;
             overflow: hidden;
-            border: 1px solid #30363d;
-            box-shadow: 0px 6px 16px rgba(0,0,0,0.6);
-            position: relative;
-            background-color: #0d1117;
+            background: linear-gradient(115deg, #090b10 65%, #f1c40f 65%);
+            border: 1px solid #22252e;
+            box-shadow: 0px 8px 20px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }}
-        .banner-slide-img {{
-            width: 100%;
+        .triunfo-arrow {{
+            color: #f1c40f;
+            font-size: 22px;
+            font-weight: 900;
+            padding: 0 10px;
+            user-select: none;
+            cursor: pointer;
+            z-index: 5;
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.8);
+        }}
+        .triunfo-slide-box {{
+            flex: 1;
             height: 100%;
-            object-fit: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }}
+        .triunfo-slide-img {{
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
             transition: opacity 1.2s ease-in-out;
             display: block;
         }}
         @media (min-width: 768px) {{
-            .banner-slider-container {{
-                height: 150px;
+            .triunfo-banner-wrapper {{
+                height: 170px;
+            }}
+            .triunfo-arrow {{
+                font-size: 28px;
+                padding: 0 16px;
             }}
         }}
     </style>
-    <div class="banner-slider-container">
-        <img id="rinconada-slide" class="banner-slide-img" src="{lista_b64_banners[0]}" />
+    <div class="triunfo-banner-wrapper">
+        <div class="triunfo-arrow">&lt;</div>
+        <div class="triunfo-slide-box">
+            <img id="rinconada-slide" class="triunfo-slide-img" src="{lista_b64_banners[0]}" />
+        </div>
+        <div class="triunfo-arrow">&gt;</div>
     </div>
     <script>
         (function() {{
@@ -783,14 +812,114 @@ if lista_b64_banners:
         }})();
     </script>
     """
-    components.html(html_slider, height=130)
+    components.html(html_slider, height=150)
 else:
-    st.markdown("""
-        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); border: 1px solid #30363d; padding: 8px 12px; border-radius: 10px; text-align: center; margin-bottom: 8px; box-shadow: 0px 6px 16px rgba(0,0,0,0.6);">
-            <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px; font-size: 13px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
-            <p style="color: #8b949e; font-size: 10px; margin: 2px 0 0 0;">¡La pasión del hipismo venezolano en vivo!</p>
+    # --- BANNER PROMOCIONAL DEDICADO ESTILO BETCHAT / TRIUNFOBET ---
+    html_betchat_style = """
+    <style>
+        .betchat-container {
+            width: 100%;
+            max-width: 1200px;
+            height: 140px;
+            margin: 0 auto 8px auto;
+            border-radius: 8px;
+            overflow: hidden;
+            background: linear-gradient(115deg, #0a0c10 62%, #f1c40f 62%);
+            border: 1px solid #2a2e39;
+            box-shadow: 0px 8px 20px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .betchat-arrow {
+            color: #f1c40f;
+            font-size: 22px;
+            font-weight: 900;
+            user-select: none;
+        }
+        .betchat-card {
+            background-color: #12161f;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 10px 14px;
+            max-width: 60%;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.7);
+        }
+        .betchat-tag {
+            color: #8b949e;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .betchat-title {
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 900;
+            margin: 2px 0;
+            line-height: 1.1;
+        }
+        .betchat-title span {
+            color: #f1c40f;
+        }
+        .betchat-sub {
+            color: #c9d1d9;
+            font-size: 10px;
+            margin-top: 3px;
+            line-height: 1.2;
+        }
+        .betchat-right-graphic {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #000000;
+            font-weight: 900;
+            padding-right: 15px;
+            text-align: center;
+        }
+        .betchat-icon {
+            font-size: 28px;
+            line-height: 1;
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));
+        }
+        .betchat-badge {
+            background-color: #000000;
+            color: #f1c40f;
+            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+        }
+        @media (min-width: 768px) {
+            .betchat-container { height: 165px; padding: 0 18px; }
+            .betchat-arrow { font-size: 28px; }
+            .betchat-card { padding: 14px 20px; }
+            .betchat-title { font-size: 18px; }
+            .betchat-sub { font-size: 12px; }
+            .betchat-icon { font-size: 38px; }
+            .betchat-badge { font-size: 11px; padding: 3px 10px; }
+        }
+    </style>
+    <div class="betchat-container">
+        <div class="betchat-arrow">&lt;</div>
+        <div class="betchat-card">
+            <div class="betchat-tag">JORNADA HÍPICA OFICIAL</div>
+            <div class="betchat-title">HIPÓDROMO <span>LA RINCONADA</span></div>
+            <div class="betchat-sub">Intercambia pronósticos, participa en remates en vivo y sigue las jugadas desde un solo lugar.</div>
         </div>
-    """, unsafe_allow_html=True)
+        <div class="betchat-right-graphic">
+            <div class="betchat-icon">🏇</div>
+            <div class="betchat-badge">EN VIVO</div>
+        </div>
+        <div class="betchat-arrow" style="color: #000000;">&gt;</div>
+    </div>
+    """
+    components.html(html_betchat_style, height=150)
 
 # --- BARRA LATERAL (IZQUIERDA) ---
 st.sidebar.header("barra lateral")
