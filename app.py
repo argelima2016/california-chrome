@@ -72,13 +72,13 @@ img_b64 = get_image_base64(nombres_archivos)
 if img_b64:
     logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" class="header-logo-img" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 13px; font-weight: 900; font-style: italic; white-space: nowrap;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 12px; font-weight: 900; font-style: italic; white-space: nowrap;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
-hora_texto = ahora_dt.strftime('%I:%M:%S %p')
+hora_texto = me_time = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS REVISADOS (SIN DESBORDAMIENTO) ---
+# --- ESTILOS CSS REVISADOS Y COMPACTADOS PARA MÓVIL ---
 st.markdown("""
     <style>
     .stApp {
@@ -89,11 +89,11 @@ st.markdown("""
         display: none !important;
     }
     .block-container {
-        padding-top: 2.2rem !important;
-        padding-bottom: 2rem !important;
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
-        max-width: 1400px !important;
+        padding-top: 2rem !important;
+        padding-bottom: 1.5rem !important;
+        padding-left: 0.3rem !important;
+        padding-right: 0.3rem !important;
+        max-width: 1200px !important;
         margin: 0 auto !important;
     }
     header[data-testid="stHeader"] {
@@ -102,7 +102,7 @@ st.markdown("""
     .header-container {
         background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
         width: 100% !important;
-        padding: 6px 8px !important;
+        padding: 4px 6px !important;
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
@@ -111,7 +111,7 @@ st.markdown("""
         border-radius: 8px !important;
         box-sizing: border-box !important;
         gap: 4px;
-        margin-bottom: 10px !important;
+        margin-bottom: 8px !important;
     }
     .header-left-clock {
         display: flex !important;
@@ -119,7 +119,7 @@ st.markdown("""
         justify-content: center !important;
         background: #0d1117 !important;
         border: 1px solid #30363d !important;
-        padding: 4px 6px !important;
+        padding: 3px 5px !important;
         border-radius: 6px !important;
         text-align: left !important;
         flex-shrink: 0;
@@ -146,7 +146,7 @@ st.markdown("""
         text-align: center;
     }
     .header-logo-img {
-        max-height: 45px !important;
+        max-height: 40px !important;
         max-width: 100% !important;
         width: auto !important;
         object-fit: contain !important;
@@ -159,8 +159,8 @@ st.markdown("""
         gap: 4px !important;
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
-        padding: 4px 6px !important;
-        border-radius: 14px !important;
+        padding: 3px 5px !important;
+        border-radius: 12px !important;
         flex-shrink: 0;
     }
     .user-text-info {
@@ -171,7 +171,7 @@ st.markdown("""
     }
     .user-name {
         color: #ffffff !important;
-        font-size: 10px !important;
+        font-size: 9px !important;
         font-weight: 800 !important;
     }
     .user-balance {
@@ -183,50 +183,35 @@ st.markdown("""
         background-color: #f1c40f !important;
         color: #000000 !important;
         border-radius: 50% !important;
-        width: 24px !important;
-        height: 24px !important;
+        width: 22px !important;
+        height: 22px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 11px !important;
+        font-size: 10px !important;
         font-weight: bold !important;
         box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
         flex-shrink: 0;
     }
     
-    /* AJUSTE MULTIDISPOSITIVO CONTENIDO DENTRO DE PANTALLA */
-    div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: wrap !important; /* Permite ajuste si la pantalla es muy angosta */
-        gap: 6px !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-    }
-    
-    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-        flex: 1 1 30% !important; /* Reparte en 3 partes equitativas */
-        min-width: 0 !important;
-        max-width: 100% !important;
-        padding: 0 !important;
-        box-sizing: border-box !important;
-    }
-
+    /* BOTONES COMPACTOS DE ALTURA BAJA */
     .stButton {
         width: 100% !important;
+        margin-bottom: 2px !important;
     }
 
     .stButton button {
         width: 100% !important;
         border-radius: 6px !important;
         font-weight: 800 !important;
-        padding: 6px 2px !important;
-        min-height: 42px !important;
-        font-size: 11px !important;
-        line-height: 1.2 !important;
-        white-space: normal !important; /* Permite salto de línea interno si no cabe el texto */
-        word-break: break-word !important;
+        padding: 4px 2px !important;
+        min-height: 34px !important;
+        height: 34px !important;
+        font-size: 10px !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -235,56 +220,56 @@ st.markdown("""
     }
 
     .subasta-header {
-        font-size: clamp(14px, 3.5vw, 18px);
+        font-size: clamp(13px, 3.2vw, 16px);
         font-weight: 800;
         color: #f1e05a;
         margin-bottom: 4px;
         border-bottom: 2px solid #f1e05a;
-        padding-bottom: 3px;
+        padding-bottom: 2px;
     }
     .timer-box {
         background-color: #161b22;
         border: 1px solid #ff4757;
-        padding: 6px;
+        padding: 5px;
         border-radius: 6px;
         text-align: center;
-        font-size: clamp(12px, 3vw, 15px);
+        font-size: clamp(11px, 2.8vw, 14px);
         font-weight: bold;
         color: #ff4757;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
     .carrera-condicion-card {
         background-color: #161b22;
         border: 1px solid #30363d;
-        padding: 8px 12px;
+        padding: 6px 10px;
         border-radius: 6px;
-        font-size: 12px;
+        font-size: 11px;
         color: #f0f6fc;
-        margin-bottom: 10px;
-        line-height: 1.4;
+        margin-bottom: 8px;
+        line-height: 1.3;
     }
     .incentivo-elegante {
         background: linear-gradient(135deg, #0d1117 100%, #161b22 0%);
         border: 1px solid #f1c40f;
-        padding: 10px 14px;
+        padding: 8px 10px;
         border-radius: 6px;
         text-align: center;
-        margin: 8px 0;
+        margin: 6px 0;
         box-shadow: 0px 2px 8px rgba(241, 196, 15, 0.15);
     }
     .incentivo-elegante-titulo {
         color: #f1c40f;
-        font-size: 12px;
+        font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.8px;
-        margin-bottom: 3px;
+        letter-spacing: 0.6px;
+        margin-bottom: 2px;
     }
     .incentivo-elegante-monto {
         color: #ffffff;
-        font-size: 18px;
+        font-size: 15px;
         font-weight: 800;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.2px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -648,25 +633,26 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL EN CAJA Y CONTROLADO ---
-col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
-
-with col_menu1:
+# --- MENÚ PRINCIPAL ESTRUCTURADO EN 2 COLUMNAS (NO SE APILA EN MÓVIL) ---
+col_m1, col_m2 = st.columns(2, gap="small")
+with col_m1:
     if st.button("REMATES", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
         st.session_state.menu_principal_opcion = "Remates"
         st.rerun()
 
-with col_menu2:
+with col_m2:
     if st.button("DUPLETAS / POLLAS", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
         st.session_state.menu_principal_opcion = "Dupletas"
         st.rerun()
 
-with col_menu3:
+# Fila secundaria para Cuentas para mantener simetría de 2 columnas máximas
+col_m3, _ = st.columns([1, 1], gap="small")
+with col_m3:
     if st.button("CUENTAS", key="menu_btn_cuentas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
         st.session_state.menu_principal_opcion = "Cuentas"
         st.rerun()
 
-st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
 # --- CARRUSEL AUTOMÁTICO DE IMÁGENES DEL HIPÓDROMO LA RINCONADA (8 SEGUNDOS) ---
 ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
@@ -696,8 +682,8 @@ if lista_b64_banners:
         .banner-slider-container {{
             width: 100%;
             max-width: 1200px;
-            height: 220px;
-            margin: 0 auto 10px auto;
+            height: 200px;
+            margin: 0 auto 8px auto;
             border-radius: 8px;
             overflow: hidden;
             border: 2px solid #f1c40f;
@@ -734,16 +720,14 @@ if lista_b64_banners:
         }})();
     </script>
     """
-    components.html(html_slider, height=235)
+    components.html(html_slider, height=215)
 else:
     st.markdown("""
-        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); border: 2px solid #f1c40f; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 10px;">
-            <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
-            <p style="color: #8b949e; font-size: 11px; margin: 4px 0 0 0;">¡La pasión del hipismo venezolano en vivo!</p>
+        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); border: 2px solid #f1c40f; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 8px;">
+            <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px; font-size: 14px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
+            <p style="color: #8b949e; font-size: 10px; margin: 2px 0 0 0;">¡La pasión del hipismo venezolano en vivo!</p>
         </div>
     """, unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
 
 # --- BARRA LATERAL (IZQUIERDA) ---
 st.sidebar.header("barra lateral")
@@ -830,10 +814,10 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# 1. MÓDULO DE REMATES (3 OPCIONES: ADELANTADOS, CIEGOS, EN VIVO)
+# 1. MÓDULO DE REMATES (3 OPCIONES REORGANIZADAS)
 # =========================================================================
 if menu_principal_opcion == "Remates":
-    col_so1, col_so2, col_so3 = st.columns(3, gap="small")
+    col_so1, col_so2 = st.columns(2, gap="small")
     with col_so1:
         if st.button("⏱️ Adelantados", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
             st.session_state.sub_remate_opcion = "Adelantados"
@@ -842,12 +826,14 @@ if menu_principal_opcion == "Remates":
         if st.button("🙈 Ciegos", key="sub_rem_ciegos", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Ciegos" else "secondary"):
             st.session_state.sub_remate_opcion = "Ciegos"
             st.rerun()
+
+    col_so3, _ = st.columns([1, 1], gap="small")
     with col_so3:
         if st.button("⚡ En Vivo", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
             st.session_state.sub_remate_opcion = "En Vivo"
             st.rerun()
 
-    st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
     modo_actual_remate = st.session_state.sub_remate_opcion
 
@@ -877,12 +863,13 @@ if menu_principal_opcion == "Remates":
             st.markdown("🔹 **Seleccionar Carrera:**")
             
             num_carreras = len(carreras_filtradas_visibles)
-            cols_carreras = st.columns(num_carreras if num_carreras > 0 else 1, gap="small")
+            cols_carreras = st.columns(min(4, num_carreras) if num_carreras > 0 else 1, gap="small")
             for idx, c_nombre in enumerate(carreras_filtradas_visibles):
                 es_modo_ciego = (modo_actual_remate == "Ciegos")
                 abreviatura = obtener_abreviatura_carrera(c_nombre, modo_ciego=es_modo_ciego)
                 es_activa = (c_nombre == carr_activa)
-                with cols_carreras[idx]:
+                c_target = cols_carreras[idx % len(cols_carreras)]
+                with c_target:
                     if st.button(abreviatura, key=f"rem_btn_sel_carr_{idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
                         st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
                         st.rerun()
@@ -946,7 +933,7 @@ if menu_principal_opcion == "Remates":
             altura_dinamica = min(max(140, (cantidad_filas * 32) + 50), 420)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
-            # --- SELECCIONAR EJEMPLAR GANADOR DEBAJO DE LA TABLA (COMPACTO Y ELEGANTE) ---
+            # --- SELECCIONAR EJEMPLAR GANADOR DEBAJO DE LA TABLA ---
             with st.container(border=True):
                 st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Ganador - {carr_activa}</p>", unsafe_allow_html=True)
                 if carr_activa in st.session_state.historial_ganadores:
@@ -1027,7 +1014,7 @@ if menu_principal_opcion == "Remates":
                     else:
                         st.markdown("🎲 **Panel Didáctico (Elige un número para asignar):**")
                         
-                        cols_ciego_grid = st.columns(min(8, len(caballos_disponibles_ciego)), gap="small")
+                        cols_ciego_grid = st.columns(min(6, len(caballos_disponibles_ciego)), gap="small")
                         for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
                             c_idx = idx_cb % len(cols_ciego_grid)
                             num_cb_parte = cb_disp.split(" - ")[0]
@@ -1067,7 +1054,7 @@ if menu_principal_opcion == "Remates":
                             
                         st.markdown(f"🔹 **1. Seleccionar Ejemplar (Total inscritos: {len(lista_caballos_activos)}):**")
                         cantidad_ejemplares = len(lista_caballos_activos)
-                        cols_ejemplares = min(6, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
+                        cols_ejemplares = min(5, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
                         num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                         
                         idx_cab = 0
@@ -1114,7 +1101,7 @@ if menu_principal_opcion == "Remates":
 # 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
-    col_d1, col_d2, col_d3 = st.columns(3, gap="small")
+    col_d1, col_d2 = st.columns(2, gap="small")
     with col_d1:
         if st.button("🎟️ Dupleta", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Dupleta"
@@ -1123,12 +1110,14 @@ elif menu_principal_opcion == "Dupletas":
         if st.button("🎟️ Tripleta", key="sub_dup_tripleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Tripleta" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Tripleta"
             st.rerun()
+
+    col_d3, _ = st.columns([1, 1], gap="small")
     with col_d3:
         if st.button("🏇 Polla Hípica", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Polla Hipica" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Polla Hipica"
             st.rerun()
 
-    st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
     sub_dup_actual = st.session_state.sub_dupleta_opcion
 
     st.markdown(f"<div class='subasta-header'>🎟️ Módulo de {sub_dup_actual}</div>", unsafe_allow_html=True)
@@ -1165,7 +1154,7 @@ elif menu_principal_opcion == "Dupletas":
             valido_legs = True
             
             num_carrs_permitidas = len(carreras_permitidas)
-            cols_horizontales = st.columns(min(num_carrs_permitidas, 4) if num_carrs_permitidas > 0 else 1, gap="small")
+            cols_horizontales = st.columns(min(num_carrs_permitidas, 2) if num_carrs_permitidas > 0 else 1, gap="small")
             
             for i, carr_leg in enumerate(carreras_permitidas):
                 col_target = cols_horizontales[i % len(cols_horizontales)]
@@ -1174,7 +1163,7 @@ elif menu_principal_opcion == "Dupletas":
                     if carr_leg in st.session_state.imagenes_carreras:
                         st.image(st.session_state.imagenes_carreras[carr_leg], use_container_width=True)
                     else:
-                        st.markdown("<div style='background: #161b22; border: 1px dashed #30363d; padding: 6px; text-align: center; font-size: 9px; border-radius: 4px; color: #8b949e; margin-bottom: 4px;'>Sin Imagen</div>", unsafe_allow_html=True)
+                        st.markdown("<div style='background: #161b22; border: 1px dashed #30363d; padding: 4px; text-align: center; font-size: 9px; border-radius: 4px; color: #8b949e; margin-bottom: 4px;'>Sin Imagen</div>", unsafe_allow_html=True)
                     
                     caballos_in_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
                     cab_leg = st.selectbox(f"Ejemplar {carr_leg}", caballos_in_carr if caballos_in_carr else ["Sin Caballos"], key=f"{sub_dup_actual.lower()}_sel_ejemplar_horizontal_{i}", label_visibility="collapsed")
@@ -1311,9 +1300,10 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     
     opciones_admin_tabs = ["✍️ Banco de Caballos", "👥 Registro Usuarios", "⚙️ Config. Dupletas/Polla", "📺 Video En Vivo", "📊 Saldos Usuarios", "🖼️ Imágenes Carrera", "📄 Importar Web/Texto"]
     
-    cols_adm_tabs = st.columns(len(opciones_admin_tabs), gap="small")
+    cols_adm_tabs = st.columns(min(3, len(opciones_admin_tabs)), gap="small")
     for idx, tab_nombre in enumerate(opciones_admin_tabs):
-        with cols_adm_tabs[idx]:
+        c_target = cols_adm_tabs[idx % len(cols_adm_tabs)]
+        with c_target:
             es_tab_activa = (st.session_state.admin_tab_seleccionada == tab_nombre)
             if st.button(tab_nombre, key=f"adm_tab_btn_{idx}", use_container_width=True, type="primary" if es_tab_activa else "secondary"):
                 st.session_state.admin_tab_seleccionada = tab_nombre
@@ -1359,7 +1349,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             else:
                 carreras_activas_actuales = st.session_state.carreras_activas_remate
                 
-                cols_grid = st.columns(min(4, len(carreras_disponibles_todas)), gap="small")
+                cols_grid = st.columns(min(3, len(carreras_disponibles_todas)), gap="small")
                 nuevas_activas = []
                 
                 for i, carr_n in enumerate(carreras_disponibles_todas):
