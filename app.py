@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS REVISADOS (BOTONES COMPACTOS, ESTILIZADOS Y MODERNOS) ---
+# --- ESTILOS CSS CON BARRAS AJUSTADAS EXACTAMENTE AL TAMAÑO DEL TEXTO ---
 st.markdown("""
     <style>
     .stApp {
@@ -201,15 +201,16 @@ st.markdown("""
         flex-shrink: 0;
     }
 
-    /* BARRA NEGRA CASINO CONTINUA (MENU PRINCIPAL / SUBMENUS) */
+    /* BARRA NEGRA COMPACTA AJUSTADA STRICTAMENTE AL TAMAÑO DEL TEXTO */
     .barra-casino {
+        display: flex !important;
+        justify-content: center !important;
         width: 100% !important;
-        max-width: 800px !important;
         margin: 0 auto 10px auto !important;
     }
 
     .barra-casino div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
+        display: inline-flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
         align-items: stretch !important;
@@ -217,8 +218,9 @@ st.markdown("""
         border: 1px solid #30363d !important;
         border-radius: 6px !important;
         gap: 0px !important;
-        width: 100% !important;
-        margin: 0 !important;
+        width: fit-content !important; /* SE AJUSTA AL TAMAÑO DEL TEXTO */
+        max-width: 100% !important;
+        margin: 0 auto !important;
         padding: 0 !important;
         overflow: hidden !important;
         box-shadow: 0px 4px 12px rgba(0,0,0,0.5);
@@ -226,8 +228,8 @@ st.markdown("""
 
     .barra-casino div[data-testid="column"], 
     .barra-casino div[data-testid="stColumn"] {
-        flex: 1 1 0% !important;
-        width: 33.333% !important;
+        flex: 0 0 auto !important; /* EVITA QUE SE EXPANDA EN ESPACIOS VACÍOS */
+        width: auto !important;
         min-width: 0 !important;
         padding: 0 !important;
         margin: 0 !important;
@@ -240,11 +242,45 @@ st.markdown("""
     }
 
     .barra-casino .stButton {
-        width: 100% !important;
+        width: auto !important;
         margin: 0 !important;
     }
 
-    /* ESTILO GENERAL DE TODOS LOS BOTONES EN LA APP (NUEVA MEJORA VISUAL) */
+    .barra-casino .stButton > button {
+        background-color: #1c212d !important;
+        color: #f0f6fc !important;
+        border: none !important;
+        border-radius: 0px !important;
+        box-shadow: none !important;
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.3px !important;
+        text-transform: uppercase !important;
+        min-height: 38px !important;
+        height: 38px !important;
+        padding: 0 12px !important; /* ESPACIO AJUSTADO INTERNO */
+        white-space: nowrap !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+
+    .barra-casino .stButton > button:hover {
+        background-color: #21262d !important;
+        color: #f1c40f !important;
+        cursor: pointer !important;
+    }
+
+    .barra-casino .stButton > button[kind="primary"] {
+        background: linear-gradient(180deg, #d63031 0%, #b22222 100%) !important;
+        color: #ffffff !important;
+        border-bottom: 3px solid #ff7675 !important;
+        font-weight: 900 !important;
+    }
+
+    /* ESTILO GENERAL DE BOTONES SECUNDARIOS */
     .stButton > button {
         background: #1c212d !important;
         color: #f0f6fc !important;
@@ -252,58 +288,17 @@ st.markdown("""
         border-radius: 6px !important;
         font-size: 11px !important;
         font-weight: 700 !important;
-        letter-spacing: 0.3px !important;
         min-height: 36px !important;
         height: 36px !important;
-        padding: 2px 8px !important;
-        box-shadow: 0px 2px 4px rgba(0,0,0,0.3) !important;
+        padding: 2px 10px !important;
         transition: all 0.18s ease-in-out !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        text-align: center !important;
     }
 
-    .stButton > button:hover {
-        background: #262c3a !important;
-        color: #f1c40f !important;
-        border-color: #f1c40f !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0px 4px 8px rgba(241, 196, 15, 0.2) !important;
-        cursor: pointer !important;
-    }
-
-    .stButton > button:active {
-        transform: translateY(0px) !important;
-    }
-
-    /* BOTONES PRIMARIOS (ACCIONES PRINCIPALES / SELECCIONADO) */
     .stButton > button[kind="primary"] {
         background: linear-gradient(180deg, #f1c40f 0%, #d4ac0d 100%) !important;
         color: #000000 !important;
         border: 1px solid #f1c40f !important;
         font-weight: 900 !important;
-        box-shadow: 0px 3px 8px rgba(241, 196, 15, 0.3) !important;
-    }
-
-    .stButton > button[kind="primary"]:hover {
-        background: linear-gradient(180deg, #f39c12 0%, #b7950b 100%) !important;
-        color: #000000 !important;
-    }
-
-    /* BARRAS TIPO CASINO (NO BORDES REDONDEADOS) */
-    .barra-casino .stButton > button {
-        border-radius: 0px !important;
-        border: none !important;
-        background: #161b22 !important;
-        min-height: 40px !important;
-        height: 40px !important;
-    }
-
-    .barra-casino .stButton > button[kind="primary"] {
-        background: linear-gradient(180deg, #d63031 0%, #b22222 100%) !important;
-        color: #ffffff !important;
-        border-bottom: 3px solid #ff7675 !important;
     }
 
     .subasta-header {
@@ -720,7 +715,7 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL ---
+# --- MENÚ PRINCIPAL COMPACTO ---
 st.markdown('<div class="barra-casino">', unsafe_allow_html=True)
 col_m1, col_m2, col_m3 = st.columns(3)
 
