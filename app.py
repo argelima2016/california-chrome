@@ -72,13 +72,13 @@ img_b64 = get_image_base64(nombres_archivos)
 if img_b64:
     logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" class="header-logo-img" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 16px; font-weight: 900; font-style: italic;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 14px; font-weight: 900; font-style: italic; white-space: nowrap;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS ---
+# --- ESTILOS CSS REVISADOS Y ADAPTADOS PARA MÓVIL ---
 st.markdown("""
     <style>
     .stApp {
@@ -89,10 +89,10 @@ st.markdown("""
         display: none !important;
     }
     .block-container {
-        padding-top: 0.4rem !important;
+        padding-top: 2.5rem !important;
         padding-bottom: 2rem !important;
-        padding-left: 0.8rem !important;
-        padding-right: 0.8rem !important;
+        padding-left: 0.4rem !important;
+        padding-right: 0.4rem !important;
         max-width: 1400px !important;
         margin: 0 auto !important;
     }
@@ -102,7 +102,7 @@ st.markdown("""
     .header-container {
         background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
         width: 100% !important;
-        padding: 10px 20px !important;
+        padding: 8px 10px !important;
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
@@ -110,7 +110,7 @@ st.markdown("""
         border-bottom: 2px solid #30363d !important;
         border-radius: 8px !important;
         box-sizing: border-box !important;
-        gap: 15px;
+        gap: 6px;
         margin-bottom: 12px !important;
     }
     .header-left-clock {
@@ -119,20 +119,20 @@ st.markdown("""
         justify-content: center !important;
         background: #0d1117 !important;
         border: 1px solid #30363d !important;
-        padding: 6px 12px !important;
-        border-radius: 8px !important;
+        padding: 4px 8px !important;
+        border-radius: 6px !important;
         text-align: left !important;
         flex-shrink: 0;
     }
     .clock-time {
         color: #58a6ff !important;
-        font-size: 14px !important;
+        font-size: 11px !important;
         font-weight: 800 !important;
         line-height: 1.15;
     }
     .clock-date {
         color: #8b949e !important;
-        font-size: 10px !important;
+        font-size: 9px !important;
         font-weight: 600 !important;
     }
     .header-center-logo {
@@ -142,10 +142,11 @@ st.markdown("""
         flex: 1 !important;
         min-width: 0 !important;
         overflow: hidden !important;
-        padding: 0 4px !important;
+        padding: 0 2px !important;
+        text-align: center;
     }
     .header-logo-img {
-        max-height: 80px !important;
+        max-height: 50px !important;
         max-width: 100% !important;
         width: auto !important;
         object-fit: contain !important;
@@ -155,11 +156,11 @@ st.markdown("""
     .user-info-container {
         display: flex !important;
         align-items: center !important;
-        gap: 10px !important;
+        gap: 6px !important;
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
-        padding: 5px 12px !important;
-        border-radius: 20px !important;
+        padding: 4px 8px !important;
+        border-radius: 16px !important;
         flex-shrink: 0;
     }
     .user-text-info {
@@ -170,47 +171,56 @@ st.markdown("""
     }
     .user-name {
         color: #ffffff !important;
-        font-size: 11px !important;
+        font-size: 10px !important;
         font-weight: 800 !important;
     }
     .user-balance {
         color: #58a6ff !important;
-        font-size: 11px !important;
+        font-size: 9px !important;
         font-weight: 800 !important;
     }
     .user-avatar {
         background-color: #f1c40f !important;
         color: #000000 !important;
         border-radius: 50% !important;
-        width: 36px !important;
-        height: 36px !important;
+        width: 28px !important;
+        height: 28px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 16px !important;
+        font-size: 13px !important;
         font-weight: bold !important;
         box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
         flex-shrink: 0;
     }
-    div.row-widget.stHorizontal > div {
-        gap: 6px !important;
+    
+    /* FORZAR NAVEGACIÓN HORIZONTAL EN PANTALLAS MÓVILES */
+    div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 4px !important;
+        width: 100% !important;
+    }
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+        width: 0 !important;
+        flex: 1 1 0px !important;
+        min-width: 0 !important;
+        padding: 0 !important;
     }
     .stButton button {
         width: 100% !important;
         border-radius: 6px !important;
         font-weight: 700 !important;
-        padding: 0.2rem 0.4rem !important;
-        min-height: 32px !important;
-        font-size: 12px !important;
-        letter-spacing: 0.2px;
+        padding: 0.25rem 0.2rem !important;
+        min-height: 36px !important;
+        font-size: 10px !important;
+        letter-spacing: 0px;
         white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+        overflow: hidden !important;
     }
-    div[data-testid="column"] {
-        width: auto !important;
-        flex: 1 !important;
-        min-width: 0 !important;
-        padding: 0 3px !important;
-    }
+
     .subasta-header {
         font-size: clamp(14px, 3.5vw, 18px);
         font-weight: 800;
@@ -1623,7 +1633,6 @@ if url_live_video:
     
     if yt_match:
         yt_id = yt_match.group(1)
-        # Formato de URL adaptable de YouTube que funciona perfecto tanto en Streamlit Móvil como en PC
         embed_url = f"https://www.youtube.com/embed/{yt_id}?playsinline=1"
         try:
             st.video(embed_url)
