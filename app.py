@@ -887,11 +887,16 @@ if menu_principal_opcion == "Remates":
                     monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
                     st.info(f"💰 Monto fijo preestablecido para esta carrera (configurable en Zona Admin -> Banco): **{formatear_bs(monto_fijo_carrera)}**")
 
-                    lista_caballos_activos = list(st.session_state.remates[carr_activa].keys())
-                    if not lista_caballos_activos:
-                        st.warning("Sin ejemplares inscritos.")
+                    # Filtrar únicamente los ejemplares que TODAVÍA NO tienen comprador (Sin Postor o monto 0)
+                    caballos_disponibles_ciego = [
+                        cab for cab, info in st.session_state.remates[carr_activa].items() 
+                        if info['jugador'] == "Sin Postor" or info['monto'] <= 0
+                    ]
+
+                    if not caballos_disponibles_ciego:
+                        st.warning("⚠️ Todos los ejemplares de esta carrera ya han sido adquiridos.")
                     else:
-                        caballo_seleccionado_ciego = st.selectbox("Seleccionar Ejemplar a Comprar", lista_caballos_activos, key=f"sel_cab_ciego_{carr_activa}")
+                        caballo_seleccionado_ciego = st.selectbox("Seleccionar Ejemplar Disponible a Comprar", caballos_disponibles_ciego, key=f"sel_cab_ciego_{carr_activa}")
                         
                         if carrera_cerrada:
                             st.button("🔨 Asignar Ejemplar (Cerrado)", key=f"btn_ciego_cerrado_{carr_activa}", use_container_width=True, type="primary", disabled=True)
@@ -1227,7 +1232,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
         st.markdown("---")
 
-        # --- SELECCIONADOR DE LAS 2 CARRERAS PARA REMATE CIEGO ---
+        # --- SELECCIONADOR DE LAS 2 CARRERAS PARA REMATE CIEGO Y SU MONTO FIJO ---
         with st.container(border=True):
             st.markdown("🙈 **Selección de las 2 Carreras Activas para Remate Ciego (Identificadas como 1V y 6V)**")
             carreras_existentes = list(st.session_state.remates.keys())
