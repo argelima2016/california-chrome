@@ -659,6 +659,65 @@ with st.sidebar.expander("🔒 Estado Dupletas / Polla", expanded=False):
             st.session_state.dupleta_bloqueada = True
             st.rerun()
 
+# --- SECCIÓN EN BARRA LATERAL PARA CIERRE ESTRICTO Y LIQUIDACIÓN ---
+with st.sidebar.expander("🏁 Cierre y Liquidación de Remates", expanded=False):
+    carr_seleccionada_liq = st.selectbox("Gestionar Carrera", lista_carreras_disponibles, key="sb_liq_sel_carrera")
+    c_cerrada_actual = st.session_state.carreras_cerradas_remate.get(carr_seleccionada_liq, False)
+    
+    col_cz1, col_cz2 = st.columns(2)
+    with col_cz1:
+        fecha_cierre_adm = st.date_input("Fecha límite", value=ahora_dt.date(), key=f"sb_f_cierre_{carr_seleccionada_liq}")
+    with col_cz2:
+        hora_cierre_adm = st.time_input("Hora límite", value=datetime.now().time(), key=f"sb_h_cierre_{carr_seleccionada_liq}")
+    
+    if st.button("💾 Guardar Hora de Cierre Estricto", key=f"sb_btn_guardar_h_{carr_seleccionada_liq}", use_container_width=True):
+        dt_cierre_estricto = datetime.combine(fecha_cierre_adm, hora_cierre_adm)
+        st.session_state.fechas_horas_cierre_remate[carr_seleccionada_liq] = dt_cierre_estricto
+        st.session_state.estado_conteo_carrera[carr_seleccionada_liq] = "INACTIVO"
+        st.toast(f"✅ Cierre estricto guardado para {carr_seleccionada_liq}")
+        st.rerun()
+
+    st.markdown("---")
+    if not c_cerrada_actual:
+        if st.button("🔒 Cerrar Remate Manualmente", key=f"sb_liq_cerrar_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
+            st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = True
+            st.session_state.estado_conteo_carrera[carr_seleccionada_liq] = "CERRADO"
+            
+            if not st.session_state.remates_cargados_en_cuentas.get(carr_seleccionada_liq, False):
+                for cab, info in st.session_state.remates[carr_seleccionada_liq].items():
+                    if info['jugador'] != "Sin Postor" and info['monto'] > 0:
+                        if info['jugador'] not in st.session_state.cuentas:
+                            st.session_state.cuentas[info['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                        st.session_state.cuentas[info['jugador']]['Pujas'] += info['monto']
+                st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = True
+            st.rerun()
+    else:
+        if st.button("🔓 Reabrir Remate", key=f"sb_liq_reabrir_{carr_seleccionada_liq}", use_container_width=True):
+            st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = False
+            st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = False
+            st.rerun()
+
+    st.markdown("---")
+    if carr_seleccionada_liq in st.session_state.historial_ganadores:
+        st.success("✅ Esta carrera ya se encuentra liquidada.")
+    else:
+        pote_carr_total = sum([info['monto'] for info in st.session_state.remates[carr_seleccionada_liq].values()])
+        monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
+        premio_final_liq = pote_carr_total - monto_casa_calc + st.session_state.get(f"rem_pote_inc_{carr_seleccionada_liq}", 0.0)
+        
+        caballo_ganador_elegido = st.selectbox("Seleccionar Ejemplar Ganador", list(st.session_state.remates[carr_seleccionada_liq].keys()), key=f"sb_liq_ganador_{carr_seleccionada_liq}")
+        
+        if st.button("🎯 Liquidar Premio de la Carrera", key=f"sb_liq_btn_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
+            info_g = st.session_state.remates[carr_seleccionada_liq][caballo_ganador_elegido]
+            if info_g['jugador'] != "Sin Postor":
+                if info_g['jugador'] not in st.session_state.cuentas:
+                    st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                st.session_state.cuentas[info_g['jugador']]['Premios'] += premio_final_liq
+            st.session_state.ganancia_casa += monto_casa_calc
+            st.session_state.historial_ganadores[carr_seleccionada_liq] = {"Ganador": info_g['jugador'], "Premio": formatear_bs(premio_final_liq)}
+            st.success("¡Premio liquidado con éxito!")
+            st.rerun()
+
 with st.sidebar.expander("🔒 Zona Administrador", expanded=False):
     es_admin_activo = (st.session_state.menu_principal_opcion == "🔒 Zona Admin")
     if st.button("⚙️ Entrar a Zona Admin", key="sb_btn_ir_admin", use_container_width=True, type="primary" if es_admin_activo else "secondary"):
@@ -1129,7 +1188,7 @@ elif menu_principal_opcion == "Cuentas":
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Zona de Administrador</div>", unsafe_allow_html=True)
     
-    opciones_admin_tabs = ["✍️ Banco", "👥 Registro Usuarios", "⚙️ Config. Dupletas/Polla", "🏁 Cierre de Remates", "📊 Saldos Usuarios", "🖼️ Imágenes Carrera", "📄 Importar Web/Texto"]
+    opciones_admin_tabs = ["✍️ Banco", "👥 Registro Usuarios", "⚙️ Config. Dupletas/Polla", "📊 Saldos Usuarios", "🖼️ Imágenes Carrera", "📄 Importar Web/Texto"]
     
     cols_adm_tabs = st.columns(len(opciones_admin_tabs), gap="small")
     for idx, tab_nombre in enumerate(opciones_admin_tabs):
@@ -1342,67 +1401,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.session_state.carreras_habilitadas_polla = sel_polla_hab
                 st.toast("✅ ¡Configuración de carreras guardada con éxito!")
                 st.rerun()
-
-    elif tab_actual == "🏁 Cierre de Remates":
-        st.markdown("### 🏁 Cierre Estricto y Liquidación de Remates")
-        carr_seleccionada_liq = st.selectbox("Gestionar Carrera", lista_carreras_disponibles, key="adm_liq_sel_carrera")
-
-        with st.container(border=True):
-            c_cerrada_actual = st.session_state.carreras_cerradas_remate.get(carr_seleccionada_liq, False)
-            
-            col_cz1, col_cz2 = st.columns(2)
-            with col_cz1:
-                fecha_cierre_adm = st.date_input("Fecha límite", value=ahora_dt.date(), key=f"adm_f_cierre_{carr_seleccionada_liq}")
-            with col_cz2:
-                hora_cierre_adm = st.time_input("Hora límite", value=datetime.now().time(), key=f"adm_h_cierre_{carr_seleccionada_liq}")
-            
-            if st.button("💾 Guardar Hora de Cierre Estricto", key=f"adm_btn_guardar_h_{carr_seleccionada_liq}", use_container_width=True):
-                dt_cierre_estricto = datetime.combine(fecha_cierre_adm, hora_cierre_adm)
-                st.session_state.fechas_horas_cierre_remate[carr_seleccionada_liq] = dt_cierre_estricto
-                st.session_state.estado_conteo_carrera[carr_seleccionada_liq] = "INACTIVO"
-                st.toast(f"✅ Cierre estricto guardado para {carr_seleccionada_liq}")
-                st.rerun()
-
-            st.markdown("---")
-            if not c_cerrada_actual:
-                if st.button("🔒 Cerrar Remate Manualmente", key=f"adm_liq_cerrar_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
-                    st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = True
-                    st.session_state.estado_conteo_carrera[carr_seleccionada_liq] = "CERRADO"
-                    
-                    if not st.session_state.remates_cargados_en_cuentas.get(carr_seleccionada_liq, False):
-                        for cab, info in st.session_state.remates[carr_seleccionada_liq].items():
-                            if info['jugador'] != "Sin Postor" and info['monto'] > 0:
-                                if info['jugador'] not in st.session_state.cuentas:
-                                    st.session_state.cuentas[info['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                                st.session_state.cuentas[info['jugador']]['Pujas'] += info['monto']
-                        st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = True
-                    st.rerun()
-            else:
-                if st.button("🔓 Reabrir Remate", key=f"adm_liq_reabrir_{carr_seleccionada_liq}", use_container_width=True):
-                    st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = False
-                    st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = False
-                    st.rerun()
-
-            st.markdown("---")
-            if carr_seleccionada_liq in st.session_state.historial_ganadores:
-                st.success("✅ Esta carrera ya se encuentra liquidada.")
-            else:
-                pote_carr_total = sum([info['monto'] for info in st.session_state.remates[carr_seleccionada_liq].values()])
-                monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
-                premio_final_liq = pote_carr_total - monto_casa_calc + st.session_state.get(f"rem_pote_inc_{carr_seleccionada_liq}", 0.0)
-                
-                caballo_ganador_elegido = st.selectbox("Seleccionar Ejemplar Ganador", list(st.session_state.remates[carr_seleccionada_liq].keys()), key=f"adm_liq_ganador_{carr_seleccionada_liq}")
-                
-                if st.button("🎯 Liquidar Premio de la Carrera", key=f"adm_liq_btn_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
-                    info_g = st.session_state.remates[carr_seleccionada_liq][caballo_ganador_elegido]
-                    if info_g['jugador'] != "Sin Postor":
-                        if info_g['jugador'] not in st.session_state.cuentas:
-                            st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                        st.session_state.cuentas[info_g['jugador']]['Premios'] += premio_final_liq
-                    st.session_state.ganancia_casa += monto_casa_calc
-                    st.session_state.historial_ganadores[carr_seleccionada_liq] = {"Ganador": info_g['jugador'], "Premio": formatear_bs(premio_final_liq)}
-                    st.success("¡Premio liquidado con éxito!")
-                    st.rerun()
 
     elif tab_actual == "📊 Saldos Usuarios":
         st.markdown("### 📊 Saldos y Cuentas de Usuarios Registrados")
