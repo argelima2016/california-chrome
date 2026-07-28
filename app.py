@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = me_time = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS REVISADOS Y COMPACTADOS PARA MÓVIL ---
+# --- ESTILOS CSS REVISADOS (MENÚ PLANO CON DIVISIONES VERTICALES) ---
 st.markdown("""
     <style>
     .stApp {
@@ -193,30 +193,59 @@ st.markdown("""
         box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
         flex-shrink: 0;
     }
-    
-    /* BOTONES COMPACTOS DE ALTURA BAJA */
-    .stButton {
+
+    /* ESTILO PARA MENÚ PLANO CON DIVISIÓN VERTICAL Y SIN BURBUJAS */
+    .menu-bar-plano div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        background: #0d1117 !important;
+        border: 1px solid #30363d !important;
+        border-radius: 6px !important;
+        padding: 0 !important;
+        margin-bottom: 6px !important;
         width: 100% !important;
-        margin-bottom: 2px !important;
     }
 
-    .stButton button {
+    .menu-bar-plano div[data-testid="column"] {
+        flex: 1 1 0px !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        border-right: 1px solid #30363d !important;
+        margin: 0 !important;
+    }
+
+    .menu-bar-plano div[data-testid="column"]:last-child {
+        border-right: none !important;
+    }
+
+    .menu-bar-plano .stButton {
         width: 100% !important;
-        border-radius: 6px !important;
-        font-weight: 800 !important;
-        padding: 4px 2px !important;
-        min-height: 34px !important;
-        height: 34px !important;
+        margin: 0 !important;
+    }
+
+    .menu-bar-plano .stButton button {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        color: #8b949e !important;
         font-size: 10px !important;
-        line-height: 1 !important;
+        font-weight: 800 !important;
+        min-height: 38px !important;
+        height: 38px !important;
+        padding: 0 2px !important;
         white-space: nowrap !important;
-        overflow: hidden !important;
         text-overflow: ellipsis !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        text-align: center !important;
-        box-sizing: border-box !important;
+        overflow: hidden !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .menu-bar-plano .stButton button[kind="primary"] {
+        color: #f1c40f !important;
+        background: rgba(241, 196, 15, 0.12) !important;
+        border-bottom: 2px solid #f1c40f !important;
     }
 
     .subasta-header {
@@ -633,8 +662,10 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL ESTRUCTURADO EN 2 COLUMNAS (NO SE APILA EN MÓVIL) ---
-col_m1, col_m2 = st.columns(2, gap="small")
+# --- MENÚ PRINCIPAL ESTRUCTURADO EN BARRA PLANO SIN BURBUJAS CON RAYAS VERTICALES ---
+st.markdown('<div class="menu-bar-plano">', unsafe_allow_html=True)
+col_m1, col_m2, col_m3 = st.columns(3)
+
 with col_m1:
     if st.button("REMATES", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
         st.session_state.menu_principal_opcion = "Remates"
@@ -645,14 +676,12 @@ with col_m2:
         st.session_state.menu_principal_opcion = "Dupletas"
         st.rerun()
 
-# Fila secundaria para Cuentas para mantener simetría de 2 columnas máximas
-col_m3, _ = st.columns([1, 1], gap="small")
 with col_m3:
     if st.button("CUENTAS", key="menu_btn_cuentas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
         st.session_state.menu_principal_opcion = "Cuentas"
         st.rerun()
 
-st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # --- CARRUSEL AUTOMÁTICO DE IMÁGENES DEL HIPÓDROMO LA RINCONADA (8 SEGUNDOS) ---
 ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
@@ -814,10 +843,12 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# 1. MÓDULO DE REMATES (3 OPCIONES REORGANIZADAS)
+# 1. MÓDULO DE REMATES (3 OPCIONES PLANAS Y SEPARADAS CON LÍNEAS VERTICALES)
 # =========================================================================
 if menu_principal_opcion == "Remates":
-    col_so1, col_so2 = st.columns(2, gap="small")
+    st.markdown('<div class="menu-bar-plano">', unsafe_allow_html=True)
+    col_so1, col_so2, col_so3 = st.columns(3)
+    
     with col_so1:
         if st.button("⏱️ Adelantados", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
             st.session_state.sub_remate_opcion = "Adelantados"
@@ -826,14 +857,12 @@ if menu_principal_opcion == "Remates":
         if st.button("🙈 Ciegos", key="sub_rem_ciegos", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Ciegos" else "secondary"):
             st.session_state.sub_remate_opcion = "Ciegos"
             st.rerun()
-
-    col_so3, _ = st.columns([1, 1], gap="small")
     with col_so3:
         if st.button("⚡ En Vivo", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
             st.session_state.sub_remate_opcion = "En Vivo"
             st.rerun()
-
-    st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+            
+    st.markdown('</div>', unsafe_allow_html=True)
 
     modo_actual_remate = st.session_state.sub_remate_opcion
 
@@ -1101,7 +1130,9 @@ if menu_principal_opcion == "Remates":
 # 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
-    col_d1, col_d2 = st.columns(2, gap="small")
+    st.markdown('<div class="menu-bar-plano">', unsafe_allow_html=True)
+    col_d1, col_d2, col_d3 = st.columns(3)
+    
     with col_d1:
         if st.button("🎟️ Dupleta", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Dupleta"
@@ -1110,14 +1141,12 @@ elif menu_principal_opcion == "Dupletas":
         if st.button("🎟️ Tripleta", key="sub_dup_tripleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Tripleta" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Tripleta"
             st.rerun()
-
-    col_d3, _ = st.columns([1, 1], gap="small")
     with col_d3:
         if st.button("🏇 Polla Hípica", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Polla Hipica" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Polla Hipica"
             st.rerun()
 
-    st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     sub_dup_actual = st.session_state.sub_dupleta_opcion
 
     st.markdown(f"<div class='subasta-header'>🎟️ Módulo de {sub_dup_actual}</div>", unsafe_allow_html=True)
