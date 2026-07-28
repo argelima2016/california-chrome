@@ -78,7 +78,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS (DISEÑO EQUILIBRADO Y PERFECTAMENTE AJUSTADO) ---
+# --- ESTILOS CSS (DISEÑO HORIZONTAL COMPACTO Y ADAPTADO A PANTALLA) ---
 st.markdown("""
     <style>
     .stApp {
@@ -89,10 +89,10 @@ st.markdown("""
         display: none !important;
     }
     .block-container {
-        padding-top: 0.5rem !important;
+        padding-top: 0.4rem !important;
         padding-bottom: 2rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
+        padding-left: 0.8rem !important;
+        padding-right: 0.8rem !important;
         max-width: 100% !important;
     }
     header[data-testid="stHeader"] {
@@ -101,7 +101,7 @@ st.markdown("""
     .header-container {
         background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
         width: 100% !important;
-        padding: 10px 16px !important;
+        padding: 8px 14px !important;
         display: flex !important;
         flex-direction: row !important;
         justify-content: space-between !important;
@@ -110,7 +110,7 @@ st.markdown("""
         margin: -1rem -1rem 0 -1rem !important;
         width: calc(100% + 2rem) !important;
         box-sizing: border-box !important;
-        gap: 12px;
+        gap: 10px;
     }
     .header-left-clock {
         display: flex !important;
@@ -118,14 +118,14 @@ st.markdown("""
         justify-content: center !important;
         background: #0d1117 !important;
         border: 1px solid #30363d !important;
-        padding: 5px 10px !important;
+        padding: 4px 8px !important;
         border-radius: 8px !important;
         text-align: left !important;
         flex-shrink: 0;
     }
     .clock-time {
         color: #58a6ff !important;
-        font-size: 14px !important;
+        font-size: 13px !important;
         font-weight: 800 !important;
         line-height: 1.15;
     }
@@ -141,10 +141,10 @@ st.markdown("""
         flex: 1 !important;
         min-width: 0 !important;
         overflow: hidden !important;
-        padding: 0 6px !important;
+        padding: 0 4px !important;
     }
     .header-logo-img {
-        max-height: 85px !important;
+        max-height: 75px !important;
         max-width: 100% !important;
         width: auto !important;
         object-fit: contain !important;
@@ -154,11 +154,11 @@ st.markdown("""
     .user-info-container {
         display: flex !important;
         align-items: center !important;
-        gap: 10px !important;
+        gap: 8px !important;
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
-        padding: 5px 12px !important;
-        border-radius: 22px !important;
+        padding: 4px 10px !important;
+        border-radius: 20px !important;
         flex-shrink: 0;
     }
     .user-text-info {
@@ -169,24 +169,24 @@ st.markdown("""
     }
     .user-name {
         color: #ffffff !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         font-weight: 800 !important;
     }
     .user-balance {
         color: #58a6ff !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         font-weight: 800 !important;
     }
     .user-avatar {
         background-color: #f1c40f !important;
         color: #000000 !important;
         border-radius: 50% !important;
-        width: 38px !important;
-        height: 38px !important;
+        width: 34px !important;
+        height: 34px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        font-size: 17px !important;
+        font-size: 15px !important;
         font-weight: bold !important;
         box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
         flex-shrink: 0;
@@ -356,7 +356,7 @@ elif neto_usuario < 0:
 else:
     etiqueta_balance = "Al día: Bs. 0,00"
 
-# --- CABECERA SUPERIOR OPTIMIZADA (FLUIDA Y BIEN AJUSTADA) ---
+# --- CABECERA SUPERIOR OPTIMIZADA ---
 st.markdown(f"""
     <div class="header-container">
         <div class="header-left-clock">
@@ -401,7 +401,7 @@ def generar_tabla_html_remate(remates_dict):
             font-family: sans-serif;
             background-color: #ffffff;
             color: #000000;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .tabla-referencia th {
             border-top: 2px solid #dfc729;
@@ -411,7 +411,7 @@ def generar_tabla_html_remate(remates_dict):
             font-weight: 800;
             background-color: #ffffff;
             color: #000000;
-            font-size: 12px;
+            font-size: 11px;
         }
         .tabla-referencia td {
             border-bottom: 1px solid #dfc729;
@@ -622,7 +622,7 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL (MÁS COMPACTO) ---
+# --- MENÚ PRINCIPAL HORIZONTAL (ADAPTADO A PANTALLA) ---
 col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
 
 with col_menu1:
@@ -840,10 +840,10 @@ if menu_principal_opcion == "Remates":
 
             tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa])
             cantidad_filas = len(st.session_state.remates[carr_activa])
-            altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
+            altura_dinamica = min(max(140, (cantidad_filas * 32) + 50), 420)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
-            # --- SELECCIONAR EJEMPLAR GANADOR DEBAJO DE LA TABLA (COMPACTO Y ELEGANTE) ---
+            # --- SELECCIONAR EJEMPLAR GANADOR DEBAJO DE LA TABLA (COMPACTO Y HORIZONTAL) ---
             with st.container(border=True):
                 st.markdown(f"<p style='font-size: 12px; font-weight: 700; margin-bottom: 3px; color: #f1e05a;'>🎯 Ganador - {carr_activa}</p>", unsafe_allow_html=True)
                 if carr_activa in st.session_state.historial_ganadores:
@@ -1008,7 +1008,7 @@ if menu_principal_opcion == "Remates":
                                     st.rerun()
 
 # =========================================================================
-# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA
+# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA (DISEÑO HORIZONTAL)
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
     col_d1, col_d2, col_d3 = st.columns(3, gap="small")
@@ -1050,37 +1050,38 @@ elif menu_principal_opcion == "Dupletas":
 
     with st.container(border=True):
         jugador_ticket = st.session_state.usuario_activo
-        st.markdown(f"👤 **Jugador Actual:** `{jugador_ticket}`")
-        st.info(f"💰 **Monto único asignado por administración:** `{formatear_bs(monto_unico_seccion)}`")
+        st.markdown(f"👤 **Jugador Actual:** `{jugador_ticket}` &nbsp;&nbsp;|&nbsp;&nbsp; 💰 **Monto Único:** `{formatear_bs(monto_unico_seccion)}`")
 
     if not carreras_permitidas:
         st.warning(f"⚠️ No hay carreras habilitadas para **{sub_dup_actual}**. Configúralas en la Zona Admin (Config. Dupletas/Polla).")
     else:
         with st.container(border=True):
-            st.markdown(f"🎯 **Selección de Ejemplares (Carreras establecidas previamente en Zona Admin):**")
+            st.markdown(f"🎯 **Armado de Ticket Horizontal (Carreras establecidas en Zona Admin):**")
             
             seleccion_legs = []
             carreras_usadas_en_ticket = set()
             valido_legs = True
             
+            # ORGANIZAR LAS CARRERAS EN COLUMNAS HORIZONTALES PARA QUE SE AJUSTEN A LA PANTALLA
+            num_carrs_permitidas = len(carreras_permitidas)
+            cols_horizontales = st.columns(min(num_carrs_permitidas, 4) if num_carrs_permitidas > 0 else 1, gap="small")
+            
             for i, carr_leg in enumerate(carreras_permitidas):
-                st.markdown(f"---")
-                col_carr, col_img, col_cab = st.columns([2, 1.2, 2])
-                with col_carr:
+                col_target = cols_horizontales[i % len(cols_horizontales)]
+                with col_target:
                     st.markdown(f"**{carr_leg}**")
-                with col_img:
                     if carr_leg in st.session_state.imagenes_carreras:
                         st.image(st.session_state.imagenes_carreras[carr_leg], use_container_width=True)
                     else:
-                        st.markdown("<div style='background: #161b22; border: 1px dashed #30363d; padding: 10px; text-align: center; font-size: 10px; border-radius: 4px; color: #8b949e;'>Sin Imagen</div>", unsafe_allow_html=True)
-                with col_cab:
+                        st.markdown("<div style='background: #161b22; border: 1px dashed #30363d; padding: 6px; text-align: center; font-size: 9px; border-radius: 4px; color: #8b949e; margin-bottom: 4px;'>Sin Imagen</div>", unsafe_allow_html=True)
+                    
                     caballos_in_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
-                    cab_leg = st.selectbox(f"Ejemplar para {carr_leg}", caballos_in_carr if caballos_in_carr else ["Sin Caballos"], key=f"{sub_dup_actual.lower()}_sel_ejemplar_fijo_{i}")
-                
-                if carr_leg in carreras_usadas_en_ticket:
-                    valido_legs = False
-                carreras_usadas_en_ticket.add(carr_leg)
-                seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
+                    cab_leg = st.selectbox(f"Ejemplar {carr_leg}", caballos_in_carr if caballos_in_carr else ["Sin Caballos"], key=f"{sub_dup_actual.lower()}_sel_ejemplar_horizontal_{i}", label_visibility="collapsed")
+                    
+                    if carr_leg in carreras_usadas_en_ticket:
+                        valido_legs = False
+                    carreras_usadas_en_ticket.add(carr_leg)
+                    seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
 
         if not st.session_state.dupleta_bloqueada:
             if st.button(f"🚀 Emitir Ticket de {sub_dup_actual}", key=f"btn_emitir_{sub_dup_actual}", use_container_width=True, type="primary"):
@@ -1105,7 +1106,7 @@ elif menu_principal_opcion == "Dupletas":
                             break
 
                     if duplicado:
-                        st.error("❌ **BLOQUEADO:** Ya existe un ticket con exactamente esta misma combinación. No se permiten combinaciones repetidas.")
+                        st.error("❌ **BLOQUEADO:** Ya existe un ticket con exactamente esta misma combinación.")
                     else:
                         prefijo_id = "DUP" if sub_dup_actual == "Dupleta" else ("TRIP" if sub_dup_actual == "Tripleta" else "POLL")
                         ticket_id = f"{prefijo_id}-{len(lista_tickets_activo) + 1:04d}"
@@ -1135,7 +1136,7 @@ elif menu_principal_opcion == "Dupletas":
                             st.session_state.cuentas[jugador_ticket] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
                         st.session_state.cuentas[jugador_ticket]['Pujas'] += monto_unico_seccion
                         
-                        st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito y listo para la siguiente jugada!")
+                        st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito!")
                         st.rerun()
 
     st.markdown("---")
@@ -1161,7 +1162,7 @@ elif menu_principal_opcion == "Dupletas":
                 st.caption(f"Emitido el: {t['fecha']}")
 
 # =========================================================================
-# 3. MÓDULO DE CUENTAS
+# 3. MÓDULO DE CUENTAS (DISPOSICIÓN HORIZONTAL ADAPTADA)
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
     st.markdown("<div class='subasta-header'>📊 Mis Cuentas y Estado de Deuda</div>", unsafe_allow_html=True)
@@ -1176,11 +1177,12 @@ elif menu_principal_opcion == "Cuentas":
     pujas, premios, abonos = vals['Pujas'], vals['Premios'], vals['Abonos']
     balance_neto = pujas - abonos - premios
 
+    # Tarjetas métricas horizontales compactas
     col_cu1, col_cu2, col_cu3, col_cu4 = st.columns(4, gap="small")
-    col_cu1.metric("🛒 Total Compras/Pujas", formatear_bs(pujas))
-    col_cu2.metric("🏆 Premios Abonados", formatear_bs(premios))
-    col_cu3.metric("💳 Pagos Realizados", formatear_bs(abonos))
-    col_cu4.metric("⚖️ Deuda / Neto a Pagar", formatear_bs(balance_neto))
+    col_cu1.metric("🛒 Compras/Pujas", formatear_bs(pujas))
+    col_cu2.metric("🏆 Premios", formatear_bs(premios))
+    col_cu3.metric("💳 Pagos", formatear_bs(abonos))
+    col_cu4.metric("⚖️ Neto a Pagar", formatear_bs(balance_neto))
 
     st.markdown("---")
     st.markdown(f"### 📜 Historial Detallado de lo Jugado por `{jugador_actual}`")
@@ -1500,7 +1502,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             value="",
             height=220,
             key="text_area_web_copiado",
-            placeholder="Primera Carrera - 1.200 mts - `02:00 PM`\n1 - Rey David\n2 - Gran Amigo\n\nSegunda Carrera - 1.400 mts - 02:30 PM\n1 - Rayo Negro"
+            placeholder="Primera Carrera - 1.200 mts - 02:00 PM\n1 - Rey David\n2 - Gran Amigo\n\nSegunda Carrera - 1.400 mts - 02:30 PM\n1 - Rayo Negro"
         )
         if st.button("🚀 Procesar Contenido Pegado", key="btn_procesar_texto_pegado", use_container_width=True, type="primary"):
             if texto_copiado_web.strip():
