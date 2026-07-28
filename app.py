@@ -236,6 +236,29 @@ st.markdown("""
         margin-bottom: 10px;
         line-height: 1.4;
     }
+    .incentivo-grande {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border: 2px solid #f1c40f;
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+        margin: 10px 0;
+        box-shadow: 0px 4px 12px rgba(241, 196, 15, 0.2);
+    }
+    .incentivo-grande-titulo {
+        color: #f1c40f;
+        font-size: 14px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+    }
+    .incentivo-grande-monto {
+        color: #ffffff;
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -782,7 +805,6 @@ if menu_principal_opcion == "Remates":
                     <b>🏁 {carr_activa}</b><br>
                     🏷️ <b>Condición:</b> {detalles_carr.get('condicion', 'N/A')}<br>
                     📏 <b>Distancia:</b> {detalles_carr.get('distancia', 'N/A')} &nbsp;|&nbsp; ⏰ <b>Hora:</b> {detalles_carr.get('hora', 'N/A')}
-                    {f"<br>💰 <b>Monto Fijo (Ciego):</b> {formatear_bs(detalles_carr.get('monto_fijo_ciego', 500.0))}" if modo_actual_remate == "Ciegos" else ""}
                 </div>
             """, unsafe_allow_html=True)
 
@@ -874,10 +896,17 @@ if menu_principal_opcion == "Remates":
             incentivo_actual = float(detalles_carr.get('incentivo', 0.0))
             premio_total_calculado = pote_neto_base + incentivo_actual
 
-            st.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
-            st.metric(f"🏆 Premio Total ({carr_activa})", formatear_bs(premio_total_calculado))
+            c_m1, c_m2 = st.columns(2)
+            c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
+            c_m2.metric(f"🏆 Premio Total ({carr_activa})", formatear_bs(premio_total_calculado))
+
             if incentivo_actual > 0:
-                st.caption(f"🎁 Incentivo incluido: {formatear_bs(incentivo_actual)}")
+                st.markdown(f"""
+                    <div class="incentivo-grande">
+                        <div class="incentivo-grande-titulo">🎁 Incentivo Ya Establecido</div>
+                        <div class="incentivo-grande-monto">{formatear_bs(incentivo_actual)}</div>
+                    </div>
+                """, unsafe_allow_html=True)
 
             with st.container(border=True):
                 if modo_actual_remate == "Ciegos":
@@ -1284,25 +1313,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.toast("✅ ¡Carreras de Remate Ciego guardadas con éxito!")
                     st.rerun()
 
-            # --- ASIGNACIÓN DE MONTO FIJO PARA LAS 2 CARRERAS CIEGAS ---
-            if len(carreras_ciego_seleccionadas) == 2:
-                st.markdown("---")
-                st.markdown("💰 **Definir Monto Fijo para cada Carrera Ciega (1V y 6V)**")
-                for idx_c_ciega, c_ciega_nombre in enumerate(carreras_ciego_seleccionadas):
-                    etiqueta_v = "1V (Primera Válida)" if idx_c_ciega == 0 else "6V (Segunda Válida)"
-                    if c_ciega_nombre not in st.session_state.detalles_carreras:
-                        st.session_state.detalles_carreras[c_ciega_nombre] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0, "incentivo": 0.0}
-                    
-                    monto_actual_cfg = float(st.session_state.detalles_carreras[c_ciega_nombre].get('monto_fijo_ciego', 500.0))
-                    nuevo_monto_ciego_val = st.number_input(
-                        f"Monto Fijo para {etiqueta_v} ({c_ciega_nombre}) (Bs.)",
-                        min_value=0.0,
-                        value=monto_actual_cfg,
-                        step=50.0,
-                        key=f"input_monto_fijo_ciego_admin_{c_ciega_nombre}"
-                    )
-                    st.session_state.detalles_carreras[c_ciega_nombre]['monto_fijo_ciego'] = nuevo_monto_ciego_val
-
         st.markdown("---")
         carr_banco_sel = st.selectbox("Seleccionar Carrera para Configurar y Editar", lista_carreras_disponibles, key="adm_banco_sel_carrera")
         
@@ -1313,16 +1323,14 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
         det_actuales = st.session_state.detalles_carreras[carr_banco_sel]
         with st.container(border=True):
-            st.markdown(f"🛠️ **Editar Detalles, Monto Fijo (Ciego) e Incentivo de {carr_banco_sel}**")
+            st.markdown(f"🛠️ **Editar Detalles e Incentivo de {carr_banco_sel}**")
             edit_cond = st.text_input("Condición de la carrera", value=det_actuales.get('condicion', ''), key=f"banco_cond_{carr_banco_sel}")
-            col_b1, col_b2, col_b3, col_b4 = st.columns(4)
+            col_b1, col_b2, col_b3 = st.columns(3)
             with col_b1:
                 edit_dist = st.text_input("Distancia", value=det_actuales.get('distancia', ''), key=f"banco_dist_{carr_banco_sel}")
             with col_b2:
                 edit_hora = st.text_input("Hora", value=det_actuales.get('hora', ''), key=f"banco_hora_{carr_banco_sel}")
             with col_b3:
-                edit_monto_ciego = st.number_input("Monto Fijo (Ciego)", min_value=0.0, value=float(det_actuales.get('monto_fijo_ciego', 500.0)), step=50.0, key=f"banco_monto_ciego_{carr_banco_sel}")
-            with col_b4:
                 edit_incentivo = st.number_input("Incentivo (Extra)", min_value=0.0, value=float(det_actuales.get('incentivo', 0.0)), step=50.0, key=f"banco_incentivo_{carr_banco_sel}")
             
             if st.button("💾 Guardar Detalles de Carrera", key=f"btn_save_banco_det_{carr_banco_sel}", use_container_width=True, type="primary"):
@@ -1330,10 +1338,10 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     "condicion": edit_cond, 
                     "distancia": edit_dist, 
                     "hora": edit_hora, 
-                    "monto_fijo_ciego": edit_monto_ciego,
+                    "monto_fijo_ciego": det_actuales.get('monto_fijo_ciego', 500.0),
                     "incentivo": edit_incentivo
                 }
-                st.toast("✅ ¡Detalles, monto fijo e incentivo guardados con éxito!")
+                st.toast("✅ ¡Detalles e incentivo guardados con éxito!")
                 st.rerun()
 
         st.markdown("---")
