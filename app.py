@@ -375,8 +375,10 @@ def inicializar_estado_global():
         st.session_state.texto_completo_pdf = ""
     if 'imagenes_carreras' not in st.session_state:
         st.session_state.imagenes_carreras = {}
+    if 'gacetas_carreras' not in st.session_state:
+        st.session_state.gacetas_carreras = {}
     if 'admin_tab_seleccionada' not in st.session_state:
-        st.session_state.admin_tab_seleccionada = "✍️ Banco de Caballos"
+        st.session_state.admin_tab_seleccionada = "✍️ Caballos"
     if 'url_video_en_vivo' not in st.session_state:
         st.session_state.url_video_en_vivo = ""
 
@@ -1035,9 +1037,23 @@ if menu_principal_opcion == "Remates":
 
             carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
             
-            # --- INDICADOR DE ESTADO SIMPLIFICADO CON ICONO ---
+            # --- INDICADOR DE ESTADO SIMPLIFICADO CON ICONO Y BOTÓN DE GACETA ---
             estado_icono = "🔴" if carrera_cerrada else "🟢"
-            st.markdown(f"### {estado_icono} **{carr_activa}** &nbsp; `{modo_actual_remate}`")
+            
+            col_tit_gac1, col_tit_gac2 = st.columns([4, 1], gap="small")
+            with col_tit_gac1:
+                st.markdown(f"### {estado_icono} **{carr_activa}** &nbsp; `{modo_actual_remate}`")
+            with col_tit_gac2:
+                if carr_activa in st.session_state.gacetas_carreras:
+                    gaceta_bytes = st.session_state.gacetas_carreras[carr_activa]
+                    st.download_button(
+                        label="📰 Gaceta",
+                        data=gaceta_bytes,
+                        file_name=f"gaceta_{carr_activa.lower().replace(' ', '_')}.pdf",
+                        mime="application/pdf",
+                        key=f"btn_descargar_gaceta_{carr_activa}",
+                        use_container_width=True
+                    )
 
             if carr_activa not in st.session_state.detalles_carreras:
                 st.session_state.detalles_carreras[carr_activa] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0, "incentivo": 0.0}
@@ -1722,23 +1738,41 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.rerun()
 
     elif tab_actual == "🖼️ Imágenes":
-        st.markdown("### 🖼️ Imágenes por Carrera")
+        st.markdown("### 🖼️ Imágenes y Gacetas por Carrera")
         carr_img_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="adm_img_sel_carr")
         
-        imagen_subida = st.file_uploader(f"Subir imagen", type=["png", "jpg", "jpeg"], key=f"file_img_{carr_img_sel}")
-        if imagen_subida is not None:
-            if st.button(f"💾 Guardar Imagen", key=f"btn_save_img_{carr_img_sel}", use_container_width=True, type="primary"):
-                st.session_state.imagenes_carreras[carr_img_sel] = imagen_subida
-                st.toast("✅ ¡Imagen guardada!")
-                st.rerun()
+        with st.container(border=True):
+            st.markdown("📸 **Imagen de la Carrera**")
+            imagen_subida = st.file_uploader("Subir imagen (PNG, JPG)", type=["png", "jpg", "jpeg"], key=f"file_img_{carr_img_sel}")
+            if imagen_subida is not None:
+                if st.button("💾 Guardar Imagen", key=f"btn_save_img_{carr_img_sel}", use_container_width=True, type="primary"):
+                    st.session_state.imagenes_carreras[carr_img_sel] = imagen_subida
+                    st.toast("✅ ¡Imagen guardada!")
+                    st.rerun()
 
-        if carr_img_sel in st.session_state.imagenes_carreras:
-            st.markdown("---")
-            st.image(st.session_state.imagenes_carreras[carr_img_sel], width=250)
-            if st.button("🗑️ Eliminar Imagen", key=f"btn_del_img_{carr_img_sel}", use_container_width=True):
-                del st.session_state.imagenes_carreras[carr_img_sel]
-                st.toast("🗑️ Removida")
-                st.rerun()
+            if carr_img_sel in st.session_state.imagenes_carreras:
+                st.image(st.session_state.imagenes_carreras[carr_img_sel], width=250)
+                if st.button("🗑️ Eliminar Imagen", key=f"btn_del_img_{carr_img_sel}", use_container_width=True):
+                    del st.session_state.imagenes_carreras[carr_img_sel]
+                    st.toast("🗑️ Imagen removida")
+                    st.rerun()
+
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown("📰 **Archivo Gaceta (PDF)**")
+            gaceta_subida = st.file_uploader("Subir PDF de la Gaceta", type=["pdf"], key=f"file_gaceta_{carr_img_sel}")
+            if gaceta_subida is not None:
+                if st.button("💾 Guardar Gaceta", key=f"btn_save_gaceta_{carr_img_sel}", use_container_width=True, type="primary"):
+                    st.session_state.gacetas_carreras[carr_img_sel] = gaceta_subida.read()
+                    st.toast("✅ ¡Gaceta guardada!")
+                    st.rerun()
+
+            if carr_img_sel in st.session_state.gacetas_carreras:
+                st.success("✅ Gaceta disponible para descarga en esta carrera.")
+                if st.button("🗑️ Eliminar Gaceta", key=f"btn_del_gaceta_{carr_img_sel}", use_container_width=True):
+                    del st.session_state.gacetas_carreras[carr_img_sel]
+                    st.toast("🗑️ Gaceta removida")
+                    st.rerun()
 
     elif tab_actual == "📄 Importar":
         st.markdown("### 📄 Importar Contenido")
