@@ -950,7 +950,19 @@ st.sidebar.header("Barra Lateral")
 ahora_dt = obtener_hora_venezuela_local()
 st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
 
-with st.sidebar.expander("👤 Selector y Usuario Activo", expanded=True):
+# --- SELECTOR DE PANTALLA / MÓDULO EN LA BARRA LATERAL ---
+with st.sidebar.expander("🧭 Navegación Rápida", expanded=True):
+    navegacion_lateral = st.selectbox(
+        "Ir a la sección",
+        options=["Remates", "Dupleta", "Cuentas", "Zona Admin"],
+        index=["Remates", "Dupleta", "Cuentas", "Zona Admin"].index(st.session_state.menu_principal_opcion) if st.session_state.menu_principal_opcion in ["Remates", "Dupleta", "Cuentas", "Zona Admin"] else 0,
+        key="sb_selector_navegacion"
+    )
+    if navegacion_lateral != st.session_state.menu_principal_opcion:
+        st.session_state.menu_principal_opcion = navegacion_lateral
+        st.rerun()
+
+with st.sidebar.expander("👤 Usuario Activo y Selector", expanded=False):
     usuario_seleccionado_sidebar = st.selectbox(
         "Cambiar de Usuario",
         options=st.session_state.lista_usuarios,
@@ -1013,12 +1025,6 @@ with st.sidebar.expander("🏁 Cierre y Liquidación de Remates", expanded=False
             st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = False
             st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = False
             st.rerun()
-
-with st.sidebar.expander("🔒 Zona Administrador", expanded=False):
-    es_admin_activo = (st.session_state.menu_principal_opcion == "🔒 Zona Admin")
-    if st.button("⚙️ Entrar a Zona Admin", key="sb_btn_ir_admin", use_container_width=True, type="primary" if es_admin_activo else "secondary"):
-        st.session_state.menu_principal_opcion = "🔒 Zona Admin"
-        st.rerun()
 
 if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada", use_container_width=True):
     for key in list(st.session_state.keys()):
@@ -1833,7 +1839,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.success("✅ ¡Inscritos organizados por carrera y editables con éxito!")
                     st.rerun()
                 else:
-                    st.warning("⚠️ Asegúrate de incluir el nombre de cada carrera (ej: 'Primera Carrera' o 'Carrera 1') seguido de los ejemplares numerados (ej: '1 - Nombre').")
+                    st.warning("⚠️ Asegúrate de incluir el nombre de each carrera (ej: 'Primera Carrera' o 'Carrera 1') seguido de los ejemplares numerados (ej: '1 - Nombre').")
             else:
                 st.warning("⚠️ El campo de texto está vacío.")
 
