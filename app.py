@@ -99,7 +99,7 @@ img_b64 = get_image_base64(nombres_archivos)
 if img_b64:
     logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" class="header-logo-img" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 24px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 26px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
@@ -309,20 +309,18 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"  # Azul neón
 
-# --- CABECERA SUPERIOR DE DOS FILAS (ARRIBA: HORA, FECHA Y USUARIO | ABAJO: LOGOTIPO GRANDE) ---
+# --- CABECERA SUPERIOR DE DOS FILAS (HORA/FECHA IZQ, USUARIO DER Y LOGO GRANDE ABAJO SIN MARCOS) ---
 st.markdown(f"""
     <style>
     .premium-header-two-rows {{
-        background: linear-gradient(135deg, #0a0d14 0%, #161b22 100%);
-        border: 2px solid rgba(241, 196, 15, 0.5);
-        box-shadow: 0 10px 35px 0 rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(10px);
-        border-radius: 14px;
-        padding: 16px 20px;
+        background: #0a0d14;
+        border: none;
+        box-shadow: none;
+        padding: 6px 4px 14px 4px;
         display: flex;
         flex-direction: column;
         gap: 14px;
-        margin-bottom: 18px;
+        margin-bottom: 12px;
         width: 100%;
         box-sizing: border-box;
     }}
@@ -334,7 +332,7 @@ st.markdown(f"""
         gap: 10px;
     }}
     .header-clock-box {{
-        background: #080a0f;
+        background: #0d1117;
         border: 1px solid #30363d;
         padding: 6px 12px;
         border-radius: 8px;
@@ -355,7 +353,7 @@ st.markdown(f"""
         font-weight: 600;
     }}
     .header-user-card {{
-        background: #080a0f;
+        background: #0d1117;
         border: 1px solid #30363d;
         padding: 6px 14px;
         border-radius: 10px;
@@ -399,15 +397,17 @@ st.markdown(f"""
         align-items: center;
         justify-content: center;
         width: 100%;
-        border-top: 1px dashed rgba(48, 54, 61, 0.8);
-        padding-top: 12px;
+        padding-top: 4px;
     }}
     .header-logo-img {{
-        max-height: 110px;
+        max-height: 120px;
         width: auto;
         max-width: 100%;
         object-fit: contain;
-        filter: drop-shadow(0px 4px 14px rgba(241, 196, 15, 0.5));
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        filter: drop-shadow(0px 4px 16px rgba(241, 196, 15, 0.35));
     }}
     </style>
 
