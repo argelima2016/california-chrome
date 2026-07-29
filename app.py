@@ -156,7 +156,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS ESTRICTOS PARA FORZAR EL DESPLAZAMIENTO HORIZONTAL ---
+# --- ESTILOS CSS AGRESIVOS PARA MÓVILES (CARRUSEL HORIZONTAL REAL) ---
 st.markdown("""
     <style>
     * {
@@ -186,55 +186,37 @@ st.markdown("""
     .block-container {
         padding-top: 0.4rem !important;
         padding-bottom: 2rem !important;
-        padding-left: 0.6rem !important;
-        padding-right: 0.6rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
         max-width: 100% !important;
         margin: 0 auto !important;
         overflow-x: hidden !important;
     }
 
-    /* --- CONTENEDOR DE CARRUSEL HORIZONTAL ESTRICTO --- */
-    .carrusel-horizontal-box {
-        width: 100% !important;
+    /* --- FORZAR BLOQUE HORIZONTAL EN LÍNEA PARA MÓVILES --- */
+    div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
         overflow-x: auto !important;
         overflow-y: hidden !important;
-        white-space: nowrap !important;
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 8px !important;
-        padding-bottom: 8px !important;
+        -webkit-overflow-scrolling: touch !important;
+        width: 100% !important;
+        gap: 6px !important;
+        padding-bottom: 6px !important;
         scrollbar-width: thin;
     }
-    .carrusel-horizontal-box div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        justify-content: flex-start !important;
-        align-items: center !important;
-        gap: 8px !important;
-        width: max-content !important;
-        min-width: 100% !important;
-    }
-    .carrusel-horizontal-box div[data-testid="stHorizontalBlock"] > div {
-        flex: 0 0 auto !important;
-        width: 130px !important;
-        min-width: 130px !important;
-        max-width: 130px !important;
-    }
-
-    /* --- SELECTOR DE CARRERAS (C1, C2...) MÁS COMPACTO --- */
-    .carreras-scroll-container div[data-testid="stHorizontalBlock"] {
-        overflow-x: auto !important;
-        flex-wrap: nowrap !important;
-        justify-content: flex-start !important;
-        padding-bottom: 8px !important;
-        scrollbar-width: thin;
-    }
-    .carreras-scroll-container div[data-testid="stHorizontalBlock"] > div {
+    div[data-testid="stHorizontalBlock"] > div {
         flex: 0 0 auto !important;
         width: auto !important;
-        min-width: 65px !important;
+        min-width: 110px !important;
         max-width: none !important;
+    }
+
+    /* --- SELECTOR DE CARRERAS (C1, C2...) --- */
+    .carreras-scroll-container div[data-testid="stHorizontalBlock"] > div {
+        min-width: 55px !important;
+        width: 55px !important;
     }
     
     div[data-testid="column"] button[kind="secondary"], 
@@ -793,7 +775,7 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL (EN FORMA DE CARRUSEL) ---
+# --- MENÚ PRINCIPAL HORIZONTAL (CARRUSEL MÓVIL) ---
 st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
 col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
 
