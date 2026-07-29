@@ -156,7 +156,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS AGRESIVOS PARA MÓVILES (CARRUSEL HORIZONTAL REAL) ---
+# --- ESTILOS CSS CON CARRUSEL HORIZONTAL FLUIDO Y BOTONES REDUCIDOS ---
 st.markdown("""
     <style>
     * {
@@ -193,47 +193,64 @@ st.markdown("""
         overflow-x: hidden !important;
     }
 
-    /* --- FORZAR BLOQUE HORIZONTAL EN LÍNEA PARA MÓVILES --- */
-    div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
+    /* --- CONTENEDOR DESLIZABLE HORIZONTAL UNIVERSAL (MENÚS Y SUBMENÚS) --- */
+    .carrusel-horizontal-box {
+        width: 100% !important;
         overflow-x: auto !important;
         overflow-y: hidden !important;
+        white-space: nowrap !important;
         -webkit-overflow-scrolling: touch !important;
-        width: 100% !important;
-        gap: 6px !important;
         padding-bottom: 6px !important;
         scrollbar-width: thin;
     }
-    div[data-testid="stHorizontalBlock"] > div {
+    .carrusel-horizontal-box div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        gap: 6px !important;
+        width: max-content !important;
+        min-width: 100% !important;
+    }
+    .carrusel-horizontal-box div[data-testid="stHorizontalBlock"] > div {
         flex: 0 0 auto !important;
-        width: auto !important;
+        width: 110px !important;
         min-width: 110px !important;
-        max-width: none !important;
+        max-width: 110px !important;
     }
 
-    /* --- SELECTOR DE CARRERAS (C1, C2...) --- */
+    /* --- SELECTOR DE CARRERAS (C1, C2...) MÁS PEQUEÑO --- */
+    .carreras-scroll-container div[data-testid="stHorizontalBlock"] {
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        padding-bottom: 8px !important;
+        scrollbar-width: thin;
+        gap: 6px !important;
+    }
     .carreras-scroll-container div[data-testid="stHorizontalBlock"] > div {
-        min-width: 55px !important;
-        width: 55px !important;
+        flex: 0 0 auto !important;
+        width: 52px !important;
+        min-width: 52px !important;
+        max-width: 52px !important;
     }
     
     div[data-testid="column"] button[kind="secondary"], 
     div[data-testid="column"] button[kind="primary"] {
-        border-radius: 20px !important;
+        border-radius: 16px !important;
         width: 100% !important;
-        height: 38px !important;
-        min-height: 38px !important;
-        max-height: 38px !important;
-        padding: 0 4px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        max-height: 32px !important;
+        padding: 0 2px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         margin: 0 auto !important;
-        font-size: 11px !important;
-        font-weight: 900 !important;
-        letter-spacing: 0.5px !important;
+        font-size: 10px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.3px !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         white-space: nowrap !important;
@@ -1205,7 +1222,7 @@ if menu_principal_opcion == "Remates":
                             
                         st.markdown(f"🔹 **1. Seleccionar Ejemplar (Total inscritos: {len(lista_caballos_activos)}):**")
                         cantidad_ejemplares = len(lista_caballos_activos)
-                        cols_ejemplares = min(5, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
+                        cols_ejemplares = 4
                         num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                         
                         idx_cab = 0
