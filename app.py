@@ -156,7 +156,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS CON CONTENEDORES DESLIZABLES (CARRUSEL) PARA MENÚS Y SUBMENÚS ---
+# --- ESTILOS CSS CON CONTENEDORES DESLIZABLES (CARRUSEL) UNIVERSALES ---
 st.markdown("""
     <style>
     * {
@@ -193,34 +193,21 @@ st.markdown("""
         overflow-x: hidden !important;
     }
 
-    /* --- CARRUSEL HORIZONTAL PARA MENÚ PRINCIPAL Y SUBMENÚS --- */
-    .menu-scroll-container div[data-testid="stHorizontalBlock"] {
-        overflow-x: auto !important;
-        flex-wrap: nowrap !important;
-        justify-content: flex-start !important;
-        padding-bottom: 6px !important;
-        scrollbar-width: thin;
-        gap: 6px !important;
-    }
-    .menu-scroll-container div[data-testid="stHorizontalBlock"] > div {
-        flex: 0 0 auto !important;
-        width: auto !important;
-        min-width: 130px !important;
-        max-width: none !important;
-    }
-
-    /* --- CONTENEDOR DESLIZABLE HORIZONTAL PARA EL SELECTOR DE CARRERAS --- */
+    /* --- CARRUSEL HORIZONTAL UNIVERSAL (MENÚS, SUBMENÚS Y SELECTOR DE CARRERAS) --- */
+    .menu-scroll-container div[data-testid="stHorizontalBlock"],
     .carreras-scroll-container div[data-testid="stHorizontalBlock"] {
         overflow-x: auto !important;
         flex-wrap: nowrap !important;
         justify-content: flex-start !important;
         padding-bottom: 8px !important;
         scrollbar-width: thin;
+        gap: 8px !important;
     }
+    .menu-scroll-container div[data-testid="stHorizontalBlock"] > div,
     .carreras-scroll-container div[data-testid="stHorizontalBlock"] > div {
         flex: 0 0 auto !important;
         width: auto !important;
-        min-width: 60px !important;
+        min-width: 110px !important;
         max-width: none !important;
     }
     
@@ -231,7 +218,7 @@ st.markdown("""
         height: 38px !important;
         min-height: 38px !important;
         max-height: 38px !important;
-        padding: 0 4px !important;
+        padding: 0 8px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -1455,6 +1442,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     
     opciones_admin_tabs = ["✍️ Caballos", "👥 Usuarios", "⚙️ Dupletas/Polla", "📺 Video", "📊 Saldos", "🖼️ Imágenes", "📄 Importar"]
     
+    st.markdown('<div class="menu-scroll-container">', unsafe_allow_html=True)
     cols_adm_tabs = st.columns(len(opciones_admin_tabs), gap="small")
     for idx, tab_nombre in enumerate(opciones_admin_tabs):
         with cols_adm_tabs[idx]:
@@ -1462,6 +1450,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             if st.button(tab_nombre, key=f"adm_tab_btn_{idx}", use_container_width=True, type="primary" if es_tab_activa else "secondary"):
                 st.session_state.admin_tab_seleccionada = tab_nombre
                 st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<hr style='margin: 0.5rem 0; border-color: #30363d;'>", unsafe_allow_html=True)
     tab_actual = st.session_state.admin_tab_seleccionada
