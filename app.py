@@ -144,7 +144,6 @@ st.markdown("""
         overflow-x: hidden !important;
     }
 
-    /* --- CONTENEDOR DESLIZABLE HORIZONTAL PARA EL SELECTOR DE CARRERAS --- */
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
@@ -161,7 +160,6 @@ st.markdown("""
         min-width: 60px !important;
     }
     
-    /* --- BURBUJAS EN FORMATO CÁPSULA / PASTILLA COMPACTA --- */
     div[data-testid="column"] button[kind="secondary"], 
     div[data-testid="column"] button[kind="primary"] {
         border-radius: 20px !important;
@@ -329,7 +327,6 @@ def formatear_bs(monto):
     numero_formateado = f"{monto:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return f"Bs. {numero_formateado}"
 
-# --- CÁLCULO DE DATOS PARA EL USUARIO EN SESIÓN ---
 usuario_en_sesion = st.session_state.usuario_activo
 if usuario_en_sesion not in st.session_state.cuentas:
     st.session_state.cuentas[usuario_en_sesion] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
@@ -339,13 +336,13 @@ neto_usuario = vals_sesion['Pujas'] - vals_sesion['Abonos'] - vals_sesion['Premi
 
 if neto_usuario > 0:
     etiqueta_balance = f"Deuda: {formatear_bs(neto_usuario)}"
-    color_balance = "#ff4757"  # Rojo elegante
+    color_balance = "#ff4757"
 elif neto_usuario < 0:
     etiqueta_balance = f"Premio: {formatear_bs(abs(neto_usuario))}"
-    color_balance = "#2ed573"  # Verde brillante
+    color_balance = "#2ed573"
 else:
     etiqueta_balance = "Al día: Bs. 0,00"
-    color_balance = "#58a6ff"  # Azul neón
+    color_balance = "#58a6ff"
 
 # --- CABECERA SUPERIOR DE DOS FILAS ---
 st.markdown(f"""
@@ -529,14 +526,14 @@ def generar_tabla_html_remate(remates_dict):
             border-radius: 2px;
             box-sizing: border-box;
         }
-        .badge-1 {{ background-color: #e3242b; color: #ffffff; }}
-        .badge-2 {{ background-color: #ffffff; color: #000000; border: 1.5px solid #000000; }}
-        .badge-3 {{ background-color: #1d11c0; color: #ffffff; }}
-        .badge-4 {{ background-color: #f1c40f; color: #000000; }}
-        .badge-5 {{ background-color: #28a745; color: #ffffff; }}
-        .badge-6 {{ background-color: #000000; color: #ffffff; }}
-        .badge-7 {{ background-color: #fd7e14; color: #ffffff; }}
-        .badge-default {{ background-color: #6c757d; color: #ffffff; }}
+        .badge-1 { background-color: #e3242b; color: #ffffff; }
+        .badge-2 { background-color: #ffffff; color: #000000; border: 1.5px solid #000000; }
+        .badge-3 { background-color: #1d11c0; color: #ffffff; }
+        .badge-4 { background-color: #f1c40f; color: #000000; }
+        .badge-5 { background-color: #28a745; color: #ffffff; }
+        .badge-6 { background-color: #000000; color: #ffffff; }
+        .badge-7 { background-color: #fd7e14; color: #ffffff; }
+        .badge-default { background-color: #6c757d; color: #ffffff; }
     </style>
     <div style="background-color: #ffffff; padding: 3px; border-radius: 6px; overflow-x: auto; width: 100%;">
         <table class="tabla-referencia">
@@ -809,7 +806,7 @@ if lista_b64_banners:
                         imgElement.src = images[index];
                         imgElement.style.opacity = 1;
                     }}, 400);
-                }, 8000);
+                }}, 8000);
             }}
         }})();
     </script>
@@ -856,7 +853,6 @@ with st.sidebar.expander("🔒 Estado Dupletas / Polla", expanded=False):
             st.session_state.dupleta_bloqueada = True
             st.rerun()
 
-# --- SECCIÓN EN BARRA LATERAL PARA CIERRE ESTRICTO Y LIQUIDACIÓN ---
 with st.sidebar.expander("🏁 Cierre y Liquidación de Remates", expanded=False):
     carr_seleccionada_liq = st.selectbox("Gestionar Carrera", lista_carreras_disponibles, key="sb_liq_sel_carrera")
     c_cerrada_actual = st.session_state.carreras_cerradas_remate.get(carr_seleccionada_liq, False)
