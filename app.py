@@ -309,7 +309,7 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"  # Azul neón
 
-# --- CABECERA SUPERIOR DE DOS FILAS (HORA/FECHA IZQ, USUARIO DER Y LOGO GRANDE ABAJO SIN MARCOS) ---
+# --- CABECERA SUPERIOR DE DOS FILAS CON LOGOTIPO SIN FONDO NEGRO ---
 st.markdown(f"""
     <style>
     .premium-header-two-rows {{
@@ -407,6 +407,7 @@ st.markdown(f"""
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
+        mix-blend-mode: screen !important; /* Elimina automáticamente el fondo negro de la imagen */
         filter: drop-shadow(0px 4px 16px rgba(241, 196, 15, 0.35));
     }}
     </style>
