@@ -107,7 +107,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS CON CÁPSULAS UNIFORMES DE 3 POR LÍNEA ---
+# --- ESTILOS CSS CON SCROLL HORIZONTAL FORZADO Y CÁPSULAS ---
 st.markdown("""
     <style>
     .stApp {
@@ -138,20 +138,37 @@ st.markdown("""
         max-width: 1400px !important;
         margin: 0 auto !important;
     }
+
+    /* --- CONTENEDOR DESLIZABLE HORIZONTAL PARA EL SELECTOR DE CARRERAS --- */
+    div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+        width: 100% !important;
+        padding-bottom: 8px !important;
+        scrollbar-width: thin;
+    }
+    div[data-testid="stHorizontalBlock"] > div {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 65px !important;
+    }
     
-    /* --- CÁPSULAS UNIFORMES DE 3 POR LÍNEA --- */
+    /* --- BURBUJAS EN FORMATO CÁPSULA / PASTILLA COMPACTA --- */
     div[data-testid="column"] button[kind="secondary"], 
     div[data-testid="column"] button[kind="primary"] {
         border-radius: 20px !important;
         width: 100% !important;
-        height: 40px !important;
-        min-height: 40px !important;
-        max-height: 40px !important;
-        padding: 0 !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        max-height: 38px !important;
+        padding: 0 6px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        margin: 2px 0 !important;
+        margin: 0 auto !important;
         font-size: 11px !important;
         font-weight: 900 !important;
         letter-spacing: 0.5px !important;
@@ -923,20 +940,17 @@ if menu_principal_opcion == "Remates":
 
             st.markdown("🔹 **Seleccionar Carrera:**")
             
-            # --- SELECCIONADOR DE CARRERAS EN LÍNEAS DE 3 POR FILA ---
+            # --- CARRUSEL HORIZONTAL CONTINUO EN UNA SOLA LÍNEA (MÓVIL Y PC) ---
             carreras_totales_visibles = list(carreras_filtradas_visibles)
-            chunk_size_carr = 3
-            for i in range(0, len(carreras_totales_visibles), chunk_size_carr):
-                chunk = carreras_totales_visibles[i:i + chunk_size_carr]
-                cols_carreras = st.columns(3, gap="small")
-                for idx_c, c_nombre in enumerate(chunk):
-                    es_modo_ciego = (modo_actual_remate == "Ciegos")
-                    abreviatura = obtener_abreviatura_carrera(c_nombre, modo_ciego=es_modo_ciego)
-                    es_activa = (c_nombre == carr_activa)
-                    with cols_carreras[idx_c]:
-                        if st.button(abreviatura, key=f"rem_btn_sel_carr_{i + idx_c}", use_container_width=True, type="primary" if es_activa else "secondary"):
-                            st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
-                            st.rerun()
+            cols_carreras = st.columns(len(carreras_totales_visibles), gap="small")
+            for idx, c_nombre in enumerate(carreras_totales_visibles):
+                es_modo_ciego = (modo_actual_remate == "Ciegos")
+                abreviatura = obtener_abreviatura_carrera(c_nombre, modo_ciego=es_modo_ciego)
+                es_activa = (c_nombre == carr_activa)
+                with cols_carreras[idx]:
+                    if st.button(abreviatura, key=f"rem_btn_sel_carr_{idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
+                        st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
+                        st.rerun()
 
             st.markdown(f"---")
 
@@ -1117,17 +1131,21 @@ if menu_principal_opcion == "Remates":
                             st.session_state[k_sel_cab] = lista_caballos_activos[0]
                             
                         st.markdown(f"🔹 **1. Seleccionar Ejemplar (Total inscritos: {len(lista_caballos_activos)}):**")
+                        cantidad_ejemplares = len(lista_caballos_activos)
+                        cols_ejemplares = min(6, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
+                        num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                         
-                        # --- SELECCIONADOR DE EJEMPLARES EN LÍNEAS DE 3 POR FILA ---
-                        chunk_size_ej = 3
-                        for i_ej in range(0, len(lista_caballos_activos), chunk_size_ej):
-                            chunk_ej = lista_caballos_activos[i_ej:i_ej + chunk_size_ej]
-                            cols_fila_ej = st.columns(3, gap="small")
-                            for c_idx_ej, cab_item in enumerate(chunk_ej):
-                                num_parte = cab_item.split(" - ")[0]
-                                with cols_fila_ej[c_idx_ej]:
-                                    if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{i_ej + c_idx_ej}", use_container_width=True):
-                                        st.session_state[k_sel_cab] = cab_item
+                        idx_cab = 0
+                        for f in range(num_filas):
+                            cols_fila = st.columns(cols_ejemplares, gap="small")
+                            for c in range(cols_ejemplares):
+                                if idx_cab < cantidad_ejemplares:
+                                    cab_item = lista_caballos_activos[idx_cab]
+                                    num_parte = cab_item.split(" - ")[0]
+                                    with cols_fila[c]:
+                                        if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{idx_cab}", use_container_width=True):
+                                            st.session_state[k_sel_cab] = cab_item
+                                    idx_cab += 1
                         
                         caballo_seleccionado = st.session_state[k_sel_cab]
                         st.info(f"Ejemplar activo en {carr_activa}: **{caballo_seleccionado}**")
