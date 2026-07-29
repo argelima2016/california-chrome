@@ -21,10 +21,10 @@ try:
 except Exception:
     pass
 
-# --- SCRIPT JS PARA OCULTAR ELEMENTOS NATIVOS DE STREAMLIT DE FORMA DEFINITIVA ---
+# --- SCRIPT JS PARA OCULTAR ELEMENTOS NATIVOS Y CREAR EL BOTÓN DE TUERCA PARA LA BARRA LATERAL ---
 components.html("""
     <script>
-        function ocultarElementosNativos() {{
+        function ocultarElementosNativos() {
             const doc = window.parent.document;
             const selectors = [
                 'header[data-testid="stHeader"]',
@@ -35,15 +35,69 @@ components.html("""
                 '#MainMenu',
                 'a[href*="streamlit.io"]'
             ];
-            selectors.forEach(selector => {{
-                doc.querySelectorAll(selector).forEach(el => {{
-                    el.style.display = 'none';
-                    el.style.visibility = 'hidden';
-                    el.style.opacity = '0';
-                    el.remove();
-                }});
-            }});
-        }}
+            selectors.forEach(selector => {
+                doc.querySelectorAll(selector).forEach(el => {
+                    if (el) {
+                        el.style.display = 'none';
+                        el.style.visibility = 'hidden';
+                        el.style.opacity = '0';
+                        el.remove();
+                    }
+                });
+            });
+
+            // --- BOTÓN FLOTANTE DE TUERCA PARA LA BARRA LATERAL ---
+            let tuercaBtn = doc.getElementById('custom-tuerca-sidebar-btn');
+            if (!tuercaBtn) {
+                tuercaBtn = doc.createElement('button');
+                tuercaBtn.id = 'custom-tuerca-sidebar-btn';
+                tuercaBtn.innerHTML = '⚙️';
+                tuercaBtn.title = 'Abrir / Cerrar Configuración';
+                
+                // Estilos flotantes fijos en la esquina superior derecha
+                tuercaBtn.style.position = 'fixed';
+                tuercaBtn.style.top = '10px';
+                tuercaBtn.style.right = '15px';
+                tuercaBtn.style.zIndex = '999999';
+                tuercaBtn.style.background = '#161b22';
+                tuercaBtn.style.border = '1px solid #30363d';
+                tuercaBtn.style.borderRadius = '8px';
+                tuercaBtn.style.fontSize = '20px';
+                tuercaBtn.style.width = '42px';
+                tuercaBtn.style.height = '42px';
+                tuercaBtn.style.cursor = 'pointer';
+                tuercaBtn.style.display = 'flex';
+                tuercaBtn.style.alignItems = 'center';
+                tuercaBtn.style.justifyModel = 'center';
+                tuercaBtn.style.justifyContent = 'center';
+                tuercaBtn.style.boxShadow = '0px 4px 12px rgba(0,0,0,0.5)';
+                tuercaBtn.style.transition = 'transform 0.2s ease, background 0.2s ease';
+
+                tuercaBtn.onmouseover = function() {
+                    tuercaBtn.style.transform = 'rotate(45deg) scale(1.05)';
+                    tuercaBtn.style.background = '#21262d';
+                };
+                tuercaBtn.onmouseout = function() {
+                    tuercaBtn.style.transform = 'rotate(0deg) scale(1)';
+                    tuercaBtn.style.background = '#161b22';
+                };
+
+                tuercaBtn.onclick = function() {
+                    // Busca el botón nativo de colapso de Streamlit dentro del header o barra lateral y hazle clic
+                    const collapseBtns = doc.querySelectorAll('button[data-testid="baseButton-header"], [data-testid="stSidebarCollapseButton"] button, button[kind="header"]');
+                    if (collapseBtns.length > 0) {
+                        // Da click en el último botón de colapso disponible
+                        collapseBtns[collapseBtns.length - 1].click();
+                    } else {
+                        // Fallback: Busca cualquier botón en la barra lateral superior
+                        const altBtn = doc.querySelector('section[data-testid="stSidebar"] button');
+                        if (altBtn) altBtn.click();
+                    }
+                };
+
+                doc.body.appendChild(tuercaBtn);
+            }
+        }
         setInterval(ocultarElementosNativos, 200);
     </script>
 """, height=0, width=0)
