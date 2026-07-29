@@ -136,99 +136,6 @@ st.markdown("""
         max-width: 1400px !important;
         margin: 0 auto !important;
     }
-    .header-container {
-        background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
-        width: 100% !important;
-        padding: 10px 20px !important;
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        border-bottom: 2px solid #30363d !important;
-        border-radius: 8px !important;
-        box-sizing: border-box !important;
-        gap: 15px;
-        margin-bottom: 12px !important;
-    }
-    .header-left-clock {
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        background: #0d1117 !important;
-        border: 1px solid #30363d !important;
-        padding: 6px 12px !important;
-        border-radius: 8px !important;
-        text-align: left !important;
-        flex-shrink: 0;
-    }
-    .clock-time {
-        color: #58a6ff !important;
-        font-size: 14px !important;
-        font-weight: 800 !important;
-        line-height: 1.15;
-    }
-    .clock-date {
-        color: #8b949e !important;
-        font-size: 10px !important;
-        font-weight: 600 !important;
-    }
-    .header-center-logo {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        flex: 1 !important;
-        min-width: 0 !important;
-        overflow: hidden !important;
-        padding: 0 4px !important;
-    }
-    .header-logo-img {
-        max-height: 80px !important;
-        max-width: 100% !important;
-        width: auto !important;
-        object-fit: contain !important;
-        display: block !important;
-        filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.9));
-    }
-    .user-info-container {
-        display: flex !important;
-        align-items: center !important;
-        gap: 10px !important;
-        background-color: #161b22 !important;
-        border: 1px solid #30363d !important;
-        padding: 5px 12px !important;
-        border-radius: 20px !important;
-        flex-shrink: 0;
-    }
-    .user-text-info {
-        display: flex !important;
-        flex-direction: column !important;
-        text-align: right !important;
-        line-height: 1.15 !important;
-    }
-    .user-name {
-        color: #ffffff !important;
-        font-size: 11px !important;
-        font-weight: 800 !important;
-    }
-    .user-balance {
-        color: #58a6ff !important;
-        font-size: 11px !important;
-        font-weight: 800 !important;
-    }
-    .user-avatar {
-        background-color: #f1c40f !important;
-        color: #000000 !important;
-        border-radius: 50% !important;
-        width: 36px !important;
-        height: 36px !important;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        font-size: 16px !important;
-        font-weight: bold !important;
-        box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
-        flex-shrink: 0;
-    }
     div.row-widget.stHorizontal > div {
         gap: 6px !important;
     }
@@ -391,29 +298,126 @@ if usuario_en_sesion not in st.session_state.cuentas:
 
 vals_sesion = st.session_state.cuentas[usuario_en_sesion]
 neto_usuario = vals_sesion['Pujas'] - vals_sesion['Abonos'] - vals_sesion['Premios']
+
 if neto_usuario > 0:
     etiqueta_balance = f"Deuda: {formatear_bs(neto_usuario)}"
+    color_balance = "#ff4757"  # Rojo elegante
 elif neto_usuario < 0:
     etiqueta_balance = f"Premio: {formatear_bs(abs(neto_usuario))}"
+    color_balance = "#2ed573"  # Verde brillante
 else:
     etiqueta_balance = "Al día: Bs. 0,00"
+    color_balance = "#58a6ff"  # Azul neón
 
-# --- CABECERA SUPERIOR OPTIMIZADA ---
+# --- CABECERA SUPERIOR REDISEÑADA Y PREMIUM ---
 st.markdown(f"""
-    <div class="header-container">
-        <div class="header-left-clock">
-            <span class="clock-time">🕒 {hora_texto}</span>
-            <span class="clock-date">📅 {fecha_texto}</span>
+    <style>
+    .premium-header {{
+        background: linear-gradient(135deg, #0a0d14 0%, #161b22 100%);
+        border: 1px solid rgba(241, 196, 15, 0.4);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(8px);
+        border-radius: 12px;
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 16px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .header-clock-box {{
+        background: #080a0f;
+        border: 1px solid #30363d;
+        padding: 6px 12px;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        flex-shrink: 0;
+    }}
+    .h-time {{
+        color: #f1c40f;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+    }}
+    .h-date {{
+        color: #8b949e;
+        font-size: 10px;
+        font-weight: 600;
+    }}
+    .header-brand-center {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+    }}
+    .header-logo-img {{
+        max-height: 65px;
+        width: auto;
+        object-fit: contain;
+        filter: drop-shadow(0px 2px 8px rgba(241, 196, 15, 0.3));
+    }}
+    .header-user-card {{
+        background: #080a0f;
+        border: 1px solid #30363d;
+        padding: 6px 14px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+    }}
+    .user-details {{
+        display: flex;
+        flex-direction: column;
+        text-align: right;
+        line-height: 1.2;
+    }}
+    .u-name {{
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+    }}
+    .u-bal {{
+        color: {color_balance};
+        font-size: 11px;
+        font-weight: 800;
+    }}
+    .u-avatar-badge {{
+        background: linear-gradient(135deg, #f1c40f 0%, #e67e22 100%);
+        color: #000000;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 900;
+        box-shadow: 0px 0px 10px rgba(241, 196, 15, 0.4);
+    }}
+    </style>
+
+    <div class="premium-header">
+        <div class="header-clock-box">
+            <span class="h-time">⚡ {hora_texto}</span>
+            <span class="h-date">📅 {fecha_texto}</span>
         </div>
-        <div class="header-center-logo">
+        <div class="header-brand-center">
             {logo_display}
         </div>
-        <div class="user-info-container">
-            <div class="user-text-info">
-                <span class="user-name">{usuario_en_sesion}</span>
-                <span class="user-balance">{etiqueta_balance}</span>
+        <div class="header-user-card">
+            <div class="user-details">
+                <span class="u-name">{usuario_en_sesion}</span>
+                <span class="u-bal">{etiqueta_balance}</span>
             </div>
-            <div class="user-avatar">👤</div>
+            <div class="u-avatar-badge">🐺</div>
         </div>
     </div>
 """, unsafe_allow_html=True)
