@@ -85,6 +85,9 @@ st.markdown("""
         background-color: #080a0f;
         color: #f0f6fc;
     }
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
     div[data-testid="stTabs"] {
         display: none !important;
     }
@@ -95,9 +98,6 @@ st.markdown("""
         padding-right: 0.8rem !important;
         max-width: 1400px !important;
         margin: 0 auto !important;
-    }
-    header[data-testid="stHeader"] {
-        background: transparent !important;
     }
     .header-container {
         background: linear-gradient(180deg, #000000 0%, #11141d 100%) !important;
@@ -705,8 +705,8 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = 1;
-                    }}, 400);
-                }}, 8000);
+                    }, 400);
+                }, 8000);
             }}
         }})();
     </script>
