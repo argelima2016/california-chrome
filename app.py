@@ -86,8 +86,8 @@ def get_image_base64(nombres_posibles):
     return ""
 
 nombres_archivos = [
-    "1001397336.jpg",
     "1001397336.png",
+    "1001397336.jpg",
     "1001394095_preview_rev_1_2.png",
     "1001394095_preview_rev_1_2.jpg",
     "logo.png",
@@ -97,7 +97,7 @@ nombres_archivos = [
 img_b64 = get_image_base64(nombres_archivos)
 
 if img_b64:
-    logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" class="header-logo-img" />'
+    logo_display = f'<img src="data:image/png;base64,{img_b64}" class="header-logo-img" />'
 else:
     logo_display = '<span style="color: #f1c40f; font-size: 26px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
 
@@ -309,7 +309,7 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"  # Azul neón
 
-# --- CABECERA SUPERIOR DE DOS FILAS CON LOGOTIPO SIN FONDO NEGRO ---
+# --- CABECERA SUPERIOR DE DOS FILAS (TRANSPARENTE Y LIMPIA PARA LOGO PNG) ---
 st.markdown(f"""
     <style>
     .premium-header-two-rows {{
@@ -407,7 +407,6 @@ st.markdown(f"""
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        mix-blend-mode: screen !important; /* Elimina automáticamente el fondo negro de la imagen */
         filter: drop-shadow(0px 4px 16px rgba(241, 196, 15, 0.35));
     }}
     </style>
