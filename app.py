@@ -107,7 +107,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS CON CONTROL ESTRICTO DE MÁRGENES Y GRILLA DE DOS LÍNEAS PARA CARRERAS ---
+# --- ESTILOS CSS CON CONTROL ESTRICTO DE MÁRGENES Y CENTRADO ---
 st.markdown("""
     <style>
     * {
@@ -158,18 +158,19 @@ st.markdown("""
         max-width: 220px !important;
     }
 
-    /* --- CONTENEDOR DE DOS LÍNEAS PARA EL SELECTOR DE CARRERAS --- */
-    .carreras-grid-container div[data-testid="stHorizontalBlock"] {
-        flex-wrap: wrap !important;
-        justify-content: center !important;
-        gap: 6px !important;
-        padding-bottom: 4px !important;
+    /* --- CONTENEDOR DESLIZABLE HORIZONTAL PARA EL SELECTOR DE CARRERAS --- */
+    .carreras-scroll-container div[data-testid="stHorizontalBlock"] {
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        padding-bottom: 8px !important;
+        scrollbar-width: thin;
     }
-    .carreras-grid-container div[data-testid="stHorizontalBlock"] > div {
+    .carreras-scroll-container div[data-testid="stHorizontalBlock"] > div {
         flex: 0 0 auto !important;
-        width: calc(20% - 6px) !important;
-        min-width: 55px !important;
-        max-width: 90px !important;
+        width: auto !important;
+        min-width: 60px !important;
+        max-width: none !important;
     }
     
     div[data-testid="column"] button[kind="secondary"], 
@@ -965,22 +966,16 @@ if menu_principal_opcion == "Remates":
             st.markdown("🔹 **Seleccionar Carrera:**")
             
             carreras_totales_visibles = list(carreras_filtradas_visibles)
-            st.markdown('<div class="carreras-grid-container">', unsafe_allow_html=True)
-            
-            # --- RENDERIZADO EN LÍNEAS MÚLTIPLES (5 POR FILA MÁXIMO) ---
-            chunk_size = 5
-            for i in range(0, len(carreras_totales_visibles), chunk_size):
-                chunk = carreras_totales_visibles[i:i + chunk_size]
-                cols_carreras = st.columns(len(chunk), gap="small")
-                for idx, c_nombre in enumerate(chunk):
-                    es_modo_ciego = (modo_actual_remate == "Ciegos")
-                    abreviatura = obtener_abreviatura_carrera(c_nombre, modo_ciego=es_modo_ciego)
-                    es_activa = (c_nombre == carr_activa)
-                    with cols_carreras[idx]:
-                        if st.button(abreviatura, key=f"rem_btn_sel_carr_{i + idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
-                            st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
-                            st.rerun()
-            
+            st.markdown('<div class="carreras-scroll-container">', unsafe_allow_html=True)
+            cols_carreras = st.columns(len(carreras_totales_visibles), gap="small")
+            for idx, c_nombre in enumerate(carreras_totales_visibles):
+                es_modo_ciego = (modo_actual_remate == "Ciegos")
+                abreviatura = obtener_abreviatura_carrera(c_nombre, modo_ciego=es_modo_ciego)
+                es_activa = (c_nombre == carr_activa)
+                with cols_carreras[idx]:
+                    if st.button(abreviatura, key=f"rem_btn_sel_carr_{idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
+                        st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
+                        st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
 
             st.markdown("---")
