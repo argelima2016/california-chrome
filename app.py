@@ -88,6 +88,15 @@ st.markdown("""
     header[data-testid="stHeader"] {
         display: none !important;
     }
+    footer {
+        display: none !important;
+    }
+    .stDeployButton {
+        display: none !important;
+    }
+    div[data-testid="stStatusWidget"] {
+        display: none !important;
+    }
     div[data-testid="stTabs"] {
         display: none !important;
     }
