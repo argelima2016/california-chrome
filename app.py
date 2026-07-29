@@ -107,7 +107,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS CON BURBUJAS REDONDAS PARA LAS CARRERAS ---
+# --- ESTILOS CSS CON BURBUJAS REDONDAS Y SCROLL HORIZONTAL ---
 st.markdown("""
     <style>
     .stApp {
@@ -138,26 +138,23 @@ st.markdown("""
         max-width: 1400px !important;
         margin: 0 auto !important;
     }
-    div.row-widget.stHorizontal > div {
-        gap: 6px !important;
-    }
-    .stButton button {
-        border-radius: 6px !important;
-        font-weight: 700 !important;
-        padding: 0.2rem 0.4rem !important;
-        min-height: 32px !important;
-        font-size: 12px !important;
-        letter-spacing: 0.2px;
-        white-space: nowrap !important;
+    
+    /* --- DISTRIBUCIÓN HORIZONTAL CON SCROLL PARA LAS CARRERAS --- */
+    div.row-widget.stHorizontal {
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+        padding-bottom: 6px !important;
     }
     div[data-testid="column"] {
+        flex: 0 0 auto !important;
         width: auto !important;
-        flex: 1 !important;
-        min-width: 0 !important;
-        padding: 0 3px !important;
+        padding: 0 2px !important;
     }
     
-    /* --- TRANSFORMACIÓN DE BOTONES DE CARRERAS EN BURBUJAS CIRCULARES IDÉNTICAS --- */
+    /* --- BURBUJAS CIRCULARES PARA LAS CARRERAS --- */
     div[data-testid="column"] button[kind="secondary"], 
     div[data-testid="column"] button[kind="primary"] {
         border-radius: 50% !important;
@@ -174,6 +171,15 @@ st.markdown("""
         font-weight: 900 !important;
     }
 
+    .stButton button {
+        border-radius: 6px !important;
+        font-weight: 700 !important;
+        padding: 0.2rem 0.4rem !important;
+        min-height: 32px !important;
+        font-size: 12px !important;
+        letter-spacing: 0.2px;
+        white-space: nowrap !important;
+    }
     .subasta-header {
         font-size: clamp(14px, 3.5vw, 18px);
         font-weight: 800;
