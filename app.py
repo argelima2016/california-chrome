@@ -107,7 +107,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS CON CÁPSULAS UNIFORMES ---
+# --- ESTILOS CSS CON CÁPSULAS UNIFORMES DE 3 POR LÍNEA ---
 st.markdown("""
     <style>
     .stApp {
@@ -139,7 +139,7 @@ st.markdown("""
         margin: 0 auto !important;
     }
     
-    /* --- CÁPSULAS UNIFORMES DE 4 POR LÍNEA --- */
+    /* --- CÁPSULAS UNIFORMES DE 3 POR LÍNEA --- */
     div[data-testid="column"] button[kind="secondary"], 
     div[data-testid="column"] button[kind="primary"] {
         border-radius: 20px !important;
@@ -923,12 +923,12 @@ if menu_principal_opcion == "Remates":
 
             st.markdown("🔹 **Seleccionar Carrera:**")
             
-            # --- SELECCIONADOR DE CARRERAS EN LÍNEAS EXACTAS DE 4 POR FILA ---
+            # --- SELECCIONADOR DE CARRERAS EN LÍNEAS DE 3 POR FILA ---
             carreras_totales_visibles = list(carreras_filtradas_visibles)
-            chunk_size_carr = 4
+            chunk_size_carr = 3
             for i in range(0, len(carreras_totales_visibles), chunk_size_carr):
                 chunk = carreras_totales_visibles[i:i + chunk_size_carr]
-                cols_carreras = st.columns(4, gap="small")
+                cols_carreras = st.columns(3, gap="small")
                 for idx_c, c_nombre in enumerate(chunk):
                     es_modo_ciego = (modo_actual_remate == "Ciegos")
                     abreviatura = obtener_abreviatura_carrera(c_nombre, modo_ciego=es_modo_ciego)
@@ -1118,11 +1118,11 @@ if menu_principal_opcion == "Remates":
                             
                         st.markdown(f"🔹 **1. Seleccionar Ejemplar (Total inscritos: {len(lista_caballos_activos)}):**")
                         
-                        # --- SELECCIONADOR DE EJEMPLARES EN LÍNEAS EXACTAS DE 4 POR FILA ---
-                        chunk_size_ej = 4
+                        # --- SELECCIONADOR DE EJEMPLARES EN LÍNEAS DE 3 POR FILA ---
+                        chunk_size_ej = 3
                         for i_ej in range(0, len(lista_caballos_activos), chunk_size_ej):
                             chunk_ej = lista_caballos_activos[i_ej:i_ej + chunk_size_ej]
-                            cols_fila_ej = st.columns(4, gap="small")
+                            cols_fila_ej = st.columns(3, gap="small")
                             for c_idx_ej, cab_item in enumerate(chunk_ej):
                                 num_parte = cab_item.split(" - ")[0]
                                 with cols_fila_ej[c_idx_ej]:
