@@ -99,7 +99,7 @@ img_b64 = get_image_base64(nombres_archivos)
 if img_b64:
     logo_display = f'<img src="data:image/jpeg;base64,{img_b64}" class="header-logo-img" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 18px; font-weight: 900; font-style: italic; letter-spacing: 1px;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 24px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
@@ -309,29 +309,35 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"  # Azul neón
 
-# --- CABECERA SUPERIOR ANCHA Y PREMIUM PARA MEJOR VISIBILIDAD DEL LOGOTIPO ---
+# --- CABECERA SUPERIOR DE DOS FILAS (ARRIBA: HORA, FECHA Y USUARIO | ABAJO: LOGOTIPO GRANDE) ---
 st.markdown(f"""
     <style>
-    .premium-header {{
+    .premium-header-two-rows {{
         background: linear-gradient(135deg, #0a0d14 0%, #161b22 100%);
         border: 2px solid rgba(241, 196, 15, 0.5);
         box-shadow: 0 10px 35px 0 rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(10px);
         border-radius: 14px;
-        padding: 16px 24px;
+        padding: 16px 20px;
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
+        flex-direction: column;
+        gap: 14px;
         margin-bottom: 18px;
         width: 100%;
         box-sizing: border-box;
     }}
+    .header-top-row {{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 10px;
+    }}
     .header-clock-box {{
         background: #080a0f;
         border: 1px solid #30363d;
-        padding: 8px 14px;
-        border-radius: 9px;
+        padding: 6px 12px;
+        border-radius: 8px;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -339,86 +345,88 @@ st.markdown(f"""
     }}
     .h-time {{
         color: #f1c40f;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 900;
         letter-spacing: 0.5px;
     }}
     .h-date {{
         color: #8b949e;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 600;
-    }}
-    .header-brand-center {{
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
-        padding: 4px 0;
-    }}
-    .header-logo-img {{
-        max-height: 95px;
-        width: auto;
-        object-fit: contain;
-        filter: drop-shadow(0px 3px 12px rgba(241, 196, 15, 0.4));
     }}
     .header-user-card {{
         background: #080a0f;
         border: 1px solid #30363d;
-        padding: 8px 16px;
-        border-radius: 11px;
+        padding: 6px 14px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 12px;
         flex-shrink: 0;
     }}
     .user-details {{
         display: flex;
         flex-direction: column;
         text-align: right;
-        line-height: 1.25;
+        line-height: 1.2;
     }}
     .u-name {{
         color: #ffffff;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 800;
         letter-spacing: 0.3px;
     }}
     .u-bal {{
         color: {color_balance};
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 800;
     }}
     .u-avatar-badge {{
         background: linear-gradient(135deg, #f1c40f 0%, #e67e22 100%);
         color: #000000;
-        width: 42px;
-        height: 42px;
+        width: 38px;
+        height: 38px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 900;
-        box-shadow: 0px 0px 12px rgba(241, 196, 15, 0.5);
+        box-shadow: 0px 0px 10px rgba(241, 196, 15, 0.4);
+    }}
+    .header-bottom-row-logo {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        border-top: 1px dashed rgba(48, 54, 61, 0.8);
+        padding-top: 12px;
+    }}
+    .header-logo-img {{
+        max-height: 110px;
+        width: auto;
+        max-width: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0px 4px 14px rgba(241, 196, 15, 0.5));
     }}
     </style>
 
-    <div class="premium-header">
-        <div class="header-clock-box">
-            <span class="h-time">⚡ {hora_texto}</span>
-            <span class="h-date">📅 {fecha_texto}</span>
-        </div>
-        <div class="header-brand-center">
-            {logo_display}
-        </div>
-        <div class="header-user-card">
-            <div class="user-details">
-                <span class="u-name">{usuario_en_sesion}</span>
-                <span class="u-bal">{etiqueta_balance}</span>
+    <div class="premium-header-two-rows">
+        <div class="header-top-row">
+            <div class="header-clock-box">
+                <span class="h-time">⚡ {hora_texto}</span>
+                <span class="h-date">📅 {fecha_texto}</span>
             </div>
-            <div class="u-avatar-badge">🐺</div>
+            <div class="header-user-card">
+                <div class="user-details">
+                    <span class="u-name">{usuario_en_sesion}</span>
+                    <span class="u-bal">{etiqueta_balance}</span>
+                </div>
+                <div class="u-avatar-badge">🐺</div>
+            </div>
+        </div>
+        <div class="header-bottom-row-logo">
+            {logo_display}
         </div>
     </div>
 """, unsafe_allow_html=True)
