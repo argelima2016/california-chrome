@@ -697,7 +697,7 @@ with col_menu3:
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- CARRUSEL AUTOMÁTICO DE IMÁGENES DEL HIPÓDROMO LA RINCONADA (8 SEGUNDOS) ---
+# --- CARRUSEL AUTOMÁTICO DE IMÁGENES (SIN BORDES Y ADAPTADO A LA PANTALLA) ---
 ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
 
 nombres_banners_posibles = [
@@ -722,22 +722,31 @@ if lista_b64_banners:
     js_images_array = str(lista_b64_banners)
     html_slider = f"""
     <style>
-        .banner-slider-container {{
-            width: 100%;
-            max-width: 1200px;
-            height: 240px;
-            margin: 0 auto 12px auto;
-            border-radius: 8px;
+        body {{
+            margin: 0;
+            padding: 0;
+            background-color: #080a0f;
             overflow: hidden;
-            border: 2px solid #f1c40f;
-            box-shadow: 0px 4px 14px rgba(0,0,0,0.8);
+        }}
+        .banner-slider-container {{
+            width: 100vw;
+            height: 240px;
+            margin: 0;
+            padding: 0;
+            border: none !important;
+            outline: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            overflow: hidden;
             position: relative;
-            background-color: #0d1117;
+            background-color: #080a0f;
         }}
         .banner-slide-img {{
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border: none !important;
+            outline: none !important;
             transition: opacity 1.2s ease-in-out;
             display: block;
         }}
@@ -763,10 +772,10 @@ if lista_b64_banners:
         }})();
     </script>
     """
-    components.html(html_slider, height=255)
+    components.html(html_slider, height=245)
 else:
     st.markdown("""
-        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); border: 2px solid #f1c40f; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px;">
+        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); padding: 15px; text-align: center; margin-bottom: 10px;">
             <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
             <p style="color: #8b949e; font-size: 12px; margin: 4px 0 0 0;">¡La pasión del hipismo venezolano en vivo!</p>
         </div>
