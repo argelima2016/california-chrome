@@ -86,8 +86,10 @@ def get_image_base64(nombres_posibles):
     return ""
 
 nombres_archivos = [
-    "1001397336.png",
+    "1001397336_preview_rev_1.png",
+    "1001397336_preview_rev_1.jpg",
     "1001397336.jpg",
+    "1001397336.png",
     "1001394095_preview_rev_1_2.png",
     "1001394095_preview_rev_1_2.jpg",
     "logo.png",
