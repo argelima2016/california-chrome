@@ -107,7 +107,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS CON BURBUJAS REDONDAS ---
+# --- ESTILOS CSS CON BURBUJAS REDONDAS PARA LAS CARRERAS ---
 st.markdown("""
     <style>
     .stApp {
@@ -157,22 +157,23 @@ st.markdown("""
         padding: 0 3px !important;
     }
     
-    /* --- BURBUJAS REDONDAS PARA SELECCIÓN DE CARRERAS Y EJEMPLARES --- */
-    /* Botones de selección de carreras */
+    /* --- TRANSFORMACIÓN DE BOTONES DE CARRERAS EN BURBUJAS CIRCULARES IDÉNTICAS --- */
     div[data-testid="column"] button[kind="secondary"], 
     div[data-testid="column"] button[kind="primary"] {
         border-radius: 50% !important;
-        width: 42px !important;
-        height: 42px !important;
-        min-height: 42px !important;
+        width: 45px !important;
+        height: 45px !important;
+        min-height: 45px !important;
+        max-height: 45px !important;
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         margin: 0 auto !important;
         font-size: 11px !important;
+        font-weight: 900 !important;
     }
-    
+
     .subasta-header {
         font-size: clamp(14px, 3.5vw, 18px);
         font-weight: 800;
