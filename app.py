@@ -31,6 +31,7 @@ components.html("""
                 'footer',
                 '.stDeployButton',
                 'div[data-testid="stStatusWidget"]',
+                '[data-testid="stToolbar"]',
                 '#MainMenu',
                 'a[href*="streamlit.io"]'
             ];
@@ -110,6 +111,19 @@ st.markdown("""
     .stApp {
         background-color: #080a0f;
         color: #f0f6fc;
+    }
+    [data-testid="stToolbar"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
+    footer, #MainMenu {
+        visibility: hidden !important;
+        display: none !important;
     }
     div[data-testid="stTabs"] {
         display: none !important;
