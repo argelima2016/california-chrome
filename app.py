@@ -21,6 +21,32 @@ try:
 except Exception:
     pass
 
+# --- SCRIPT JS PARA OCULTAR ELEMENTOS NATIVOS DE STREAMLIT DE FORMA DEFINITIVA ---
+components.html("""
+    <script>
+        function ocultarElementosNativos() {
+            const doc = window.parent.document;
+            const selectors = [
+                'header[data-testid="stHeader"]',
+                'footer',
+                '.stDeployButton',
+                'div[data-testid="stStatusWidget"]',
+                '#MainMenu',
+                'a[href*="streamlit.io"]'
+            ];
+            selectors.forEach(selector => {
+                doc.querySelectorAll(selector).forEach(el => {
+                    el.style.display = 'none';
+                    el.style.visibility = 'hidden';
+                    el.style.opacity = '0';
+                    el.remove();
+                });
+            });
+        }
+        setInterval(ocultarElementosNativos, 200);
+    </script>
+""", height=0, width=0)
+
 # --- HORA LOCAL DE VENEZUELA ---
 def obtener_hora_venezuela_local():
     try:
@@ -84,18 +110,6 @@ st.markdown("""
     .stApp {
         background-color: #080a0f;
         color: #f0f6fc;
-    }
-    header[data-testid="stHeader"] {
-        display: none !important;
-    }
-    footer {
-        display: none !important;
-    }
-    .stDeployButton {
-        display: none !important;
-    }
-    div[data-testid="stStatusWidget"] {
-        display: none !important;
     }
     div[data-testid="stTabs"] {
         display: none !important;
