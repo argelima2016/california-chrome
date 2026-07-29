@@ -1034,10 +1034,10 @@ if menu_principal_opcion == "Remates":
                 st.image(st.session_state.imagenes_carreras[carr_activa], caption=f"Imagen oficial - {carr_activa}", use_container_width=True)
 
             carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
-            if carrera_cerrada:
-                st.error(f"🔴 La carrera **{carr_activa}** se encuentra **CERRADA** para nuevas pujas.")
-            else:
-                st.success(f"🟢 Panel activo y abierto para: **{carr_activa}** ({modo_actual_remate})")
+            
+            # --- INDICADOR DE ESTADO SIMPLIFICADO CON ICONO ---
+            estado_icono = "🔴" if carrera_cerrada else "🟢"
+            st.markdown(f"### {estado_icono} **{carr_activa}** &nbsp; `{modo_actual_remate}`")
 
             if carr_activa not in st.session_state.detalles_carreras:
                 st.session_state.detalles_carreras[carr_activa] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0, "incentivo": 0.0}
