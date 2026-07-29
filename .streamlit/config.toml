@@ -1,0 +1,12 @@
+[theme]
+base = "dark"
+primaryColor = "#f1c40f"
+backgroundColor = "#080a0f"
+secondaryBackgroundColor = "#161b22"
+textColor = "#f0f6fc"
+
+[client]
+showSidebarNavigation = true
+
+[ui]
+hideTopBar = true
