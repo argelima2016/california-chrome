@@ -107,7 +107,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS CON BURBUJAS REDONDAS Y COMPACTAS ---
+# --- ESTILOS CSS CON BURBUJAS EN FORMATO CÁPSULA / PASTILLA ---
 st.markdown("""
     <style>
     .stApp {
@@ -148,21 +148,22 @@ st.markdown("""
         white-space: nowrap !important;
     }
     
-    /* --- BURBUJAS CIRCULARES EXACTAS PARA 4 POR LÍNEA --- */
+    /* --- NUEVO MODELO: BURBUJAS EN FORMATO CÁPSULA / PASTILLA --- */
     div[data-testid="column"] button[kind="secondary"], 
     div[data-testid="column"] button[kind="primary"] {
-        border-radius: 50% !important;
-        width: 48px !important;
-        height: 48px !important;
-        min-height: 48px !important;
-        max-height: 48px !important;
-        padding: 0 !important;
+        border-radius: 20px !important;
+        width: 100% !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        max-height: 42px !important;
+        padding: 0 8px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         margin: 2px auto !important;
-        font-size: 11px !important;
+        font-size: 12px !important;
         font-weight: 900 !important;
+        letter-spacing: 0.5px !important;
     }
 
     .subasta-header {
@@ -922,7 +923,7 @@ if menu_principal_opcion == "Remates":
 
             st.markdown("🔹 **Seleccionar Carrera:**")
             
-            # --- DISTRIBUCIÓN EN BLOQUES DE 4 BURBUJAS POR LÍNEA ---
+            # --- DISTRIBUCIÓN EN BLOQUES DE 4 CÁPSULAS POR LÍNEA ---
             carreras_totales_visibles = list(carreras_filtradas_visibles)
             chunk_size = 4
             for i in range(0, len(carreras_totales_visibles), chunk_size):
