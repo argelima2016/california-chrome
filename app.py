@@ -107,7 +107,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS CON BURBUJAS EN FORMATO CÁPSULA / PASTILLA ---
+# --- ESTILOS CSS CON CARRUSEL HORIZONTAL OBLIGATORIO Y CÁPSULAS ---
 st.markdown("""
     <style>
     .stApp {
@@ -138,6 +138,42 @@ st.markdown("""
         max-width: 1400px !important;
         margin: 0 auto !important;
     }
+
+    /* --- CONTENEDOR HORIZONTAL FORZADO PARA LAS CARRERAS --- */
+    div.row-widget.stHorizontal {
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+        padding-bottom: 8px !important;
+        width: 100% !important;
+    }
+    div[data-testid="column"] {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: unset !important;
+        padding: 0 2px !important;
+    }
+    
+    /* --- BURBUJAS EN FORMATO CÁPSULA / PASTILLA COMPACTA --- */
+    div[data-testid="column"] button[kind="secondary"], 
+    div[data-testid="column"] button[kind="primary"] {
+        border-radius: 20px !important;
+        width: 60px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 auto !important;
+        font-size: 12px !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.5px !important;
+    }
+
     .stButton button {
         border-radius: 6px !important;
         font-weight: 700 !important;
@@ -147,25 +183,6 @@ st.markdown("""
         letter-spacing: 0.2px;
         white-space: nowrap !important;
     }
-    
-    /* --- NUEVO MODELO: BURBUJAS EN FORMATO CÁPSULA / PASTILLA --- */
-    div[data-testid="column"] button[kind="secondary"], 
-    div[data-testid="column"] button[kind="primary"] {
-        border-radius: 20px !important;
-        width: 100% !important;
-        height: 42px !important;
-        min-height: 42px !important;
-        max-height: 42px !important;
-        padding: 0 8px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin: 2px auto !important;
-        font-size: 12px !important;
-        font-weight: 900 !important;
-        letter-spacing: 0.5px !important;
-    }
-
     .subasta-header {
         font-size: clamp(14px, 3.5vw, 18px);
         font-weight: 800;
@@ -923,20 +940,17 @@ if menu_principal_opcion == "Remates":
 
             st.markdown("🔹 **Seleccionar Carrera:**")
             
-            # --- DISTRIBUCIÓN EN BLOQUES DE 4 CÁPSULAS POR LÍNEA ---
+            # --- CARRUSEL HORIZONTAL DESLIZABLE PARA MÓVIL Y ESCRITORIO ---
             carreras_totales_visibles = list(carreras_filtradas_visibles)
-            chunk_size = 4
-            for i in range(0, len(carreras_totales_visibles), chunk_size):
-                chunk = carreras_totales_visibles[i:i + chunk_size]
-                cols_carreras = st.columns(4, gap="small")
-                for idx_c, c_nombre in enumerate(chunk):
-                    es_modo_ciego = (modo_actual_remate == "Ciegos")
-                    abreviatura = obtener_abreviatura_carrera(c_nombre, modo_ciego=es_modo_ciego)
-                    es_activa = (c_nombre == carr_activa)
-                    with cols_carreras[idx_c]:
-                        if st.button(abreviatura, key=f"rem_btn_sel_carr_{i + idx_c}", use_container_width=True, type="primary" if es_activa else "secondary"):
-                            st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
-                            st.rerun()
+            cols_carreras = st.columns(len(carreras_totales_visibles), gap="small")
+            for idx, c_nombre in enumerate(carreras_totales_visibles):
+                es_modo_ciego = (modo_actual_remate == "Ciegos")
+                abreviatura = obtener_abreviatura_carrera(c_nombre, modo_ciego=es_modo_ciego)
+                es_activa = (c_nombre == carr_activa)
+                with cols_carreras[idx]:
+                    if st.button(abreviatura, key=f"rem_btn_sel_carr_{idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
+                        st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
+                        st.rerun()
 
             st.markdown(f"---")
 
