@@ -156,7 +156,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS CON CONTENEDORES DESLIZABLES (CARRUSEL) UNIVERSALES ---
+# --- ESTILOS CSS ESTRICTOS PARA FORZAR EL DESPLAZAMIENTO HORIZONTAL ---
 st.markdown("""
     <style>
     * {
@@ -193,21 +193,47 @@ st.markdown("""
         overflow-x: hidden !important;
     }
 
-    /* --- CARRUSEL HORIZONTAL UNIVERSAL (MENÚS, SUBMENÚS Y SELECTOR DE CARRERAS) --- */
-    .menu-scroll-container div[data-testid="stHorizontalBlock"],
+    /* --- CONTENEDOR DE CARRUSEL HORIZONTAL ESTRICTO --- */
+    .carrusel-horizontal-box {
+        width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        white-space: nowrap !important;
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        padding-bottom: 8px !important;
+        scrollbar-width: thin;
+    }
+    .carrusel-horizontal-box div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: max-content !important;
+        min-width: 100% !important;
+    }
+    .carrusel-horizontal-box div[data-testid="stHorizontalBlock"] > div {
+        flex: 0 0 auto !important;
+        width: 130px !important;
+        min-width: 130px !important;
+        max-width: 130px !important;
+    }
+
+    /* --- SELECTOR DE CARRERAS (C1, C2...) MÁS COMPACTO --- */
     .carreras-scroll-container div[data-testid="stHorizontalBlock"] {
         overflow-x: auto !important;
         flex-wrap: nowrap !important;
         justify-content: flex-start !important;
         padding-bottom: 8px !important;
         scrollbar-width: thin;
-        gap: 8px !important;
     }
-    .menu-scroll-container div[data-testid="stHorizontalBlock"] > div,
     .carreras-scroll-container div[data-testid="stHorizontalBlock"] > div {
         flex: 0 0 auto !important;
         width: auto !important;
-        min-width: 110px !important;
+        min-width: 65px !important;
         max-width: none !important;
     }
     
@@ -218,7 +244,7 @@ st.markdown("""
         height: 38px !important;
         min-height: 38px !important;
         max-height: 38px !important;
-        padding: 0 8px !important;
+        padding: 0 4px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -768,7 +794,7 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
 # --- MENÚ PRINCIPAL HORIZONTAL (EN FORMA DE CARRUSEL) ---
-st.markdown('<div class="menu-scroll-container">', unsafe_allow_html=True)
+st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
 col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
 
 with col_menu1:
@@ -962,7 +988,7 @@ menu_principal_opcion = st.session_state.menu_principal_opcion
 # 1. MÓDULO DE REMATES
 # =========================================================================
 if menu_principal_opcion == "Remates":
-    st.markdown('<div class="menu-scroll-container">', unsafe_allow_html=True)
+    st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
     col_so1, col_so2, col_so3 = st.columns(3, gap="small")
     with col_so1:
         if st.button("⏱️ Adelantados", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
@@ -1244,7 +1270,7 @@ if menu_principal_opcion == "Remates":
 # 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
-    st.markdown('<div class="menu-scroll-container">', unsafe_allow_html=True)
+    st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
     col_d1, col_d2, col_d3 = st.columns(3, gap="small")
     with col_d1:
         if st.button("🎟️ Dupleta", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
@@ -1442,7 +1468,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     
     opciones_admin_tabs = ["✍️ Caballos", "👥 Usuarios", "⚙️ Dupletas/Polla", "📺 Video", "📊 Saldos", "🖼️ Imágenes", "📄 Importar"]
     
-    st.markdown('<div class="menu-scroll-container">', unsafe_allow_html=True)
+    st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
     cols_adm_tabs = st.columns(len(opciones_admin_tabs), gap="small")
     for idx, tab_nombre in enumerate(opciones_admin_tabs):
         with cols_adm_tabs[idx]:
