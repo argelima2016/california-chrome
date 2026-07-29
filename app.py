@@ -21,7 +21,7 @@ try:
 except Exception:
     pass
 
-# --- SCRIPT JS PARA OCULTAR ELEMENTOS NATIVOS Y CREAR EL BOTÓN DE TUERCA PARA LA BARRA LATERAL ---
+# --- SCRIPT JS PARA OCULTAR ELEMENTOS NATIVOS Y CREAR EL BOTÓN DE TUERCA ---
 components.html("""
     <script>
         function ocultarElementosNativos() {
@@ -54,7 +54,6 @@ components.html("""
                 tuercaBtn.innerHTML = '⚙️';
                 tuercaBtn.title = 'Abrir / Cerrar Configuración';
                 
-                // Estilos flotantes fijos en la esquina superior derecha
                 tuercaBtn.style.position = 'fixed';
                 tuercaBtn.style.top = '10px';
                 tuercaBtn.style.right = '15px';
@@ -68,7 +67,6 @@ components.html("""
                 tuercaBtn.style.cursor = 'pointer';
                 tuercaBtn.style.display = 'flex';
                 tuercaBtn.style.alignItems = 'center';
-                tuercaBtn.style.justifyModel = 'center';
                 tuercaBtn.style.justifyContent = 'center';
                 tuercaBtn.style.boxShadow = '0px 4px 12px rgba(0,0,0,0.5)';
                 tuercaBtn.style.transition = 'transform 0.2s ease, background 0.2s ease';
@@ -83,13 +81,10 @@ components.html("""
                 };
 
                 tuercaBtn.onclick = function() {
-                    // Busca el botón nativo de colapso de Streamlit dentro del header o barra lateral y hazle clic
                     const collapseBtns = doc.querySelectorAll('button[data-testid="baseButton-header"], [data-testid="stSidebarCollapseButton"] button, button[kind="header"]');
                     if (collapseBtns.length > 0) {
-                        // Da click en el último botón de colapso disponible
                         collapseBtns[collapseBtns.length - 1].click();
                     } else {
-                        // Fallback: Busca cualquier botón en la barra lateral superior
                         const altBtn = doc.querySelector('section[data-testid="stSidebar"] button');
                         if (altBtn) altBtn.click();
                     }
@@ -161,7 +156,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS (Menú Principal Plano / Sin Burbuja) ---
+# --- ESTILOS CSS CON CONTENEDORES DESLIZABLES (CARRUSEL) PARA MENÚS Y SUBMENÚS ---
 st.markdown("""
     <style>
     * {
@@ -198,25 +193,20 @@ st.markdown("""
         overflow-x: hidden !important;
     }
 
-    /* --- CENTRADO Y ALINEACIÓN DE BLOQUES HORIZONTALES --- */
-    div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: center !important;
-        align-items: center !important;
-        gap: 8px !important;
-        width: 100% !important;
+    /* --- CARRUSEL HORIZONTAL PARA MENÚ PRINCIPAL Y SUBMENÚS --- */
+    .menu-scroll-container div[data-testid="stHorizontalBlock"] {
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        padding-bottom: 6px !important;
+        scrollbar-width: thin;
+        gap: 6px !important;
     }
-    div[data-testid="stHorizontalBlock"] > div {
-        flex: 1 1 0% !important;
-        max-width: 220px !important;
-    }
-
-    /* --- ESTILO SIN BURBUJA PARA EL MENÚ PRINCIPAL --- */
-    div.row-widget.stButton > button[key*="menu_btn_"] {
-        border-radius: 4px !important;
-        border: 1px solid #30363d !important;
-        background-color: #161b22 !important;
+    .menu-scroll-container div[data-testid="stHorizontalBlock"] > div {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 130px !important;
+        max-width: none !important;
     }
 
     /* --- CONTENEDOR DESLIZABLE HORIZONTAL PARA EL SELECTOR DE CARRERAS --- */
@@ -790,7 +780,8 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL ---
+# --- MENÚ PRINCIPAL HORIZONTAL (EN FORMA DE CARRUSEL) ---
+st.markdown('<div class="menu-scroll-container">', unsafe_allow_html=True)
 col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
 
 with col_menu1:
@@ -807,6 +798,7 @@ with col_menu3:
     if st.button("CUENTAS", key="menu_btn_cuentas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
         st.session_state.menu_principal_opcion = "Cuentas"
         st.rerun()
+st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
@@ -983,6 +975,7 @@ menu_principal_opcion = st.session_state.menu_principal_opcion
 # 1. MÓDULO DE REMATES
 # =========================================================================
 if menu_principal_opcion == "Remates":
+    st.markdown('<div class="menu-scroll-container">', unsafe_allow_html=True)
     col_so1, col_so2, col_so3 = st.columns(3, gap="small")
     with col_so1:
         if st.button("⏱️ Adelantados", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
@@ -996,6 +989,7 @@ if menu_principal_opcion == "Remates":
         if st.button("⚡ En Vivo", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
             st.session_state.sub_remate_opcion = "En Vivo"
             st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
@@ -1263,6 +1257,7 @@ if menu_principal_opcion == "Remates":
 # 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
+    st.markdown('<div class="menu-scroll-container">', unsafe_allow_html=True)
     col_d1, col_d2, col_d3 = st.columns(3, gap="small")
     with col_d1:
         if st.button("🎟️ Dupleta", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
@@ -1276,6 +1271,7 @@ elif menu_principal_opcion == "Dupletas":
         if st.button("🏇 Polla", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Polla Hipica" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Polla Hipica"
             st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
     sub_dup_actual = st.session_state.sub_dupleta_opcion
