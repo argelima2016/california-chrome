@@ -1037,23 +1037,24 @@ if menu_principal_opcion == "Remates":
 
             carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
             
-            # --- INDICADOR DE ESTADO SIMPLIFICADO CON ICONO Y BOTÓN DE GACETA ---
+            # --- INDICADOR DE ESTADO CON ICONO Y BOTÓN DE GACETA VISIBLE ---
             estado_icono = "🔴" if carrera_cerrada else "🟢"
             
-            col_tit_gac1, col_tit_gac2 = st.columns([4, 1], gap="small")
-            with col_tit_gac1:
+            col_st1, col_st2 = st.columns([3, 1], gap="small")
+            with col_st1:
                 st.markdown(f"### {estado_icono} **{carr_activa}** &nbsp; `{modo_actual_remate}`")
-            with col_tit_gac2:
+            with col_st2:
                 if carr_activa in st.session_state.gacetas_carreras:
-                    gaceta_bytes = st.session_state.gacetas_carreras[carr_activa]
                     st.download_button(
                         label="📰 Gaceta",
-                        data=gaceta_bytes,
+                        data=st.session_state.gacetas_carreras[carr_activa],
                         file_name=f"gaceta_{carr_activa.lower().replace(' ', '_')}.pdf",
                         mime="application/pdf",
                         key=f"btn_descargar_gaceta_{carr_activa}",
                         use_container_width=True
                     )
+                else:
+                    st.markdown("<span style='font-size: 11px; color: #8b949e;'>Sin Gaceta</span>", unsafe_allow_html=True)
 
             if carr_activa not in st.session_state.detalles_carreras:
                 st.session_state.detalles_carreras[carr_activa] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0, "incentivo": 0.0}
