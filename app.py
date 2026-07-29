@@ -992,8 +992,6 @@ if menu_principal_opcion == "Remates":
 
     modo_actual_remate = st.session_state.sub_remate_opcion
 
-    st.markdown(f"### 🏇 Modo de Remate: **{modo_actual_remate.upper()}**")
-
     if not lista_carreras_disponibles:
         st.warning("⚠️ No hay carreras cargadas en el sistema.")
     else:
@@ -1037,12 +1035,18 @@ if menu_principal_opcion == "Remates":
 
             carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
             
-            # --- INDICADOR DE ESTADO CON ICONO Y BOTÓN DE GACETA VISIBLE ---
+            # --- ENCABEZADO COMPACTO DE CARRERA Y GACETA ---
             estado_icono = "🔴" if carrera_cerrada else "🟢"
             
             col_st1, col_st2 = st.columns([3, 1], gap="small")
             with col_st1:
-                st.markdown(f"### {estado_icono} **{carr_activa}** &nbsp; `{modo_actual_remate}`")
+                st.markdown(f"""
+                    <div style="font-size: 14px; font-weight: 800; color: #f0f6fc; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                        <span>{estado_icono}</span>
+                        <span>{carr_activa}</span>
+                        <span style="font-size: 11px; font-weight: 600; color: #8b949e; background: #161b22; padding: 1px 6px; border-radius: 4px; border: 1px solid #30363d;">{modo_actual_remate}</span>
+                    </div>
+                """, unsafe_allow_html=True)
             with col_st2:
                 if carr_activa in st.session_state.gacetas_carreras:
                     st.download_button(
@@ -1054,7 +1058,7 @@ if menu_principal_opcion == "Remates":
                         use_container_width=True
                     )
                 else:
-                    st.markdown("<span style='font-size: 11px; color: #8b949e;'>Sin Gaceta</span>", unsafe_allow_html=True)
+                    st.markdown("<span style='font-size: 10px; color: #8b949e; text-align: right; display: block; padding-top: 6px;'>Sin Gaceta</span>", unsafe_allow_html=True)
 
             if carr_activa not in st.session_state.detalles_carreras:
                 st.session_state.detalles_carreras[carr_activa] = {"condicion": "Condición general", "distancia": "1200 mts", "hora": "02:00 PM", "monto_fijo_ciego": 500.0, "incentivo": 0.0}
