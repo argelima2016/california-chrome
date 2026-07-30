@@ -1256,7 +1256,7 @@ if menu_principal_opcion == "Remates":
                                     st.rerun()
 
 # =========================================================================
-# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA (REDISEÑADO)
+# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA (CON CARRUSEL VISUAL)
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
@@ -1278,7 +1278,7 @@ elif menu_principal_opcion == "Dupletas":
     st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
     sub_dup_actual = st.session_state.sub_dupleta_opcion
 
-    st.markdown(f"<div class='subasta-header'>🎟️ Emisión Rápida de {sub_dup_actual}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='subasta-header'>🎟️ Armado Visual de {sub_dup_actual}</div>", unsafe_allow_html=True)
     if st.session_state.dupleta_bloqueada:
         st.error("🔒 **BLOQUEADO:** Emisión cerrada temporalmente.")
 
@@ -1297,7 +1297,49 @@ elif menu_principal_opcion == "Dupletas":
         st.metric("💰 Pote Acumulado Polla", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
 
-    # --- NUEVO DISEÑO LIMPIO Y VERTICAL POR PASOS ---
+    # --- CARRUSEL DESLIZANTE DE IMÁGENES / TARJETAS PARA EL MÓDULO ---
+    cards_html_slider = ""
+    for carr_h in carreras_permitidas:
+        det_h = st.session_state.detalles_carreras.get(carr_h, {})
+        cond_h = det_h.get('condicion', 'Carrera oficial')
+        dist_h = det_h.get('distancia', '1200 mts')
+        hora_h = det_h.get('hora', '02:00 PM')
+        
+        img_carr_b64 = ""
+        if carr_h in st.session_state.imagenes_carreras:
+            try:
+                img_obj = st.session_state.imagenes_carreras[carr_h]
+                if hasattr(img_obj, "read"):
+                    img_bytes = img_obj.getvalue()
+                else:
+                    with open(img_obj, "rb") as f_img:
+                        img_bytes = f_img.read()
+                img_carr_b64 = base64.b64encode(img_bytes).decode('utf-8')
+            except Exception:
+                pass
+
+        if img_carr_b64:
+            media_content = f'<img src="data:image/jpeg;base64,{img_carr_b64}" style="width:100%; height:110px; object-fit:cover; border-radius:4px; margin-bottom:6px;" />'
+        else:
+            media_content = f'<div style="width:100%; height:110px; background:#161b22; border:1px dashed #30363d; display:flex; align-items:center; justify-content:center; border-radius:4px; margin-bottom:6px; color:#8b949e; font-size:11px; font-weight:700;">{carr_h}</div>'
+
+        cards_html_slider += f"""
+            <div style="flex: 0 0 160px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 8px; text-align: left; box-shadow: 0px 4px 10px rgba(0,0,0,0.4);">
+                {media_content}
+                <div style="color: #f1c40f; font-size: 12px; font-weight: 900; margin-bottom: 2px;">{carr_h}</div>
+                <div style="color: #8b949e; font-size: 10px; line-height: 1.2; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{cond_h}</div>
+                <div style="color: #ffffff; font-size: 10px; font-weight: 700; margin-top: 4px;">📏 {dist_h} | ⏰ {hora_h}</div>
+            </div>
+        """
+
+    if cards_html_slider:
+        st.markdown(f"""
+            <div style="display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; margin-bottom: 12px; scrollbar-width: thin;">
+                {cards_html_slider}
+            </div>
+        """, unsafe_allow_html=True)
+
+    # --- SELECTOR LIMPIO Y DINÁMICO DE TICKETS ---
     with st.container(border=True):
         st.markdown(f"👤 **Jugador Activo:** `{st.session_state.usuario_activo}` &nbsp;|&nbsp; 💵 **Costo Ticket:** `{formatear_bs(monto_unico_seccion)}`")
         st.markdown("---")
@@ -1309,7 +1351,6 @@ elif menu_principal_opcion == "Dupletas":
             valido_legs = True
             carreras_usadas = set()
 
-            # Determinamos cuantas selecciones requiere según la modalidad
             cantidad_pasos = 2 if sub_dup_actual == "Dupleta" else (3 if sub_dup_actual == "Tripleta" else len(carreras_permitidas))
 
             for paso in range(cantidad_pasos):
