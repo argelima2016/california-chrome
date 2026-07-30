@@ -1256,7 +1256,7 @@ if menu_principal_opcion == "Remates":
                                     st.rerun()
 
 # =========================================================================
-# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA (CON CARRUSEL CLICKEABLE Y SELECCIÓN VERTICAL FIJA)
+# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA (CON CARRUSEL DESLIZANTE DE IMÁGENES Y SELECCIÓN FIJA)
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
@@ -1297,6 +1297,49 @@ elif menu_principal_opcion == "Dupletas":
         st.metric("💰 Pote Acumulado Polla", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
 
+    # --- CARRUSEL DESLIZANTE DE IMÁGENES DE LAS CARRERAS DISPONIBLES ---
+    cards_html_slider = ""
+    for carr_h in carreras_permitidas:
+        det_h = st.session_state.detalles_carreras.get(carr_h, {})
+        cond_h = det_h.get('condicion', 'Carrera oficial')
+        dist_h = det_h.get('distancia', '1200 mts')
+        hora_h = det_h.get('hora', '02:00 PM')
+        
+        img_carr_b64 = ""
+        if carr_h in st.session_state.imagenes_carreras:
+            try:
+                img_obj = st.session_state.imagenes_carreras[carr_h]
+                if hasattr(img_obj, "read"):
+                    img_bytes = img_obj.getvalue()
+                else:
+                    with open(img_obj, "rb") as f_img:
+                        img_bytes = f_img.read()
+                img_carr_b64 = base64.b64encode(img_bytes).decode('utf-8')
+            except Exception:
+                pass
+
+        if img_carr_b64:
+            media_content = f'<img src="data:image/jpeg;base64,{img_carr_b64}" style="width:100%; height:110px; object-fit:cover; border-radius:4px; margin-bottom:6px;" />'
+        else:
+            media_content = f'<div style="width:100%; height:110px; background:#161b22; border:1px dashed #30363d; display:flex; align-items:center; justify-content:center; border-radius:4px; margin-bottom:6px; color:#8b949e; font-size:11px; font-weight:700;">{carr_h}</div>'
+
+        cards_html_slider += f"""
+            <div style="flex: 0 0 160px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 8px; text-align: left; box-shadow: 0px 4px 10px rgba(0,0,0,0.4);">
+                {media_content}
+                <div style="color: #f1c40f; font-size: 12px; font-weight: 900; margin-bottom: 2px;">{carr_h}</div>
+                <div style="color: #8b949e; font-size: 10px; line-height: 1.2; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{cond_h}</div>
+                <div style="color: #ffffff; font-size: 10px; font-weight: 700; margin-top: 4px;">📏 {dist_h} | ⏰ {hora_h}</div>
+            </div>
+        """
+
+    if cards_html_slider:
+        st.markdown("🖼️ **Carrusel de Carreras Disponibles:**")
+        st.markdown(f"""
+            <div style="display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; margin-bottom: 12px; scrollbar-width: thin;">
+                {cards_html_slider}
+            </div>
+        """, unsafe_allow_html=True)
+
     # --- SELECTOR VERTICAL FIJO: CARRERA FIJA ARRIBA Y EJEMPLAR ABAJO ---
     with st.container(border=True):
         st.markdown(f"👤 **Jugador Activo:** `{st.session_state.usuario_activo}` &nbsp;|&nbsp; 💵 **Costo Ticket:** `{formatear_bs(monto_unico_seccion)}`")
@@ -1317,14 +1360,9 @@ elif menu_principal_opcion == "Dupletas":
                 # Asignación fija secuencial basada en el orden exacto de carreras habilitadas
                 carr_leg = carreras_permitidas[paso % len(carreras_permitidas)]
                 
-                # Mostramos la carrera de forma fija e inalterable
+                # Mostramos la carrera de forma fija e inalterable en la parte superior
                 st.markdown(f"🏁 **Carrera fija:** `{carr_leg}`")
                 
-                # BOTÓN O PREVIEW PARA VISUALIZAR LA IMAGEN DE LA CARRERA
-                if carr_leg in st.session_state.imagenes_carreras:
-                    if st.button(f"🔍 Ver Imagen de {carr_leg}", key=f"btn_ver_img_carr_{sub_dup_actual}_{paso}", use_container_width=True):
-                        st.image(st.session_state.imagenes_carreras[carr_leg], caption=f"Imagen oficial - {carr_leg}", use_container_width=True)
-
                 retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
                 caballos_in_carr = [c for c in list(st.session_state.remates.get(carr_leg, {}).keys()) if c not in retirados_carr_t]
                 
