@@ -377,8 +377,6 @@ def inicializar_estado_global():
         st.session_state.admin_tab_seleccionada = "✍️ Caballos"
     if 'url_video_en_vivo' not in st.session_state:
         st.session_state.url_video_en_vivo = ""
-    if 'carrera_ampliada_modal' not in st.session_state:
-        st.session_state.carrera_ampliada_modal = None
 
 inicializar_estado_global()
 
@@ -1299,41 +1297,6 @@ elif menu_principal_opcion == "Dupletas":
         st.metric("💰 Pote Acumulado Polla", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
 
-    # --- VENTANA MODAL / EXPANSOR PARA VISUALIZAR IMAGEN AMPLIADA ---
-    if st.session_state.carrera_ampliada_modal:
-        carr_ampliada = st.session_state.carrera_ampliada_modal
-        with st.container(border=True):
-            st.markdown(f"### 🔍 Vista Ampliada: {carr_ampliada}")
-            if carr_ampliada in st.session_state.imagenes_carreras:
-                st.image(st.session_state.imagenes_carreras[carr_ampliada], use_container_width=True)
-            else:
-                st.info("No hay imagen disponible para esta carrera.")
-            if st.button("❌ Cerrar Vista Ampliada", key="btn_cerrar_modal_img", use_container_width=True, type="primary"):
-                st.session_state.carrera_ampliada_modal = None
-                st.rerun()
-
-    # --- CARRUSEL DESLIZANTE CON BOTONES PARA VER IMAGEN ---
-    st.markdown("🖼️ **Carrusel de Carreras (Haz clic en una tarjeta para ver su imagen ampliada):**")
-    cols_slider_cards = st.columns(len(carreras_permitidas) if carreras_permitidas else 1, gap="small")
-    
-    for idx_sc, carr_h in enumerate(carreras_permitidas):
-        det_h = st.session_state.detalles_carreras.get(carr_h, {})
-        cond_h = det_h.get('condicion', 'Carrera oficial')
-        dist_h = det_h.get('distancia', '1200 mts')
-        hora_h = det_h.get('hora', '02:00 PM')
-        
-        with cols_slider_cards[idx_sc % len(cols_slider_cards)]:
-            if carr_h in st.session_state.imagenes_carreras:
-                st.image(st.session_state.imagenes_carreras[carr_h], use_container_width=True)
-            else:
-                st.markdown(f"<div style='background:#161b22; border:1px dashed #30363d; padding:15px; text-align:center; font-size:10px; color:#8b949e; border-radius:4px;'>Sin Imagen</div>", unsafe_allow_html=True)
-            
-            if st.button(f"🔍 {carr_h}", key=f"btn_ver_img_modal_{carr_h}", use_container_width=True):
-                st.session_state.carrera_ampliada_modal = carr_h
-                st.rerun()
-
-    st.markdown("---")
-
     # --- SELECTOR VERTICAL FIJO: CARRERA FIJA ARRIBA Y EJEMPLAR ABAJO ---
     with st.container(border=True):
         st.markdown(f"👤 **Jugador Activo:** `{st.session_state.usuario_activo}` &nbsp;|&nbsp; 💵 **Costo Ticket:** `{formatear_bs(monto_unico_seccion)}`")
@@ -1357,6 +1320,11 @@ elif menu_principal_opcion == "Dupletas":
                 # Mostramos la carrera de forma fija e inalterable
                 st.markdown(f"🏁 **Carrera fija:** `{carr_leg}`")
                 
+                # BOTÓN O PREVIEW PARA VISUALIZAR LA IMAGEN DE LA CARRERA
+                if carr_leg in st.session_state.imagenes_carreras:
+                    if st.button(f"🔍 Ver Imagen de {carr_leg}", key=f"btn_ver_img_carr_{sub_dup_actual}_{paso}", use_container_width=True):
+                        st.image(st.session_state.imagenes_carreras[carr_leg], caption=f"Imagen oficial - {carr_leg}", use_container_width=True)
+
                 retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
                 caballos_in_carr = [c for c in list(st.session_state.remates.get(carr_leg, {}).keys()) if c not in retirados_carr_t]
                 
@@ -1791,7 +1759,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.rerun()
 
     elif tab_actual == "📄 Importar":
-        st.markdown("### 📄 Importار Contenido")
+        st.markdown("### 📄 Importar Contenido")
         texto_copiado_web = st.text_area(
             "Pegar texto:", value="", height=200, key="text_area_web_copiado",
             placeholder="Primera Carrera - 1.200 mts - 02:00 PM\n1 - Rey David\n2 - Gran Amigo"
