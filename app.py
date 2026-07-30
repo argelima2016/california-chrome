@@ -1256,7 +1256,7 @@ if menu_principal_opcion == "Remates":
                                     st.rerun()
 
 # =========================================================================
-# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA (CON CARRUSEL VISUAL)
+# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA (CON CARRUSEL Y SELECCIÓN VERTICAL FIJA)
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
@@ -1339,7 +1339,7 @@ elif menu_principal_opcion == "Dupletas":
             </div>
         """, unsafe_allow_html=True)
 
-    # --- SELECTOR LIMPIO Y DINÁMICO DE TICKETS ---
+    # --- SELECTOR VERTICAL FIJO: CARRERA ARRIBA Y EJEMPLAR ABAJO ---
     with st.container(border=True):
         st.markdown(f"👤 **Jugador Activo:** `{st.session_state.usuario_activo}` &nbsp;|&nbsp; 💵 **Costo Ticket:** `{formatear_bs(monto_unico_seccion)}`")
         st.markdown("---")
@@ -1351,35 +1351,33 @@ elif menu_principal_opcion == "Dupletas":
             valido_legs = True
             carreras_usadas = set()
 
+            # Definimos el número de pasos según la modalidad (Dupleta = 2 pasos, Tripleta = 3 pasos, Polla = todas las habilitadas)
             cantidad_pasos = 2 if sub_dup_actual == "Dupleta" else (3 if sub_dup_actual == "Tripleta" else len(carreras_permitidas))
 
             for paso in range(cantidad_pasos):
-                st.markdown(f"🔹 **Paso {paso + 1}: Selecciona Carrera y Ejemplar**")
+                st.markdown(f"🔹 **Paso {paso + 1} de {cantidad_pasos}**")
                 
-                col_p1, col_p2 = st.columns([2, 3], gap="small")
-                with col_p1:
-                    carr_leg = st.selectbox(
-                        f"Carrera #{paso+1}", 
-                        options=carreras_permitidas, 
-                        key=f"ticket_carr_{sub_dup_actual}_{paso}",
-                        index=min(paso, len(carreras_permitidas)-1)
-                    )
+                # Asignación fija secuencial basada en el orden exacto de carreras habilitadas
+                carr_leg = carreras_permitidas[paso % len(carreras_permitidas)]
+                
+                # Mostramos la carrera de forma fija (no modificable)
+                st.markdown(f"🏁 **Carrera seleccionada:** `{carr_leg}`")
                 
                 retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
                 caballos_in_carr = [c for c in list(st.session_state.remates.get(carr_leg, {}).keys()) if c not in retirados_carr_t]
                 
-                with col_p2:
-                    cab_leg = st.selectbox(
-                        f"Ejemplar para {carr_leg}", 
-                        options=caballos_in_carr if caballos_in_carr else ["Sin Caballos Disponibles"], 
-                        key=f"ticket_cab_{sub_dup_actual}_{paso}"
-                    )
+                # Selector de ejemplar ubicado justo debajo de la carrera
+                cab_leg = st.selectbox(
+                    f"Selecciona el Ejemplar para {carr_leg}", 
+                    options=caballos_in_carr if caballos_in_carr else ["Sin Caballos Disponibles"], 
+                    key=f"ticket_cab_{sub_dup_actual}_{paso}"
+                )
                 
                 if carr_leg in carreras_usadas:
                     valido_legs = False
                 carreras_usadas.add(carr_leg)
                 seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
-                st.markdown("")
+                st.markdown("---")
 
             if not st.session_state.dupleta_bloqueada:
                 if st.button(f"🚀 Emitir Ticket de {sub_dup_actual}", key=f"btn_emitir_{sub_dup_actual}", use_container_width=True, type="primary"):
