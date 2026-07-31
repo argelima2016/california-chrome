@@ -804,7 +804,6 @@ st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allo
 # --- BANNER MARQUESINA DINÁMICO (FLUJO HACIA LA DERECHA CON LETRAS LLAMATIVAS) ---
 elementos_carrusel_info = []
 
-# 1. Recopilar Remates Abiertos
 remates_abiertos = [c for c in lista_carreras_disponibles if not st.session_state.carreras_cerradas_remate.get(c, False)]
 if remates_abiertos:
     texto_remates = "🟢 REMATES ABIERTOS: " + " | ".join(remates_abiertos)
@@ -812,13 +811,11 @@ if remates_abiertos:
 else:
     elementos_carrusel_info.append("🔴 TODOS LOS REMATES CERRADOS")
 
-# 2. Recopilar Dupletas Disponibles (Carreras Habilitadas)
 dupletas_hab = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
 if dupletas_hab:
     texto_dupletas = "🎟️ DUPLETAS DISPONIBLES EN: " + " - ".join(dupletas_hab)
     elementos_carrusel_info.append(texto_dupletas)
 
-# 3. Recopilar Ganadores de Carrera / Ejemplar
 if st.session_state.historial_ganadores:
     for carr_g, info_g in st.session_state.historial_ganadores.items():
         ganador_jugador = info_g.get('Ganador', 'N/A')
@@ -848,7 +845,7 @@ if elementos_carrusel_info:
             box-shadow: 0px 0px 15px rgba(241, 196, 15, 0.3);
             display: flex;
             align-items: center;
-        }
+        }}
         .marquee-text {{
             display: inline-block;
             white-space: nowrap;
@@ -860,7 +857,7 @@ if elementos_carrusel_info:
             text-transform: uppercase;
             letter-spacing: 1.5px;
             text-shadow: 0px 0px 8px rgba(0, 255, 255, 0.8), 2px 2px 2px #000000;
-            padding-left: 100%;
+            padding-right: 100%;
         }}
         @keyframes scrollRight {{
             0% {{
@@ -1886,7 +1883,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 else:
                     st.warning("⚠️ Asegúrate de incluir el nombre de la carrera y los ejemplares numerados.")
             else:
-                        st.warning("⚠️ El campo está vacío.")
+                st.warning("⚠️ El campo está vacío.")
 
 # =========================================================================
 # TRANSMISIÓN EN VIVO
