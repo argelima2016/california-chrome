@@ -15,6 +15,20 @@ from pypdf import PdfReader
 # Configuración de pantalla completa
 st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
 
+# --- HORA LOCAL DE VENEZUELA ---
+def obtener_hora_venezuela_local():
+    try:
+        zona_venezuela = ZoneInfo("America/Caracas")
+        return datetime.now(zona_venezuela).replace(tzinfo=None)
+    except Exception:
+        pass
+    tz_venezuela = timezone(timedelta(hours=-4))
+    return datetime.now(tz_venezuela).replace(tzinfo=None)
+
+def formatear_bs(monto):
+    numero_formateado = f"{monto:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"Bs. {numero_formateado}"
+
 # --- SISTEMA DE PERSISTENCIA GLOBAL (JSON) PARA SINCRONIZAR A TODOS LOS USUARIOS ---
 DB_FILE = "state_db.json"
 
@@ -84,7 +98,6 @@ def guardar_estado_global():
     for k in keys_to_save:
         if k in st.session_state:
             val = st.session_state[k]
-            # Convertimos datetime u objetos complejos a string si es necesario para JSON
             data[k] = val
     try:
         with open(DB_FILE, "w", encoding="utf-8") as f:
@@ -189,16 +202,6 @@ components.html("""
         setInterval(ocultarElementosNativos, 200);
     </script>
 """, height=0, width=0)
-
-# --- HORA LOCAL DE VENEZUELA ---
-def obtener_hora_venezuela_local():
-    try:
-        zona_venezuela = ZoneInfo("America/Caracas")
-        return datetime.now(zona_venezuela).replace(tzinfo=None)
-    except Exception:
-        pass
-    tz_venezuela = timezone(timedelta(hours=-4))
-    return datetime.now(tz_venezuela).replace(tzinfo=None)
 
 # --- ESCALA DE PUJAS ---
 ESCALA_PUJAS = [
@@ -581,118 +584,6 @@ def generar_tabla_html_remate(remates_dict, retirados_list):
     </div>
     """
     return html
-
-def procesar_texto_flexible(texto_a_procesar):
-    try:
-        lineas = texto_a_procesar.split('\n')
-        carrera_actual_detectada = None
-        banco_temporal = {}
-        detalles_temporal = {}
-        
-        map_numeros = {
-            'primera': 1, 'segunda': 2, 'tercera': 3, 'cuarta': 4,
-            'quinta': 5, 'sexta': 6, 'septima': 7, 'octava': 8,
-            'novena': 9, 'decima': 10, 'undecima': 11, 'duodecima': 12
-        }
-
-        for linea in lineas:
-            linea_limpia = linea.strip()
-            if not linea_limpia:
-                continue
-            
-            linea_lower = linea_limpia.lower()
-            
-            es_nueva_carrera = False
-            num_carr = None
-
-            if "carrera" in linea_lower or any(k in linea_lower for k in map_numeros.keys()):
-                match_digito = re.search(r'(\d+)', linea_lower)
-                if match_digito and ("carrera" in linea_lower or len(linea_limpia) < 50):
-                    num_carr = int(match_digito.group(1))
-                    es_nueva_carrera = True
-                else:
-                    for palabra, num in map_numeros.items():
-                        if palabra in linea_lower:
-                            num_carr = num
-                            es_nueva_carrera = True
-                            break
-
-            if es_nueva_carrera and num_carr:
-                carrera_actual_detectada = f"Carrera {num_carr}"
-                if carrera_actual_detectada not in banco_temporal:
-                    banco_temporal[carrera_actual_detectada] = []
-                
-                cond = linea_limpia
-                dist = "1200 mts"
-                hora = "02:00 PM"
-
-                match_dist = re.search(r'(\d+[\.,]?\d*\s*(?:mts|metros|mt))', linea_lower)
-                if match_dist:
-                    dist = match_dist.group(1).upper()
-
-                match_h = re.search(r'(\d{1,2}:\d{2}\s*(?:am|pm)?)', linea_lower)
-                if match_h:
-                    hora = match_h.group(1).upper()
-
-                detalles_temporal[carrera_actual_detectada] = {
-                    "condicion": cond, 
-                    "distancia": dist, 
-                    "hora": hora,
-                    "monto_fijo_ciego": 500.0,
-                    "incentivo_adelantados": 0.0,
-                    "incentivo_ciegos": 0.0,
-                    "incentivo_envivo": 0.0,
-                    "hora_cierre_real": "No registrada"
-                }
-                continue
-
-            if carrera_actual_detectada:
-                if "mts" in linea_lower or "metros" in linea_lower:
-                    if detalles_temporal[carrera_actual_detectada]["distancia"] == "1200 mts":
-                        detalles_temporal[carrera_actual_detectada]["distancia"] = linea_limpia
-                if re.search(r'\d{1,2}:\d{2}', linea_lower):
-                    match_h2 = re.search(r'\d{1,2}:\d{2}\s*(?:am|pm)?', linea_lower)
-                    if match_h2 and detalles_temporal[carrera_actual_detectada]["hora"] == "02:00 PM":
-                        detalles_temporal[carrera_actual_detectada]["hora"] = match_h2.group(0).upper()
-
-                match_ejemplar = re.match(r'^(?:[Pp][Oo][Ss]\.?\s*)?(\d{1,2})[\s\-\.\)]+(.+)', linea_limpia)
-                if match_ejemplar:
-                    num_pos = int(match_ejemplar.group(1))
-                    nom_ej = match_ejemplar.group(2).strip()
-                    palabras_excluir = ['retirado', 'jinete', 'entrenador', 'distancia', 'premio', 'propietario', 'condicion', 'hipodromo', 'metros', 'haras', 'stud', 'aprox', 'ejemplar']
-                    if 1 <= num_pos <= 25 and len(nom_ej) > 1 and not any(p in nom_ej.lower() for p in palabras_excluir):
-                        formato_ej = f"{num_pos} - {nom_ej.title()}"
-                        if formato_ej not in banco_temporal[carrera_actual_detectada]:
-                            banco_temporal[carrera_actual_detectada].append(formato_ej)
-
-        if banco_temporal:
-            for c_key in banco_temporal:
-                banco_temporal[c_key].sort(key=lambda x: int(re.match(r'^(\d+)', x).group(1)))
-            st.session_state.banco_caballos_por_carrera = banco_temporal
-            st.session_state.detalles_carreras = detalles_temporal
-            for c_key, c_vals in banco_temporal.items():
-                if c_key not in st.session_state.remates:
-                    st.session_state.remates[c_key] = {}
-                for ev in c_vals:
-                    if ev not in st.session_state.remates[c_key]:
-                        st.session_state.remates[c_key][ev] = {"jugador": "Sin Postor", "monto": 0.0}
-            todas_carr = list(banco_temporal.keys())
-            st.session_state.carreras_activas_remate = list(todas_carr)
-            st.session_state.carreras_habilitadas_dupleta = list(todas_carr)
-            st.session_state.carreras_habilitadas_tripleta = list(todas_carr)
-            st.session_state.carreras_habilitadas_polla = list(todas_carr)
-            st.session_state.total_carreras_semana = len(todas_carr)
-            for mod in st.session_state.carreras_por_modalidad:
-                if not st.session_state.carreras_por_modalidad[mod]:
-                    if mod == "Ciegos":
-                        st.session_state.carreras_por_modalidad[mod] = todas_carr[:2]
-                    else:
-                        st.session_state.carreras_por_modalidad[mod] = list(todas_carr)
-            guardar_estado_global()
-            return True
-    except Exception as e:
-        st.error(f"Error procesando el texto: {e}")
-    return False
 
 if not st.session_state.remates:
     for i in range(1, st.session_state.total_carreras_semana + 1):
@@ -1685,7 +1576,7 @@ elif menu_principal_opcion == "Dupletas":
                                 st.rerun()
 
 # =========================================================================
-# 3. MÓDULO DE CUENTAS (HISTORIAL EN FORMATO TICKET - SOLO LA ÚLTIMA PUJA GANADA)
+# 3. MÓDULO DE CUENTAS
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
     st.markdown("<div class='subasta-header'>📊 Mis Cuentas y Historial de Jugador en Formato Ticket</div>", unsafe_allow_html=True)
@@ -1708,7 +1599,6 @@ elif menu_principal_opcion == "Cuentas":
     st.markdown("---")
     st.markdown(f"### 🎟️ Historial de Tickets y Asignaciones de `{jugador_actual}`")
 
-    # 1. Mostrar SOLAMENTE LA ÚLTIMA PUJA POR CADA CARRERA SI EL JUGADOR LA GANÓ (TIENE EL REMATE)
     st.markdown("#### 🐎 Tickets de Remates (Última puja ganada por carrera)")
     
     remates_ganados_por_carrera = {}
@@ -1751,7 +1641,6 @@ elif menu_principal_opcion == "Cuentas":
 
     st.markdown("---")
 
-    # 2. Mostrar Tickets de Dupletas, Tripletas y Polla Hípica del usuario
     tickets_usuario_dupletas = [t for t in st.session_state.dupletas_tickets if t['jugador'] == jugador_actual]
     tickets_usuario_tripletas = [t for t in st.session_state.tripleta_tickets if t['jugador'] == jugador_actual]
     tickets_usuario_pollas = [t for t in st.session_state.polla_tickets if t['jugador'] == jugador_actual]
@@ -2147,8 +2036,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     guardar_estado_global()
                     st.toast("✅ ¡Gaceta guardada!")
                     st.rerun()
-            if carr_img_sel in st.session_state.gacetas_gacetas_carreras if 'gacetas_carreras' in st.session_state else []:
-                pass
 
     elif tab_actual == "📄 Importar":
         st.markdown("### 📄 Importar Contenido")
