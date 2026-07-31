@@ -801,7 +801,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BANNER MARQUESINA DINÁMICO (SIN MARCO, FLUJO LENTO HACIA LA DERECHA, LETRAS LLAMATIVAS) ---
+# --- BANNER MARQUESINA DINÁMICO (SIN MARCO, FLUJO MUY LENTO HACIA LA DERECHA, LETRAS LLAMATIVAS) ---
 elementos_carrusel_info = []
 
 remates_abiertos = [c for c in lista_carreras_disponibles if not st.session_state.carreras_cerradas_remate.get(c, False)]
@@ -848,7 +848,7 @@ if elementos_carrusel_info:
         .marquee-text {{
             display: inline-block;
             white-space: nowrap;
-            animation: scrollRight 45s linear infinite;
+            animation: scrollRight 80s linear infinite;
             font-family: 'Arial Black', Gadget, sans-serif;
             font-size: 15px;
             font-weight: 900;
