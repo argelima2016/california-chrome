@@ -13,7 +13,7 @@ from pypdf import PdfReader
 from streamlit_autorefresh import st_autorefresh
 
 # Configuración de pantalla completa
-st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
 
 # --- AUTOREFRESH (3 SEGUNDOS) ---
 try:
@@ -801,7 +801,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BANNER MARQUESINA DINÁMICO (FLUJO HACIA LA DERECHA CON LETRAS LLAMATIVAS) ---
+# --- BANNER MARQUESINA DINÁMICO (FLUJO LENTO HACIA LA DERECHA CON LETRAS LLAMATIVAS) ---
 elementos_carrusel_info = []
 
 remates_abiertos = [c for c in lista_carreras_disponibles if not st.session_state.carreras_cerradas_remate.get(c, False)]
@@ -849,7 +849,7 @@ if elementos_carrusel_info:
         .marquee-text {{
             display: inline-block;
             white-space: nowrap;
-            animation: scrollRight 22s linear infinite;
+            animation: scrollRight 45s linear infinite;
             font-family: 'Arial Black', Gadget, sans-serif;
             font-size: 14px;
             font-weight: 900;
