@@ -21,7 +21,7 @@ try:
 except Exception:
     pass
 
-# --- SCRIPT JS PARA OCULTAR ELEMENTOS NATIVOS Y CREAR EL BOTÓN DE TUERCA ---
+# --- SCRIPT JS PARA OCULTAR ELEMENTOS NATIVOS Y CREAR EL BOTÓN DE TUERCA FLOTANTE ---
 components.html(r"""
     <script>
         function ocultarElementosNativos() {
@@ -46,7 +46,7 @@ components.html(r"""
                 });
             });
 
-            // --- BOTÓN FLOTANTE DE TUERCA PARA LA BARRA LATERAL ---
+            // --- BOTÓN FLOTANTE DE TUERCA PARA INTERACTUAR CON LA CONFIGURACIÓN ---
             let tuercaBtn = doc.getElementById('custom-tuerca-sidebar-btn');
             if (!tuercaBtn) {
                 tuercaBtn = doc.createElement('button');
@@ -81,34 +81,29 @@ components.html(r"""
                 };
 
                 tuercaBtn.onclick = function() {
-                    // Método directo sobre la sección de la barra lateral en Streamlit
-                    const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
-                    if (sidebar) {
-                        const computedStyle = window.getComputedStyle(sidebar);
-                        const isHidden = computedStyle.getPropertyValue('visibility') === 'hidden' || 
-                                         computedStyle.getPropertyValue('display') === 'none' || 
-                                         sidebar.getAttribute('aria-expanded') === 'false' ||
-                                         sidebar.style.transform.includes('-100%') ||
-                                         sidebar.classList.contains('closed');
-
-                        if (isHidden) {
-                            sidebar.setAttribute('aria-expanded', 'true');
-                            sidebar.style.transform = 'none';
-                            sidebar.style.visibility = 'visible';
-                            sidebar.style.display = 'block';
-                            sidebar.classList.remove('closed');
-                        } else {
-                            sidebar.setAttribute('aria-expanded', 'false');
-                            sidebar.style.transform = 'translateX(-100%)';
-                            sidebar.classList.add('closed');
-                        }
+                    // Clic directo sobre el botón colapsador oficial de Streamlit
+                    const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
+                                        doc.querySelector('[data-testid="collapsedControl"] button') || 
+                                        doc.querySelector('button[aria-label="Collapse sidebar"]') || 
+                                        doc.querySelector('button[aria-label="Expand sidebar"]');
+                    
+                    if (collapseBtn) {
+                        collapseBtn.click();
                     } else {
-                        // Búsqueda alternativa de botones nativos de despliegue
-                        const buttons = doc.querySelectorAll('button');
-                        for (let btn of buttons) {
-                            if (btn.getAttribute('aria-label') && btn.getAttribute('aria-label').toLowerCase().includes('sidebar')) {
-                                btn.click();
-                                break;
+                        const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
+                        if (sidebar) {
+                            if (sidebar.style.display === 'none' || sidebar.style.visibility === 'hidden' || sidebar.classList.contains('closed')) {
+                                sidebar.style.display = 'block';
+                                sidebar.style.visibility = 'visible';
+                                sidebar.style.transform = 'none';
+                                sidebar.classList.remove('closed');
+                                sidebar.setAttribute('aria-expanded', 'true');
+                            } else {
+                                sidebar.style.display = 'none';
+                                sidebar.style.visibility = 'hidden';
+                                sidebar.style.transform = 'translateX(-100%)';
+                                sidebar.classList.add('closed');
+                                sidebar.setAttribute('aria-expanded', 'false');
                             }
                         }
                     }
@@ -938,7 +933,7 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }}, 400);
+                    }, 400);
                 }}, 8000);
             }}
         }})();
@@ -1593,10 +1588,10 @@ elif menu_principal_opcion == "Cuentas":
         st.dataframe(pd.DataFrame(datos_historial), use_container_width=True, hide_index=True)
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR
+# 4. ZONA DE ADMINISTRADOR (Y CONFIGURACIÓN DESDE EL ICONO DE TUERCA)
 # =========================================================================
 elif menu_principal_opcion == "🔒 Zona Admin":
-    st.markdown("<div class='subasta-header'>🔒 Zona de Administrador</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subasta-header'>🔒 Panel de Configuración y Administración</div>", unsafe_allow_html=True)
     
     opciones_admin_tabs = ["✍️ Caballos", "👥 Usuarios", "⚙️ Dupletas/Polla", "📺 Video", "📊 Saldos", "🖼️ Imágenes", "📄 Importar"]
     
