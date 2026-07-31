@@ -801,21 +801,21 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- CARRUSEL INFORMATIVO DINÁMICO (ESTADO DE LA JORNADA) ---
+# --- BANNER MARQUESINA DINÁMICO (FLUJO HACIA LA DERECHA CON LETRAS LLAMATIVAS) ---
 elementos_carrusel_info = []
 
 # 1. Recopilar Remates Abiertos
 remates_abiertos = [c for c in lista_carreras_disponibles if not st.session_state.carreras_cerradas_remate.get(c, False)]
 if remates_abiertos:
-    texto_remates = "🟢 Remates Abiertos: " + ", ".join(remates_abiertos)
+    texto_remates = "🟢 REMATES ABIERTOS: " + " | ".join(remates_abiertos)
     elementos_carrusel_info.append(texto_remates)
 else:
-    elementos_carrusel_info.append("🔴 Todos los Remates Cerrados")
+    elementos_carrusel_info.append("🔴 TODOS LOS REMATES CERRADOS")
 
 # 2. Recopilar Dupletas Disponibles (Carreras Habilitadas)
 dupletas_hab = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
 if dupletas_hab:
-    texto_dupletas = "🎟️ Dupletas Disponibles (" + str(len(dupletas_hab)) + " carreras)"
+    texto_dupletas = "🎟️ DUPLETAS DISPONIBLES EN: " + " - ".join(dupletas_hab)
     elementos_carrusel_info.append(texto_dupletas)
 
 # 3. Recopilar Ganadores de Carrera / Ejemplar
@@ -827,72 +827,58 @@ if st.session_state.historial_ganadores:
             if h.get('carrera') == carr_g and h.get('jugador') == ganador_jugador and "Remate" in h.get('tipo', ''):
                 ejemplar_ganador_nombre = h.get('detalle', 'N/A')
                 break
-        texto_ganador = "🏆 " + carr_g + " Ganador: " + ganador_jugador + " (" + ejemplar_ganador_nombre + ")"
+        texto_ganador = "🏆 " + carr_g.upper() + " GANADOR: " + ganador_jugador + " (" + ejemplar_ganador_nombre + ")"
         elementos_carrusel_info.append(texto_ganador)
 else:
-    elementos_carrusel_info.append("⏳ Esperando primeros resultados de ganadores...")
+    elementos_carrusel_info.append("⏳ ESPERANDO PRIMEROS RESULTADOS DE GANADORES...")
 
 if elementos_carrusel_info:
-    js_slides_array = str(elementos_carrusel_info)
-    html_carrusel_informativo = """
+    texto_unido_marquesina = " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ".join(elementos_carrusel_info)
+    html_banner_marquesina = f"""
     <style>
-        .ticker-container {
+        .marquee-container {{
             width: 100%;
-            background: linear-gradient(90deg, #161b22 0%, #0d1117 100%);
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            padding: 8px 12px;
-            margin-bottom: 12px;
+            background: linear-gradient(90deg, #1a1500 0%, #0d1117 50%, #1a1500 100%);
+            border: 2px solid #f1c40f;
+            border-radius: 8px;
+            padding: 10px 0;
+            margin-bottom: 14px;
             overflow: hidden;
             box-sizing: border-box;
+            box-shadow: 0px 0px 15px rgba(241, 196, 15, 0.3);
             display: flex;
             align-items: center;
-            gap: 10px;
         }
-        .ticker-badge {
-            background: #f1c40f;
-            color: #000000;
-            font-size: 10px;
-            font-weight: 900;
-            padding: 2px 6px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            flex-shrink: 0;
-        }
-        .ticker-text {
-            color: #f0f6fc;
-            font-size: 12px;
-            font-weight: 700;
+        .marquee-text {{
+            display: inline-block;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 100%;
-            transition: opacity 0.5s ease-in-out;
-        }
+            animation: scrollRight 22s linear infinite;
+            font-family: 'Arial Black', Gadget, sans-serif;
+            font-size: 14px;
+            font-weight: 900;
+            color: #00ffff;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-shadow: 0px 0px 8px rgba(0, 255, 255, 0.8), 2px 2px 2px #000000;
+            padding-left: 100%;
+        }}
+        @keyframes scrollRight {{
+            0% {{
+                transform: translateX(-100%);
+            }}
+            100% {{
+                transform: translateX(100%);
+            }}
+        }}
+        .marquee-container:hover .marquee-text {{
+            animation-play-state: paused;
+        }}
     </style>
-    <div class="ticker-container">
-        <span class="ticker-badge">INFO VIVA</span>
-        <div id="ticker-slide-text" class="ticker-text">""" + elementos_carrusel_info[0] + """</div>
+    <div class="marquee-container">
+        <div class="marquee-text">{texto_unido_marquesina}</div>
     </div>
-    <script>
-        (function() {
-            var slides = """ + js_slides_array + """;
-            var currentIdx = 0;
-            var el = document.getElementById("ticker-slide-text");
-            if(slides.length > 1 && el) {
-                setInterval(function() {
-                    currentIdx = (currentIdx + 1) % slides.length;
-                    el.style.opacity = "0";
-                    setTimeout(function() {
-                        el.innerText = slides[currentIdx];
-                        el.style.opacity = "1";
-                    }, 300);
-                }, 4000);
-            }
-        })();
-    </script>
     """
-    components.html(html_carrusel_informativo, height=45)
+    components.html(html_banner_marquesina, height=52)
 
 # --- CARRUSEL AUTOMÁTICO DE IMÁGENES ---
 ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
@@ -1900,7 +1886,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 else:
                     st.warning("⚠️ Asegúrate de incluir el nombre de la carrera y los ejemplares numerados.")
             else:
-                st.warning("⚠️ El campo está vacío.")
+                        st.warning("⚠️ El campo está vacío.")
 
 # =========================================================================
 # TRANSMISIÓN EN VIVO
