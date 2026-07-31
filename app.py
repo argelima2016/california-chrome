@@ -81,13 +81,11 @@ components.html("""
                 };
 
                 tuercaBtn.onclick = function() {
-                    // Intenta hacer clic en el botón de la barra lateral nativa o colapsador si existe
                     const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
                                         doc.querySelector('[data-testid="collapsedControl"] button');
                     if (collapseBtn) {
                         collapseBtn.click();
                     } else {
-                        // Oculta la barra lateral por completo si no se usa
                         const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                         if (sidebar) {
                             sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
@@ -942,7 +940,7 @@ else:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# --- BARRA LATERAL (CONFIGURACIÓN RÁPIDA) ---
+# --- BARRA LATERAL ---
 st.sidebar.header("barra lateral")
 ahora_dt = obtener_hora_venezuela_local()
 st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
@@ -1831,20 +1829,47 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
         st.metric("Ganancia Casa", formatear_bs(st.session_state.ganancia_casa))
         st.markdown("---")
-        st.markdown("#### 💵 Registrar Abono")
-        col_ab1, col_ab2, col_ab3 = st.columns(3, gap="small")
-        with col_ab1:
-            jugador_abonar = st.selectbox("Usuario", st.session_state.lista_usuarios, key="adm_abono_jugador")
-        with col_ab2:
-            monto_abono = st.number_input("Monto (Bs.)", min_value=0.0, step=100.0, key="adm_abono_monto")
-        with col_ab3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("➕ Abonar", key="adm_btn_aplicar_abono", use_container_width=True, type="primary"):
-                if jugador_abonar not in st.session_state.cuentas:
-                    st.session_state.cuentas[jugador_abonar] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                st.session_state.cuentas[jugador_abonar]['Abonos'] += monto_abono
-                st.toast(f"✅ Abono registrado a {jugador_abonar}")
-                st.rerun()
+        
+        # --- BLOQUE DE ABONOS Y RETIROS ---
+        col_op1, col_op2 = st.columns(2, gap="small")
+        
+        with col_op1:
+            with st.container(border=True):
+                st.markdown("#### 💵 Registrar Abono (Pago)")
+                jugador_abonar = st.selectbox("Usuario", st.session_state.lista_usuarios, key="adm_abono_jugador")
+                monto_abono = st.number_input("Monto Abono (Bs.)", min_value=0.0, step=100.0, key="adm_abono_monto")
+                if st.button("➕ Aplicar Abono", key="adm_btn_aplicar_abono", use_container_width=True, type="primary"):
+                    if jugador_abonar not in st.session_state.cuentas:
+                        st.session_state.cuentas[jugador_abonar] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                    st.session_state.cuentas[jugador_abonar]['Abonos'] += monto_abono
+                    st.toast(f"✅ Abono registrado a {jugador_abonar}")
+                    st.rerun()
+
+        with col_op2:
+            with st.container(border=True):
+                st.markdown("#### 💸 Registrar Retiro")
+                jugador_retirar = st.selectbox("Usuario", st.session_state.lista_usuarios, key="adm_retiro_jugador")
+                monto_retiro = st.number_input("Monto Retiro (Bs.)", min_value=0.0, step=100.0, key="adm_retiro_monto")
+                if st.button("➖ Aplicar Retiro", key="adm_btn_aplicar_retiro", use_container_width=True, type="primary"):
+                    if jugador_retirar not in st.session_state.cuentas:
+                        st.session_state.cuentas[jugador_retirar] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                    
+                    # Deduce tanto de las jugadas (Pujas) como de los premios
+                    st.session_state.cuentas[jugador_retirar]['Pujas'] = max(0.0, st.session_state.cuentas[jugador_retirar]['Pujas'] - monto_retiro)
+                    st.session_state.cuentas[jugador_retirar]['Premios'] = max(0.0, st.session_state.cuentas[jugador_retirar]['Premios'] - monto_retiro)
+                    
+                    # Registramos la operación en el historial
+                    st.session_state.historial_jugadas.append({
+                        "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                        "jugador": jugador_retirar,
+                        "tipo": "Retiro",
+                        "carrera": "General",
+                        "detalle": f"Retiro de fondos aplicado",
+                        "monto": monto_retiro
+                    })
+                    
+                    st.toast(f"✅ Retiro de {formatear_bs(monto_retiro)} deducido a {jugador_retirar}")
+                    st.rerun()
 
     elif tab_actual == "🖼️ Imágenes":
         st.markdown("### 🖼️ Imágenes y Gacetas por Carrera")
