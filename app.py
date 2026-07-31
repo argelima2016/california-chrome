@@ -81,21 +81,34 @@ components.html("""
                 };
 
                 tuercaBtn.onclick = function() {
-                    const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
-                                        doc.querySelector('button[aria-label="Collapse sidebar"]') || 
-                                        doc.querySelector('button[aria-label="Expand sidebar"]') ||
-                                        doc.querySelector('section[data-testid="stSidebar"] button');
-                    
-                    if (collapseBtn) {
-                        collapseBtn.click();
-                    } else {
-                        const altBtns = doc.querySelectorAll('button');
-                        for (let btn of altBtns) {
-                            if (btn.getAttribute('kind') === 'header' || btn.innerHTML.includes('sidebar')) {
-                                btn.click();
-                                break;
-                            }
+                    // Estrategia 1: Buscar botones de colapso oficiales de Streamlit
+                    const collapseBtns = doc.querySelectorAll('[data-testid="stSidebarCollapseButton"] button, [data-testid="collapsedControl"] button, button[aria-label="Collapse sidebar"], button[aria-label="Expand sidebar"]');
+                    if (collapseBtns.length > 0) {
+                        collapseBtns[collapseBtns.length - 1].click();
+                        return;
+                    }
+
+                    // Estrategia 2: Forzar la apertura manipulando directamente el DOM de la sección de la barra lateral
+                    const sidebarSection = doc.querySelector('section[data-testid="stSidebar"]');
+                    if (sidebarSection) {
+                        const currentVal = window.getComputedStyle(sidebarSection).getPropertyValue('transform');
+                        // Si está contraída (oculta por transformación), la abrimos forzando el estado abierto de Streamlit
+                        if (sidebarSection.getAttribute('aria-expanded') === 'false' || sidebarSection.classList.contains('closed') || (currentVal && currentVal !== 'none' && !currentVal.includes('matrix(1, 0, 0, 1, 0, 0)'))) {
+                            sidebarSection.setAttribute('aria-expanded', 'true');
+                            sidebarSection.style.transform = 'none';
+                            sidebarSection.style.visibility = 'visible';
+                            sidebarSection.style.display = 'block';
+                        } else {
+                            sidebarSection.setAttribute('aria-expanded', 'false');
+                            sidebarSection.style.transform = 'translateX(-100%)';
                         }
+                        return;
+                    }
+
+                    // Estrategia 3: Buscar cualquier botón dentro del área de cabecera principal que controle la barra
+                    const headerButtons = doc.querySelectorAll('header button');
+                    if (headerButtons.length > 0) {
+                        headerButtons[0].click();
                     }
                 };
 
@@ -922,8 +935,8 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }}, 400);
-                }}, 8000);
+                    }, 400);
+                }, 8000);
             }}
         }})();
     </script>
@@ -1873,7 +1886,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             if carr_img_sel in st.session_state.gacetas_carreras:
                 st.success("✅ Gaceta disponible para descarga en esta carrera.")
                 if st.button("🗑️ Eliminar Gaceta", key=f"btn_del_gaceta_{carr_img_sel}", use_container_width=True):
-                    del st.session_state.gacetas_carreras[carr_img_sel]
+                    del st.session_state.gacetas_carreras[carr_img_sel] = None
                     st.toast("🗑️ Gaceta removida")
                     st.rerun()
 
