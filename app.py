@@ -311,7 +311,6 @@ st.markdown("""
         letter-spacing: 0.5px;
         text-shadow: 2px 2px 4px #000000;
     }
-    /* Estilo de ticket de jugador */
     .ticket-jugador-card {
         background: #0d1117;
         border: 2px solid #30363d;
@@ -1762,7 +1761,7 @@ elif menu_principal_opcion == "Dupletas":
                                 st.rerun()
 
 # =========================================================================
-# 3. MÓDULO DE CUENTAS (HISTORIAL EN FORMATO DE TICKET Y HORAS DE CIERRE)
+# 3. MÓDULO DE CUENTAS (HISTORIAL EN FORMATO TICKET - SOLO LA ÚLTIMA PUJA GANADA)
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
     st.markdown("<div class='subasta-header'>📊 Mis Cuentas y Historial de Jugador en Formato Ticket</div>", unsafe_allow_html=True)
@@ -1785,37 +1784,49 @@ elif menu_principal_opcion == "Cuentas":
     st.markdown("---")
     st.markdown(f"### 🎟️ Historial de Tickets y Asignaciones de `{jugador_actual}`")
 
-    # 1. Mostrar Historial de Remates (Adelantados, Ciegos, En Vivo) en Formato de Ticket
-    historial_usuario_remates = [
-        h for h in st.session_state.historial_jugadas 
-        if h['jugador'] == jugador_actual and "Remate" in h.get('tipo', '')
-    ]
+    # 1. Mostrar SOLAMENTE LA ÚLTIMA PUJA POR CADA CARRERA SI EL JUGADOR LA GANÓ (TIENE EL REMATE)
+    st.markdown("#### 🐎 Tickets de Remates (Última puja ganada por carrera)")
+    
+    # Agrupamos los remates por carrera donde el usuario activo sea el ganador actual
+    remates_ganados_por_carrera = {}
+    for carr_k, remates_carr in st.session_state.remates.items():
+        for ej_k, info_rem in remates_carr.items():
+            if info_rem['jugador'] == jugador_actual and info_rem['monto'] > 0:
+                # Verificamos si el ejemplar no está retirado
+                retirados_c = st.session_state.ejemplares_retirados.get(carr_k, [])
+                if ej_k not in retirados_c:
+                    remates_ganados_por_carrera[carr_k] = {
+                        "ejemplar": ej_k,
+                        "monto": info_rem['monto']
+                    }
 
-    if historial_usuario_remates:
-        st.markdown("#### 🐎 Tickets de Remates (Adelantados, Ciegos, En Vivo)")
-        for h in reversed(historial_usuario_remates):
-            carr_h = h.get('carrera', 'N/A')
-            detalles_c = st.session_state.detalles_carreras.get(carr_h, {})
+    if remates_ganados_por_carrera:
+        for carr_k, info_r in remates_ganados_por_carrera.items():
+            detalles_c = st.session_state.detalles_carreras.get(carr_k, {})
             hora_cierre_real = detalles_c.get('hora_cierre_real', 'No cerrado todavía')
             
-            # Detectar si fue Adelantada, Ciega o En Vivo según el tipo
-            tipo_rem = h.get('tipo', 'Remate')
-            
+            # Buscamos la fecha exacta del último registro de puja para este caballo
+            fecha_puja = "Jornada actual"
+            for h in reversed(st.session_state.historial_jugadas):
+                if h.get('carrera') == carr_k and h.get('jugador') == jugador_actual and h.get('detalle') == info_r['ejemplar']:
+                    fecha_puja = h.get('fecha', '')
+                    break
+
             ticket_html = f"""
                 <div class="ticket-jugador-card">
                     <div class="ticket-header-row">
-                        <span>🏷️ TICKET REMATE ({tipo_rem.upper()})</span>
-                        <span>📅 {h.get('fecha', '')}</span>
+                        <span>🏷️ TICKET REMATE (GANADOR)</span>
+                        <span>📅 {fecha_puja}</span>
                     </div>
-                    <div class="ticket-body-row">🏁 <b>Carrera:</b> {carr_h}</div>
-                    <div class="ticket-body-row">🐎 <b>Ejemplar Asignado:</b> {h.get('detalle', '')}</div>
+                    <div class="ticket-body-row">🏁 <b>Carrera:</b> {carr_k}</div>
+                    <div class="ticket-body-row">🐎 <b>Último Ejemplar Asignado:</b> {info_r['ejemplar']}</div>
                     <div class="ticket-body-row">🔒 <b>Hora de Cierre Carrera:</b> {hora_cierre_real}</div>
-                    <div class="ticket-body-row" style="color: #f1c40f; margin-top: 6px;">💰 <b>Monto Invertido:</b> {formatear_bs(h.get('monto', 0.0))}</div>
+                    <div class="ticket-body-row" style="color: #f1c40f; margin-top: 6px;">💰 <b>Monto Ganador:</b> {formatear_bs(info_r['monto'])}</div>
                 </div>
             """
             st.markdown(ticket_html, unsafe_allow_html=True)
     else:
-        st.info("ℹ️ No hay tickets de remates registrados para este usuario.")
+        st.info("ℹ️ No tienes remates ganados activos registrados en esta jornada.")
 
     st.markdown("---")
 
