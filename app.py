@@ -1181,21 +1181,21 @@ if menu_principal_opcion == "Remates":
                             st.success(f"✅ ¡Premio liquidado a **{info_g['jugador']}**!")
                             st.rerun()
 
-            # --- BOTONES DE RETIRO RÁPIDO (SOLO UN ICONO SIN TÍTULO) ---
+            # --- BOTONES TÁCTILES CON NÚMEROS DE POSICIÓN PARA RETIRAR/ACTIVAR EJEMPLARES ---
             retirados_actuales_carr = st.session_state.ejemplares_retirados[carr_activa]
-            st.markdown("🔹 **Estado de Retiros (Clic para cambiar):**")
-            cols_retiro_grid = st.columns(min(6, len(st.session_state.remates[carr_activa])), gap="small")
+            st.markdown("🔹 **Toca el número para retirar o activar el ejemplar:**")
+            cols_retiro_grid = st.columns(min(8, len(st.session_state.remates[carr_activa])), gap="small")
             for idx_r, (cab_item, info_item) in enumerate(st.session_state.remates[carr_activa].items()):
                 c_idx = idx_r % len(cols_retiro_grid)
                 es_ret = cab_item in retirados_actuales_carr
                 num_parte = cab_item.split(" - ")[0]
                 with cols_retiro_grid[c_idx]:
                     if es_ret:
-                        if st.button(f"🚫 #{num_parte}", key=f"btn_toggle_ret_{carr_activa}_{cab_item}", use_container_width=True, type="primary"):
+                        if st.button(f"🚫#{num_parte}", key=f"btn_toggle_ret_{carr_activa}_{cab_item}", use_container_width=True, type="primary"):
                             st.session_state.ejemplares_retirados[carr_activa].remove(cab_item)
                             st.rerun()
                     else:
-                        if st.button(f"✅ #{num_parte}", key=f"btn_toggle_ret_{carr_activa}_{cab_item}", use_container_width=True):
+                        if st.button(f"#{num_parte}", key=f"btn_toggle_ret_{carr_activa}_{cab_item}", use_container_width=True):
                             if cab_item not in st.session_state.ejemplares_retirados[carr_activa]:
                                 st.session_state.ejemplares_retirados[carr_activa].append(cab_item)
                             st.rerun()
@@ -1861,7 +1861,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         st.markdown("---")
         with st.container(border=True):
             st.markdown("📰 **Archivo Gaceta (PDF)**")
-            gaceta_subida = st.file_uploader("Subir PDF de la Gaceta", type=["pdf"], key=f"file_gaceta_{carr_img_sel}")
+            gaceta_subida = st.file_uploader("Sub PDF de la Gaceta", type=["pdf"], key=f"file_gaceta_{carr_img_sel}")
             if gaceta_subida is not None:
                 if st.button("💾 Guardar Gaceta", key=f"btn_save_gaceta_{carr_img_sel}", use_container_width=True, type="primary"):
                     st.session_state.gacetas_carreras[carr_img_sel] = gaceta_subida.read()
@@ -1910,4 +1910,4 @@ if url_live_video:
         try:
             st.video(url_live_video)
         except Exception:
-            st.warning("⚠️ No se pudo cargar el video con la URL proporcionada.")
+            st.warning("⚠️ No se pudo cargar el video con la URL provenance.")
