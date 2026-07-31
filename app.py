@@ -822,22 +822,21 @@ if dupletas_hab:
 if st.session_state.historial_ganadores:
     for carr_g, info_g in st.session_state.historial_ganadores.items():
         ganador_jugador = info_g.get('Ganador', 'N/A')
-        # Buscar el ejemplar ganador en las jugadas
         ejemplar_ganador_nombre = "N/A"
         for h in st.session_state.historial_jugadas:
             if h.get('carrera') == carr_g and h.get('jugador') == ganador_jugador and "Remate" in h.get('tipo', ''):
                 ejemplar_ganador_nombre = h.get('detalle', 'N/A')
                 break
-        texto_ganador = f"🏆 {carr_g} Ganador: {ganador_jugador} ({ejemplar_ganador_nombre})"
+        texto_ganador = "🏆 " + carr_g + " Ganador: " + ganador_jugador + " (" + ejemplar_ganador_nombre + ")"
         elementos_carrusel_info.append(texto_ganador)
 else:
     elementos_carrusel_info.append("⏳ Esperando primeros resultados de ganadores...")
 
 if elementos_carrusel_info:
     js_slides_array = str(elementos_carrusel_info)
-    html_carrusel_informativo = f"""
+    html_carrusel_informativo = """
     <style>
-        .ticker-container {{
+        .ticker-container {
             width: 100%;
             background: linear-gradient(90deg, #161b22 0%, #0d1117 100%);
             border: 1px solid #30363d;
@@ -849,8 +848,8 @@ if elementos_carrusel_info:
             display: flex;
             align-items: center;
             gap: 10px;
-        }}
-        .ticker-badge {{
+        }
+        .ticker-badge {
             background: #f1c40f;
             color: #000000;
             font-size: 10px;
@@ -859,8 +858,8 @@ if elementos_carrusel_info:
             border-radius: 4px;
             text-transform: uppercase;
             flex-shrink: 0;
-        }}
-        .ticker-text {{
+        }
+        .ticker-text {
             color: #f0f6fc;
             font-size: 12px;
             font-weight: 700;
@@ -869,28 +868,28 @@ if elementos_carrusel_info:
             text-overflow: ellipsis;
             width: 100%;
             transition: opacity 0.5s ease-in-out;
-        }}
+        }
     </style>
     <div class="ticker-container">
         <span class="ticker-badge">INFO VIVA</span>
-        <div id="ticker-slide-text" class="ticker-text">{elementos_carrusel_info[0]}</div>
+        <div id="ticker-slide-text" class="ticker-text">""" + elementos_carrusel_info[0] + """</div>
     </div>
     <script>
-        (function() {{
-            var slides = {js_slides_array};
+        (function() {
+            var slides = """ + js_slides_array + """;
             var currentIdx = 0;
             var el = document.getElementById("ticker-slide-text");
-            if(slides.length > 1 && el) {{
-                setInterval(function() {{
+            if(slides.length > 1 && el) {
+                setInterval(function() {
                     currentIdx = (currentIdx + 1) % slides.length;
                     el.style.opacity = 0;
-                    setTimeout(function() {{
+                    setTimeout(function() {
                         el.innerText = slides[currentIdx];
                         el.style.opacity = 1;
                     }, 300);
-                }}, 4000);
-            }}
-        }})();
+                }, 4000);
+            }
+        })();
     </script>
     """
     components.html(html_carrusel_informativo, height=45)
@@ -1883,7 +1882,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             if carr_img_sel in st.session_state.gacetas_carreras:
                 st.success("✅ Gaceta disponible para descarga en esta carrera.")
                 if st.button("🗑️ Eliminar Gaceta", key=f"btn_del_gaceta_{carr_img_sel}", use_container_width=True):
-                    del st.session_state.gacetas_gacetas[carr_img_sel] if 'gacetas_gacetas' in locals() else del st.session_state.gacetas_carreras[carr_img_sel]
+                    del st.session_state.gacetas_carreras[carr_img_sel]
                     st.toast("🗑️ Gaceta removida")
                     st.rerun()
 
