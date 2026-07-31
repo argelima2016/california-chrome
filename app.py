@@ -10,16 +10,9 @@ from bs4 import BeautifulSoup
 from datetime import datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pypdf import PdfReader
-from streamlit_autorefresh import st_autorefresh
 
 # Configuración de pantalla completa
 st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
-
-# --- AUTOREFRESH (3 SEGUNDOS) ---
-try:
-    st_autorefresh(interval=3000, key="datarefresh_en_vivo")
-except Exception:
-    pass
 
 # --- SCRIPT JS PARA OCULTAR ELEMENTOS NATIVOS Y OCULTAR/MOSTRAR TOTALMENTE LA BARRA LATERAL ---
 components.html("""
