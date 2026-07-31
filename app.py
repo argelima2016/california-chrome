@@ -22,7 +22,7 @@ except Exception:
     pass
 
 # --- SCRIPT JS PARA OCULTAR ELEMENTOS NATIVOS Y CREAR EL BOTÓN DE TUERCA ---
-components.html("""
+components.html(r"""
     <script>
         function ocultarElementosNativos() {
             const doc = window.parent.document;
@@ -81,42 +81,34 @@ components.html("""
                 };
 
                 tuercaBtn.onclick = function() {
-                    // Método robusto: Busca cualquier botón en la barra superior o controles de Streamlit que actúen sobre el sidebar
-                    const allButtons = doc.querySelectorAll('button');
-                    let targetBtn = null;
-                    
-                    for (let btn of allButtons) {
-                        const aria = btn.getAttribute('aria-label') || '';
-                        const testId = btn.getAttribute('data-testid') || '';
-                        if (
-                            aria.toLowerCase().includes('sidebar') || 
-                            testId.includes('Sidebar') || 
-                            testId.includes('collapsedControl') ||
-                            btn.querySelector('svg[aria-hidden="true"]')
-                        ) {
-                            // Validar que no sea el botón de la tuerca
-                            if (btn.id !== 'custom-tuerca-sidebar-btn') {
-                                targetBtn = btn;
-                                break;
-                            }
-                        }
-                    }
+                    // Método directo sobre la sección de la barra lateral en Streamlit
+                    const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
+                    if (sidebar) {
+                        const computedStyle = window.getComputedStyle(sidebar);
+                        const isHidden = computedStyle.getPropertyValue('visibility') === 'hidden' || 
+                                         computedStyle.getPropertyValue('display') === 'none' || 
+                                         sidebar.getAttribute('aria-expanded') === 'false' ||
+                                         sidebar.style.transform.includes('-100%') ||
+                                         sidebar.classList.contains('closed');
 
-                    if (targetBtn) {
-                        targetBtn.click();
+                        if (isHidden) {
+                            sidebar.setAttribute('aria-expanded', 'true');
+                            sidebar.style.transform = 'none';
+                            sidebar.style.visibility = 'visible';
+                            sidebar.style.display = 'block';
+                            sidebar.classList.remove('closed');
+                        } else {
+                            sidebar.setAttribute('aria-expanded', 'false');
+                            sidebar.style.transform = 'translateX(-100%)';
+                            sidebar.classList.add('closed');
+                        }
                     } else {
-                        // Fallback directo sobre la sección del sidebar modificando su atributo de aria-expanded o clase
-                        const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
-                        if (sidebar) {
-                            const isExpanded = sidebar.getAttribute('aria-expanded');
-                            if (isExpanded === 'false' || sidebar.style.transform.includes('-')) {
-                                sidebar.setAttribute('aria-expanded', 'true');
-                                sidebar.style.transform = 'none';
-                                sidebar.style.visibility = 'visible';
-                                sidebar.style.display = 'block';
-                            } else {
-                                sidebar.setAttribute('aria-expanded', 'false');
-                                sidebar.style.transform = 'translateX(-100%)';
+                        // Búsqueda alternativa de botones nativos de despliegue
+                        const buttons = doc.querySelectorAll('button');
+                        for (let btn of buttons) {
+                            if (btn.getAttribute('aria-label') && btn.getAttribute('aria-label').toLowerCase().includes('sidebar')) {
+                                btn.click();
+                                break;
                             }
                         }
                     }
@@ -946,7 +938,7 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }, 400);
+                    }}, 400);
                 }}, 8000);
             }}
         }})();
@@ -1937,4 +1929,4 @@ if url_live_video:
         try:
             st.video(url_live_video)
         except Exception:
-            st.warning("⚠️ No se pudo cargar el video con la URL proporcionada.")
+            st.video(url_live_video)
