@@ -81,27 +81,43 @@ components.html("""
                 };
 
                 tuercaBtn.onclick = function() {
-                    // Simular clic en el botón nativo de Streamlit para colapsar/expandir barra lateral
-                    const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
-                                        doc.querySelector('[data-testid="collapsedControl"] button') || 
-                                        doc.querySelector('button[aria-label="Collapse sidebar"]') || 
-                                        doc.querySelector('button[aria-label="Expand sidebar"]');
+                    // Método robusto: Busca cualquier botón en la barra superior o controles de Streamlit que actúen sobre el sidebar
+                    const allButtons = doc.querySelectorAll('button');
+                    let targetBtn = null;
                     
-                    if (collapseBtn) {
-                        collapseBtn.click();
-                        return;
+                    for (let btn of allButtons) {
+                        const aria = btn.getAttribute('aria-label') || '';
+                        const testId = btn.getAttribute('data-testid') || '';
+                        if (
+                            aria.toLowerCase().includes('sidebar') || 
+                            testId.includes('Sidebar') || 
+                            testId.includes('collapsedControl') ||
+                            btn.querySelector('svg[aria-hidden="true"]')
+                        ) {
+                            // Validar que no sea el botón de la tuerca
+                            if (btn.id !== 'custom-tuerca-sidebar-btn') {
+                                targetBtn = btn;
+                                break;
+                            }
+                        }
                     }
 
-                    // Forzar manipulación directa sobre la sección de la barra lateral si el botón nativo no se detecta
-                    const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
-                    if (sidebar) {
-                        const currentLeft = window.getComputedStyle(sidebar).left;
-                        if (currentLeft === '0px' || !sidebar.classList.contains('closed')) {
-                            sidebar.style.left = '-350px';
-                            sidebar.classList.add('closed');
-                        } else {
-                            sidebar.style.left = '0px';
-                            sidebar.classList.remove('closed');
+                    if (targetBtn) {
+                        targetBtn.click();
+                    } else {
+                        // Fallback directo sobre la sección del sidebar modificando su atributo de aria-expanded o clase
+                        const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
+                        if (sidebar) {
+                            const isExpanded = sidebar.getAttribute('aria-expanded');
+                            if (isExpanded === 'false' || sidebar.style.transform.includes('-')) {
+                                sidebar.setAttribute('aria-expanded', 'true');
+                                sidebar.style.transform = 'none';
+                                sidebar.style.visibility = 'visible';
+                                sidebar.style.display = 'block';
+                            } else {
+                                sidebar.setAttribute('aria-expanded', 'false');
+                                sidebar.style.transform = 'translateX(-100%)';
+                            }
                         }
                     }
                 };
@@ -930,7 +946,7 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }}, 400);
+                    }, 400);
                 }}, 8000);
             }}
         }})();
