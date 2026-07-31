@@ -596,26 +596,15 @@ def generar_tabla_html_remate(remates_dict, retirados_list):
             color: #990000 !important;
             text-decoration: line-through;
         }
-        .badge-retirado {
-            background-color: #ff4757;
-            color: #ffffff;
-            font-size: 9px;
-            font-weight: 900;
-            padding: 2px 5px;
-            border-radius: 4px;
-            display: inline-block;
-            text-decoration: none !important;
-            margin-left: 4px;
-        }
     </style>
     <div style="background-color: #ffffff; padding: 3px; border-radius: 6px; overflow-x: auto; width: 100%;">
         <table class="tabla-referencia">
             <thead>
                 <tr>
                     <th style="width: 12%;">No</th>
-                    <th style="width: 42%;">Ejemplar</th>
-                    <th style="width: 23%;">Comprador</th>
-                    <th style="width: 23%;">Monto</th>
+                    <th style="width: 35%;">Ejemplar</th>
+                    <th style="width: 25%;">Comprador</th>
+                    <th style="width: 28%;">Monto</th>
                 </tr>
             </thead>
             <tbody>
@@ -640,12 +629,12 @@ def generar_tabla_html_remate(remates_dict, retirados_list):
         
         es_retirado = cab in retirados_list
         clase_fila = "retirado-row" if es_retirado else ""
-        etiqueta_html_estado = '<span class="badge-retirado">RETIRADO</span>' if es_retirado else ''
+        etiqueta_estado = " 🚫" if es_retirado else ""
         
         html += f"""
                 <tr class="{clase_fila}">
                     <td><span class="badge-numero {badge_class}">{num}</span></td>
-                    <td style="font-weight: 800; font-size: 12px;" title="{nombre_solo.upper()}">{nombre_solo.upper()}{etiqueta_html_estado}</td>
+                    <td style="font-weight: 800; font-size: 12px;" title="{nombre_solo.upper()}{etiqueta_estado}">{nombre_solo.upper()}{etiqueta_estado}</td>
                     <td title="{info['jugador']}">{info['jugador']}</td>
                     <td style="font-weight: bold; color: { '#990000' if es_retirado else '#000000' };">{formatear_bs(info['monto'])}</td>
                 </tr>
@@ -1157,17 +1146,18 @@ if menu_principal_opcion == "Remates":
                         if restantes_10s > 0:
                             st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa})</div>", unsafe_allow_html=True)
 
-            # --- GESTIÓN RÁPIDA DE RETIRADOS DESDE LA TABLA (ADMIN / CASA) ---
-            retirados_actuales_carr = st.session_state.ejemplares_retirados[carr_activa]
+            tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []))
+            cantidad_filas = len(st.session_state.remates[carr_activa])
+            altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
+            components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
-            # --- SELECCIÓN DE GANADOR / LIQUIDACIÓN ---
             with st.container(border=True):
                 st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Ganador - {carr_activa}</p>", unsafe_allow_html=True)
                 if carr_activa in st.session_state.historial_ganadores:
                     info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
                     st.success(f"✅ Ganador: **{info_ganador_prev.get('Ganador', 'N/A')}** | Premio: **{info_ganador_prev.get('Premio', '0')}**")
                 else:
-                    caballos_lista_ganador = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in retirados_actuales_carr]
+                    caballos_lista_ganador = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in st.session_state.ejemplares_retirados.get(carr_activa, [])]
                     if not caballos_lista_ganador:
                         caballos_lista_ganador = list(st.session_state.remates[carr_activa].keys())
                     col_g1, col_g2 = st.columns([3, 2], gap="small")
@@ -1191,34 +1181,21 @@ if menu_principal_opcion == "Remates":
                             st.success(f"✅ ¡Premio liquidado a **{info_g['jugador']}**!")
                             st.rerun()
 
-            # --- TABLA DE REMATES CON BOTONES DE RETIRADO INTEGRADOS ---
-            st.markdown("🔹 **Listado de Ejemplares y Estado (Haz clic para Retirar/Activar):**")
-            for cab_item, info_item in st.session_state.remates[carr_activa].items():
+            # --- BOTONES DE RETIRO RÁPIDO (SOLO UN ICONO SIN TÍTULO) ---
+            retirados_actuales_carr = st.session_state.ejemplares_retirados[carr_activa]
+            st.markdown("🔹 **Estado de Retiros (Clic para cambiar):**")
+            cols_retiro_grid = st.columns(min(6, len(st.session_state.remates[carr_activa])), gap="small")
+            for idx_r, (cab_item, info_item) in enumerate(st.session_state.remates[carr_activa].items()):
+                c_idx = idx_r % len(cols_retiro_grid)
                 es_ret = cab_item in retirados_actuales_carr
-                match_num = re.match(r'^(\d+)', cab_item)
-                num_str = match_num.group(1) if match_num else "0"
-                nombre_solo = cab_item.split(" - ", 1)[1] if " - " in cab_item else cab_item
-
-                col_t_num, col_t_nom, col_t_com, col_t_mon, col_t_btn = st.columns([0.8, 2.5, 2.0, 1.8, 1.4], gap="small")
-                
-                with col_t_num:
-                    st.markdown(f"<div style='background:#161b22; color:#f1c40f; text-align:center; padding:4px; border-radius:4px; font-weight:900;'>#{num_str}</div>", unsafe_allow_html=True)
-                with col_t_nom:
+                num_parte = cab_item.split(" - ")[0]
+                with cols_retiro_grid[c_idx]:
                     if es_ret:
-                        st.markdown(f"<div style='color:#ff4757; font-weight:800; text-decoration:line-through; font-size:11px; padding-top:4px;'>{nombre_solo.upper()} (RET)</div>", unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"<div style='color:#f0f6fc; font-weight:800; font-size:11px; padding-top:4px;'>{nombre_solo.upper()}</div>", unsafe_allow_html=True)
-                with col_t_com:
-                    st.markdown(f"<div style='color:#8b949e; font-size:11px; padding-top:4px; overflow:hidden; text-overflow:ellipsis;'>{info_item['jugador']}</div>", unsafe_allow_html=True)
-                with col_t_mon:
-                    st.markdown(f"<div style='color:#2ed573; font-weight:700; font-size:11px; padding-top:4px;'>{formatear_bs(info_item['monto'])}</div>", unsafe_allow_html=True)
-                with col_t_btn:
-                    if es_ret:
-                        if st.button("🟢 Activar", key=f"btn_activar_{carr_activa}_{cab_item}", use_container_width=True):
+                        if st.button(f"🚫 #{num_parte}", key=f"btn_toggle_ret_{carr_activa}_{cab_item}", use_container_width=True, type="primary"):
                             st.session_state.ejemplares_retirados[carr_activa].remove(cab_item)
                             st.rerun()
                     else:
-                        if st.button("🔴 Retirar", key=f"btn_retirar_{carr_activa}_{cab_item}", use_container_width=True):
+                        if st.button(f"✅ #{num_parte}", key=f"btn_toggle_ret_{carr_activa}_{cab_item}", use_container_width=True):
                             if cab_item not in st.session_state.ejemplares_retirados[carr_activa]:
                                 st.session_state.ejemplares_retirados[carr_activa].append(cab_item)
                             st.rerun()
