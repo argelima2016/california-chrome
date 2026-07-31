@@ -1179,7 +1179,7 @@ if menu_principal_opcion == "Remates":
                                     "monto": -monto_ej
                                 })
 
-                    # --- REEMPLAZO AUTOMÁTICO EN TICKETS DE POLLA HÍPICA ---
+                    # --- REGLA: EN POLLA HÍPICA SE ASIGNA EL SIGUIENTE AUTOMÁTICAMENTE ---
                     for t_polla in st.session_state.polla_tickets:
                         for leg in t_polla['legs']:
                             if leg['carrera'] == carr_activa and leg['ejemplar'] in nuevos_retirados:
@@ -1192,8 +1192,32 @@ if menu_principal_opcion == "Remates":
                                 if siguiente_cab:
                                     leg['ejemplar'] = siguiente_cab
 
+                    # --- REGLA: EN DUPLETA Y TRIPLETA, SI EL TICKET TENÍA EL EJEMPLAR RETIRADO, QUEDA NULO Y SE RESTA EL MONTO ---
+                    for lista_tkts in [st.session_state.dupletas_tickets, st.session_state.tripleta_tickets]:
+                        for t_dup in lista_tkts:
+                            if t_dup.get('estado', 'Pendiente') == 'Pendiente':
+                                afect = False
+                                for leg in t_dup['legs']:
+                                    if leg['carrera'] == carr_activa and leg['ejemplar'] in nuevos_retirados:
+                                        afect = True
+                                        break
+                                if afect:
+                                    t_dup['estado'] = 'Nulo (Retirado)'
+                                    jug_t = t_dup['jugador']
+                                    monto_t = t_dup['monto']
+                                    if jug_t in st.session_state.cuentas:
+                                        st.session_state.cuentas[jug_t]['Pujas'] = max(0.0, st.session_state.cuentas[jug_t]['Pujas'] - monto_t)
+                                    st.session_state.historial_jugadas.append({
+                                        "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                        "jugador": jug_t,
+                                        "tipo": "Ticket Anulado (Retiro)",
+                                        "carrera": carr_activa,
+                                        "detalle": f"Ticket {t_dup['id']} anulado por retiro",
+                                        "monto": -monto_t
+                                    })
+
                     st.session_state.ejemplares_retirados[carr_activa] = nuevos_retirados
-                    st.toast("✅ ¡Ejemplares retirados actualizados y pollas ajustadas!")
+                    st.toast("✅ ¡Ejemplares retirados actualizados, tickets nulos descontados!")
                     st.rerun()
 
             dt_limite = st.session_state.fechas_horas_cierre_remate.get(carr_activa)
@@ -1424,11 +1448,11 @@ elif menu_principal_opcion == "Dupletas":
     monto_unico_seccion = st.session_state.config_montos_especiales.get(sub_dup_actual, 500.0)
 
     if sub_dup_actual == "Dupleta":
-        pote_total = sum([t['monto'] for t in st.session_state.dupletas_tickets])
+        pote_total = sum([t['monto'] for t in st.session_state.dupletas_tickets if t.get('estado') == 'Pendiente'])
         st.metric("💰 Pote Acumulado Dupletas", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
     elif sub_dup_actual == "Tripleta":
-        pote_total = sum([t['monto'] for t in st.session_state.tripleta_tickets])
+        pote_total = sum([t['monto'] for t in st.session_state.tripleta_tickets if t.get('estado') == 'Pendiente'])
         st.metric("💰 Pote Acumulado Tripletas", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
     else:
@@ -1515,7 +1539,6 @@ elif menu_principal_opcion == "Dupletas":
                     key=f"ticket_cab_{sub_dup_actual}_{paso}"
                 )
                 
-                # REGLA: En Polla Hípica, si el ejemplar elegido está retirado, se asigna automáticamente el siguiente disponible sin dejar cambiarlo
                 if sub_dup_actual == "Polla Hipica" and cab_leg in retirados_carr_t:
                     idx_ret = todos_caballos_carr.index(cab_leg)
                     siguiente_cab = None
@@ -1611,27 +1634,8 @@ elif menu_principal_opcion == "Dupletas":
                 st.markdown(f"> {detalles_legs}")
                 st.caption(f"Emitido: {t['fecha']}")
 
-                # --- REGLA: EN POLLA HÍPICA NO SE CAMBIA MANUALMENTE, SE ASIGNA EL SIGUIENTE AUTOMÁTICAMENTE ---
-                if sub_dup_actual == "Polla Hipica":
-                    retirado_en_ticket_polla = False
-                    for leg in t['legs']:
-                        carr_l = leg['carrera']
-                        ej_l = leg['ejemplar']
-                        retirados_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
-                        if ej_l in retirados_carr:
-                            retirado_en_ticket_polla = True
-                            # Asignación automática del siguiente disponible
-                            todos_cab = list(st.session_state.remates.get(carr_l, {}).keys())
-                            if ej_l in todos_cab:
-                                idx_r = todos_cab.index(ej_l)
-                                for sig_c in todos_cab[idx_r + 1:] + todos_cab[:idx_r]:
-                                    if sig_c not in retirados_carr:
-                                        leg['ejemplar'] = sig_c
-                                        break
-                    if retirado_en_ticket_polla:
-                        st.info("ℹ️ **Polla Hípica:** Ejemplar retirado detectado en este ticket. Se le ha asignado automáticamente el siguiente caballo disponible.")
-                else:
-                    # --- PARA DUPLETA Y TRIPLETA: PERMITIR CAMBIAR SOLO SI EL USUARIO ELIGE OTRO EJEMPLAR (Y NO SE ASIGNA SOLO) ---
+                # --- REGLA: EN DUPLETA Y TRIPLETA, SI HAY UN RETIRADO, QUEDA NULO Y SE RESTA EL MONTO HASTA QUE ELIJA OTRO ---
+                if sub_dup_actual != "Polla Hipica":
                     retirado_en_ticket = False
                     carrera_afectada = None
                     for leg in t['legs']:
@@ -1644,7 +1648,24 @@ elif menu_principal_opcion == "Dupletas":
                             break
 
                     if retirado_en_ticket:
-                        st.warning(f"⚠️ El ticket **{t['id']}** tiene un ejemplar retirado en la **{carrera_afectada}**. Debe elegir manualmente un nuevo ejemplar para actualizar el ticket:")
+                        if t.get('estado') == 'Pendiente':
+                            # Marcar como nulo y restar el monto del ticket al jugador automáticamente
+                            t['estado'] = 'Nulo (Retirado)'
+                            jug_t = t['jugador']
+                            monto_t = t['monto']
+                            if jug_t in st.session_state.cuentas:
+                                st.session_state.cuentas[jug_t]['Pujas'] = max(0.0, st.session_state.cuentas[jug_t]['Pujas'] - monto_t)
+                            st.session_state.historial_jugadas.append({
+                                "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                "jugador": jug_t,
+                                "tipo": "Ticket Anulado (Retiro)",
+                                "carrera": carrera_afectada,
+                                "detalle": f"Ticket {t['id']} anulado por retiro de {carrera_afectada}",
+                                "monto": -monto_t
+                            })
+
+                        st.error(f"❌ El ticket **{t['id']}** está **NULO** porque el ejemplar de la **{carrera_afectada}** fue retirado. Seleccione un nuevo ejemplar para reactivarlo:")
+                        
                         with st.form(key=f"form_modificar_ticket_{t['id']}_{idx_t}"):
                             nuevas_legs = []
                             for i_l, leg in enumerate(t['legs']):
@@ -1669,9 +1690,27 @@ elif menu_principal_opcion == "Dupletas":
                                 else:
                                     nuevas_legs.append(leg)
 
-                            if st.form_submit_button("💾 Actualizar Ticket con Nueva Selección", use_container_width=True):
+                            if st.form_submit_button("🔄 Reactivar y Asignar Nuevo Ejemplar", use_container_width=True):
                                 t['legs'] = nuevas_legs
-                                st.success(f"✅ ¡Ticket {t['id']} actualizado correctamente en pantalla!")
+                                t['estado'] = 'Pendiente'
+                                jug_t = t['jugador']
+                                monto_t = t['monto']
+                                
+                                # Sumamos nuevamente el monto del ticket al usuario al reactivarlo
+                                if jug_t not in st.session_state.cuentas:
+                                    st.session_state.cuentas[jug_t] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                st.session_state.cuentas[jug_t]['Pujas'] += monto_t
+                                
+                                st.session_state.historial_jugadas.append({
+                                    "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                    "jugador": jug_t,
+                                    "tipo": sub_dup_actual,
+                                    "carrera": "Múltiple Reactivada",
+                                    "detalle": f"Ticket {t['id']} reactivado tras cambio",
+                                    "monto": monto_t
+                                })
+
+                                st.success(f"✅ ¡Ticket {t['id']} reactivado con éxito!")
                                 st.rerun()
 
 # =========================================================================
