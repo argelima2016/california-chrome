@@ -1490,14 +1490,37 @@ elif menu_principal_opcion == "Dupletas":
                 st.markdown(f"🏁 **Carrera fija:** `{carr_leg}`")
                 
                 retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
-                caballos_in_carr = [c for c in list(st.session_state.remates.get(carr_leg, {}).keys()) if c not in retirados_carr_t]
                 
+                # REGLA SOLICITADA: Si es Dupleta o Tripleta y el caballo está retirado, abrir opción de cambio o mostrar siguiente.
+                # Para la Polla Hípica o reglas de asignación automática del siguiente:
+                todos_caballos_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
+                
+                # Identificamos caballos disponibles (no retirados)
+                caballos_in_carr = [c for c in todos_caballos_carr if c not in retirados_carr_t]
+                
+                # Si hay caballos retirados, permitimos en Dupleta y Tripleta un selector especial o aviso
+                if retirados_carr_t and sub_dup_actual in ["Dupleta", "Tripleta"]:
+                    st.markdown(f"<p style='color: #ff4757; font-size: 11px; font-weight: bold;'>⚠️ Hay ejemplares retirados en esta carrera. Se asignará/sugerirá el siguiente disponible o selecciona manualmente:</p>", unsafe_allow_html=True)
+
                 cab_leg = st.selectbox(
                     f"Selecciona el Ejemplar para {carr_leg}", 
                     options=caballos_in_carr if caballos_in_carr else ["Sin Caballos Disponibles"], 
                     key=f"ticket_cab_{sub_dup_actual}_{paso}"
                 )
                 
+                # Lógica automática para Polla Hípica si el escogido resulta estar retirado o se requiere asignar el siguiente
+                if sub_dup_actual == "Polla Hipica" and cab_leg in retirados_carr_t:
+                    # Buscar el siguiente ejemplar numéricamente disponible
+                    idx_ret = todos_caballos_carr.index(cab_leg)
+                    siguiente_cab = None
+                    for siguiente_c in todos_caballos_carr[idx_ret + 1:] + todos_caballos_carr[:idx_ret]:
+                        if siguiente_c not in retirados_carr_t:
+                            siguiente_cab = siguiente_c
+                            break
+                    if siguiente_cab:
+                        cab_leg = siguiente_cab
+                        st.info(f"🔄 El ejemplar seleccionado estaba retirado. Asignado automáticamente el siguiente: **{cab_leg}**")
+
                 if carr_leg in carreras_usadas:
                     valido_legs = False
                 carreras_usadas.add(carr_leg)
