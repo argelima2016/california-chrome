@@ -295,7 +295,6 @@ st.markdown("""
         line-height: 1.4;
         word-break: break-word;
     }
-    /* Estilo llamativo y animado para el incentivo en remate (Solo icono y monto) */
     .incentivo-llamativo {
         background: linear-gradient(135deg, #1f1c2c 0%, #923d41 100%);
         border: 2px dashed #00ffff;
@@ -304,12 +303,6 @@ st.markdown("""
         text-align: center;
         margin: 10px 0;
         box-shadow: 0px 0px 15px rgba(0, 255, 255, 0.4);
-        animation: pulseIncentivo 2s infinite;
-    }
-    @keyframes pulseIncentivo {
-        0% { transform: scale(1); border-color: #00ffff; }
-        50% { transform: scale(1.02); border-color: #f1c40f; box-shadow: 0px 0px 20px rgba(241, 196, 15, 0.7); }
-        100% { transform: scale(1); border-color: #00ffff; }
     }
     .incentivo-llamativo-monto {
         color: #ffffff;
@@ -317,6 +310,32 @@ st.markdown("""
         font-weight: 900;
         letter-spacing: 0.5px;
         text-shadow: 2px 2px 4px #000000;
+    }
+    /* Estilo de ticket de jugador */
+    .ticket-jugador-card {
+        background: #0d1117;
+        border: 2px solid #30363d;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 10px;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.5);
+    }
+    .ticket-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px dashed #30363d;
+        padding-bottom: 6px;
+        margin-bottom: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        color: #f1c40f;
+    }
+    .ticket-body-row {
+        font-size: 13px;
+        color: #f0f6fc;
+        margin-bottom: 4px;
+        font-weight: 600;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -728,7 +747,8 @@ def procesar_texto_flexible(texto_a_procesar):
                     "monto_fijo_ciego": 500.0,
                     "incentivo_adelantados": 0.0,
                     "incentivo_ciegos": 0.0,
-                    "incentivo_envivo": 0.0
+                    "incentivo_envivo": 0.0,
+                    "hora_cierre_real": "No registrada"
                 }
                 continue
 
@@ -791,7 +811,8 @@ if not st.session_state.remates:
             "monto_fijo_ciego": 500.0, 
             "incentivo_adelantados": 0.0,
             "incentivo_ciegos": 0.0,
-            "incentivo_envivo": 0.0
+            "incentivo_envivo": 0.0,
+            "hora_cierre_real": "No registrada"
         }
 
 lista_carreras_disponibles = list(st.session_state.remates.keys())
@@ -1022,6 +1043,7 @@ with st.sidebar.expander("🏁 Cierre y Liquidación de Remates", expanded=False
         if st.button("🔒 Cerrar Remate Manual", key=f"sb_liq_cerrar_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
             st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = True
             st.session_state.estado_conteo_carrera[carr_seleccionada_liq] = "CERRADO"
+            st.session_state.detalles_carreras[carr_seleccionada_liq]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
             if not st.session_state.remates_cargados_en_cuentas.get(carr_seleccionada_liq, False):
                 retirados_carr = st.session_state.ejemplares_retirados.get(carr_seleccionada_liq, [])
                 for cab, info in st.session_state.remates[carr_seleccionada_liq].items():
@@ -1143,7 +1165,8 @@ if menu_principal_opcion == "Remates":
                     "monto_fijo_ciego": 500.0, 
                     "incentivo_adelantados": 0.0,
                     "incentivo_ciegos": 0.0,
-                    "incentivo_envivo": 0.0
+                    "incentivo_envivo": 0.0,
+                    "hora_cierre_real": "No registrada"
                 }
             
             detalles_carr = st.session_state.detalles_carreras[carr_activa]
@@ -1247,6 +1270,7 @@ if menu_principal_opcion == "Remates":
                     elif diferencia_segundos <= 0:
                         st.session_state.carreras_cerradas_remate[carr_activa] = True
                         st.session_state.estado_conteo_carrera[carr_activa] = "CERRADO"
+                        st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
                         st.rerun()
                 elif estado_conteo == "CONTEO_10S":
                     tiempo_inicio = st.session_state.tiempo_inicio_conteo.get(carr_activa, ahora_dt)
@@ -1254,6 +1278,7 @@ if menu_principal_opcion == "Remates":
                     if transcurridos >= 12:
                         st.session_state.carreras_cerradas_remate[carr_activa] = True
                         st.session_state.estado_conteo_carrera[carr_activa] = "CERRADO"
+                        st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
                         st.rerun()
                     else:
                         restantes_10s = max(0, 10 - int(transcurridos))
@@ -1265,7 +1290,7 @@ if menu_principal_opcion == "Remates":
             altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
-            # --- POTE, PREMIO E INCENTIVO LLAMATIVO (SOLO ICONO Y MONTO) DEBAJO DE LA TABLA DE REMATE ---
+            # --- POTE, PREMIO E INCENTIVO LLAMATIVO DEBAJO DE LA TABLA DE REMATE ---
             retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
             total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in retirados_carr_activa])
             monto_casa = total_pote * (porcentaje_casa / 100)
@@ -1737,10 +1762,10 @@ elif menu_principal_opcion == "Dupletas":
                                 st.rerun()
 
 # =========================================================================
-# 3. MÓDULO DE CUENTAS
+# 3. MÓDULO DE CUENTAS (HISTORIAL EN FORMATO DE TICKET Y HORAS DE CIERRE)
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
-    st.markdown("<div class='subasta-header'>📊 Mis Cuentas y Estado de Deuda</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subasta-header'>📊 Mis Cuentas y Historial de Jugador en Formato Ticket</div>", unsafe_allow_html=True)
     jugador_actual = st.session_state.usuario_activo
     st.markdown(f"👤 **Jugador en Sesión:** `{jugador_actual}`")
 
@@ -1758,22 +1783,70 @@ elif menu_principal_opcion == "Cuentas":
     col_cu4.metric("⚖️ Neto", formatear_bs(balance_neto))
 
     st.markdown("---")
-    st.markdown(f"### 📜 Historial de `{jugador_actual}`")
-    historial_usuario = [h for h in st.session_state.historial_jugadas if h['jugador'] == jugador_actual]
+    st.markdown(f"### 🎟️ Historial de Tickets y Asignaciones de `{jugador_actual}`")
 
-    if not historial_usuario:
-        st.info(f"ℹ️ No tienes jugadas registradas en esta jornada.")
+    # 1. Mostrar Historial de Remates (Adelantados, Ciegos, En Vivo) en Formato de Ticket
+    historial_usuario_remates = [
+        h for h in st.session_state.historial_jugadas 
+        if h['jugador'] == jugador_actual and "Remate" in h.get('tipo', '')
+    ]
+
+    if historial_usuario_remates:
+        st.markdown("#### 🐎 Tickets de Remates (Adelantados, Ciegos, En Vivo)")
+        for h in reversed(historial_usuario_remates):
+            carr_h = h.get('carrera', 'N/A')
+            detalles_c = st.session_state.detalles_carreras.get(carr_h, {})
+            hora_cierre_real = detalles_c.get('hora_cierre_real', 'No cerrado todavía')
+            
+            # Detectar si fue Adelantada, Ciega o En Vivo según el tipo
+            tipo_rem = h.get('tipo', 'Remate')
+            
+            ticket_html = f"""
+                <div class="ticket-jugador-card">
+                    <div class="ticket-header-row">
+                        <span>🏷️ TICKET REMATE ({tipo_rem.upper()})</span>
+                        <span>📅 {h.get('fecha', '')}</span>
+                    </div>
+                    <div class="ticket-body-row">🏁 <b>Carrera:</b> {carr_h}</div>
+                    <div class="ticket-body-row">🐎 <b>Ejemplar Asignado:</b> {h.get('detalle', '')}</div>
+                    <div class="ticket-body-row">🔒 <b>Hora de Cierre Carrera:</b> {hora_cierre_real}</div>
+                    <div class="ticket-body-row" style="color: #f1c40f; margin-top: 6px;">💰 <b>Monto Invertido:</b> {formatear_bs(h.get('monto', 0.0))}</div>
+                </div>
+            """
+            st.markdown(ticket_html, unsafe_allow_html=True)
     else:
-        datos_historial = []
-        for h in reversed(historial_usuario):
-            datos_historial.append({
-                "Fecha / Hora": h['fecha'],
-                "Tipo": h['tipo'],
-                "Carrera": h['carrera'],
-                "Detalle": h['detalle'],
-                "Monto": formatear_bs(h['monto'])
-            })
-        st.dataframe(pd.DataFrame(datos_historial), use_container_width=True, hide_index=True)
+        st.info("ℹ️ No hay tickets de remates registrados para este usuario.")
+
+    st.markdown("---")
+
+    # 2. Mostrar Tickets de Dupletas, Tripletas y Polla Hípica del usuario
+    tickets_usuario_dupletas = [t for t in st.session_state.dupletas_tickets if t['jugador'] == jugador_actual]
+    tickets_usuario_tripletas = [t for t in st.session_state.tripleta_tickets if t['jugador'] == jugador_actual]
+    tickets_usuario_pollas = [t for t in st.session_state.polla_tickets if t['jugador'] == jugador_actual]
+
+    todos_tickets_multiples = tickets_usuario_dupletas + tickets_usuario_tripletas + tickets_usuario_pollas
+
+    if todos_tickets_multiples:
+        st.markdown("#### 🎟️ Tickets de Dupletas, Tripletas y Polla Hípica")
+        for t in reversed(todos_tickets_multiples):
+            detalles_legs = " ➔ ".join([f"<b>{l['carrera']}</b>: {l['ejemplar']}" for l in t['legs']])
+            estado_t = t.get('estado', 'Pendiente')
+            color_est = "#2ed573" if estado_t == 'Pendiente' else "#ff4757"
+
+            ticket_m_html = f"""
+                <div class="ticket-jugador-card" style="border-color: {color_est};">
+                    <div class="ticket-header-row">
+                        <span>🏷️ {t['id']}</span>
+                        <span style="color: {color_est};">📌 {estado_t}</span>
+                    </div>
+                    <div class="ticket-body-row">🛤️ <b>Selecciones:</b> {detalles_legs}</div>
+                    <div class="ticket-body-row" style="color: #f1c40f; margin-top: 6px;">💰 <b>Monto Ticket:</b> {formatear_bs(t['monto'])}</div>
+                    <div style="font-size: 10px; color: #8b949e; text-align: right; margin-top: 4px;">Emitido: {t['fecha']}</div>
+                </div>
+            """
+            st.markdown(ticket_m_html, unsafe_allow_html=True)
+    else:
+        st.info("ℹ️ No hay tickets de dupletas, tripletas o pollas registrados para este usuario.")
 
 # =========================================================================
 # 4. ZONA DE ADMINISTRADOR (CONFIGURACIÓN)
@@ -1820,7 +1893,8 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                             "monto_fijo_ciego": 500.0, 
                             "incentivo_adelantados": 0.0,
                             "incentivo_ciegos": 0.0,
-                            "incentivo_envivo": 0.0
+                            "incentivo_envivo": 0.0,
+                            "hora_cierre_real": "No registrada"
                         }
                 st.toast(f"✅ ¡Jornada ajustada a {nueva_cantidad_carreras} carreras!")
                 st.rerun()
@@ -1884,7 +1958,8 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 "monto_fijo_ciego": 500.0, 
                 "incentivo_adelantados": 0.0,
                 "incentivo_ciegos": 0.0,
-                "incentivo_envivo": 0.0
+                "incentivo_envivo": 0.0,
+                "hora_cierre_real": "No registrada"
             }
 
         det_actuales = st.session_state.detalles_carreras[carr_banco_sel]
@@ -1916,7 +1991,8 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     "monto_fijo_ciego": edit_monto_ciego,
                     "incentivo_adelantados": edit_inc_adel,
                     "incentivo_ciegos": edit_inc_ciegos,
-                    "incentivo_envivo": edit_inc_envivo
+                    "incentivo_envivo": edit_inc_envivo,
+                    "hora_cierre_real": det_actuales.get("hora_cierre_real", "No registrada")
                 }
                 st.toast("✅ ¡Detalles e incentivos guardados!")
                 st.rerun()
