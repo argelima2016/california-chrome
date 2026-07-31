@@ -882,10 +882,10 @@ if elementos_carrusel_info:
             if(slides.length > 1 && el) {
                 setInterval(function() {
                     currentIdx = (currentIdx + 1) % slides.length;
-                    el.style.opacity = 0;
+                    el.style.opacity = "0";
                     setTimeout(function() {
                         el.innerText = slides[currentIdx];
-                        el.style.opacity = 1;
+                        el.style.opacity = "1";
                     }, 300);
                 }, 4000);
             }
@@ -927,11 +927,11 @@ if lista_b64_banners:
             if(images.length > 1) {{
                 setInterval(function() {{
                     index = (index + 1) % images.length;
-                    imgElement.style.opacity = 0.15;
+                    imgElement.style.opacity = "0.15";
                     setTimeout(function() {{
                         imgElement.src = images[index];
-                        imgElement.style.opacity = 1;
-                    }, 400);
+                        imgElement.style.opacity = "1";
+                    }}, 400);
                 }}, 8000);
             }}
         }})();
