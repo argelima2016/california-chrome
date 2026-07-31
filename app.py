@@ -1182,9 +1182,9 @@ if menu_principal_opcion == "Remates":
                             st.success(f"✅ ¡Premio liquidado a **{info_g['jugador']}**!")
                             st.rerun()
 
-            # --- BOTONES TÁCTILES CON NÚMEROS DE POSICIÓN PARA RETIRAR/ACTIVAR EJEMPLARES ---
+            # --- BOTONES DE RETIRO RÁPIDO (CLIC EN EL NÚMERO DEL EJEMPLAR PARA RETIRAR/ACTIVAR) ---
             retirados_actuales_carr = st.session_state.ejemplares_retirados[carr_activa]
-            st.markdown("🔹 **Toca el número para retirar o activar el ejemplar:**")
+            st.markdown("🔹 **Retirar / Activar (Toque el número del ejemplar):**")
             cols_retiro_grid = st.columns(min(8, len(st.session_state.remates[carr_activa])), gap="small")
             for idx_r, (cab_item, info_item) in enumerate(st.session_state.remates[carr_activa].items()):
                 c_idx = idx_r % len(cols_retiro_grid)
@@ -1192,11 +1192,11 @@ if menu_principal_opcion == "Remates":
                 num_parte = cab_item.split(" - ")[0]
                 with cols_retiro_grid[c_idx]:
                     if es_ret:
-                        if st.button(f"🚫#{num_parte}", key=f"btn_toggle_ret_{carr_activa}_{cab_item}", use_container_width=True, type="primary"):
+                        if st.button(f"🔴 #{num_parte}", key=f"btn_toggle_ret_{carr_activa}_{cab_item}", use_container_width=True, type="primary"):
                             st.session_state.ejemplares_retirados[carr_activa].remove(cab_item)
                             st.rerun()
                     else:
-                        if st.button(f"#{num_parte}", key=f"btn_toggle_ret_{carr_activa}_{cab_item}", use_container_width=True):
+                        if st.button(f"🟢 #{num_parte}", key=f"btn_toggle_ret_{carr_activa}_{cab_item}", use_container_width=True):
                             if cab_item not in st.session_state.ejemplares_retirados[carr_activa]:
                                 st.session_state.ejemplares_retirados[carr_activa].append(cab_item)
                             st.rerun()
