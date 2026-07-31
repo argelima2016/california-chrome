@@ -1200,9 +1200,9 @@ if menu_principal_opcion == "Remates":
                     # --- REGLA: EN POLLA HÍPICA SE ASIGNA EL SIGUIENTE AUTOMÁTICAMENTE ---
                     for t_polla in st.session_state.polla_tickets:
                         for leg in t_polla['legs']:
-                            if leg['carrera'] == carr_activa and leg['ejemplar'].split(" (")[0] in nuevos_retirados:
-                                base_ej = leg['ejemplar'].split(" (")[0]
-                                idx_ret = lista_todos_caballos_carr.index(base_ej)
+                            base_ej_p = leg['ejemplar'].split(" (")[0]
+                            if leg['carrera'] == carr_activa and base_ej_p in nuevos_retirados:
+                                idx_ret = lista_todos_caballos_carr.index(base_ej_p)
                                 siguiente_cab = None
                                 for siguiente_c in lista_todos_caballos_carr[idx_ret + 1:] + lista_todos_caballos_carr[:idx_ret]:
                                     if siguiente_c not in nuevos_retirados:
@@ -1274,6 +1274,34 @@ if menu_principal_opcion == "Remates":
             altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
+            # --- POTE, PREMIO Y GESTIÓN DE GANADOR DEBAJO DE LA TABLA DE REMATE ---
+            retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
+            total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in retirados_carr_activa])
+            monto_casa = total_pote * (porcentaje_casa / 100)
+            pote_neto_base = total_pote - monto_casa
+
+            if modo_actual_remate == "Adelantados":
+                incentivo_actual = float(detalles_carr.get('incentivo_adelantados', 0.0))
+            elif modo_actual_remate == "Ciegos":
+                incentivo_actual = float(detalles_carr.get('incentivo_ciegos', 0.0))
+            else:
+                incentivo_actual = float(detalles_carr.get('incentivo_envivo', 0.0))
+
+            premio_total_calculado = pote_neto_base + incentivo_actual
+
+            # Mostrar Pote y Premio Total Debajo de la Tabla de Remate
+            c_m1, c_m2 = st.columns(2)
+            c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
+            c_m2.metric(f"🏆 Premio Total ({carr_activa})", formatear_bs(premio_total_calculado))
+
+            if incentivo_actual > 0:
+                st.markdown(f"""
+                    <div class="incentivo-elegante">
+                        <div class="incentivo-elegante-titulo">🎁 Incentivo ({modo_actual_remate}) Establecido</div>
+                        <div class="incentivo-elegante-monto">{formatear_bs(incentivo_actual)}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+
             with st.container(border=True):
                 st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Ganador - {carr_activa}</p>", unsafe_allow_html=True)
                 if carr_activa in st.session_state.historial_ganadores:
@@ -1292,7 +1320,6 @@ if menu_principal_opcion == "Remates":
                             pote_carr_total = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in retirados_carr_liq])
                             monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
                             
-                            # Incentivo separado por modalidad (Adelantados, Ciegos, En Vivo)
                             if modo_actual_remate == "Adelantados":
                                 incentivo_establecido = float(detalles_carr.get('incentivo_adelantados', 0.0))
                             elif modo_actual_remate == "Ciegos":
@@ -1330,34 +1357,6 @@ if menu_principal_opcion == "Remates":
                             "Monto": formatear_bs(h.get('monto', 0.0))
                         })
                     st.dataframe(pd.DataFrame(datos_h_carr), use_container_width=True, hide_index=True)
-
-            retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
-            total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in retirados_carr_activa])
-            monto_casa = total_pote * (porcentaje_casa / 100)
-            pote_neto_base = total_pote - monto_casa
-
-            # Seleccionar incentivo según la modalidad activa para el cálculo previo
-            if modo_actual_remate == "Adelantados":
-                incentivo_actual = float(detalles_carr.get('incentivo_adelantados', 0.0))
-            elif modo_actual_remate == "Ciegos":
-                incentivo_actual = float(detalles_carr.get('incentivo_ciegos', 0.0))
-            else:
-                incentivo_actual = float(detalles_carr.get('incentivo_envivo', 0.0))
-
-            premio_total_calculado = pote_neto_base + incentivo_actual
-
-            # --- POTE Y PREMIO TOTAL DEBAJO DE LA TABLA DE REMATE ---
-            c_m1, c_m2 = st.columns(2)
-            c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
-            c_m2.metric(f"🏆 Premio Total ({carr_activa})", formatear_bs(premio_total_calculado))
-
-            if incentivo_actual > 0:
-                st.markdown(f"""
-                    <div class="incentivo-elegante">
-                        <div class="incentivo-elegante-titulo">🎁 Incentivo ({modo_actual_remate}) Establecido</div>
-                        <div class="incentivo-elegante-monto">{formatear_bs(incentivo_actual)}</div>
-                    </div>
-                """, unsafe_allow_html=True)
 
             with st.container(border=True):
                 if modo_actual_remate == "Ciegos":
