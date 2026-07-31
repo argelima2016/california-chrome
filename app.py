@@ -1146,6 +1146,7 @@ if menu_principal_opcion == "Remates":
                         if restantes_10s > 0:
                             st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa})</div>", unsafe_allow_html=True)
 
+            # --- TABLA DE REMATES ORIGINAL INTACTA ---
             tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []))
             cantidad_filas = len(st.session_state.remates[carr_activa])
             altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
@@ -1861,7 +1862,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         st.markdown("---")
         with st.container(border=True):
             st.markdown("📰 **Archivo Gaceta (PDF)**")
-            gaceta_subida = st.file_uploader("Sub PDF de la Gaceta", type=["pdf"], key=f"file_gaceta_{carr_img_sel}")
+            gaceta_subida = st.file_uploader("Subir PDF de la Gaceta", type=["pdf"], key=f"file_gaceta_{carr_img_sel}")
             if gaceta_subida is not None:
                 if st.button("💾 Guardar Gaceta", key=f"btn_save_gaceta_{carr_img_sel}", use_container_width=True, type="primary"):
                     st.session_state.gacetas_carreras[carr_img_sel] = gaceta_subida.read()
@@ -1910,4 +1911,4 @@ if url_live_video:
         try:
             st.video(url_live_video)
         except Exception:
-            st.warning("⚠️ No se pudo cargar el video con la URL provenance.")
+            st.warning("⚠️ No se pudo cargar el video con la URL proporcionada.")
