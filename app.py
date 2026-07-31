@@ -302,28 +302,37 @@ st.markdown("""
         line-height: 1.4;
         word-break: break-word;
     }
-    .incentivo-elegante {
-        background: linear-gradient(135deg, #0d1117 100%, #161b22 0%);
-        border: 1px solid #f1c40f;
-        padding: 10px 14px;
-        border-radius: 6px;
+    /* Estilo llamativo y animado para el incentivo en remate */
+    .incentivo-llamativo {
+        background: linear-gradient(135deg, #1f1c2c 0%, #923d41 100%);
+        border: 2px dashed #00ffff;
+        padding: 12px 18px;
+        border-radius: 12px;
         text-align: center;
-        margin: 8px 0;
-        box-shadow: 0px 2px 8px rgba(241, 196, 15, 0.15);
+        margin: 10px 0;
+        box-shadow: 0px 0px 15px rgba(0, 255, 255, 0.4);
+        animation: pulseIncentivo 2s infinite;
     }
-    .incentivo-elegante-titulo {
-        color: #f1c40f;
-        font-size: 12px;
-        font-weight: 700;
+    @keyframes pulseIncentivo {
+        0% { transform: scale(1); border-color: #00ffff; }
+        50% { transform: scale(1.02); border-color: #f1c40f; box-shadow: 0px 0px 20px rgba(241, 196, 15, 0.7); }
+        100% { transform: scale(1); border-color: #00ffff; }
+    }
+    .incentivo-llamativo-titulo {
+        color: #00ffff;
+        font-size: 13px;
+        font-weight: 900;
         text-transform: uppercase;
-        letter-spacing: 0.8px;
-        margin-bottom: 3px;
+        letter-spacing: 1.2px;
+        margin-bottom: 4px;
+        text-shadow: 0px 0px 8px rgba(0, 255, 255, 0.8);
     }
-    .incentivo-elegante-monto {
+    .incentivo-llamativo-monto {
         color: #ffffff;
-        font-size: 18px;
-        font-weight: 800;
-        letter-spacing: 0.3px;
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        text-shadow: 2px 2px 4px #000000;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -1197,7 +1206,6 @@ if menu_principal_opcion == "Remates":
                                     "monto": -monto_ej
                                 })
 
-                    # --- REGLA: EN POLLA HÍPICA SE ASIGNA EL SIGUIENTE AUTOMÁTICAMENTE ---
                     for t_polla in st.session_state.polla_tickets:
                         for leg in t_polla['legs']:
                             base_ej_p = leg['ejemplar'].split(" (")[0]
@@ -1211,7 +1219,6 @@ if menu_principal_opcion == "Remates":
                                 if siguiente_cab:
                                     leg['ejemplar'] = f"{siguiente_cab} (Sustituto por retiro)"
 
-                    # --- REGLA: EN DUPLETA Y TRIPLETA, SI HAY UN RETIRADO, QUEDA NULO Y SE RESTA EL MONTO ---
                     for lista_tkts in [st.session_state.dupletas_tickets, st.session_state.tripleta_tickets]:
                         for t_dup in lista_tkts:
                             if t_dup.get('estado', 'Pendiente') == 'Pendiente':
@@ -1274,7 +1281,7 @@ if menu_principal_opcion == "Remates":
             altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
-            # --- POTE, PREMIO Y GESTIÓN DE GANADOR DEBAJO DE LA TABLA DE REMATE ---
+            # --- POTE, PREMIO E INCENTIVO LLAMATIVO DEBAJO DE LA TABLA DE REMATE ---
             retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
             total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in retirados_carr_activa])
             monto_casa = total_pote * (porcentaje_casa / 100)
@@ -1289,18 +1296,18 @@ if menu_principal_opcion == "Remates":
 
             premio_total_calculado = pote_neto_base + incentivo_actual
 
-            # Mostrar Pote y Premio Total Debajo de la Tabla de Remate
+            # Incentivo muy llamativo reflejado directamente en Remates
+            if incentivo_actual > 0:
+                st.markdown(f"""
+                    <div class="incentivo-llamativo">
+                        <div class="incentivo-llamativo-titulo">🎁 ¡INCENTIVO ESPECIAL ({modo_actual_remate.upper()}) ACTIVADO! 🚀</div>
+                        <div class="incentivo-llamativo-monto">{formatear_bs(incentivo_actual)}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+
             c_m1, c_m2 = st.columns(2)
             c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
             c_m2.metric(f"🏆 Premio Total ({carr_activa})", formatear_bs(premio_total_calculado))
-
-            if incentivo_actual > 0:
-                st.markdown(f"""
-                    <div class="incentivo-elegante">
-                        <div class="incentivo-elegante-titulo">🎁 Incentivo ({modo_actual_remate}) Establecido</div>
-                        <div class="incentivo-elegante-monto">{formatear_bs(incentivo_actual)}</div>
-                    </div>
-                """, unsafe_allow_html=True)
 
             with st.container(border=True):
                 st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Ganador - {carr_activa}</p>", unsafe_allow_html=True)
