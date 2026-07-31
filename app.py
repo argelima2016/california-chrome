@@ -1502,7 +1502,7 @@ elif menu_principal_opcion == "Dupletas":
                     key=f"ticket_cab_{sub_dup_actual}_{paso}"
                 )
                 
-                # REGLA: En Polla Hípica, si el ejemplar elegido está retirado, se asigna automáticamente el siguiente disponible
+                # REGLA: En Polla Hípica, si el ejemplar elegido está retirado, se asigna automáticamente el siguiente disponible sin dejar cambiarlo
                 if sub_dup_actual == "Polla Hipica" and cab_leg in retirados_carr_t:
                     idx_ret = todos_caballos_carr.index(cab_leg)
                     siguiente_cab = None
@@ -1512,7 +1512,7 @@ elif menu_principal_opcion == "Dupletas":
                             break
                     if siguiente_cab:
                         cab_leg = siguiente_cab
-                        st.info(f"🔄 El ejemplar seleccionado estaba retirado. Asignado automáticamente el siguiente: **{cab_leg}**")
+                        st.info(f"🔄 **Polla Hípica:** El ejemplar seleccionado estaba retirado. Se asignó automáticamente el siguiente disponible: **{cab_leg}**")
 
                 if carr_leg in carreras_usadas:
                     valido_legs = False
@@ -1598,50 +1598,58 @@ elif menu_principal_opcion == "Dupletas":
                 st.markdown(f"> {detalles_legs}")
                 st.caption(f"Emitido: {t['fecha']}")
 
-                # --- PERMITIR MODIFICAR EL TICKET SOLO EN LA CARRERA DONDE HUBO EL RETIRO ---
-                retirado_en_ticket = False
-                carrera_afectada = None
-                for leg in t['legs']:
-                    carr_l = leg['carrera']
-                    ej_l = leg['ejemplar']
-                    retirados_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
-                    if ej_l in retirados_carr:
-                        retirado_en_ticket = True
-                        carrera_afectada = carr_l
-                        break
+                # --- PERMITIR MODIFICAR EL TICKET SOLO EN LA CARRERA EXACTA DONDE HUBO EL RETIRO (EXCEPTO EN POLLA HÍPICA) ---
+                if sub_dup_actual != "Polla Hipica":
+                    retirado_en_ticket = False
+                    carrera_afectada = None
+                    for leg in t['legs']:
+                        carr_l = leg['carrera']
+                        ej_l = leg['ejemplar']
+                        retirados_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
+                        if ej_l in retirados_carr:
+                            retirado_en_ticket = True
+                            carrera_afectada = carr_l
+                            break
 
-                if retirado_en_ticket:
-                    st.warning(f"⚠️ El ticket **{t['id']}** tiene un ejemplar retirado en la **{carrera_afectada}**. Puede modificar exclusivamente esta carrera a continuación:")
-                    with st.form(key=f"form_modificar_ticket_{t['id']}_{idx_t}"):
-                        nuevas_legs = []
-                        for i_l, leg in enumerate(t['legs']):
-                            carr_l = leg['carrera']
-                            ej_actual = leg['ejemplar']
-                            
-                            # Si es la carrera afectada, permitimos cambiar solo esta
-                            if carr_l == carrera_afectada:
-                                ret_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
-                                disponibles_l = [c for c in list(st.session_state.remates.get(carr_l, {}).keys()) if c not in ret_carr]
+                    if retirado_en_ticket:
+                        st.warning(f"⚠️ El ticket **{t['id']}** tiene un ejemplar retirado en la **{carrera_afectada}**. Puede modificar exclusivamente esta carrera:")
+                        with st.form(key=f"form_modificar_ticket_{t['id']}_{idx_t}"):
+                            nuevas_legs = []
+                            for i_l, leg in enumerate(t['legs']):
+                                carr_l = leg['carrera']
+                                ej_actual = leg['ejemplar']
                                 
-                                idx_def = 0
-                                if ej_actual in disponibles_l:
-                                    idx_def = disponibles_l.index(ej_actual)
+                                if carr_l == carrera_afectada:
+                                    ret_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
+                                    disponibles_l = [c for c in list(st.session_state.remates.get(carr_l, {}).keys()) if c not in ret_carr]
+                                    
+                                    idx_def = 0
+                                    if ej_actual in disponibles_l:
+                                        idx_def = disponibles_l.index(ej_actual)
 
-                                nuevo_ej = st.selectbox(
-                                    f"Cambiar ejemplar para {carr_l} (Actual retirado: {ej_actual})",
-                                    options=disponibles_l if disponibles_l else [ej_actual],
-                                    index=idx_def,
-                                    key=f"mod_ticket_{t['id']}_carr_{carr_l}"
-                                )
-                                nuevas_legs.append({"carrera": carr_l, "ejemplar": nuevo_ej})
-                            else:
-                                # Las demás carreras se mantienen intactas
-                                nuevas_legs.append(leg)
+                                    nuevo_ej = st.selectbox(
+                                        f"Cambiar ejemplar para {carr_l} (Actual retirado: {ej_actual})",
+                                        options=disponibles_l if disponibles_l else [ej_actual],
+                                        index=idx_def,
+                                        key=f"mod_ticket_{t['id']}_carr_{carr_l}"
+                                    )
+                                    nuevas_legs.append({"carrera": carr_l, "ejemplar": nuevo_ej})
+                                else:
+                                    nuevas_legs.append(leg)
 
-                        if st.form_submit_button("💾 Guardar Cambio en Carrera Afectada", use_container_width=True):
-                            t['legs'] = nuevas_legs
-                            st.success(f"✅ ¡Ticket {t['id']} actualizado para la {carrera_afectada}!")
-                            st.rerun()
+                            if st.form_submit_button("💾 Guardar Cambio en Carrera Afectada", use_container_width=True):
+                                t['legs'] = nuevas_legs
+                                st.success(f"✅ ¡Ticket {t['id']} actualizado para la {carrera_afectada}!")
+                                st.rerun()
+                else:
+                    # Para Polla Hípica, si hay retirados, se informa que se asignó automáticamente el siguiente
+                    retirado_en_ticket_polla = False
+                    for leg in t['legs']:
+                        if leg['ejemplar'] in st.session_state.ejemplares_retirados.get(leg['carrera'], []):
+                            retirado_en_ticket_polla = True
+                            break
+                    if retirado_en_ticket_polla:
+                        st.info("ℹ️ **Polla Hípica:** Los ejemplares retirados en este ticket se sustituyeron automáticamente por el siguiente caballo disponible según las reglas de la polla.")
 
 # =========================================================================
 # 3. MÓDULO DE CUENTAS
