@@ -81,12 +81,21 @@ components.html("""
                 };
 
                 tuercaBtn.onclick = function() {
-                    const collapseBtns = doc.querySelectorAll('button[data-testid="baseButton-header"], [data-testid="stSidebarCollapseButton"] button, button[kind="header"]');
-                    if (collapseBtns.length > 0) {
-                        collapseBtns[collapseBtns.length - 1].click();
+                    const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
+                                        doc.querySelector('button[aria-label="Collapse sidebar"]') || 
+                                        doc.querySelector('button[aria-label="Expand sidebar"]') ||
+                                        doc.querySelector('section[data-testid="stSidebar"] button');
+                    
+                    if (collapseBtn) {
+                        collapseBtn.click();
                     } else {
-                        const altBtn = doc.querySelector('section[data-testid="stSidebar"] button');
-                        if (altBtn) altBtn.click();
+                        const altBtns = doc.querySelectorAll('button');
+                        for (let btn of altBtns) {
+                            if (btn.getAttribute('kind') === 'header' || btn.innerHTML.includes('sidebar')) {
+                                btn.click();
+                                break;
+                            }
+                        }
                     }
                 };
 
@@ -801,7 +810,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BANNER MARQUESINA DINÁMICO (SIN MARCO, FLUJO MUY LENTO HACIA LA DERECHA, LETRAS LLAMATIVAS) ---
+# --- BANNER MARQUESINA DINÁMICO ---
 elementos_carrusel_info = []
 
 remates_abiertos = [c for c in lista_carreras_disponibles if not st.session_state.carreras_cerradas_remate.get(c, False)]
@@ -913,8 +922,8 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }}, 400);
-                }}, 8000);
+                    }, 400);
+                }, 8000);
             }}
         }})();
     </script>
@@ -1415,7 +1424,7 @@ elif menu_principal_opcion == "Dupletas":
             </div>
         """, unsafe_allow_html=True)
 
-    # --- SELECTOR VERTICAL FIJO: CARRERA FIJA ARRIBA Y EJEMPLAR ABAJO ---
+    # --- SELECTOR VERTICAL FIJO ---
     with st.container(border=True):
         st.markdown(f"👤 **Jugador Activo:** `{st.session_state.usuario_activo}` &nbsp;|&nbsp; 💵 **Costo Ticket:** `{formatear_bs(monto_unico_seccion)}`")
         st.markdown("---")
