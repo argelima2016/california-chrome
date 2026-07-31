@@ -83,13 +83,11 @@ components.html("""
                 tuercaBtn.onclick = function() {
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
-                        // Verificamos si está totalmente contraída o abierta mediante transform/width
                         const currentTransform = window.getComputedStyle(sidebar).transform;
                         const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
                                          (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
-                            // Abrir barra lateral por completo
                             sidebar.setAttribute('aria-expanded', 'true');
                             sidebar.style.transform = 'none';
                             sidebar.style.visibility = 'visible';
@@ -98,7 +96,6 @@ components.html("""
                             sidebar.style.width = '360px';
                             sidebar.style.position = 'relative';
                         } else {
-                            // Cerrar la barra lateral de forma total (ocultarla y remover el espacio ocupado)
                             sidebar.setAttribute('aria-expanded', 'false');
                             sidebar.style.transform = 'translateX(-100%)';
                             sidebar.style.visibility = 'hidden';
@@ -107,7 +104,6 @@ components.html("""
                             sidebar.style.width = '0px';
                         }
                     } else {
-                        // Intento secundario con el botón oficial de Streamlit
                         const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
                                             doc.querySelector('[data-testid="collapsedControl"] button');
                         if (collapseBtn) collapseBtn.click();
@@ -191,7 +187,6 @@ st.markdown("""
         color: #f0f6fc;
         overflow-x: hidden !important;
     }
-    /* Ancho amplio de 360px para cuando esté abierta */
     [data-testid="stSidebar"] {
         min-width: 360px !important;
         max-width: 360px !important;
@@ -1169,8 +1164,32 @@ if menu_principal_opcion == "Remates":
                     key=f"multiselect_retirados_{carr_activa}"
                 )
                 if st.button("💾 Actualizar Retirados", key=f"btn_save_retirados_{carr_activa}", use_container_width=True, type="primary"):
+                    # Detectar nuevos ejemplares retirados para descontar de las compras de los jugadores
+                    retirados_anteriores = set(retirados_actuales_carr)
+                    retirados_nuevos_set = set(nuevos_retirados)
+                    recien_retirados = retirados_nuevos_set - retirados_anteriores
+
+                    for cab_ret in recien_retirados:
+                        info_cab = st.session_state.remates[carr_activa].get(cab_ret, {})
+                        comprador = info_cab.get('jugador', 'Sin Postor')
+                        monto_ej = info_cab.get('monto', 0.0)
+
+                        if comprador != "Sin Postor" and monto_ej > 0:
+                            if comprador in st.session_state.cuentas:
+                                # Descontar de las compras (pujas) del jugador
+                                st.session_state.cuentas[comprador]['Pujas'] = max(0.0, st.session_state.cuentas[comprador]['Pujas'] - monto_ej)
+                                # Registrar en el historial de jugadas
+                                st.session_state.historial_jugadas.append({
+                                    "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                    "jugador": comprador,
+                                    "tipo": "Retirado (Descuento)",
+                                    "carrera": carr_activa,
+                                    "detalle": f"Ejemplar retirado: {cab_ret}",
+                                    "monto": -monto_ej
+                                })
+
                     st.session_state.ejemplares_retirados[carr_activa] = nuevos_retirados
-                    st.toast("✅ ¡Ejemplares retirados actualizados!")
+                    st.toast("✅ ¡Ejemplares retirados actualizados y cuentas ajustadas!")
                     st.rerun()
 
             dt_limite = st.session_state.fechas_horas_cierre_remate.get(carr_activa)
