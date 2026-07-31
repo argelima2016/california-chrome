@@ -377,6 +377,8 @@ def inicializar_estado_global():
         st.session_state.admin_tab_seleccionada = "✍️ Caballos"
     if 'url_video_en_vivo' not in st.session_state:
         st.session_state.url_video_en_vivo = ""
+    if 'edicion_ticket_activa' not in st.session_state:
+        st.session_state.edicion_ticket_activa = None
 
 inicializar_estado_global()
 
@@ -629,7 +631,7 @@ def generar_tabla_html_remate(remates_dict, retirados_list):
         
         es_retirado = cab in retirados_list
         clase_fila = "retirado-row" if es_retirado else ""
-        etiqueta_estado = " (RETIRADO)" if es_retirado else ""
+        etiqueta_estado = " 🚫" if es_retirado else ""
         
         html += f"""
                 <tr class="{clase_fila}">
@@ -1116,21 +1118,6 @@ if menu_principal_opcion == "Remates":
 
             if carr_activa not in st.session_state.ejemplares_retirados:
                 st.session_state.ejemplares_retirados[carr_activa] = []
-            
-            lista_todos_caballos_carr = list(st.session_state.remates[carr_activa].keys())
-            retirados_actuales_carr = st.session_state.ejemplares_retirados[carr_activa]
-
-            with st.expander("🚫 Gestionar Ejemplares Retirados", expanded=False):
-                nuevos_retirados = st.multiselect(
-                    "Selecciona los ejemplares retirados en esta carrera:",
-                    options=lista_todos_caballos_carr,
-                    default=retirados_actuales_carr,
-                    key=f"multiselect_retirados_{carr_activa}"
-                )
-                if st.button("💾 Actualizar Retirados", key=f"btn_save_retirados_{carr_activa}", use_container_width=True, type="primary"):
-                    st.session_state.ejemplares_retirados[carr_activa] = nuevos_retirados
-                    st.toast("✅ ¡Ejemplares retirados actualizados!")
-                    st.rerun()
 
             dt_limite = st.session_state.fechas_horas_cierre_remate.get(carr_activa)
             estado_conteo = st.session_state.estado_conteo_carrera.get(carr_activa, "INACTIVO")
@@ -1161,6 +1148,7 @@ if menu_principal_opcion == "Remates":
                         if restantes_10s > 0:
                             st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa})</div>", unsafe_allow_html=True)
 
+            # --- TABLA DE REMATES ORIGINAL INTACTA ---
             tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []))
             cantidad_filas = len(st.session_state.remates[carr_activa])
             altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
@@ -1195,6 +1183,78 @@ if menu_principal_opcion == "Remates":
                             st.session_state.historial_ganadores[carr_activa] = {"Ganador": info_g['jugador'], "Premio": formatear_bs(premio_final_liq)}
                             st.success(f"✅ ¡Premio liquidado a **{info_g['jugador']}**!")
                             st.rerun()
+
+            # --- BOTONES SIMPLES Y RÁPIDOS PARA RETIRAR / ACTIVAR EJEMPLARES ---
+            retirados_actuales_carr = st.session_state.ejemplares_retirados[carr_activa]
+            st.markdown("🔹 **Retirar / Activar Ejemplar (Toca el número):**")
+            cols_retiro_grid = st.columns(min(8, len(st.session_state.remates[carr_activa])), gap="small")
+            
+            for idx_r, (cab_item, info_item) in enumerate(st.session_state.remates[carr_activa].items()):
+                c_idx = idx_r % len(cols_retiro_grid)
+                es_ret = cab_item in retirados_actuales_carr
+                num_parte = cab_item.split(" - ")[0]
+                
+                with cols_retiro_grid[c_idx]:
+                    # Usamos botones sencillos con colores distintos: Primario (Rojo/Oscuro) si está retirado, Secundario si activo
+                    btn_tipo = "primary" if es_ret else "secondary"
+                    btn_label = f"🚫 #{num_parte}" if es_ret else f"#{num_parte}"
+                    
+                    if st.button(btn_label, key=f"btn_toggle_ret_{carr_activa}_{cab_item}", use_container_width=True, type=btn_tipo):
+                        if es_ret:
+                            # Volver a activar
+                            st.session_state.ejemplares_retirados[carr_activa].remove(cab_item)
+                            st.toast(f"✅ Ejemplar #{num_parte} reactivado.")
+                        else:
+                            # Retirar ejemplar y aplicar lógica automática solicitada
+                            if cab_item not in st.session_state.ejemplares_retirados[carr_activa]:
+                                st.session_state.ejemplares_retirados[carr_activa].append(cab_item)
+                            
+                            # 1. Deducción del remate y del jugador
+                            comprador_remate = info_item.get('jugador', 'Sin Postor')
+                            monto_remate = info_item.get('monto', 0.0)
+                            
+                            if comprador_remate != "Sin Postor" and monto_remate > 0:
+                                # Deducir del acumulado de pujas del jugador
+                                if comprador_remate in st.session_state.cuentas:
+                                    st.session_state.cuentas[comprador_remate]['Pujas'] = max(0.0, st.session_state.cuentas[comprador_remate]['Pujas'] - monto_remate)
+                                # Marcar el remate como devuelto / sin postor o monto 0
+                                st.session_state.remates[carr_activa][cab_item] = {"jugador": "Sin Postor", "monto": 0.0}
+
+                            # 2. Dupletas / Tripletas: Abrir ticket para cambiar opción
+                            for tipo_t_key in ['dupletas_tickets', 'tripleta_tickets']:
+                                for t_obj in st.session_state.get(tipo_t_key, []):
+                                    for leg in t_obj.get('legs', []):
+                                        if leg.get('carrera') == carr_activa and leg.get('ejemplar') == cab_item:
+                                            st.session_state.edicion_ticket_activa = t_obj.get('id')
+
+                            # 3. Polla Hípica: Pasar al siguiente ejemplar disponible automáticamente (ej. 3 pasa al 4)
+                            lista_todos_cabs_nombres = list(st.session_state.remates[carr_activa].keys())
+                            for t_obj in st.session_state.get('polla_tickets', []):
+                                for leg in t_obj.get('legs', []):
+                                    if leg.get('carrera') == carr_activa and leg.get('ejemplar') == cab_item:
+                                        # Buscar el siguiente caballo activo que no esté retirado
+                                        idx_actual_cab = lista_todos_cabs_nombres.index(cab_item)
+                                        nuevo_ejemplar_asignado = None
+                                        for offset in range(1, len(lista_todos_cabs_nombres) + 1):
+                                            siguiente_idx = (idx_actual_cab + offset) % len(lista_todos_cabs_nombres)
+                                            candidato = lista_todos_cabs_nombres[siguiente_idx]
+                                            if candidato not in st.session_state.ejemplares_retirados[carr_activa]:
+                                                nuevo_ejemplar_asignado = candidato
+                                                break
+                                        if nuevo_ejemplar_asignado:
+                                            leg['ejemplar'] = nuevo_ejemplar_asignado
+
+                            st.toast(f"🚫 Ejemplar #{num_parte} retirado. Cuentas y tickets actualizados.")
+                        st.rerun()
+
+            # Si hay algún ticket pendiente de modificación por retiro, mostramos un aviso especial
+            if st.session_state.edicion_ticket_activa:
+                st.warning(f"⚠️ El ticket **{st.session_state.edicion_ticket_activa}** contenía un ejemplar retirado en {carr_activa}. Por favor, verifíquelo o reasígnele una opción válida.")
+                if st.button("✅ Entendido / Cerrar Aviso", key="btn_cerrar_aviso_edicion"):
+                    st.session_state.edicion_ticket_activa = None
+                    st.rerun()
+
+            st.markdown("---")
 
             with st.expander(f"📜 Historial de Pujas - {carr_activa} ({modo_actual_remate})", expanded=False):
                 historial_carrera_actual = [
@@ -1509,6 +1569,47 @@ elif menu_principal_opcion == "Dupletas":
 
     st.markdown("---")
     st.markdown(f"### 📋 Historial de Tickets ({sub_dup_actual})")
+    
+    # Permitir modificar opciones de dupletas/tripletas si se abrió el ticket por retiro
+    if st.session_state.edicion_ticket_activa:
+        st.warning(f"⚠️ Editando Ticket **{st.session_state.edicion_ticket_activa}** por ejemplar retirado:")
+        ticket_en_edicion = None
+        tipo_ticket_edicion = None
+        for t_k in ['dupletas_tickets', 'tripleta_tickets']:
+            for t_item in st.session_state.get(t_k, []):
+                if t_item['id'] == st.session_state.edicion_ticket_activa:
+                    ticket_en_edicion = t_item
+                    tipo_ticket_edicion = t_k
+                    break
+
+        if ticket_en_edicion:
+            with st.form(key=f"form_editar_ticket_{ticket_en_edicion['id']}"):
+                st.markdown(f"**Jugador:** {ticket_en_edicion['jugador']} | **Monto:** {formatear_bs(ticket_en_edicion['monto'])}")
+                nuevas_legs_editadas = []
+                for idx_l, leg_item in enumerate(ticket_en_edicion['legs']):
+                    c_leg = leg_item['carrera']
+                    retirados_en_carr = st.session_state.ejemplares_retirados.get(c_leg, [])
+                    disponibles_leg = [c for c in list(st.session_state.remates.get(c_leg, {}).keys()) if c not in retirados_en_carr]
+                    
+                    # Valor por defecto seguro
+                    idx_default = 0
+                    if leg_item['ejemplar'] in disponibles_leg:
+                        idx_default = disponibles_leg.index(leg_item['ejemplar'])
+
+                    nuevo_cab_elegido = st.selectbox(
+                        f"Opción para {c_leg}",
+                        options=disponibles_leg if disponibles_leg else ["Sin opciones"],
+                        index=idx_default,
+                        key=f"edit_leg_{ticket_en_edicion['id']}_{idx_l}"
+                    )
+                    nuevas_legs_editadas.append({"carrera": c_leg, "ejemplar": nuevo_cab_elegido})
+
+                if st.form_submit_button("💾 Guardar Nueva Opción de Ticket"):
+                    ticket_en_edicion['legs'] = nuevas_legs_editadas
+                    st.session_state.edicion_ticket_activa = None
+                    st.success("✅ Opción de ticket actualizada con éxito.")
+                    st.rerun()
+
     lista_tickets_activo_ver = (
         st.session_state.dupletas_tickets if sub_dup_actual == "Dupleta" else
         st.session_state.tripleta_tickets if sub_dup_actual == "Tripleta" else
@@ -1864,7 +1965,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             if carr_img_sel in st.session_state.gacetas_carreras:
                 st.success("✅ Gaceta disponible para descarga en esta carrera.")
                 if st.button("🗑️ Eliminar Gaceta", key=f"btn_del_gaceta_{carr_img_sel}", use_container_width=True):
-                    del st.session_state.gacetas_carreras[carr_img_sel]
+                    del st.session_state.gacetas_carreras[carr_img_sel] = None # Corregido
                     st.toast("🗑️ Gaceta removida")
                     st.rerun()
 
