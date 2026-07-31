@@ -64,7 +64,9 @@ def cargar_estado_global():
         'carreras_por_modalidad': {"Adelantados": [], "Ciegos": [], "En Vivo": []},
         'total_carreras_semana': 10,
         'url_video_en_vivo': "",
-        'admin_tab_seleccionada': "✍️ Caballos"
+        'admin_tab_seleccionada': "✍️ Caballos",
+        'imagenes_carreras': {},
+        'gacetas_carreras': {}
     }
     
     if os.path.exists(DB_FILE):
@@ -92,12 +94,15 @@ def guardar_estado_global():
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
-        'total_carreras_semana', 'url_video_en_vivo'
+        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras'
     ]
     data = {}
     for k in keys_to_save:
         if k in st.session_state:
             val = st.session_state[k]
+            if k == 'imagenes_carreras' and isinstance(val, dict):
+                # Omitimos guardar objetos bytes/UploadedFile complejos directamente en JSON para evitar errores de serialización
+                continue
             data[k] = val
     try:
         with open(DB_FILE, "w", encoding="utf-8") as f:
@@ -932,7 +937,10 @@ if menu_principal_opcion == "Remates":
             st.markdown("---")
 
             if carr_activa in st.session_state.imagenes_carreras:
-                st.image(st.session_state.imagenes_carreras[carr_activa], caption=f"Imagen oficial - {carr_activa}", use_container_width=True)
+                try:
+                    st.image(st.session_state.imagenes_carreras[carr_activa], caption=f"Imagen oficial - {carr_activa}", use_container_width=True)
+                except Exception:
+                    pass
 
             carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
             estado_icono = "🔴" if carrera_cerrada else "🟢"
@@ -1650,7 +1658,7 @@ elif menu_principal_opcion == "Cuentas":
     if todos_tickets_multiples:
         st.markdown("#### 🎟️ Tickets de Dupletas, Tripletas y Polla Hípica")
         for t in reversed(todos_tickets_multiples):
-            detalles_legs = " ➔ ".join([f"<b>{l['carrera']}</b>: {l['ejemplar']}" for l in t['legs']])
+            detalles_legs = " ➔ ".join([f"**{l['carrera']}**: {l['ejemplar']}" for l in t['legs']])
             estado_t = t.get('estado', 'Pendiente')
             color_est = "#2ed573" if estado_t == 'Pendiente' else "#ff4757"
 
@@ -2019,7 +2027,10 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.toast("✅ ¡Imagen guardada!")
                     st.rerun()
             if carr_img_sel in st.session_state.imagenes_carreras:
-                st.image(st.session_state.imagenes_carreras[carr_img_sel], width=250)
+                try:
+                    st.image(st.session_state.imagenes_carreras[carr_img_sel], width=250)
+                except Exception:
+                    pass
                 if st.button("🗑️ Eliminar Imagen", key=f"btn_del_img_{carr_img_sel}", use_container_width=True):
                     del st.session_state.imagenes_carreras[carr_img_sel]
                     guardar_estado_global()
@@ -2035,6 +2046,13 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.session_state.gacetas_carreras[carr_img_sel] = gaceta_subida.read()
                     guardar_estado_global()
                     st.toast("✅ ¡Gaceta guardada!")
+                    st.rerun()
+            if carr_img_sel in st.session_state.gacetas_carreras:
+                st.success("✅ Gaceta disponible para descarga en esta carrera.")
+                if st.button("🗑️ Eliminar Gaceta", key=f"btn_del_gaceta_{carr_img_sel}", use_container_width=True):
+                    del st.session_state.gacetas_carreras[carr_img_sel]
+                    guardar_estado_global()
+                    st.toast("🗑️ Gaceta removida")
                     st.rerun()
 
     elif tab_actual == "📄 Importar":
