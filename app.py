@@ -13,7 +13,7 @@ from zoneinfo import ZoneInfo
 from pypdf import PdfReader
 
 # Configuración de pantalla completa
-st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="Wolf Ready to Run", layout="wide", page_icon="🐺")
 
 # --- HORA LOCAL DE VENEZUELA ---
 def obtener_hora_venezuela_local():
