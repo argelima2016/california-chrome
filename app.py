@@ -302,11 +302,11 @@ st.markdown("""
         line-height: 1.4;
         word-break: break-word;
     }
-    /* Estilo llamativo y animado para el incentivo en remate */
+    /* Estilo llamativo y animado para el incentivo en remate (Solo icono y monto) */
     .incentivo-llamativo {
         background: linear-gradient(135deg, #1f1c2c 0%, #923d41 100%);
         border: 2px dashed #00ffff;
-        padding: 12px 18px;
+        padding: 10px 16px;
         border-radius: 12px;
         text-align: center;
         margin: 10px 0;
@@ -317,15 +317,6 @@ st.markdown("""
         0% { transform: scale(1); border-color: #00ffff; }
         50% { transform: scale(1.02); border-color: #f1c40f; box-shadow: 0px 0px 20px rgba(241, 196, 15, 0.7); }
         100% { transform: scale(1); border-color: #00ffff; }
-    }
-    .incentivo-llamativo-titulo {
-        color: #00ffff;
-        font-size: 13px;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 1.2px;
-        margin-bottom: 4px;
-        text-shadow: 0px 0px 8px rgba(0, 255, 255, 0.8);
     }
     .incentivo-llamativo-monto {
         color: #ffffff;
@@ -1281,7 +1272,7 @@ if menu_principal_opcion == "Remates":
             altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
-            # --- POTE, PREMIO E INCENTIVO LLAMATIVO DEBAJO DE LA TABLA DE REMATE ---
+            # --- POTE, PREMIO E INCENTIVO LLAMATIVO (SOLO ICONO Y MONTO) DEBAJO DE LA TABLA DE REMATE ---
             retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
             total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in retirados_carr_activa])
             monto_casa = total_pote * (porcentaje_casa / 100)
@@ -1296,12 +1287,10 @@ if menu_principal_opcion == "Remates":
 
             premio_total_calculado = pote_neto_base + incentivo_actual
 
-            # Incentivo muy llamativo reflejado directamente en Remates
             if incentivo_actual > 0:
                 st.markdown(f"""
                     <div class="incentivo-llamativo">
-                        <div class="incentivo-llamativo-titulo">🎁 ¡INCENTIVO ESPECIAL ({modo_actual_remate.upper()}) ACTIVADO! 🚀</div>
-                        <div class="incentivo-llamativo-monto">{formatear_bs(incentivo_actual)}</div>
+                        <div class="incentivo-llamativo-monto">🎁 {formatear_bs(incentivo_actual)}</div>
                     </div>
                 """, unsafe_allow_html=True)
 
