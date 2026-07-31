@@ -46,7 +46,7 @@ components.html("""
                 });
             });
 
-            # --- BOTÓN FLOTANTE DE TUERCA PARA CONTROLAR EL CIERRE TOTAL DE LA BARRA LATERAL ---
+            // --- BOTÓN FLOTANTE DE TUERCA PARA CONTROLAR EL CIERRE TOTAL DE LA BARRA LATERAL ---
             let tuercaBtn = doc.getElementById('custom-tuerca-sidebar-btn');
             if (!tuercaBtn) {
                 tuercaBtn = doc.createElement('button');
@@ -1423,7 +1423,7 @@ elif menu_principal_opcion == "Dupletas":
         st.metric("💰 Pote Acumulado Polla", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
 
-    # --- CARRUSEL DESLIZANTE DE IMÁGENES DE LAS CARRERAS DISPONIBLES (MÁS GRANDE) ---
+    # --- CARRUSEL DESLIZANTE DE IMÁGENES MÁS GRANDE PARA DUPLETAS ---
     cards_html_slider = ""
     for carr_h in carreras_permitidas:
         det_h = st.session_state.detalles_carreras.get(carr_h, {})
@@ -1445,23 +1445,23 @@ elif menu_principal_opcion == "Dupletas":
                 pass
 
         if img_carr_b64:
-            media_content = f'<img src="data:image/jpeg;base64,{img_carr_b64}" style="width:100%; height:160px; object-fit:cover; border-radius:6px; margin-bottom:8px;" />'
+            media_content = f'<img src="data:image/jpeg;base64,{img_carr_b64}" style="width:100%; height:200px; object-fit:cover; border-radius:8px; margin-bottom:10px;" />'
         else:
-            media_content = f'<div style="width:100%; height:160px; background:#161b22; border:1px dashed #30363d; display:flex; align-items:center; justify-content:center; border-radius:6px; margin-bottom:8px; color:#8b949e; font-size:12px; font-weight:700;">{carr_h}</div>'
+            media_content = f'<div style="width:100%; height:200px; background:#161b22; border:1px dashed #30363d; display:flex; align-items:center; justify-content:center; border-radius:8px; margin-bottom:10px; color:#8b949e; font-size:13px; font-weight:700;">{carr_h}</div>'
 
         cards_html_slider += f"""
-            <div style="flex: 0 0 220px; background: #0d1117; border: 1px solid #30363d; border-radius: 10px; padding: 12px; text-align: left; box-shadow: 0px 4px 12px rgba(0,0,0,0.5);">
+            <div style="flex: 0 0 280px; background: #0d1117; border: 1px solid #30363d; border-radius: 12px; padding: 14px; text-align: left; box-shadow: 0px 6px 16px rgba(0,0,0,0.6);">
                 {media_content}
-                <div style="color: #f1c40f; font-size: 14px; font-weight: 900; margin-bottom: 4px;">{carr_h}</div>
-                <div style="color: #8b949e; font-size: 11px; line-height: 1.3; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{cond_h}</div>
-                <div style="color: #ffffff; font-size: 11px; font-weight: 700; margin-top: 6px;">📏 {dist_h} | ⏰ {hora_h}</div>
+                <div style="color: #f1c40f; font-size: 16px; font-weight: 900; margin-bottom: 6px;">{carr_h}</div>
+                <div style="color: #8b949e; font-size: 12px; line-height: 1.4; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{cond_h}</div>
+                <div style="color: #ffffff; font-size: 12px; font-weight: 700; margin-top: 8px;">📏 {dist_h} &nbsp;|&nbsp; ⏰ {hora_h}</div>
             </div>
         """
 
     if cards_html_slider:
         st.markdown("🖼️ **Carrusel de Carreras Disponibles:**")
         st.markdown(f"""
-            <div style="display: flex; overflow-x: auto; gap: 12px; padding-bottom: 12px; margin-bottom: 14px; scrollbar-width: thin;">
+            <div style="display: flex; overflow-x: auto; gap: 14px; padding-bottom: 14px; margin-bottom: 16px; scrollbar-width: thin;">
                 {cards_html_slider}
             </div>
         """, unsafe_allow_html=True)
