@@ -1179,7 +1179,7 @@ if menu_principal_opcion == "Remates":
                                     "monto": -monto_ej
                                 })
 
-                    # --- REGLA: EN POLLA HÍPICA SE ASIGNA EL SIGUIENTE AUTOMÁTICAMENTE ---
+                    # --- REGLA: EN POLLA HÍPICA SE ASIGNA EL SIGUIENTE AUTOMÁTICAMENTE Y SE REFLEJA EN EL TICKET ---
                     for t_polla in st.session_state.polla_tickets:
                         for leg in t_polla['legs']:
                             if leg['carrera'] == carr_activa and leg['ejemplar'] in nuevos_retirados:
@@ -1190,9 +1190,9 @@ if menu_principal_opcion == "Remates":
                                         siguiente_cab = siguiente_c
                                         break
                                 if siguiente_cab:
-                                    leg['ejemplar'] = siguiente_cab
+                                    leg['ejemplar'] = f"{siguiente_cab} (Sustituto por retiro)"
 
-                    # --- REGLA: EN DUPLETA Y TRIPLETA, SI EL TICKET TENÍA EL EJEMPLAR RETIRADO, QUEDA NULO Y SE RESTA EL MONTO ---
+                    # --- REGLA: EN DUPLETA Y TRIPLETA, SI HAY UN RETIRADO, QUEDA NULO Y SE RESTA EL MONTO HASTA QUE ELIJA OTRO ---
                     for lista_tkts in [st.session_state.dupletas_tickets, st.session_state.tripleta_tickets]:
                         for t_dup in lista_tkts:
                             if t_dup.get('estado', 'Pendiente') == 'Pendiente':
@@ -1217,7 +1217,7 @@ if menu_principal_opcion == "Remates":
                                     })
 
                     st.session_state.ejemplares_retirados[carr_activa] = nuevos_retirados
-                    st.toast("✅ ¡Ejemplares retirados actualizados, tickets nulos descontados!")
+                    st.toast("✅ ¡Ejemplares retirados actualizados, tickets nulos y pollas ajustadas!")
                     st.rerun()
 
             dt_limite = st.session_state.fechas_horas_cierre_remate.get(carr_activa)
@@ -1649,7 +1649,6 @@ elif menu_principal_opcion == "Dupletas":
 
                     if retirado_en_ticket:
                         if t.get('estado') == 'Pendiente':
-                            # Marcar como nulo y restar el monto del ticket al jugador automáticamente
                             t['estado'] = 'Nulo (Retirado)'
                             jug_t = t['jugador']
                             monto_t = t['monto']
@@ -1660,11 +1659,11 @@ elif menu_principal_opcion == "Dupletas":
                                 "jugador": jug_t,
                                 "tipo": "Ticket Anulado (Retiro)",
                                 "carrera": carrera_afectada,
-                                "detalle": f"Ticket {t['id']} anulado por retiro de {carrera_afectada}",
+                                "detalle": f"Ticket {t['id']} anulado por retiro",
                                 "monto": -monto_t
                             })
 
-                        st.error(f"❌ El ticket **{t['id']}** está **NULO** porque el ejemplar de la **{carrera_afectada}** fue retirado. Seleccione un nuevo ejemplar para reactivarlo:")
+                        st.error(f"❌ El ticket **{t['id']}** está **NULO** y su monto ha sido restado porque el ejemplar de la **{carrera_afectada}** fue retirado. Seleccione un nuevo ejemplar para reactivarlo:")
                         
                         with st.form(key=f"form_modificar_ticket_{t['id']}_{idx_t}"):
                             nuevas_legs = []
@@ -1696,7 +1695,6 @@ elif menu_principal_opcion == "Dupletas":
                                 jug_t = t['jugador']
                                 monto_t = t['monto']
                                 
-                                # Sumamos nuevamente el monto del ticket al usuario al reactivarlo
                                 if jug_t not in st.session_state.cuentas:
                                     st.session_state.cuentas[jug_t] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
                                 st.session_state.cuentas[jug_t]['Pujas'] += monto_t
