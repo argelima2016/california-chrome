@@ -1598,43 +1598,49 @@ elif menu_principal_opcion == "Dupletas":
                 st.markdown(f"> {detalles_legs}")
                 st.caption(f"Emitido: {t['fecha']}")
 
-                # --- PERMITIR MODIFICAR EL TICKET SI HAY RETIRO EN SUS EJEMPLARES ---
-                # Verificamos si alguno de los ejemplares del ticket está retirado en su respectiva carrera
-                tiene_retirado = False
+                # --- PERMITIR MODIFICAR EL TICKET SOLO EN LA CARRERA DONDE HUBO EL RETIRO ---
+                retirado_en_ticket = False
+                carrera_afectada = None
                 for leg in t['legs']:
                     carr_l = leg['carrera']
                     ej_l = leg['ejemplar']
                     retirados_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
                     if ej_l in retirados_carr:
-                        tiene_retirado = True
+                        retirado_en_ticket = True
+                        carrera_afectada = carr_l
                         break
 
-                if tiene_retirado:
-                    st.warning(f"⚠️ El ticket **{t['id']}** contiene un ejemplar retirado. Puede modificarlo a continuación:")
+                if retirado_en_ticket:
+                    st.warning(f"⚠️ El ticket **{t['id']}** tiene un ejemplar retirado en la **{carrera_afectada}**. Puede modificar exclusivamente esta carrera a continuación:")
                     with st.form(key=f"form_modificar_ticket_{t['id']}_{idx_t}"):
                         nuevas_legs = []
                         for i_l, leg in enumerate(t['legs']):
                             carr_l = leg['carrera']
                             ej_actual = leg['ejemplar']
-                            ret_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
-                            disponibles_l = [c for c in list(st.session_state.remates.get(carr_l, {}).keys()) if c not in ret_carr]
                             
-                            idx_def = 0
-                            if ej_actual in disponibles_l:
-                                idx_def = disponibles_l.index(ej_actual)
+                            # Si es la carrera afectada, permitimos cambiar solo esta
+                            if carr_l == carrera_afectada:
+                                ret_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
+                                disponibles_l = [c for c in list(st.session_state.remates.get(carr_l, {}).keys()) if c not in ret_carr]
+                                
+                                idx_def = 0
+                                if ej_actual in disponibles_l:
+                                    idx_def = disponibles_l.index(ej_actual)
 
-                            nuevo_ej = st.selectbox(
-                                f"Cambiar ejemplar para {carr_l} (Actual: {ej_actual})",
-                                options=disponibles_l if disponibles_l else [ej_actual],
-                                index=idx_def,
-                                key=f"mod_ticket_{t['id']}_leg_{i_l}"
-                            )
-                            nuevas_legs.append({"carrera": carr_l, "ejemplar": nuevo_ej})
+                                nuevo_ej = st.selectbox(
+                                    f"Cambiar ejemplar para {carr_l} (Actual retirado: {ej_actual})",
+                                    options=disponibles_l if disponibles_l else [ej_actual],
+                                    index=idx_def,
+                                    key=f"mod_ticket_{t['id']}_carr_{carr_l}"
+                                )
+                                nuevas_legs.append({"carrera": carr_l, "ejemplar": nuevo_ej})
+                            else:
+                                # Las demás carreras se mantienen intactas
+                                nuevas_legs.append(leg)
 
-                        if st.form_submit_button("💾 Guardar Cambios en Ticket", use_container_width=True):
-                            # Actualizamos las legs del ticket
+                        if st.form_submit_button("💾 Guardar Cambio en Carrera Afectada", use_container_width=True):
                             t['legs'] = nuevas_legs
-                            st.success(f"✅ ¡Ticket {t['id']} modificado con éxito!")
+                            st.success(f"✅ ¡Ticket {t['id']} actualizado para la {carrera_afectada}!")
                             st.rerun()
 
 # =========================================================================
@@ -2003,7 +2009,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.rerun()
 
     elif tab_actual == "📄 Importar":
-        st.markdown("### 📄 Importar Importar Contenido")
+        st.markdown("### 📄 Importar Contenido")
         texto_copiado_web = st.text_area(
             "Pegar texto:", value="", height=200, key="text_area_web_copiado",
             placeholder="Primera Carrera - 1.200 mts - 02:00 PM\n1 - Rey David\n2 - Gran Amigo"
