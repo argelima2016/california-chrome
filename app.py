@@ -1490,17 +1490,11 @@ elif menu_principal_opcion == "Dupletas":
                 st.markdown(f"🏁 **Carrera fija:** `{carr_leg}`")
                 
                 retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
-                
-                # REGLA SOLICITADA: Si es Dupleta o Tripleta y el caballo está retirado, abrir opción de cambio o mostrar siguiente.
-                # Para la Polla Hípica o reglas de asignación automática del siguiente:
                 todos_caballos_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
-                
-                # Identificamos caballos disponibles (no retirados)
                 caballos_in_carr = [c for c in todos_caballos_carr if c not in retirados_carr_t]
                 
-                # Si hay caballos retirados, permitimos en Dupleta y Tripleta un selector especial o aviso
                 if retirados_carr_t and sub_dup_actual in ["Dupleta", "Tripleta"]:
-                    st.markdown(f"<p style='color: #ff4757; font-size: 11px; font-weight: bold;'>⚠️ Hay ejemplares retirados en esta carrera. Se asignará/sugerirá el siguiente disponible o selecciona manualmente:</p>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='color: #ff4757; font-size: 11px; font-weight: bold;'>⚠️ Hay ejemplares retirados en esta carrera. Puede cambiar el ejemplar seleccionado:</p>", unsafe_allow_html=True)
 
                 cab_leg = st.selectbox(
                     f"Selecciona el Ejemplar para {carr_leg}", 
@@ -1508,9 +1502,8 @@ elif menu_principal_opcion == "Dupletas":
                     key=f"ticket_cab_{sub_dup_actual}_{paso}"
                 )
                 
-                # Lógica automática para Polla Hípica si el escogido resulta estar retirado o se requiere asignar el siguiente
+                # REGLA: En Polla Hípica, si el ejemplar elegido está retirado, se asigna automáticamente el siguiente disponible
                 if sub_dup_actual == "Polla Hipica" and cab_leg in retirados_carr_t:
-                    # Buscar el siguiente ejemplar numéricamente disponible
                     idx_ret = todos_caballos_carr.index(cab_leg)
                     siguiente_cab = None
                     for siguiente_c in todos_caballos_carr[idx_ret + 1:] + todos_caballos_carr[:idx_ret]:
@@ -1580,7 +1573,7 @@ elif menu_principal_opcion == "Dupletas":
                                 st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
                             st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_unico_seccion
                             
-                            st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito!")
+                            st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito (Estado: PENDIENTE)!")
                             st.rerun()
 
     st.markdown("---")
@@ -1593,16 +1586,56 @@ elif menu_principal_opcion == "Dupletas":
     if not lista_tickets_activo_ver:
         st.info("No hay tickets emitidos todavía en esta sección.")
     else:
-        for t in reversed(lista_tickets_activo_ver):
+        for idx_t, t in enumerate(reversed(lista_tickets_activo_ver)):
             with st.container(border=True):
-                col_t1, col_t2, col_t3 = st.columns([2, 2, 2])
+                col_t1, col_t2, col_t3, col_t4 = st.columns([2, 2, 2, 2])
                 col_t1.markdown(f"🏷️ `{t['id']}`")
                 col_t2.markdown(f"👤 `{t['jugador']}`")
                 col_t3.markdown(f"💰 `{formatear_bs(t['monto'])}`")
+                col_t4.markdown(f"📌 **Estado:** `{t.get('estado', 'Pendiente')}`")
                 
                 detalles_legs = " ➔ ".join([f"**{l['carrera']}**: {l['ejemplar']}" for l in t['legs']])
                 st.markdown(f"> {detalles_legs}")
                 st.caption(f"Emitido: {t['fecha']}")
+
+                # --- PERMITIR MODIFICAR EL TICKET SI HAY RETIRO EN SUS EJEMPLARES ---
+                # Verificamos si alguno de los ejemplares del ticket está retirado en su respectiva carrera
+                tiene_retirado = False
+                for leg in t['legs']:
+                    carr_l = leg['carrera']
+                    ej_l = leg['ejemplar']
+                    retirados_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
+                    if ej_l in retirados_carr:
+                        tiene_retirado = True
+                        break
+
+                if tiene_retirado:
+                    st.warning(f"⚠️ El ticket **{t['id']}** contiene un ejemplar retirado. Puede modificarlo a continuación:")
+                    with st.form(key=f"form_modificar_ticket_{t['id']}_{idx_t}"):
+                        nuevas_legs = []
+                        for i_l, leg in enumerate(t['legs']):
+                            carr_l = leg['carrera']
+                            ej_actual = leg['ejemplar']
+                            ret_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
+                            disponibles_l = [c for c in list(st.session_state.remates.get(carr_l, {}).keys()) if c not in ret_carr]
+                            
+                            idx_def = 0
+                            if ej_actual in disponibles_l:
+                                idx_def = disponibles_l.index(ej_actual)
+
+                            nuevo_ej = st.selectbox(
+                                f"Cambiar ejemplar para {carr_l} (Actual: {ej_actual})",
+                                options=disponibles_l if disponibles_l else [ej_actual],
+                                index=idx_def,
+                                key=f"mod_ticket_{t['id']}_leg_{i_l}"
+                            )
+                            nuevas_legs.append({"carrera": carr_l, "ejemplar": nuevo_ej})
+
+                        if st.form_submit_button("💾 Guardar Cambios en Ticket", use_container_width=True):
+                            # Actualizamos las legs del ticket
+                            t['legs'] = nuevas_legs
+                            st.success(f"✅ ¡Ticket {t['id']} modificado con éxito!")
+                            st.rerun()
 
 # =========================================================================
 # 3. MÓDULO DE CUENTAS
@@ -1970,7 +2003,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.rerun()
 
     elif tab_actual == "📄 Importar":
-        st.markdown("### 📄 Importar Contenido")
+        st.markdown("### 📄 Importar Importar Contenido")
         texto_copiado_web = st.text_area(
             "Pegar texto:", value="", height=200, key="text_area_web_copiado",
             placeholder="Primera Carrera - 1.200 mts - 02:00 PM\n1 - Rey David\n2 - Gran Amigo"
