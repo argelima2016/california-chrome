@@ -1179,8 +1179,21 @@ if menu_principal_opcion == "Remates":
                                     "monto": -monto_ej
                                 })
 
+                    # --- REEMPLAZO AUTOMÁTICO EN TICKETS DE POLLA HÍPICA SI EL CABALLO ESTÁ RETIRADO ---
+                    for t_polla in st.session_state.polla_tickets:
+                        for leg in t_polla['legs']:
+                            if leg['carrera'] == carr_activa and leg['ejemplar'] in nuevos_retirados:
+                                idx_ret = lista_todos_caballos_carr.index(leg['ejemplar'])
+                                siguiente_cab = None
+                                for siguiente_c in lista_todos_caballos_carr[idx_ret + 1:] + lista_todos_caballos_carr[:idx_ret]:
+                                    if siguiente_c not in nuevos_retirados:
+                                        siguiente_cab = siguiente_c
+                                        break
+                                if siguiente_cab:
+                                    leg['ejemplar'] = siguiente_cab
+
                     st.session_state.ejemplares_retirados[carr_activa] = nuevos_retirados
-                    st.toast("✅ ¡Ejemplares retirados actualizados y cuentas ajustadas!")
+                    st.toast("✅ ¡Ejemplares retirados actualizados, cuentas y pollas ajustadas!")
                     st.rerun()
 
             dt_limite = st.session_state.fechas_horas_cierre_remate.get(carr_activa)
@@ -1502,7 +1515,7 @@ elif menu_principal_opcion == "Dupletas":
                     key=f"ticket_cab_{sub_dup_actual}_{paso}"
                 )
                 
-                # REGLA: En Polla Hípica, si el ejemplar elegido está retirado, se asigna automáticamente el siguiente disponible sin dejar cambiarlo
+                # REGLA: En Polla Hípica, si el ejemplar elegido está retirado, se asigna automáticamente el siguiente disponible
                 if sub_dup_actual == "Polla Hipica" and cab_leg in retirados_carr_t:
                     idx_ret = todos_caballos_carr.index(cab_leg)
                     siguiente_cab = None
@@ -1598,7 +1611,7 @@ elif menu_principal_opcion == "Dupletas":
                 st.markdown(f"> {detalles_legs}")
                 st.caption(f"Emitido: {t['fecha']}")
 
-                # --- PERMITIR MODIFICAR EL TICKET SOLO EN LA CARRERA EXACTA DONDE HUBO EL RETIRO (EXCEPTO EN POLLA HÍPICA) ---
+                # --- PERMITIR MODIFICAR EL TICKET SOLO EN LA CARRERA EXACTA DONDE HUBO EL RETIRO (Y VISUALIZAR EL CAMBIO) ---
                 if sub_dup_actual != "Polla Hipica":
                     retirado_en_ticket = False
                     carrera_afectada = None
@@ -1612,7 +1625,7 @@ elif menu_principal_opcion == "Dupletas":
                             break
 
                     if retirado_en_ticket:
-                        st.warning(f"⚠️ El ticket **{t['id']}** tiene un ejemplar retirado en la **{carrera_afectada}**. Puede modificar exclusivamente esta carrera:")
+                        st.warning(f"⚠️ El ticket **{t['id']}** tiene un ejemplar retirado en la **{carrera_afectada}**. Modifique abajo el ejemplar para actualizar el ticket:")
                         with st.form(key=f"form_modificar_ticket_{t['id']}_{idx_t}"):
                             nuevas_legs = []
                             for i_l, leg in enumerate(t['legs']):
@@ -1637,19 +1650,18 @@ elif menu_principal_opcion == "Dupletas":
                                 else:
                                     nuevas_legs.append(leg)
 
-                            if st.form_submit_button("💾 Guardar Cambio en Carrera Afectada", use_container_width=True):
+                            if st.form_submit_button("💾 Guardar y Actualizar Ticket", use_container_width=True):
                                 t['legs'] = nuevas_legs
-                                st.success(f"✅ ¡Ticket {t['id']} actualizado para la {carrera_afectada}!")
+                                st.success(f"✅ ¡Ticket {t['id']} actualizado en pantalla para la {carrera_afectada}!")
                                 st.rerun()
                 else:
-                    # Para Polla Hípica, si hay retirados, se informa que se asignó automáticamente el siguiente
                     retirado_en_ticket_polla = False
                     for leg in t['legs']:
                         if leg['ejemplar'] in st.session_state.ejemplares_retirados.get(leg['carrera'], []):
                             retirado_en_ticket_polla = True
                             break
                     if retirado_en_ticket_polla:
-                        st.info("ℹ️ **Polla Hípica:** Los ejemplares retirados en este ticket se sustituyeron automáticamente por el siguiente caballo disponible según las reglas de la polla.")
+                        st.info("ℹ️ **Polla Hípica:** Los ejemplares retirados en este ticket se sustituyeron automáticamente en pantalla por el siguiente caballo disponible.")
 
 # =========================================================================
 # 3. MÓDULO DE CUENTAS
