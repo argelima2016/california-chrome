@@ -801,7 +801,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BANNER MARQUESINA DINÁMICO (FLUJO LENTO HACIA LA DERECHA CON LETRAS LLAMATIVAS) ---
+# --- BANNER MARQUESINA DINÁMICO (SIN MARCO, FLUJO LENTO HACIA LA DERECHA, LETRAS LLAMATIVAS) ---
 elementos_carrusel_info = []
 
 remates_abiertos = [c for c in lista_carreras_disponibles if not st.session_state.carreras_cerradas_remate.get(c, False)]
@@ -835,14 +835,13 @@ if elementos_carrusel_info:
     <style>
         .marquee-container {{
             width: 100%;
-            background: linear-gradient(90deg, #1a1500 0%, #0d1117 50%, #1a1500 100%);
-            border: 2px solid #f1c40f;
-            border-radius: 8px;
-            padding: 10px 0;
-            margin-bottom: 14px;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            padding: 8px 0;
+            margin-bottom: 12px;
             overflow: hidden;
             box-sizing: border-box;
-            box-shadow: 0px 0px 15px rgba(241, 196, 15, 0.3);
             display: flex;
             align-items: center;
         }}
@@ -851,12 +850,12 @@ if elementos_carrusel_info:
             white-space: nowrap;
             animation: scrollRight 45s linear infinite;
             font-family: 'Arial Black', Gadget, sans-serif;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 900;
             color: #00ffff;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            text-shadow: 0px 0px 8px rgba(0, 255, 255, 0.8), 2px 2px 2px #000000;
+            text-shadow: 0px 0px 10px rgba(0, 255, 255, 0.9), 2px 2px 2px #000000;
             padding-right: 100%;
         }}
         @keyframes scrollRight {{
@@ -875,7 +874,7 @@ if elementos_carrusel_info:
         <div class="marquee-text">{texto_unido_marquesina}</div>
     </div>
     """
-    components.html(html_banner_marquesina, height=52)
+    components.html(html_banner_marquesina, height=42)
 
 # --- CARRUSEL AUTOMÁTICO DE IMÁGENES ---
 ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
