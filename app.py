@@ -33,9 +33,7 @@ components.html("""
                 'div[data-testid="stStatusWidget"]',
                 '[data-testid="stToolbar"]',
                 '#MainMenu',
-                'a[href*="streamlit.io"]',
-                'div[class*="viewerBadge"]',
-                'aside[aria-label="Status"]'
+                'a[href*="streamlit.io"]'
             ];
             selectors.forEach(selector => {
                 doc.querySelectorAll(selector).forEach(el => {
@@ -169,11 +167,7 @@ st.markdown("""
         color: #f0f6fc;
         overflow-x: hidden !important;
     }
-    [data-testid="stToolbar"],
-    [data-testid="stDecoration"],
-    div[data-testid="stStatusWidget"],
-    div[class*="viewerBadge"],
-    aside[aria-label="Status"] {
+    [data-testid="stToolbar"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
@@ -807,6 +801,100 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
+# --- CARRUSEL INFORMATIVO DINÁMICO (ESTADO DE LA JORNADA) ---
+elementos_carrusel_info = []
+
+# 1. Recopilar Remates Abiertos
+remates_abiertos = [c for c in lista_carreras_disponibles if not st.session_state.carreras_cerradas_remate.get(c, False)]
+if remates_abiertos:
+    texto_remates = "🟢 Remates Abiertos: " + ", ".join(remates_abiertos)
+    elementos_carrusel_info.append(texto_remates)
+else:
+    elementos_carrusel_info.append("🔴 Todos los Remates Cerrados")
+
+# 2. Recopilar Dupletas Disponibles (Carreras Habilitadas)
+dupletas_hab = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
+if dupletas_hab:
+    texto_dupletas = "🎟️ Dupletas Disponibles (" + str(len(dupletas_hab)) + " carreras)"
+    elementos_carrusel_info.append(texto_dupletas)
+
+# 3. Recopilar Ganadores de Carrera / Ejemplar
+if st.session_state.historial_ganadores:
+    for carr_g, info_g in st.session_state.historial_ganadores.items():
+        ganador_jugador = info_g.get('Ganador', 'N/A')
+        # Buscar el ejemplar ganador en las jugadas
+        ejemplar_ganador_nombre = "N/A"
+        for h in st.session_state.historial_jugadas:
+            if h.get('carrera') == carr_g and h.get('jugador') == ganador_jugador and "Remate" in h.get('tipo', ''):
+                ejemplar_ganador_nombre = h.get('detalle', 'N/A')
+                break
+        texto_ganador = f"🏆 {carr_g} Ganador: {ganador_jugador} ({ejemplar_ganador_nombre})"
+        elementos_carrusel_info.append(texto_ganador)
+else:
+    elementos_carrusel_info.append("⏳ Esperando primeros resultados de ganadores...")
+
+if elementos_carrusel_info:
+    js_slides_array = str(elementos_carrusel_info)
+    html_carrusel_informativo = f"""
+    <style>
+        .ticker-container {{
+            width: 100%;
+            background: linear-gradient(90deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }}
+        .ticker-badge {{
+            background: #f1c40f;
+            color: #000000;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }}
+        .ticker-text {{
+            color: #f0f6fc;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            transition: opacity 0.5s ease-in-out;
+        }}
+    </style>
+    <div class="ticker-container">
+        <span class="ticker-badge">INFO VIVA</span>
+        <div id="ticker-slide-text" class="ticker-text">{elementos_carrusel_info[0]}</div>
+    </div>
+    <script>
+        (function() {{
+            var slides = {js_slides_array};
+            var currentIdx = 0;
+            var el = document.getElementById("ticker-slide-text");
+            if(slides.length > 1 && el) {{
+                setInterval(function() {{
+                    currentIdx = (currentIdx + 1) % slides.length;
+                    el.style.opacity = 0;
+                    setTimeout(function() {{
+                        el.innerText = slides[currentIdx];
+                        el.style.opacity = 1;
+                    }, 300);
+                }}, 4000);
+            }}
+        }})();
+    </script>
+    """
+    components.html(html_carrusel_informativo, height=45)
+
 # --- CARRUSEL AUTOMÁTICO DE IMÁGENES ---
 ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
 nombres_banners_posibles = ["1001398079.jpg", "1001398079.png", "1001398078.jpg", "1001398078.png", "1001398058.jpg", "1001398058.png", "rinconada.jpg", "rinconada.png"]
@@ -844,7 +932,7 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = 1;
-                    }}, 400);
+                    }, 400);
                 }}, 8000);
             }}
         }})();
@@ -1262,7 +1350,7 @@ if menu_principal_opcion == "Remates":
                                     st.rerun()
 
 # =========================================================================
-# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA (CON CARRUSEL DESLIZANTE DE IMÁGENES Y SELECCIÓN FIJA)
+# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
@@ -1363,16 +1451,13 @@ elif menu_principal_opcion == "Dupletas":
             for paso in range(cantidad_pasos):
                 st.markdown(f"🔹 **Paso {paso + 1} de {cantidad_pasos}**")
                 
-                # Asignación fija secuencial basada en el orden exacto de carreras habilitadas
                 carr_leg = carreras_permitidas[paso % len(carreras_permitidas)]
                 
-                # Mostramos la carrera de forma fija e inalterable en la parte superior
                 st.markdown(f"🏁 **Carrera fija:** `{carr_leg}`")
                 
                 retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
                 caballos_in_carr = [c for c in list(st.session_state.remates.get(carr_leg, {}).keys()) if c not in retirados_carr_t]
                 
-                # Selector de ejemplar ubicado exactamente debajo de la carrera fija
                 cab_leg = st.selectbox(
                     f"Selecciona el Ejemplar para {carr_leg}", 
                     options=caballos_in_carr if caballos_in_carr else ["Sin Caballos Disponibles"], 
@@ -1798,7 +1883,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             if carr_img_sel in st.session_state.gacetas_carreras:
                 st.success("✅ Gaceta disponible para descarga en esta carrera.")
                 if st.button("🗑️ Eliminar Gaceta", key=f"btn_del_gaceta_{carr_img_sel}", use_container_width=True):
-                    del st.session_state.gacetas_carreras[carr_img_sel]
+                    del st.session_state.gacetas_gacetas[carr_img_sel] if 'gacetas_gacetas' in locals() else del st.session_state.gacetas_carreras[carr_img_sel]
                     st.toast("🗑️ Gaceta removida")
                     st.rerun()
 
