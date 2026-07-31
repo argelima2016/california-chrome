@@ -81,34 +81,28 @@ components.html("""
                 };
 
                 tuercaBtn.onclick = function() {
-                    // Estrategia 1: Buscar botones de colapso oficiales de Streamlit
-                    const collapseBtns = doc.querySelectorAll('[data-testid="stSidebarCollapseButton"] button, [data-testid="collapsedControl"] button, button[aria-label="Collapse sidebar"], button[aria-label="Expand sidebar"]');
-                    if (collapseBtns.length > 0) {
-                        collapseBtns[collapseBtns.length - 1].click();
+                    // Simular clic en el botón nativo de Streamlit para colapsar/expandir barra lateral
+                    const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
+                                        doc.querySelector('[data-testid="collapsedControl"] button') || 
+                                        doc.querySelector('button[aria-label="Collapse sidebar"]') || 
+                                        doc.querySelector('button[aria-label="Expand sidebar"]');
+                    
+                    if (collapseBtn) {
+                        collapseBtn.click();
                         return;
                     }
 
-                    // Estrategia 2: Forzar la apertura manipulando directamente el DOM de la sección de la barra lateral
-                    const sidebarSection = doc.querySelector('section[data-testid="stSidebar"]');
-                    if (sidebarSection) {
-                        const currentVal = window.getComputedStyle(sidebarSection).getPropertyValue('transform');
-                        // Si está contraída (oculta por transformación), la abrimos forzando el estado abierto de Streamlit
-                        if (sidebarSection.getAttribute('aria-expanded') === 'false' || sidebarSection.classList.contains('closed') || (currentVal && currentVal !== 'none' && !currentVal.includes('matrix(1, 0, 0, 1, 0, 0)'))) {
-                            sidebarSection.setAttribute('aria-expanded', 'true');
-                            sidebarSection.style.transform = 'none';
-                            sidebarSection.style.visibility = 'visible';
-                            sidebarSection.style.display = 'block';
+                    // Forzar manipulación directa sobre la sección de la barra lateral si el botón nativo no se detecta
+                    const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
+                    if (sidebar) {
+                        const currentLeft = window.getComputedStyle(sidebar).left;
+                        if (currentLeft === '0px' || !sidebar.classList.contains('closed')) {
+                            sidebar.style.left = '-350px';
+                            sidebar.classList.add('closed');
                         } else {
-                            sidebarSection.setAttribute('aria-expanded', 'false');
-                            sidebarSection.style.transform = 'translateX(-100%)';
+                            sidebar.style.left = '0px';
+                            sidebar.classList.remove('closed');
                         }
-                        return;
-                    }
-
-                    // Estrategia 3: Buscar cualquier botón dentro del área de cabecera principal que controle la barra
-                    const headerButtons = doc.querySelectorAll('header button');
-                    if (headerButtons.length > 0) {
-                        headerButtons[0].click();
                     }
                 };
 
@@ -424,7 +418,7 @@ else:
     color_balance = "#58a6ff"
 
 # --- CABECERA SUPERIOR ---
-st.markdown(f"""
+header_html = f"""
     <style>
     .premium-header-two-rows {{
         background: #0a0d14;
@@ -543,7 +537,8 @@ st.markdown(f"""
             {logo_display}
         </div>
     </div>
-""", unsafe_allow_html=True)
+"""
+st.markdown(header_html, unsafe_allow_html=True)
 
 def obtener_abreviatura_carrera(nombre_carrera, modo_ciego=False):
     if modo_ciego:
@@ -935,8 +930,8 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }, 400);
-                }, 8000);
+                    }}, 400);
+                }}, 8000);
             }}
         }})();
     </script>
@@ -1886,7 +1881,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             if carr_img_sel in st.session_state.gacetas_carreras:
                 st.success("✅ Gaceta disponible para descarga en esta carrera.")
                 if st.button("🗑️ Eliminar Gaceta", key=f"btn_del_gaceta_{carr_img_sel}", use_container_width=True):
-                    del st.session_state.gacetas_carreras[carr_img_sel] = None
+                    del st.session_state.gacetas_carreras[carr_img_sel]
                     st.toast("🗑️ Gaceta removida")
                     st.rerun()
 
