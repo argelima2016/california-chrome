@@ -67,7 +67,7 @@ components.html("""
                 tuercaBtn.style.cursor = 'pointer';
                 tuercaBtn.style.display = 'flex';
                 tuercaBtn.style.alignItems = 'center';
-                tuercaBtn.style.justifyContent = 'center';
+                tuercaBtn.style.justifyContent: 'center';
                 tuercaBtn.style.boxShadow = '0px 4px 12px rgba(0,0,0,0.5)';
                 tuercaBtn.style.transition = 'transform 0.2s ease, background 0.2s ease';
 
@@ -159,7 +159,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS AGRESIVOS PARA MÓVILES Y ANCHO DE BARRA LATERAL ---
+# --- ESTILOS CSS AGRESIVOS PARA MÓVILES Y CORRECCIÓN DE ANCHO LATERAL ---
 st.markdown("""
     <style>
     * {
@@ -170,10 +170,10 @@ st.markdown("""
         color: #f0f6fc;
         overflow-x: hidden !important;
     }
-    /* Expansión del ancho de la barra lateral */
+    /* Control robusto del ancho y comportamiento de la barra lateral */
     [data-testid="stSidebar"] {
-        width: 340px !important;
         min-width: 340px !important;
+        max-width: 340px !important;
     }
     [data-testid="stSidebar"] > div:first-child {
         width: 340px !important;
@@ -933,7 +933,7 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }}, 400);
+                    }, 400);
                 }}, 8000);
             }}
         }})();
@@ -1915,7 +1915,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.toast("🗑️ Gaceta removida")
                     st.rerun()
 
-    elif tab_actual == "📄 Importar":
+    elif tab_class_is_active := (tab_actual == "📄 Importar"):
         st.markdown("### 📄 Importar Contenido")
         texto_copiado_web = st.text_area(
             "Pegar texto:", value="", height=200, key="text_area_web_copiado",
@@ -1930,6 +1930,22 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.warning("⚠️ Asegúrate de incluir el nombre de la carrera y los ejemplares numerados.")
             else:
                 st.warning("⚠️ El campo está vacío.")
+
+elif tab_actual == "📄 Importar":
+    st.markdown("### 📄 Importar Contenido")
+    texto_copiado_web = st.text_area(
+        "Pegar texto:", value="", height=200, key="text_area_web_copiado",
+        placeholder="Primera Carrera - 1.200 mts - 02:00 PM\n1 - Rey David\n2 - Gran Amigo"
+    )
+    if st.button("🚀 Procesar Contenido", key="btn_procesar_texto_pegado", use_container_width=True, type="primary"):
+        if texto_copiado_web.format() if hasattr(texto_copiado_web, "format") else texto_copiado_web.strip():
+            if procesar_texto_flexible(texto_copiado_web):
+                st.success("✅ ¡Procesado con éxito!")
+                st.rerun()
+            else:
+                st.warning("⚠️ Asegúrate de incluir el nombre de la carrera y los ejemplares numerados.")
+        else:
+            st.warning("⚠️ El campo está vacío.")
 
 # =========================================================================
 # TRANSMISIÓN EN VIVO
