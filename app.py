@@ -33,7 +33,9 @@ components.html("""
                 'div[data-testid="stStatusWidget"]',
                 '[data-testid="stToolbar"]',
                 '#MainMenu',
-                'a[href*="streamlit.io"]'
+                'a[href*="streamlit.io"]',
+                'div[class*="viewerBadge"]',
+                'aside[aria-label="Status"]'
             ];
             selectors.forEach(selector => {
                 doc.querySelectorAll(selector).forEach(el => {
@@ -167,7 +169,11 @@ st.markdown("""
         color: #f0f6fc;
         overflow-x: hidden !important;
     }
-    [data-testid="stToolbar"] {
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    div[data-testid="stStatusWidget"],
+    div[class*="viewerBadge"],
+    aside[aria-label="Status"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
