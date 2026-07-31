@@ -101,7 +101,6 @@ def guardar_estado_global():
         if k in st.session_state:
             val = st.session_state[k]
             if k == 'imagenes_carreras' and isinstance(val, dict):
-                # Omitimos guardar objetos bytes/UploadedFile complejos directamente en JSON para evitar errores de serialización
                 continue
             data[k] = val
     try:
@@ -112,10 +111,10 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- SCRIPT JS PARA OCULTAR ELEMENTOS NATIVOS Y OCULTAR/MOSTRAR TOTALMENTE LA BARRA LATERAL ---
+# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN EN TIEMPO REAL Y CONTROL TOTAL ---
 components.html("""
     <script>
-        function ocultarElementosNativos() {
+        function sincronizacionEnVivo() {
             const doc = window.parent.document;
             const selectors = [
                 'header[data-testid="stHeader"]',
@@ -162,15 +161,6 @@ components.html("""
                 tuercaBtn.style.boxShadow = '0px 4px 12px rgba(0,0,0,0.5)';
                 tuercaBtn.style.transition = 'transform 0.2s ease, background 0.2s ease';
 
-                tuercaBtn.onmouseover = function() {
-                    tuercaBtn.style.transform = 'rotate(45deg) scale(1.05)';
-                    tuercaBtn.style.background = '#21262d';
-                };
-                tuercaBtn.onmouseout = function() {
-                    tuercaBtn.style.transform = 'rotate(0deg) scale(1)';
-                    tuercaBtn.style.background = '#161b22';
-                };
-
                 tuercaBtn.onclick = function() {
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
@@ -204,7 +194,7 @@ components.html("""
                 doc.body.appendChild(tuercaBtn);
             }
         }
-        setInterval(ocultarElementosNativos, 200);
+        setInterval(sincronizacionEnVivo, 200);
     </script>
 """, height=0, width=0)
 
@@ -466,6 +456,13 @@ header_html = f"""
     </div>
 """
 st.markdown(header_html, unsafe_allow_html=True)
+
+# Botón superior flotante para refrescar pantalla manualmente al instante desde cualquier dispositivo
+col_ref_sync1, col_ref_sync2 = st.columns([6, 1])
+with col_ref_sync2:
+    if st.button("🔄 Sincronizar", use_container_width=True):
+        cargar_estado_global()
+        st.rerun()
 
 def obtener_abreviatura_carrera(nombre_carrera, modo_ciego=False):
     if modo_ciego:
