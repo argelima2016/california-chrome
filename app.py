@@ -21,7 +21,7 @@ try:
 except Exception:
     pass
 
-# --- SCRIPT JS PARA OCULTAR ELEMENTOS NATIVOS Y CREAR EL BOTÓN DE TUERCA FLOTANTE ---
+# --- SCRIPT JS PARA OCULTAR ELEMENTOS NATIVOS Y OCULTAR/MOSTRAR TOTALMENTE LA BARRA LATERAL ---
 components.html("""
     <script>
         function ocultarElementosNativos() {
@@ -46,13 +46,13 @@ components.html("""
                 });
             });
 
-            // --- BOTÓN FLOTANTE DE TUERCA PARA ABRIR LA ZONA ADMIN DIRECTAMENTE ---
+            // --- BOTÓN FLOTANTE DE TUERCA PARA CONTROLA EL CIERRE TOTAL DE LA BARRA LATERAL ---
             let tuercaBtn = doc.getElementById('custom-tuerca-sidebar-btn');
             if (!tuercaBtn) {
                 tuercaBtn = doc.createElement('button');
                 tuercaBtn.id = 'custom-tuerca-sidebar-btn';
                 tuercaBtn.innerHTML = '⚙️';
-                tuercaBtn.title = 'Abrir Panel de Administración';
+                tuercaBtn.title = 'Abrir / Cerrar Barra Lateral';
                 
                 tuercaBtn.style.position = 'fixed';
                 tuercaBtn.style.top = '10px';
@@ -81,15 +81,36 @@ components.html("""
                 };
 
                 tuercaBtn.onclick = function() {
-                    const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
-                                        doc.querySelector('[data-testid="collapsedControl"] button');
-                    if (collapseBtn) {
-                        collapseBtn.click();
-                    } else {
-                        const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
-                        if (sidebar) {
-                            sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
+                    const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
+                    if (sidebar) {
+                        // Verificamos si está totalmente contraída o abierta mediante transform/width
+                        const currentTransform = window.getComputedStyle(sidebar).transform;
+                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
+                                         (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
+                        
+                        if (isClosed) {
+                            // Abrir barra lateral por completo
+                            sidebar.setAttribute('aria-expanded', 'true');
+                            sidebar.style.transform = 'none';
+                            sidebar.style.visibility = 'visible';
+                            sidebar.style.display = 'block';
+                            sidebar.style.minWidth = '360px';
+                            sidebar.style.width = '360px';
+                            sidebar.style.position = 'relative';
+                        } else {
+                            // Cerrar la barra lateral de forma total (ocultarla y remover el espacio ocupado)
+                            sidebar.setAttribute('aria-expanded', 'false');
+                            sidebar.style.transform = 'translateX(-100%)';
+                            sidebar.style.visibility = 'hidden';
+                            sidebar.style.display = 'none';
+                            sidebar.style.minWidth = '0px';
+                            sidebar.style.width = '0px';
                         }
+                    } else {
+                        // Intento secundario con el botón oficial de Streamlit
+                        const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
+                                            doc.querySelector('[data-testid="collapsedControl"] button');
+                        if (collapseBtn) collapseBtn.click();
                     }
                 };
 
@@ -159,7 +180,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS AGRESIVOS PARA MÓVILES Y ANCHO DE BARRA LATERAL ---
+# --- ESTILOS CSS AGRESIVOS PARA MÓVILES Y ANCHO ESPACIOSO DE BARRA LATERAL ---
 st.markdown("""
     <style>
     * {
@@ -170,7 +191,7 @@ st.markdown("""
         color: #f0f6fc;
         overflow-x: hidden !important;
     }
-    /* Ancho amplio y fijo para la barra lateral */
+    /* Ancho amplio de 360px para cuando esté abierta */
     [data-testid="stSidebar"] {
         min-width: 360px !important;
         max-width: 360px !important;
