@@ -159,7 +159,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS AGRESIVOS PARA MÓVILES ---
+# --- ESTILOS CSS AGRESIVOS PARA MÓVILES Y ANCHO DE BARRA LATERAL ---
 st.markdown("""
     <style>
     * {
@@ -169,6 +169,16 @@ st.markdown("""
         background-color: #080a0f;
         color: #f0f6fc;
         overflow-x: hidden !important;
+    }
+    /* Expansión del ancho de la barra lateral */
+    [data-testid="stSidebar"] {
+        width: 340px !important;
+        min-width: 340px !important;
+    }
+    [data-testid="stSidebar"] > div:first-child {
+        width: 340px !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
     }
     [data-testid="stToolbar"] {
         display: none !important;
