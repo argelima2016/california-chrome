@@ -629,7 +629,7 @@ def generar_tabla_html_remate(remates_dict, retirados_list):
         
         es_retirado = cab in retirados_list
         clase_fila = "retirado-row" if es_retirado else ""
-        etiqueta_estado = " 🚫" if es_retirado else ""
+        etiqueta_estado = " (RETIRADO)" if es_retirado else ""
         
         html += f"""
                 <tr class="{clase_fila}">
@@ -1116,6 +1116,21 @@ if menu_principal_opcion == "Remates":
 
             if carr_activa not in st.session_state.ejemplares_retirados:
                 st.session_state.ejemplares_retirados[carr_activa] = []
+            
+            lista_todos_caballos_carr = list(st.session_state.remates[carr_activa].keys())
+            retirados_actuales_carr = st.session_state.ejemplares_retirados[carr_activa]
+
+            with st.expander("🚫 Gestionar Ejemplares Retirados", expanded=False):
+                nuevos_retirados = st.multiselect(
+                    "Selecciona los ejemplares retirados en esta carrera:",
+                    options=lista_todos_caballos_carr,
+                    default=retirados_actuales_carr,
+                    key=f"multiselect_retirados_{carr_activa}"
+                )
+                if st.button("💾 Actualizar Retirados", key=f"btn_save_retirados_{carr_activa}", use_container_width=True, type="primary"):
+                    st.session_state.ejemplares_retirados[carr_activa] = nuevos_retirados
+                    st.toast("✅ ¡Ejemplares retirados actualizados!")
+                    st.rerun()
 
             dt_limite = st.session_state.fechas_horas_cierre_remate.get(carr_activa)
             estado_conteo = st.session_state.estado_conteo_carrera.get(carr_activa, "INACTIVO")
@@ -1146,7 +1161,6 @@ if menu_principal_opcion == "Remates":
                         if restantes_10s > 0:
                             st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa})</div>", unsafe_allow_html=True)
 
-            # --- TABLA DE REMATES ORIGINAL INTACTA ---
             tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []))
             cantidad_filas = len(st.session_state.remates[carr_activa])
             altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
@@ -1181,27 +1195,6 @@ if menu_principal_opcion == "Remates":
                             st.session_state.historial_ganadores[carr_activa] = {"Ganador": info_g['jugador'], "Premio": formatear_bs(premio_final_liq)}
                             st.success(f"✅ ¡Premio liquidado a **{info_g['jugador']}**!")
                             st.rerun()
-
-            # --- BOTONES DE RETIRO RÁPIDO (CLIC EN EL NÚMERO DEL EJEMPLAR PARA RETIRAR/ACTIVAR) ---
-            retirados_actuales_carr = st.session_state.ejemplares_retirados[carr_activa]
-            st.markdown("🔹 **Retirar / Activar (Toque el número del ejemplar):**")
-            cols_retiro_grid = st.columns(min(8, len(st.session_state.remates[carr_activa])), gap="small")
-            for idx_r, (cab_item, info_item) in enumerate(st.session_state.remates[carr_activa].items()):
-                c_idx = idx_r % len(cols_retiro_grid)
-                es_ret = cab_item in retirados_actuales_carr
-                num_parte = cab_item.split(" - ")[0]
-                with cols_retiro_grid[c_idx]:
-                    if es_ret:
-                        if st.button(f"🔴 #{num_parte}", key=f"btn_toggle_ret_{carr_activa}_{cab_item}", use_container_width=True, type="primary"):
-                            st.session_state.ejemplares_retirados[carr_activa].remove(cab_item)
-                            st.rerun()
-                    else:
-                        if st.button(f"🟢 #{num_parte}", key=f"btn_toggle_ret_{carr_activa}_{cab_item}", use_container_width=True):
-                            if cab_item not in st.session_state.ejemplares_retirados[carr_activa]:
-                                st.session_state.ejemplares_retirados[carr_activa].append(cab_item)
-                            st.rerun()
-
-            st.markdown("---")
 
             with st.expander(f"📜 Historial de Pujas - {carr_activa} ({modo_actual_remate})", expanded=False):
                 historial_carrera_actual = [
