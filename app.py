@@ -22,7 +22,7 @@ except Exception:
     pass
 
 # --- SCRIPT JS PARA OCULTAR ELEMENTOS NATIVOS Y CREAR EL BOTÓN DE TUERCA FLOTANTE ---
-components.html(r"""
+components.html("""
     <script>
         function ocultarElementosNativos() {
             const doc = window.parent.document;
@@ -46,13 +46,13 @@ components.html(r"""
                 });
             });
 
-            // --- BOTÓN FLOTANTE DE TUERCA PARA INTERACTUAR CON LA CONFIGURACIÓN ---
+            // --- BOTÓN FLOTANTE DE TUERCA PARA ABRIR LA ZONA ADMIN DIRECTAMENTE ---
             let tuercaBtn = doc.getElementById('custom-tuerca-sidebar-btn');
             if (!tuercaBtn) {
                 tuercaBtn = doc.createElement('button');
                 tuercaBtn.id = 'custom-tuerca-sidebar-btn';
                 tuercaBtn.innerHTML = '⚙️';
-                tuercaBtn.title = 'Abrir / Cerrar Configuración';
+                tuercaBtn.title = 'Abrir Panel de Administración';
                 
                 tuercaBtn.style.position = 'fixed';
                 tuercaBtn.style.top = '10px';
@@ -81,30 +81,16 @@ components.html(r"""
                 };
 
                 tuercaBtn.onclick = function() {
-                    // Clic directo sobre el botón colapsador oficial de Streamlit
+                    // Intenta hacer clic en el botón de la barra lateral nativa o colapsador si existe
                     const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
-                                        doc.querySelector('[data-testid="collapsedControl"] button') || 
-                                        doc.querySelector('button[aria-label="Collapse sidebar"]') || 
-                                        doc.querySelector('button[aria-label="Expand sidebar"]');
-                    
+                                        doc.querySelector('[data-testid="collapsedControl"] button');
                     if (collapseBtn) {
                         collapseBtn.click();
                     } else {
+                        // Oculta la barra lateral por completo si no se usa
                         const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                         if (sidebar) {
-                            if (sidebar.style.display === 'none' || sidebar.style.visibility === 'hidden' || sidebar.classList.contains('closed')) {
-                                sidebar.style.display = 'block';
-                                sidebar.style.visibility = 'visible';
-                                sidebar.style.transform = 'none';
-                                sidebar.classList.remove('closed');
-                                sidebar.setAttribute('aria-expanded', 'true');
-                            } else {
-                                sidebar.style.display = 'none';
-                                sidebar.style.visibility = 'hidden';
-                                sidebar.style.transform = 'translateX(-100%)';
-                                sidebar.classList.add('closed');
-                                sidebar.setAttribute('aria-expanded', 'false');
-                            }
+                            sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
                         }
                     }
                 };
@@ -801,7 +787,7 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
 
 # --- MENÚ PRINCIPAL HORIZONTAL ---
 st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
-col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
+col_menu1, col_menu2, col_menu3, col_menu4 = st.columns(4, gap="small")
 
 with col_menu1:
     if st.button("REMATES", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
@@ -817,6 +803,12 @@ with col_menu3:
     if st.button("CUENTAS", key="menu_btn_cuentas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
         st.session_state.menu_principal_opcion = "Cuentas"
         st.rerun()
+
+with col_menu4:
+    if st.button("⚙️ CONFIG", key="menu_btn_config_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "🔒 Zona Admin" else "secondary"):
+        st.session_state.menu_principal_opcion = "🔒 Zona Admin"
+        st.rerun()
+
 st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
@@ -933,7 +925,7 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }, 400);
+                    }}, 400);
                 }}, 8000);
             }}
         }})();
@@ -950,7 +942,7 @@ else:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# --- BARRA LATERAL ---
+# --- BARRA LATERAL (CONFIGURACIÓN RÁPIDA) ---
 st.sidebar.header("barra lateral")
 ahora_dt = obtener_hora_venezuela_local()
 st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
@@ -1588,7 +1580,7 @@ elif menu_principal_opcion == "Cuentas":
         st.dataframe(pd.DataFrame(datos_historial), use_container_width=True, hide_index=True)
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR (Y CONFIGURACIÓN DESDE EL ICONO DE TUERCA)
+# 4. ZONA DE ADMINISTRADOR (CONFIGURACIÓN)
 # =========================================================================
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Panel de Configuración y Administración</div>", unsafe_allow_html=True)
