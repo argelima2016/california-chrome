@@ -95,13 +95,18 @@ def guardar_estado_global():
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
-        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'gacetas_carreras'
+        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'gacetas_carreras',
+        'fechas_horas_cierre_remate'
     ]
     data = {}
     for k in keys_to_save:
         if k in st.session_state:
             val = st.session_state[k]
-            data[k] = val
+            if k == 'fechas_horas_cierre_remate':
+                # Serializar fechas de cierre a string ISO para el JSON
+                data[k] = {c_k: c_v.isoformat() if isinstance(c_v, datetime) else c_v for c_k, c_v in val.items()}
+            else:
+                data[k] = val
     try:
         with open(DB_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
@@ -109,6 +114,15 @@ def guardar_estado_global():
         pass
 
 cargar_estado_global()
+
+# Cargar adecuadamente las fechas desde la sesión si vienen como string
+if 'fechas_horas_cierre_remate' in st.session_state:
+    for c_k, c_v in list(st.session_state.fechas_horas_cierre_remate.items()):
+        if isinstance(c_v, str):
+            try:
+                st.session_state.fechas_horas_cierre_remate[c_k] = datetime.fromisoformat(c_v)
+            except Exception:
+                pass
 
 # --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN EN TIEMPO REAL Y CONTROL TOTAL ---
 components.html("""
@@ -163,7 +177,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
                                          (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -909,21 +923,7 @@ with st.sidebar.expander("🏁 Cierre y Liquidación de Remates", expanded=False
     carr_seleccionada_liq = st.selectbox("Gestionar Carrera", lista_carreras_disponibles, key="sb_liq_sel_carrera")
     c_cerrada_actual = st.session_state.carreras_cerradas_remate.get(carr_seleccionada_liq, False)
     
-    col_cz1, col_cz2 = st.columns(2)
-    with col_cz1:
-        fecha_cierre_adm = st.date_input("Fecha límite", value=ahora_dt.date(), key=f"sb_f_cierre_{carr_seleccionada_liq}")
-    with col_cz2:
-        hora_cierre_adm = st.time_input("Hora límite", value=datetime.now().time(), key=f"sb_h_cierre_{carr_seleccionada_liq}")
-    
-    if st.button("💾 Guardar Cierre Estricto", key=f"sb_btn_guardar_h_{carr_seleccionada_liq}", use_container_width=True):
-        dt_cierre_estricto = datetime.combine(fecha_cierre_adm, hora_cierre_adm)
-        st.session_state.fechas_horas_cierre_remate[carr_seleccionada_liq] = dt_cierre_estricto
-        st.session_state.estado_conteo_carrera[carr_seleccionada_liq] = "INACTIVO"
-        guardar_estado_global()
-        st.toast(f"✅ Cierre estricto guardado para {carr_seleccionada_liq}")
-        st.rerun()
-
-    st.markdown("---")
+    st.markdown(f"Carrera seleccionada: **{carr_seleccionada_liq}**")
     if not c_cerrada_actual:
         if st.button("🔒 Cerrar Remate Manual", key=f"sb_liq_cerrar_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
             st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = True
@@ -1939,6 +1939,26 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                         del st.session_state.remates[carr_banco_sel][ej_item]
                     guardar_estado_global()
                     st.rerun()
+
+        # --- CONFIGURACIÓN DE HORA Y FECHA DE CIERRE ESTRICTO ---
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown(f"⏰ **Cierre Estricto Programado - {carr_banco_sel}**")
+            dt_existente_carr = st.session_state.fechas_horas_cierre_remate.get(carr_banco_sel, ahora_dt)
+            
+            col_fe1, col_fe2 = st.columns(2)
+            with col_fe1:
+                f_cierre_estricto = st.date_input("Fecha Límite Cierre", value=dt_existente_carr.date(), key=f"banco_f_cierre_{carr_banco_sel}")
+            with col_fe2:
+                h_cierre_estricto = st.time_input("Hora Límite Cierre", value=dt_existente_carr.time(), key=f"banco_h_cierre_{carr_banco_sel}")
+            
+            if st.button("💾 Guardar Cierre Estricto", key=f"banco_btn_save_cierre_{carr_banco_sel}", use_container_width=True, type="primary"):
+                dt_combinada = datetime.combine(f_cierre_estricto, h_cierre_estricto)
+                st.session_state.fechas_horas_cierre_remate[carr_banco_sel] = dt_combinada
+                st.session_state.estado_conteo_carrera[carr_banco_sel] = "INACTIVO"
+                guardar_estado_global()
+                st.toast(f"✅ ¡Cierre estricto guardado para {carr_banco_sel}!")
+                st.rerun()
 
     elif tab_actual == "👥 Usuarios":
         st.markdown("### 👥 Registro de Usuarios")
