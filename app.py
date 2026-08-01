@@ -757,212 +757,84 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- CONTENEDOR PRINCIPAL DINÁMICO AISLADO POR SECCIÓN (EVITA ELEMENTOS FANTASMAS) ---
-menu_principal_opcion = st.session_state.menu_principal_opcion
-container_principal = st.container()
+# --- BARRA LATERAL ---
+st.sidebar.header("barra lateral")
+ahora_dt = obtener_hora_venezuela_local()
+st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
 
-with container_principal:
+with st.sidebar.expander("👤 Usuario Activo y Selector", expanded=True):
+    usuario_seleccionado_sidebar = st.selectbox(
+        "Cambiar de Usuario",
+        options=st.session_state.lista_usuarios,
+        index=st.session_state.lista_usuarios.index(st.session_state.usuario_activo) if st.session_state.usuario_activo in st.session_state.lista_usuarios else 0,
+        key="sb_selectbox_usuario_activo"
+    )
+    if usuario_seleccionado_sidebar != st.session_state.usuario_activo:
+        st.session_state.usuario_activo = usuario_seleccionado_sidebar
+        guardar_estado_global()
+        st.rerun()
 
-    # --- BANNER MARQUESINA DINÁMICO ---
-    elementos_carrusel_info = []
+with st.sidebar.expander("🏠 Retención de la Casa", expanded=False):
+    porcentaje_casa = st.slider("Retención (%)", 0, 50, 30, key="sb_slider_retencion_casa")
 
-    remates_abiertos = [c for c in lista_carreras_disponibles if not st.session_state.carreras_cerradas_remate.get(c, False)]
-    if remates_abiertos:
-        texto_remates = "🟢 REMATES ABIERTOS: " + " | ".join(remates_abiertos)
-        elementos_carrusel_info.append(texto_remates)
+with st.sidebar.expander("🔒 Estado Dupletas / Polla", expanded=False):
+    if st.session_state.dupleta_bloqueada:
+        st.markdown("<p style='color: #ff4757; font-weight: bold;'>🔴 BLOQUEADAS</p>", unsafe_allow_html=True)
+        if st.button("🔓 Desbloquear", key="sb_btn_desbloquear_dupleta", use_container_width=True):
+            st.session_state.dupleta_bloqueada = False
+            guardar_estado_global()
+            st.rerun()
     else:
-        elementos_carrusel_info.append("🔴 TODOS LOS REMATES CERRADOS")
-
-    dupletas_hab = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
-    if dupletas_hab:
-        texto_dupletas = "🎟️ DUPLETAS DISPONIBLES EN: " + " - ".join(dupletas_hab)
-        elementos_carrusel_info.append(texto_dupletas)
-
-    if st.session_state.historial_ganadores:
-        for carr_g, info_g in st.session_state.historial_ganadores.items():
-            ganador_jugador = info_g.get('Ganador', 'N/A')
-            ejemplar_ganador_nombre = "N/A"
-            for h in st.session_state.historial_jugadas:
-                if h.get('carrera') == carr_g and h.get('jugador') == ganador_jugador and "Remate" in h.get('tipo', ''):
-                    ejemplar_ganador_nombre = h.get('detalle', 'N/A')
-                    break
-            texto_ganador = "🏆 " + carr_g.upper() + " GANADOR: " + ganador_jugador + " (" + ejemplar_ganador_nombre + ")"
-            elementos_carrusel_info.append(texto_ganador)
-    else:
-        elementos_carrusel_info.append("⏳ ESPERANDO PRIMEROS RESULTADOS DE GANADORES...")
-
-    if elementos_carrusel_info:
-        texto_unido_marquesina = " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ".join(elementos_carrusel_info)
-        html_banner_marquesina = f"""
-        <style>
-            .marquee-container {{
-                width: 100%;
-                background: transparent;
-                border: none;
-                box-shadow: none;
-                padding: 8px 0;
-                margin-bottom: 12px;
-                overflow: hidden;
-                box-sizing: border-box;
-                display: flex;
-                align-items: center;
-            }}
-            .marquee-text {{
-                display: inline-block;
-                white-space: nowrap;
-                animation: scrollRight 80s linear infinite;
-                font-family: 'Arial Black', Gadget, sans-serif;
-                font-size: 15px;
-                font-weight: 900;
-                color: #00ffff;
-                text-transform: uppercase;
-                letter-spacing: 1.5px;
-                text-shadow: 0px 0px 10px rgba(0, 255, 255, 0.9), 2px 2px 2px #000000;
-                padding-right: 100%;
-            }}
-            @keyframes scrollRight {{
-                0% {{
-                    transform: translateX(-100%);
-                }}
-                100% {{
-                    transform: translateX(100%);
-                }}
-            }}
-            .marquee-container:hover .marquee-text {{
-                animation-play-state: paused;
-            }}
-        </style>
-        <div class="marquee-container">
-            <div class="marquee-text">{texto_unido_marquesina}</div>
-        </div>
-        """
-        components.html(html_banner_marquesina, height=42)
-
-    # --- CARRUSEL AUTOMÁTICO DE IMÁGENES ---
-    ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
-    nombres_banners_posibles = ["1001398079.jpg", "1001398079.png", "1001398078.jpg", "1001398078.png", "1001398058.jpg", "1001398058.png", "rinconada.jpg", "rinconada.png"]
-    lista_b64_banners = []
-    for n_b in nombres_banners_posibles:
-        r_b = os.path.join(ruta_actual_dir, n_b)
-        if os.path.exists(r_b):
-            try:
-                with open(r_b, "rb") as f_b:
-                    b64_str = base64.b64encode(f_b.read()).decode('utf-8')
-                    lista_b64_banners.append(f"data:image/jpeg;base64,{b64_str}")
-            except Exception:
-                continue
-
-    if lista_b64_banners:
-        js_images_array = str(lista_b64_banners)
-        html_slider = f"""
-        <style>
-            body {{ margin: 0; padding: 0; background-color: #080a0f; overflow: hidden; }}
-            .banner-slider-container {{ width: 100vw; height: 240px; margin: 0; padding: 0; overflow: hidden; position: relative; background-color: #080a0f; }}
-            .banner-slide-img {{ width: 100%; height: 100%; object-fit: cover; transition: opacity 1.2s ease-in-out; display: block; }}
-        </style>
-        <div class="banner-slider-container">
-            <img id="rinconada-slide" class="banner-slide-img" src="{lista_b64_banners[0]}" />
-        </div>
-        <script>
-            (function() {{
-                var images = {js_images_array};
-                var index = 0;
-                var imgElement = document.getElementById("rinconada-slide");
-                if(images.length > 1) {{
-                    setInterval(function() {{
-                        index = (index + 1) % images.length;
-                        imgElement.style.opacity = "0.15";
-                        setTimeout(function() {{
-                            imgElement.src = images[index];
-                            imgElement.style.opacity = "1";
-                        }}, 400);
-                    }}, 8000);
-                }}
-            }})();
-        </script>
-        """
-        components.html(html_slider, height=245)
-    else:
-        st.markdown("""
-            <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); padding: 15px; text-align: center; margin-bottom: 10px; border-radius: 6px;">
-                <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px; font-size: 16px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
-                <p style="color: #8b949e; font-size: 11px; margin: 4px 0 0 0;">¡La pasión del hipismo venezolano en vivo!</p>
-            </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # --- BARRA LATERAL ---
-    st.sidebar.header("barra lateral")
-    ahora_dt = obtener_hora_venezuela_local()
-    st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
-
-    with st.sidebar.expander("👤 Usuario Activo y Selector", expanded=True):
-        usuario_seleccionado_sidebar = st.selectbox(
-            "Cambiar de Usuario",
-            options=st.session_state.lista_usuarios,
-            index=st.session_state.lista_usuarios.index(st.session_state.usuario_activo) if st.session_state.usuario_activo in st.session_state.lista_usuarios else 0,
-            key="sb_selectbox_usuario_activo"
-        )
-        if usuario_seleccionado_sidebar != st.session_state.usuario_activo:
-            st.session_state.usuario_activo = usuario_seleccionado_sidebar
+        st.markdown("<p style='color: #00d2d3; font-weight: bold;'>🟢 ABIERTAS</p>", unsafe_allow_html=True)
+        if st.button("🔒 Bloquear", key="sb_btn_bloquear_dupleta", use_container_width=True):
+            st.session_state.dupleta_bloqueada = True
             guardar_estado_global()
             st.rerun()
 
-    with st.sidebar.expander("🏠 Retención de la Casa", expanded=False):
-        porcentaje_casa = st.slider("Retención (%)", 0, 50, 30, key="sb_slider_retencion_casa")
+with st.sidebar.expander("🏁 Cierre y Liquidación de Remates", expanded=False):
+    carr_seleccionada_liq = st.selectbox("Gestionar Carrera", lista_carreras_disponibles, key="sb_liq_sel_carrera")
+    c_cerrada_actual = st.session_state.carreras_cerradas_remate.get(carr_seleccionada_liq, False)
+    
+    st.markdown(f"Carrera seleccionada: **{carr_seleccionada_liq}**")
+    if not c_cerrada_actual:
+        if st.button("🔒 Cerrar Remate Manual", key=f"sb_liq_cerrar_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
+            st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = True
+            st.session_state.estado_conteo_carrera[carr_seleccionada_liq] = "CERRADO"
+            st.session_state.detalles_carreras[carr_seleccionada_liq]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
+            if not st.session_state.remates_cargados_en_cuentas.get(carr_seleccionada_liq, False):
+                retirados_carr = st.session_state.ejemplares_retirados.get(carr_seleccionada_liq, [])
+                for cab, info in st.session_state.remates[carr_seleccionada_liq].items():
+                    if cab in retirados_carr:
+                        continue
+                    if info['jugador'] != "Sin Postor" and info['monto'] > 0:
+                        if info['jugador'] not in st.session_state.cuentas:
+                            st.session_state.cuentas[info['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                        st.session_state.cuentas[info['jugador']]['Pujas'] += info['monto']
+                st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = True
+            guardar_estado_global()
+            st.rerun()
+    else:
+        if st.button("🔓 Reabrir Remate", key=f"sb_liq_reabrir_{carr_seleccionada_liq}", use_container_width=True):
+            st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = False
+            st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = False
+            guardar_estado_global()
+            st.rerun()
 
-    with st.sidebar.expander("🔒 Estado Dupletas / Polla", expanded=False):
-        if st.session_state.dupleta_bloqueada:
-            st.markdown("<p style='color: #ff4757; font-weight: bold;'>🔴 BLOQUEADAS</p>", unsafe_allow_html=True)
-            if st.button("🔓 Desbloquear", key="sb_btn_desbloquear_dupleta", use_container_width=True):
-                st.session_state.dupleta_bloqueada = False
-                guardar_estado_global()
-                st.rerun()
-        else:
-            st.markdown("<p style='color: #00d2d3; font-weight: bold;'>🟢 ABIERTAS</p>", unsafe_allow_html=True)
-            if st.button("🔒 Bloquear", key="sb_btn_bloquear_dupleta", use_container_width=True):
-                st.session_state.dupleta_bloqueada = True
-                guardar_estado_global()
-                st.rerun()
+if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada", use_container_width=True):
+    for key in list(st.session_state.keys()):
+        if key not in ['banco_caballos_por_carrera', 'lista_usuarios']:
+            del st.session_state[key]
+    if os.path.exists(DB_FILE):
+        os.remove(DB_FILE)
+    st.toast("🚨 Jornada reiniciada.")
+    st.rerun()
 
-    with st.sidebar.expander("🏁 Cierre y Liquidación de Remates", expanded=False):
-        carr_seleccionada_liq = st.selectbox("Gestionar Carrera", lista_carreras_disponibles, key="sb_liq_sel_carrera")
-        c_cerrada_actual = st.session_state.carreras_cerradas_remate.get(carr_seleccionada_liq, False)
-        
-        st.markdown(f"Carrera seleccionada: **{carr_seleccionada_liq}**")
-        if not c_cerrada_actual:
-            if st.button("🔒 Cerrar Remate Manual", key=f"sb_liq_cerrar_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
-                st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = True
-                st.session_state.estado_conteo_carrera[carr_seleccionada_liq] = "CERRADO"
-                st.session_state.detalles_carreras[carr_seleccionada_liq]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
-                if not st.session_state.remates_cargados_en_cuentas.get(carr_seleccionada_liq, False):
-                    retirados_carr = st.session_state.ejemplares_retirados.get(carr_seleccionada_liq, [])
-                    for cab, info in st.session_state.remates[carr_seleccionada_liq].items():
-                        if cab in retirados_carr:
-                            continue
-                        if info['jugador'] != "Sin Postor" and info['monto'] > 0:
-                            if info['jugador'] not in st.session_state.cuentas:
-                                st.session_state.cuentas[info['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                            st.session_state.cuentas[info['jugador']]['Pujas'] += info['monto']
-                    st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = True
-                guardar_estado_global()
-                st.rerun()
-        else:
-            if st.button("🔓 Reabrir Remate", key=f"sb_liq_reabrir_{carr_seleccionada_liq}", use_container_width=True):
-                st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = False
-                st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = False
-                guardar_estado_global()
-                st.rerun()
+menu_principal_opcion = st.session_state.menu_principal_opcion
 
-    if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada", use_container_width=True):
-        for key in list(st.session_state.keys()):
-            if key not in ['banco_caballos_por_carrera', 'lista_usuarios']:
-                del st.session_state[key]
-        if os.path.exists(DB_FILE):
-            os.remove(DB_FILE)
-        st.toast("🚨 Jornada reiniciada.")
-        st.rerun()
+# =========================================================================
+# CONTENEDOR AISLADO PARA RENDERIZAR CADA MÓDULO COMPLETAMENTE LIMPIO
+# =========================================================================
+with st.container():
 
     # =========================================================================
     # 1. MÓDULO DE REMATES
