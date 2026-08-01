@@ -961,10 +961,12 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# CONTENEDORES AISLADOS ESTRICTOS POR CADA MÓDULO PRINCIPAL
+# CONTENEDOR MAESTRO EXCLUSIVO (EVITA CUALQUIER SOLAPAMIENTO DE PANTALLA)
 # =========================================================================
-if menu_principal_opcion == "Remates":
-    with st.container():
+main_viewport = st.container()
+
+with main_viewport:
+    if menu_principal_opcion == "Remates":
         st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
         col_so1, col_so2, col_so3 = st.columns(3, gap="small")
         with col_so1:
@@ -1383,319 +1385,318 @@ if menu_principal_opcion == "Remates":
                                             st.rerun()
 
 elif menu_principal_opcion == "Dupletas":
-    with st.container():
-        st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
-        col_d1, col_d2, col_d3 = st.columns(3, gap="small")
-        with col_d1:
-            if st.button("🎟️ Dupleta", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
-                st.session_state.sub_dupleta_opcion = "Dupleta"
-                guardar_estado_global()
-                st.rerun()
-        with col_d2:
-            if st.button("🎟️ Tripleta", key="sub_dup_tripleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Tripleta" else "secondary"):
-                st.session_state.sub_dupleta_opcion = "Tripleta"
-                guardar_estado_global()
-                st.rerun()
-        with col_d3:
-            if st.button("🏇 Polla", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Polla Hipica" else "secondary"):
-                st.session_state.sub_dupleta_opcion = "Polla Hipica"
-                guardar_estado_global()
-                st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
+    col_d1, col_d2, col_d3 = st.columns(3, gap="small")
+    with col_d1:
+        if st.button("🎟️ Dupleta", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
+            st.session_state.sub_dupleta_opcion = "Dupleta"
+            guardar_estado_global()
+            st.rerun()
+    with col_d2:
+        if st.button("🎟️ Tripleta", key="sub_dup_tripleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Tripleta" else "secondary"):
+            st.session_state.sub_dupleta_opcion = "Tripleta"
+            guardar_estado_global()
+            st.rerun()
+    with col_d3:
+        if st.button("🏇 Polla", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Polla Hipica" else "secondary"):
+            st.session_state.sub_dupleta_opcion = "Polla Hipica"
+            guardar_estado_global()
+            st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-        st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
-        sub_dup_actual = st.session_state.sub_dupleta_opcion
+    st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+    sub_dup_actual = st.session_state.sub_dupleta_opcion
 
-        st.markdown(f"<div class='subasta-header'>🎟️ Armado Visual de {sub_dup_actual}</div>", unsafe_allow_html=True)
-        if st.session_state.dupleta_bloqueada:
-            st.error("🔒 **BLOQUEADO:** Emisión cerrada temporalmente.")
+    st.markdown(f"<div class='subasta-header'>🎟️ Armado Visual de {sub_dup_actual}</div>", unsafe_allow_html=True)
+    if st.session_state.dupleta_bloqueada:
+        st.error("🔒 **BLOQUEADO:** Emisión cerrada temporalmente.")
 
-        monto_unico_seccion = st.session_state.config_montos_especiales.get(sub_dup_actual, 500.0)
+    monto_unico_seccion = st.session_state.config_montos_especiales.get(sub_dup_actual, 500.0)
 
-        if sub_dup_actual == "Dupleta":
-            pote_total = sum([t['monto'] for t in st.session_state.dupletas_tickets if t.get('estado') == 'Pendiente'])
-            st.metric("💰 Pote Acumulado Dupletas", formatear_bs(pote_total))
-            carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
-        elif sub_dup_actual == "Tripleta":
-            pote_total = sum([t['monto'] for t in st.session_state.tripleta_tickets if t.get('estado') == 'Pendiente'])
-            st.metric("💰 Pote Acumulado Tripletas", formatear_bs(pote_total))
-            carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
+    if sub_dup_actual == "Dupleta":
+        pote_total = sum([t['monto'] for t in st.session_state.dupletas_tickets if t.get('estado') == 'Pendiente'])
+        st.metric("💰 Pote Acumulado Dupletas", formatear_bs(pote_total))
+        carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
+    elif sub_dup_actual == "Tripleta":
+        pote_total = sum([t['monto'] for t in st.session_state.tripleta_tickets if t.get('estado') == 'Pendiente'])
+        st.metric("💰 Pote Acumulado Tripletas", formatear_bs(pote_total))
+        carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
+    else:
+        pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
+        st.metric("💰 Pote Acumulado Polla", formatear_bs(pote_total))
+        carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
+
+    # --- CARRUSEL DESLIZANTE CON TARJETAS MÁS LARGAS (VERTICALES) ---
+    cards_html_slider = ""
+    for carr_h in carreras_permitidas:
+        det_h = st.session_state.detalles_carreras.get(carr_h, {})
+        cond_h = det_h.get('condicion', 'Carrera oficial')
+        dist_h = det_h.get('distancia', '1200 mts')
+        hora_h = det_h.get('hora', '02:00 PM')
+        
+        img_src_html = ""
+        if carr_h in st.session_state.imagenes_carreras:
+            img_src_html = f'<img src="{st.session_state.imagenes_carreras[carr_h]}" style="width:100%; height:320px; object-fit:cover; border-radius:10px; margin-bottom:12px;" />'
         else:
-            pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
-            st.metric("💰 Pote Acumulado Polla", formatear_bs(pote_total))
-            carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
+            img_src_html = f'<div style="width:100%; height:320px; background:#161b22; border:1px dashed #30363d; display:flex; align-items:center; justify-content:center; border-radius:10px; margin-bottom:12px; color:#8b949e; font-size:14px; font-weight:700;">{carr_h}</div>'
 
-        # --- CARRUSEL DESLIZANTE CON TARJETAS MÁS LARGAS (VERTICALES) ---
-        cards_html_slider = ""
-        for carr_h in carreras_permitidas:
-            det_h = st.session_state.detalles_carreras.get(carr_h, {})
-            cond_h = det_h.get('condicion', 'Carrera oficial')
-            dist_h = det_h.get('distancia', '1200 mts')
-            hora_h = det_h.get('hora', '02:00 PM')
-            
-            img_src_html = ""
-            if carr_h in st.session_state.imagenes_carreras:
-                img_src_html = f'<img src="{st.session_state.imagenes_carreras[carr_h]}" style="width:100%; height:320px; object-fit:cover; border-radius:10px; margin-bottom:12px;" />'
-            else:
-                img_src_html = f'<div style="width:100%; height:320px; background:#161b22; border:1px dashed #30363d; display:flex; align-items:center; justify-content:center; border-radius:10px; margin-bottom:12px; color:#8b949e; font-size:14px; font-weight:700;">{carr_h}</div>'
-
-            cards_html_slider += f"""
-                <div style="flex: 0 0 240px; background: #0d1117; border: 1px solid #30363d; border-radius: 14px; padding: 14px; text-align: left; box-shadow: 0px 6px 18px rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: space-between;">
-                    <div>
-                        {img_src_html}
-                        <div style="color: #f1c40f; font-size: 16px; font-weight: 900; margin-bottom: 6px;">{carr_h}</div>
-                        <div style="color: #8b949e; font-size: 11px; line-height: 1.4; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">{cond_h}</div>
-                    </div>
-                    <div style="color: #ffffff; font-size: 11px; font-weight: 700; margin-top: 12px; border-top: 1px solid #21262d; padding-top: 8px;">📏 {dist_h} &nbsp;|&nbsp; ⏰ {hora_h}</div>
+        cards_html_slider += f"""
+            <div style="flex: 0 0 240px; background: #0d1117; border: 1px solid #30363d; border-radius: 14px; padding: 14px; text-align: left; box-shadow: 0px 6px 18px rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    {img_src_html}
+                    <div style="color: #f1c40f; font-size: 16px; font-weight: 900; margin-bottom: 6px;">{carr_h}</div>
+                    <div style="color: #8b949e; font-size: 11px; line-height: 1.4; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">{cond_h}</div>
                 </div>
-            """
+                <div style="color: #ffffff; font-size: 11px; font-weight: 700; margin-top: 12px; border-top: 1px solid #21262d; padding-top: 8px;">📏 {dist_h} &nbsp;|&nbsp; ⏰ {hora_h}</div>
+            </div>
+        """
 
-        if cards_html_slider:
-            st.markdown("🖼️ **Carrusel de Carreras Disponibles (Tarjetas Verticales Amplias):**")
-            st.markdown(f"""
-                <div style="display: flex; overflow-x: auto; gap: 14px; padding-bottom: 14px; margin-bottom: 16px; scrollbar-width: thin;">
-                    {cards_html_slider}
-                </div>
-            """, unsafe_allow_html=True)
+    if cards_html_slider:
+        st.markdown("🖼️ **Carrusel de Carreras Disponibles (Tarjetas Verticales Amplias):**")
+        st.markdown(f"""
+            <div style="display: flex; overflow-x: auto; gap: 14px; padding-bottom: 14px; margin-bottom: 16px; scrollbar-width: thin;">
+                {cards_html_slider}
+            </div>
+        """, unsafe_allow_html=True)
 
-        # --- SELECTOR VERTICAL FIJO ---
-        with st.container(border=True):
-            st.markdown(f"👤 **Jugador Activo:** `{st.session_state.usuario_activo}` &nbsp;|&nbsp; 💵 **Costo Ticket:** `{formatear_bs(monto_unico_seccion)}`")
-            st.markdown("---")
-
-            if not carreras_permitidas:
-                st.warning(f"⚠️ No hay carreras habilitadas para **{sub_dup_actual}**. Configúralas en Zona Admin.")
-            else:
-                seleccion_legs = []
-                valido_legs = True
-                carreras_usadas = set()
-
-                cantidad_pasos = 2 if sub_dup_actual == "Dupleta" else (3 if sub_dup_actual == "Tripleta" else len(carreras_permitidas))
-
-                for paso in range(cantidad_pasos):
-                    st.markdown(f"🔹 **Paso {paso + 1} de {cantidad_pasos}**")
-                    
-                    carr_leg = carreras_permitidas[paso % len(carreras_permitidas)]
-                    
-                    st.markdown(f"🏁 **Carrera fija:** `{carr_leg}`")
-                    
-                    retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
-                    todos_caballos_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
-                    caballos_in_carr = [c for c in todos_caballos_carr if c not in retirados_carr_t]
-                    
-                    if retirados_carr_t and sub_dup_actual in ["Dupleta", "Tripleta"]:
-                        st.markdown(f"<p style='color: #ff4757; font-size: 11px; font-weight: bold;'>⚠️ Hay ejemplares retirados en esta carrera. Puede cambiar el ejemplar seleccionado:</p>", unsafe_allow_html=True)
-
-                    cab_leg = st.selectbox(
-                        f"Selecciona el Ejemplar para {carr_leg}", 
-                        options=caballos_in_carr if caballos_in_carr else ["Sin Caballos Disponibles"], 
-                        key=f"ticket_cab_{sub_dup_actual}_{paso}"
-                    )
-                    
-                    if sub_dup_actual == "Polla Hipica" and cab_leg in retirados_carr_t:
-                        idx_ret = todos_caballos_carr.index(cab_leg)
-                        siguiente_cab = None
-                        for siguiente_c in todos_caballos_carr[idx_ret + 1:] + todos_caballos_carr[:idx_ret]:
-                            if siguiente_c not in retirados_carr_t:
-                                siguiente_cab = siguiente_c
-                                break
-                        if siguiente_cab:
-                            cab_leg = f"{siguiente_cab} (Sustituto por retiro)"
-                            st.info(f"🔄 **Polla Hípica:** El ejemplar seleccionado estaba retirado. Se asignó automáticamente el siguiente disponible: **{cab_leg}**")
-
-                    if carr_leg in carreras_usadas:
-                        valido_legs = False
-                    carreras_usadas.add(carr_leg)
-                    seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
-                    st.markdown("---")
-
-                if not st.session_state.dupleta_bloqueada:
-                    if st.button(f"🚀 Emitir Ticket de {sub_dup_actual}", key=f"btn_emitir_{sub_dup_actual}", use_container_width=True, type="primary"):
-                        if not valido_legs:
-                            st.error("⚠️ No puedes repetir la misma carrera en el mismo ticket.")
-                        else:
-                            legs_ordenadas = sorted(seleccion_legs, key=lambda x: x['carrera'])
-                            firma_combinacion = tuple((l['carrera'], l['ejemplar']) for l in legs_ordenadas)
-
-                            lista_tickets_activo = (
-                                st.session_state.dupletas_tickets if sub_dup_actual == "Dupleta" else
-                                st.session_state.tripleta_tickets if sub_dup_actual == "Tripleta" else
-                                st.session_state.polla_tickets
-                            )
-
-                            duplicado = False
-                            for t in lista_tickets_activo:
-                                t_legs_ordenadas = sorted(t['legs'], key=lambda x: x['carrera'])
-                                t_firma = tuple((l['carrera'], l['ejemplar']) for l in t_legs_ordenadas)
-                                if t_firma == firma_combinacion:
-                                    duplicado = True
-                                    break
-
-                            if duplicado:
-                                st.error("❌ **BLOQUEADO:** Ya existe un ticket con esta misma combinación.")
-                            else:
-                                prefijo_id = "DUP" if sub_dup_actual == "Dupleta" else ("TRIP" if sub_dup_actual == "Tripleta" else "POLL")
-                                ticket_id = f"{prefijo_id}-{len(lista_tickets_activo) + 1:04d}"
-                                
-                                nuevo_ticket_dict = {
-                                    "id": ticket_id, "jugador": st.session_state.usuario_activo, "monto": monto_unico_seccion,
-                                    "legs": seleccion_legs, "estado": "Pendiente", "fecha": ahora_dt.strftime('%d/%m %I:%M %p')
-                                }
-
-                                if sub_dup_actual == "Dupleta":
-                                    st.session_state.dupletas_tickets.append(nuevo_ticket_dict)
-                                elif sub_dup_actual == "Tripleta":
-                                    st.session_state.tripleta_tickets.append(nuevo_ticket_dict)
-                                else:
-                                    st.session_state.polla_tickets.append(nuevo_ticket_dict)
-
-                                detalles_str = " ➔ ".join([f"{l['carrera']}: {l['ejemplar']}" for l in seleccion_legs])
-                                st.session_state.historial_jugadas.append({
-                                    "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                    "jugador": st.session_state.usuario_activo,
-                                    "tipo": sub_dup_actual,
-                                    "carrera": "Múltiple",
-                                    "detalle": f"Ticket {ticket_id} ({detalles_str})",
-                                    "monto": monto_unico_seccion
-                                })
-                                if st.session_state.usuario_activo not in st.session_state.cuentas:
-                                    st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                                st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_unico_seccion
-                                
-                                guardar_estado_global()
-                                st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito (Estado: PENDIENTE)!")
-                                st.rerun()
-
+    # --- SELECTOR VERTICAL FIJO ---
+    with st.container(border=True):
+        st.markdown(f"👤 **Jugador Activo:** `{st.session_state.usuario_activo}` &nbsp;|&nbsp; 💵 **Costo Ticket:** `{formatear_bs(monto_unico_seccion)}`")
         st.markdown("---")
-        st.markdown(f"### 📋 Historial de Tickets ({sub_dup_actual})")
-        lista_tickets_activo_ver = (
-            st.session_state.dupletas_tickets if sub_dup_actual == "Dupleta" else
-            st.session_state.tripleta_tickets if sub_dup_actual == "Tripleta" else
-            st.session_state.polla_tickets
-        )
-        if not lista_tickets_activo_ver:
-            st.info("No hay tickets emitidos todavía en esta sección.")
+
+        if not carreras_permitidas:
+            st.warning(f"⚠️ No hay carreras habilitadas para **{sub_dup_actual}**. Configúralas en Zona Admin.")
         else:
-            for idx_t, t in enumerate(reversed(lista_tickets_activo_ver)):
-                with st.container(border=True):
-                    col_t1, col_t2, col_t3, col_t4 = st.columns([2, 2, 2, 2])
-                    col_t1.markdown(f"🏷️ `{t['id']}`")
-                    col_t2.markdown(f"👤 `{t['jugador']}`")
-                    col_t3.markdown(f"💰 `{formatear_bs(t['monto'])}`")
-                    col_t4.markdown(f"📌 **Estado:** `{t.get('estado', 'Pendiente')}`")
-                    
-                    detalles_legs = " ➔ ".join([f"**{l['carrera']}**: {l['ejemplar']}" for l in t['legs']])
-                    st.markdown(f"> {detalles_legs}")
-                    st.caption(f"Emitido: {t['fecha']}")
+            seleccion_legs = []
+            valido_legs = True
+            carreras_usadas = set()
 
-                    # --- OPCIÓN DE ELIMINAR TICKET SOLO PARA EL ADMINISTRADOR (CASA) ---
-                    if st.session_state.usuario_activo == "CASA":
-                        if st.button(f"🗑️ Eliminar Ticket {t['id']}", key=f"btn_del_tkt_{sub_dup_actual}_{t['id']}_{idx_t}", use_container_width=True):
-                            jug_t = t['jugador']
-                            monto_t = t['monto']
-                            estado_t = t.get('estado', 'Pendiente')
+            cantidad_pasos = 2 if sub_dup_actual == "Dupleta" else (3 if sub_dup_actual == "Tripleta" else len(carreras_permitidas))
 
-                            if estado_t == 'Pendiente':
-                                if jug_t in st.session_state.cuentas:
-                                    st.session_state.cuentas[jug_t]['Pujas'] = max(0.0, st.session_state.cuentas[jug_t]['Pujas'] - monto_t)
+            for paso in range(cantidad_pasos):
+                st.markdown(f"🔹 **Paso {paso + 1} de {cantidad_pasos}**")
+                
+                carr_leg = carreras_permitidas[paso % len(carreras_permitidas)]
+                
+                st.markdown(f"🏁 **Carrera fija:** `{carr_leg}`")
+                
+                retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
+                todos_caballos_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
+                caballos_in_carr = [c for c in todos_caballos_carr if c not in retirados_carr_t]
+                
+                if retirados_carr_t and sub_dup_actual in ["Dupleta", "Tripleta"]:
+                    st.markdown(f"<p style='color: #ff4757; font-size: 11px; font-weight: bold;'>⚠️ Hay ejemplares retirados en esta carrera. Puede cambiar el ejemplar seleccionado:</p>", unsafe_allow_html=True)
+
+                cab_leg = st.selectbox(
+                    f"Selecciona el Ejemplar para {carr_leg}", 
+                    options=caballos_in_carr if caballos_in_carr else ["Sin Caballos Disponibles"], 
+                    key=f"ticket_cab_{sub_dup_actual}_{paso}"
+                )
+                
+                if sub_dup_actual == "Polla Hipica" and cab_leg in retirados_carr_t:
+                    idx_ret = todos_caballos_carr.index(cab_leg)
+                    siguiente_cab = None
+                    for siguiente_c in todos_caballos_carr[idx_ret + 1:] + todos_caballos_carr[:idx_ret]:
+                        if siguiente_c not in retirados_carr_t:
+                            siguiente_cab = siguiente_c
+                            break
+                    if siguiente_cab:
+                        cab_leg = f"{siguiente_cab} (Sustituto por retiro)"
+                        st.info(f"🔄 **Polla Hípica:** El ejemplar seleccionado estaba retirado. Se asignó automáticamente el siguiente disponible: **{cab_leg}**")
+
+                if carr_leg in carreras_usadas:
+                    valido_legs = False
+                carreras_usadas.add(carr_leg)
+                seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
+                st.markdown("---")
+
+            if not st.session_state.dupleta_bloqueada:
+                if st.button(f"🚀 Emitir Ticket de {sub_dup_actual}", key=f"btn_emitir_{sub_dup_actual}", use_container_width=True, type="primary"):
+                    if not valido_legs:
+                        st.error("⚠️ No puedes repetir la misma carrera en el mismo ticket.")
+                    else:
+                        legs_ordenadas = sorted(seleccion_legs, key=lambda x: x['carrera'])
+                        firma_combinacion = tuple((l['carrera'], l['ejemplar']) for l in legs_ordenadas)
+
+                        lista_tickets_activo = (
+                            st.session_state.dupletas_tickets if sub_dup_actual == "Dupleta" else
+                            st.session_state.tripleta_tickets if sub_dup_actual == "Tripleta" else
+                            st.session_state.polla_tickets
+                        )
+
+                        duplicado = False
+                        for t in lista_tickets_activo:
+                            t_legs_ordenadas = sorted(t['legs'], key=lambda x: x['carrera'])
+                            t_firma = tuple((l['carrera'], l['ejemplar']) for l in t_legs_ordenadas)
+                            if t_firma == firma_combinacion:
+                                duplicado = True
+                                break
+
+                        if duplicado:
+                            st.error("❌ **BLOQUEADO:** Ya existe un ticket con esta misma combinación.")
+                        else:
+                            prefijo_id = "DUP" if sub_dup_actual == "Dupleta" else ("TRIP" if sub_dup_actual == "Tripleta" else "POLL")
+                            ticket_id = f"{prefijo_id}-{len(lista_tickets_activo) + 1:04d}"
+                            
+                            nuevo_ticket_dict = {
+                                "id": ticket_id, "jugador": st.session_state.usuario_activo, "monto": monto_unico_seccion,
+                                "legs": seleccion_legs, "estado": "Pendiente", "fecha": ahora_dt.strftime('%d/%m %I:%M %p')
+                            }
 
                             if sub_dup_actual == "Dupleta":
-                                st.session_state.dupletas_tickets = [tk for tk in st.session_state.dupletas_tickets if tk['id'] != t['id']]
+                                st.session_state.dupletas_tickets.append(nuevo_ticket_dict)
                             elif sub_dup_actual == "Tripleta":
-                                st.session_state.tripleta_tickets = [tk for tk in st.session_state.tripleta_tickets if tk['id'] != t['id']]
+                                st.session_state.tripleta_tickets.append(nuevo_ticket_dict)
                             else:
-                                st.session_state.polla_tickets = [tk for tk in st.session_state.polla_tickets if tk['id'] != t['id']]
+                                st.session_state.polla_tickets.append(nuevo_ticket_dict)
 
+                            detalles_str = " ➔ ".join([f"{l['carrera']}: {l['ejemplar']}" for l in seleccion_legs])
                             st.session_state.historial_jugadas.append({
                                 "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                "jugador": "CASA (Admin)",
-                                "tipo": f"Eliminación de Ticket",
+                                "jugador": st.session_state.usuario_activo,
+                                "tipo": sub_dup_actual,
                                 "carrera": "Múltiple",
-                                "detalle": f"Ticket {t['id']} eliminado por administrador",
-                                "monto": -monto_t
+                                "detalle": f"Ticket {ticket_id} ({detalles_str})",
+                                "monto": monto_unico_seccion
                             })
-
+                            if st.session_state.usuario_activo not in st.session_state.cuentas:
+                                st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                            st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_unico_seccion
+                            
                             guardar_estado_global()
-                            st.toast(f"🗑️ Ticket {t['id']} eliminado correctamente.")
+                            st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito (Estado: PENDIENTE)!")
                             st.rerun()
 
-                    if sub_dup_actual != "Polla Hipica":
-                        retirado_en_ticket = False
-                        carrera_afectada = None
-                        for leg in t['legs']:
-                            carr_l = leg['carrera']
-                            ej_l = leg['ejemplar'].split(" (")[0]
-                            retirados_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
-                            if ej_l in retirados_carr:
-                                retirado_en_ticket = True
-                                carrera_afectada = carr_l
-                                break
+    st.markdown("---")
+    st.markdown(f"### 📋 Historial de Tickets ({sub_dup_actual})")
+    lista_tickets_activo_ver = (
+        st.session_state.dupletas_tickets if sub_dup_actual == "Dupleta" else
+        st.session_state.tripleta_tickets if sub_dup_actual == "Tripleta" else
+        st.session_state.polla_tickets
+    )
+    if not lista_tickets_activo_ver:
+        st.info("No hay tickets emitidos todavía en esta sección.")
+    else:
+        for idx_t, t in enumerate(reversed(lista_tickets_activo_ver)):
+            with st.container(border=True):
+                col_t1, col_t2, col_t3, col_t4 = st.columns([2, 2, 2, 2])
+                col_t1.markdown(f"🏷️ `{t['id']}`")
+                col_t2.markdown(f"👤 `{t['jugador']}`")
+                col_t3.markdown(f"💰 `{formatear_bs(t['monto'])}`")
+                col_t4.markdown(f"📌 **Estado:** `{t.get('estado', 'Pendiente')}`")
+                
+                detalles_legs = " ➔ ".join([f"**{l['carrera']}**: {l['ejemplar']}" for l in t['legs']])
+                st.markdown(f"> {detalles_legs}")
+                st.caption(f"Emitido: {t['fecha']}")
 
-                        if retirado_en_ticket:
-                            if t.get('estado') == 'Pendiente':
-                                t['estado'] = 'Nulo (Retirado)'
+                # --- OPCIÓN DE ELIMINAR TICKET SOLO PARA EL ADMINISTRADOR (CASA) ---
+                if st.session_state.usuario_activo == "CASA":
+                    if st.button(f"🗑️ Eliminar Ticket {t['id']}", key=f"btn_del_tkt_{sub_dup_actual}_{t['id']}_{idx_t}", use_container_width=True):
+                        jug_t = t['jugador']
+                        monto_t = t['monto']
+                        estado_t = t.get('estado', 'Pendiente')
+
+                        if estado_t == 'Pendiente':
+                            if jug_t in st.session_state.cuentas:
+                                st.session_state.cuentas[jug_t]['Pujas'] = max(0.0, st.session_state.cuentas[jug_t]['Pujas'] - monto_t)
+
+                        if sub_dup_actual == "Dupleta":
+                            st.session_state.dupletas_tickets = [tk for tk in st.session_state.dupletas_tickets if tk['id'] != t['id']]
+                        elif sub_dup_actual == "Tripleta":
+                            st.session_state.tripleta_tickets = [tk for tk in st.session_state.tripleta_tickets if tk['id'] != t['id']]
+                        else:
+                            st.session_state.polla_tickets = [tk for tk in st.session_state.polla_tickets if tk['id'] != t['id']]
+
+                        st.session_state.historial_jugadas.append({
+                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                            "jugador": "CASA (Admin)",
+                            "tipo": f"Eliminación de Ticket",
+                            "carrera": "Múltiple",
+                            "detalle": f"Ticket {t['id']} eliminado por administrador",
+                            "monto": -monto_t
+                        })
+
+                        guardar_estado_global()
+                        st.toast(f"🗑️ Ticket {t['id']} eliminado correctamente.")
+                        st.rerun()
+
+                if sub_dup_actual != "Polla Hipica":
+                    retirado_en_ticket = False
+                    carrera_afectada = None
+                    for leg in t['legs']:
+                        carr_l = leg['carrera']
+                        ej_l = leg['ejemplar'].split(" (")[0]
+                        retirados_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
+                        if ej_l in retirados_carr:
+                            retirado_en_ticket = True
+                            carrera_afectada = carr_l
+                            break
+
+                    if retirado_en_ticket:
+                        if t.get('estado') == 'Pendiente':
+                            t['estado'] = 'Nulo (Retirado)'
+                            jug_t = t['jugador']
+                            monto_t = t['monto']
+                            if jug_t in st.session_state.cuentas:
+                                st.session_state.cuentas[jug_t]['Pujas'] = max(0.0, st.session_state.cuentas[jug_t]['Pujas'] - monto_t)
+                            st.session_state.historial_jugadas.append({
+                                "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                "jugador": jug_t,
+                                "tipo": "Ticket Anulado (Retiro)",
+                                "carrera": carrera_afectada,
+                                "detalle": f"Ticket {t['id']} anulado por retiro",
+                                "monto": -monto_t
+                            })
+                            guardar_estado_global()
+
+                        st.error(f"❌ El ticket **{t['id']}** está **NULO** y su monto ha sido restado porque el ejemplar de la **{carrera_afectada}** fue retirado. Seleccione un nuevo ejemplar para reactivarlo:")
+                        
+                        with st.form(key=f"form_modificar_ticket_{t['id']}_{idx_t}"):
+                            nuevas_legs = []
+                            for i_l, leg in enumerate(t['legs']):
+                                carr_l = leg['carrera']
+                                ej_actual = leg['ejemplar'].split(" (")[0]
+                                
+                                if carr_l == carrera_afectada:
+                                    ret_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
+                                    disponibles_l = [c for c in list(st.session_state.remates.get(carr_l, {}).keys()) if c not in ret_carr]
+                                    
+                                    idx_def = 0
+                                    if ej_actual in disponibles_l:
+                                        idx_def = disponibles_l.index(ej_actual)
+
+                                    nuevo_ej = st.selectbox(
+                                        f"Elija nuevo ejemplar para {carr_l} (Retirado: {ej_actual})",
+                                        options=disponibles_l if disponibles_l else [ej_actual],
+                                        index=idx_def,
+                                        key=f"mod_ticket_{t['id']}_carr_{carr_l}"
+                                    )
+                                    nuevas_legs.append({"carrera": carr_l, "ejemplar": f"{nuevo_ej} (Cambiado por retiro)"})
+                                else:
+                                    nuevas_legs.append(leg)
+
+                            if st.form_submit_button("🔄 Reactivar y Asignar Nuevo Ejemplar", use_container_width=True):
+                                t['legs'] = nuevas_legs
+                                t['estado'] = 'Pendiente'
                                 jug_t = t['jugador']
                                 monto_t = t['monto']
-                                if jug_t in st.session_state.cuentas:
-                                    st.session_state.cuentas[jug_t]['Pujas'] = max(0.0, st.session_state.cuentas[jug_t]['Pujas'] - monto_t)
+                                
+                                if jug_t not in st.session_state.cuentas:
+                                    st.session_state.cuentas[jug_t] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                st.session_state.cuentas[jug_t]['Pujas'] += monto_t
+                                
                                 st.session_state.historial_jugadas.append({
                                     "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
                                     "jugador": jug_t,
-                                    "tipo": "Ticket Anulado (Retiro)",
-                                    "carrera": carrera_afectada,
-                                    "detalle": f"Ticket {t['id']} anulado por retiro",
-                                    "monto": -monto_t
+                                    "tipo": sub_dup_actual,
+                                    "carrera": "Múltiple Reactivada",
+                                    "detalle": f"Ticket {t['id']} reactivado tras cambio",
+                                    "monto": monto_t
                                 })
+
                                 guardar_estado_global()
-
-                            st.error(f"❌ El ticket **{t['id']}** está **NULO** y su monto ha sido restado porque el ejemplar de la **{carrera_afectada}** fue retirado. Seleccione un nuevo ejemplar para reactivarlo:")
-                            
-                            with st.form(key=f"form_modificar_ticket_{t['id']}_{idx_t}"):
-                                nuevas_legs = []
-                                for i_l, leg in enumerate(t['legs']):
-                                    carr_l = leg['carrera']
-                                    ej_actual = leg['ejemplar'].split(" (")[0]
-                                    
-                                    if carr_l == carrera_afectada:
-                                        ret_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
-                                        disponibles_l = [c for c in list(st.session_state.remates.get(carr_l, {}).keys()) if c not in ret_carr]
-                                        
-                                        idx_def = 0
-                                        if ej_actual in disponibles_l:
-                                            idx_def = disponibles_l.index(ej_actual)
-
-                                        nuevo_ej = st.selectbox(
-                                            f"Elija nuevo ejemplar para {carr_l} (Retirado: {ej_actual})",
-                                            options=disponibles_l if disponibles_l else [ej_actual],
-                                            index=idx_def,
-                                            key=f"mod_ticket_{t['id']}_carr_{carr_l}"
-                                        )
-                                        nuevas_legs.append({"carrera": carr_l, "ejemplar": f"{nuevo_ej} (Cambiado por retiro)"})
-                                    else:
-                                        nuevas_legs.append(leg)
-
-                                if st.form_submit_button("🔄 Reactivar y Asignar Nuevo Ejemplar", use_container_width=True):
-                                    t['legs'] = nuevas_legs
-                                    t['estado'] = 'Pendiente'
-                                    jug_t = t['jugador']
-                                    monto_t = t['monto']
-                                    
-                                    if jug_t not in st.session_state.cuentas:
-                                        st.session_state.cuentas[jug_t] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                                    st.session_state.cuentas[jug_t]['Pujas'] += monto_t
-                                    
-                                    st.session_state.historial_jugadas.append({
-                                        "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                        "jugador": jug_t,
-                                        "tipo": sub_dup_actual,
-                                        "carrera": "Múltiple Reactivada",
-                                        "detalle": f"Ticket {t['id']} reactivado tras cambio",
-                                        "monto": monto_t
-                                    })
-
-                                    guardar_estado_global()
-                                    st.success(f"✅ ¡Ticket {t['id']} reactivado con éxito!")
-                                    st.rerun()
+                                st.success(f"✅ ¡Ticket {t['id']} reactivado con éxito!")
+                                st.rerun()
 
 elif menu_principal_opcion == "Cuentas":
     with st.container():
