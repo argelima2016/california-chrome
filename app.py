@@ -1589,6 +1589,39 @@ elif menu_principal_opcion == "Dupletas":
                 st.markdown(f"> {detalles_legs}")
                 st.caption(f"Emitido: {t['fecha']}")
 
+                # --- OPCIÓN DE ELIMINAR TICKET SOLO PARA EL ADMINISTRADOR (CASA) ---
+                if st.session_state.usuario_activo == "CASA":
+                    if st.button(f"🗑️ Eliminar Ticket {t['id']}", key=f"btn_del_tkt_{sub_dup_actual}_{t['id']}_{idx_t}", use_container_width=True):
+                        jug_t = t['jugador']
+                        monto_t = t['monto']
+                        estado_t = t.get('estado', 'Pendiente')
+
+                        # Reintegrar o ajustar cuentas si estaba pendiente o activo
+                        if estado_t == 'Pendiente':
+                            if jug_t in st.session_state.cuentas:
+                                st.session_state.cuentas[jug_t]['Pujas'] = max(0.0, st.session_state.cuentas[jug_t]['Pujas'] - monto_t)
+
+                        # Remover de la lista correspondiente
+                        if sub_dup_actual == "Dupleta":
+                            st.session_state.dupletas_tickets = [tk for tk in st.session_state.dupletas_tickets if tk['id'] != t['id']]
+                        elif sub_dup_actual == "Tripleta":
+                            st.session_state.tripleta_tickets = [tk for tk in st.session_state.tripleta_tickets if tk['id'] != t['id']]
+                        else:
+                            st.session_state.polla_tickets = [tk for tk in st.session_state.polla_tickets if tk['id'] != t['id']]
+
+                        st.session_state.historial_jugadas.append({
+                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                            "jugador": "CASA (Admin)",
+                            "tipo": f"Eliminación de Ticket",
+                            "carrera": "Múltiple",
+                            "detalle": f"Ticket {t['id']} eliminado por administrador",
+                            "monto": -monto_t
+                        })
+
+                        guardar_estado_global()
+                        st.toast(f"🗑️ Ticket {t['id']} eliminado correctamente.")
+                        st.rerun()
+
                 if sub_dup_actual != "Polla Hipica":
                     retirado_en_ticket = False
                     carrera_afectada = None
