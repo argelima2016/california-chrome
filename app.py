@@ -305,8 +305,12 @@ st.markdown("""
         margin: 0 auto !important;
         overflow-x: hidden !important;
     }
-    div[data-testid="stVerticalBlock"] > div:empty {
+    /* Forzar ocultación total de elementos vacíos o inactivos de secciones anteriores */
+    div[data-testid="stVerticalBlock"] > div:not(:has(*)) {
         display: none !important;
+        height: 0px !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
