@@ -2145,7 +2145,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.rerun()
 
 # =========================================================================
-# TRANSMISIÓN EN VIVO Y BUCLE AUTOMÁTICO DE REFRESCO EN TIEMPO REAL
+# TRANSMISIÓN EN VIVO Y CONTROL DE RECARGA AUTOMÁTICA INTELIGENTE
 # =========================================================================
 url_live_video = st.session_state.get('url_video_en_vivo', '').strip()
 
@@ -2166,7 +2166,8 @@ if url_live_video:
         except Exception:
             st.video(url_live_video)
 
-# --- SINCRONIZACIÓN AUTOMÁTICA EN SEGUNDO PLANO (CADA 3 SEGUNDOS) ---
-time.sleep(3)
-cargar_estado_global(forzar_recarga=True)
-st.rerun()
+# --- SINCRONIZACIÓN AUTOMÁTICA SOLO SI NO ESTÁS EN ZONA ADMIN ---
+if menu_principal_opcion != "🔒 Zona Admin":
+    time.sleep(3)
+    cargar_estado_global(forzar_recarga=True)
+    st.rerun()
