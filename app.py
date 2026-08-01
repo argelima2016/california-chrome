@@ -1915,6 +1915,41 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Detalles e incentivos guardados!")
                 st.rerun()
 
+        # --- CONFIGURACIÓN DE HORA Y FECHA DE INICIO Y CIERRE ESTRICTO (DEBAJO DE DETALLES E INCENTIVOS) ---
+        with st.container(border=True):
+            st.markdown(f"🚀 **Control de Apertura y Cierre - {carr_banco_sel}**")
+            
+            # Fecha y Hora de Inicio
+            dt_inicio_existente = st.session_state.fechas_horas_inicio_remate.get(carr_banco_sel, ahora_dt)
+            st.markdown("🟢 **Hora y Fecha de Inicio (Apertura)**")
+            col_fi1, col_fi2 = st.columns(2)
+            with col_fi1:
+                f_inicio_estricto = st.date_input("Fecha Inicio", value=dt_inicio_existente.date(), key=f"banco_f_inicio_{carr_banco_sel}")
+            with col_fi2:
+                h_inicio_estricto = st.time_input("Hora Inicio", value=dt_inicio_existente.time(), key=f"banco_h_inicio_{carr_banco_sel}")
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # Fecha y Hora de Cierre
+            dt_cierre_existente = st.session_state.fechas_horas_cierre_remate.get(carr_banco_sel, ahora_dt)
+            st.markdown("🔴 **Hora y Fecha de Cierre Estricto**")
+            col_fc1, col_fc2 = st.columns(2)
+            with col_fc1:
+                f_cierre_estricto = st.date_input("Fecha Cierre", value=dt_cierre_existente.date(), key=f"banco_f_cierre_{carr_banco_sel}")
+            with col_fc2:
+                h_cierre_estricto = st.time_input("Hora Cierre", value=dt_cierre_existente.time(), key=f"banco_h_cierre_{carr_banco_sel}")
+            
+            if st.button("💾 Guardar Apertura y Cierre", key=f"banco_btn_save_fechas_{carr_banco_sel}", use_container_width=True, type="primary"):
+                dt_combinada_inicio = datetime.combine(f_inicio_estricto, h_inicio_estricto)
+                dt_combinada_cierre = datetime.combine(f_cierre_estricto, h_cierre_estricto)
+                
+                st.session_state.fechas_horas_inicio_remate[carr_banco_sel] = dt_combinada_inicio
+                st.session_state.fechas_horas_cierre_remate[carr_banco_sel] = dt_combinada_cierre
+                st.session_state.estado_conteo_carrera[carr_banco_sel] = "INACTIVO"
+                guardar_estado_global()
+                st.toast(f"✅ ¡Configuración guardada para {carr_banco_sel}!")
+                st.rerun()
+
         st.markdown("---")
         st.markdown("#### 🐎 Ejemplares Inscritos")
         with st.container(border=True):
@@ -1949,42 +1984,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                         del st.session_state.remates[carr_banco_sel][ej_item]
                     guardar_estado_global()
                     st.rerun()
-
-        # --- CONFIGURACIÓN DE HORA Y FECHA DE INICIO Y CIERRE ESTRICTO ---
-        st.markdown("---")
-        with st.container(border=True):
-            st.markdown(f"🚀 **Control de Apertura y Cierre - {carr_banco_sel}**")
-            
-            # Fecha y Hora de Inicio
-            dt_inicio_existente = st.session_state.fechas_horas_inicio_remate.get(carr_banco_sel, ahora_dt)
-            st.markdown("🟢 **Hora y Fecha de Inicio (Apertura)**")
-            col_fi1, col_fi2 = st.columns(2)
-            with col_fi1:
-                f_inicio_estricto = st.date_input("Fecha Inicio", value=dt_inicio_existente.date(), key=f"banco_f_inicio_{carr_banco_sel}")
-            with col_fi2:
-                h_inicio_estricto = st.time_input("Hora Inicio", value=dt_inicio_existente.time(), key=f"banco_h_inicio_{carr_banco_sel}")
-
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            # Fecha y Hora de Cierre
-            dt_cierre_existente = st.session_state.fechas_horas_cierre_remate.get(carr_banco_sel, ahora_dt)
-            st.markdown("🔴 **Hora y Fecha de Cierre Estricto**")
-            col_fc1, col_fc2 = st.columns(2)
-            with col_fc1:
-                f_cierre_estricto = st.date_input("Fecha Cierre", value=dt_cierre_existente.date(), key=f"banco_f_cierre_{carr_banco_sel}")
-            with col_fc2:
-                h_cierre_estricto = st.time_input("Hora Cierre", value=dt_cierre_existente.time(), key=f"banco_h_cierre_{carr_banco_sel}")
-            
-            if st.button("💾 Guardar Apertura y Cierre", key=f"banco_btn_save_fechas_{carr_banco_sel}", use_container_width=True, type="primary"):
-                dt_combinada_inicio = datetime.combine(f_inicio_estricto, h_inicio_estricto)
-                dt_combinada_cierre = datetime.combine(f_cierre_estricto, h_cierre_estricto)
-                
-                st.session_state.fechas_horas_inicio_remate[carr_banco_sel] = dt_combinada_inicio
-                st.session_state.fechas_horas_cierre_remate[carr_banco_sel] = dt_combinada_cierre
-                st.session_state.estado_conteo_carrera[carr_banco_sel] = "INACTIVO"
-                guardar_estado_global()
-                st.toast(f"✅ ¡Configuración guardada para {carr_banco_sel}!")
-                st.rerun()
 
     elif tab_actual == "👥 Usuarios":
         st.markdown("### 👥 Registro de Usuarios")
