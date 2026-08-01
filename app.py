@@ -543,13 +543,6 @@ header_html = f"""
 """
 st.markdown(header_html, unsafe_allow_html=True)
 
-# Botón superior flotante para refrescar pantalla manualmente al instante desde cualquier dispositivo
-col_ref_sync1, col_ref_sync2 = st.columns([6, 1])
-with col_ref_sync2:
-    if st.button("🔄 Sincronizar", use_container_width=True):
-        cargar_estado_global(forzar_recarga=True)
-        st.rerun()
-
 def obtener_abreviatura_carrera(nombre_carrera, modo_ciego=False):
     if modo_ciego:
         carreras_ciegas = st.session_state.carreras_por_modalidad.get("Ciegos", [])
@@ -862,7 +855,7 @@ if lista_b64_banners:
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
                     }}, 400);
-                }}, 8000);
+                }, 8000);
             }}
         }})();
     </script>
