@@ -305,6 +305,9 @@ st.markdown("""
         margin: 0 auto !important;
         overflow-x: hidden !important;
     }
+    div[data-testid="stVerticalBlock"] > div:empty {
+        display: none !important;
+    }
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
@@ -1596,12 +1599,10 @@ elif menu_principal_opcion == "Dupletas":
                         monto_t = t['monto']
                         estado_t = t.get('estado', 'Pendiente')
 
-                        # Reintegrar o ajustar cuentas si estaba pendiente o activo
                         if estado_t == 'Pendiente':
                             if jug_t in st.session_state.cuentas:
                                 st.session_state.cuentas[jug_t]['Pujas'] = max(0.0, st.session_state.cuentas[jug_t]['Pujas'] - monto_t)
 
-                        # Remover de la lista correspondiente
                         if sub_dup_actual == "Dupleta":
                             st.session_state.dupletas_tickets = [tk for tk in st.session_state.dupletas_tickets if tk['id'] != t['id']]
                         elif sub_dup_actual == "Tripleta":
