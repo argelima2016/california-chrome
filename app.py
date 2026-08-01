@@ -135,7 +135,6 @@ components.html("""
                 });
             });
 
-            // --- BOTÓN FLOTANTE DE TUERCA PARA CONTROLAR EL CIERRE TOTAL DE LA BARRA LATERAL ---
             let tuercaBtn = doc.getElementById('custom-tuerca-sidebar-btn');
             if (!tuercaBtn) {
                 tuercaBtn = doc.createElement('button');
@@ -862,8 +861,8 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }, 400);
-                }, 8000);
+                    }}, 400);
+                }}, 8000);
             }}
         }})();
     </script>
