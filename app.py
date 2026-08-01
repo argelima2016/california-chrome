@@ -415,7 +415,7 @@ st.markdown("""
         font-weight: 600;
     }
     
-    /* --- ESTILOS MODERNOS PARA LA CABECERA CON LOGO AMPLIADO --- */
+    /* --- ESTILOS MODERNOS PARA LA CABECERA CON LOGO MÁS GRANDE --- */
     .header-container-modern {
         background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
         border: 1px solid #30363d;
@@ -1077,7 +1077,7 @@ if menu_principal_opcion == "Remates":
                 st.session_state.ejemplares_retirados[carr_activa] = []
             
             lista_todos_caballos_carr = list(st.session_state.remates[carr_activa].keys())
-            retirados_actuales_carr = st.session_state.ejemplares_retirados[carr_activa]
+            retirados_actuales_carr = [c for c in st.session_state.ejemplares_retirados[carr_activa] if c in lista_todos_caballos_carr]
 
             with st.expander("🚫 Gestionar Ejemplares Retirados", expanded=False):
                 nuevos_retirados = st.multiselect(
@@ -1743,7 +1743,7 @@ elif menu_principal_opcion == "Cuentas":
     if todos_tickets_multiples:
         st.markdown("#### 🎟️ Tickets de Dupletas, Tripletas y Polla Hípica")
         for t in reversed(todos_tickets_multiples):
-            detalles_legs = " ➔ ".join([f"**{l['carrera']}**: {l['ejemplar']}" for l in t['legs']])
+            detalles_legs = " ➔ ".join([f"**{l['carrera']}**: {l['ejemplar']}" for t_legs in [t['legs']] for l in t_legs])
             estado_t = t.get('estado', 'Pendiente')
             color_est = "#2ed573" if estado_t == 'Pendiente' else "#ff4757"
 
