@@ -7,3 +7,4 @@ streamlit-autorefresh
 pypdf
 requests
 beautifulsoup4
+supabase
