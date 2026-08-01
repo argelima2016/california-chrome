@@ -961,10 +961,9 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# FUNCIONES DE RENDERIZADO AISLADO POR CADA SECCIÓN
+# RENDERIZADO ESTRICTO Y MUTUAMENTE EXCLUYENTE POR MENÚ PRINCIPAL
 # =========================================================================
-
-def render_modulo_remates():
+if menu_principal_opcion == "Remates":
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
     col_so1, col_so2, col_so3 = st.columns(3, gap="small")
     with col_so1:
@@ -1382,7 +1381,6 @@ def render_modulo_remates():
                                         st.success("✅ ¡Puja registrada correctamente!")
                                         st.rerun()
 
-# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA
 elif menu_principal_opcion == "Dupletas":
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
     col_d1, col_d2, col_d3 = st.columns(3, gap="small")
@@ -1697,7 +1695,6 @@ elif menu_principal_opcion == "Dupletas":
                                 st.success(f"✅ ¡Ticket {t['id']} reactivado con éxito!")
                                 st.rerun()
 
-# 3. MÓDULO DE CUENTAS
 elif menu_principal_opcion == "Cuentas":
     st.markdown("<div class='subasta-header'>📊 Mis Cuentas y Historial de Jugador en Formato Ticket</div>", unsafe_allow_html=True)
     jugador_actual = st.session_state.usuario_activo
@@ -1789,7 +1786,6 @@ elif menu_principal_opcion == "Cuentas":
     else:
         st.info("ℹ️ No hay tickets de dupletas, tripletas o pollas registrados para este usuario.")
 
-# 4. ZONA DE ADMINISTRADOR (CONFIGURACIÓN)
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Panel de Configuración y Administración</div>", unsafe_allow_html=True)
     
