@@ -241,7 +241,7 @@ img_b64 = get_image_base64(nombres_archivos)
 if img_b64:
     logo_display = f'<img src="data:image/png;base64,{img_b64}" class="header-logo-img" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 32px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 38px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
@@ -415,17 +415,17 @@ st.markdown("""
         font-weight: 600;
     }
     
-    /* --- ESTILOS MODERNOS PARA LA CABECERA CON LOGO MÁS GRANDE --- */
+    /* --- ESTILOS MODERNOS PARA LA CABECERA CON LOGO AMPLIADO --- */
     .header-container-modern {
         background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
         border: 1px solid #30363d;
         border-radius: 12px;
-        padding: 12px 16px;
+        padding: 14px 18px;
         margin-bottom: 10px;
         box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6);
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
         width: 100%;
         box-sizing: border-box;
     }
@@ -491,10 +491,10 @@ st.markdown("""
     .header-bottom-row-logo {
         text-align: center;
         border-top: 1px solid #21262d;
-        padding-top: 10px;
+        padding-top: 12px;
     }
     .header-logo-img {
-        max-height: 85px;
+        max-height: 120px;
         width: auto;
         object-fit: contain;
     }
@@ -522,7 +522,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- CABECERA SUPERIOR MODERNA CON LOGO AMPLIADO ---
+# --- CABECERA SUPERIOR MODERNA CON LOGO MÁS GRANDE ---
 header_html = f"""
     <div class="header-container-modern">
         <div class="header-top-row">
