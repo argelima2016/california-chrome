@@ -7,8 +7,9 @@ import base64
 import requests
 import io
 import json
+import time
 from bs4 import BeautifulSoup
-from datetime import datetime, time, timedelta, timezone
+from datetime import datetime, time as dtime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pypdf import PdfReader
 
@@ -32,7 +33,7 @@ def formatear_bs(monto):
 # --- SISTEMA DE PERSISTENCIA GLOBAL (JSON) PARA SINCRONIZAR A TODOS LOS USUARIOS ---
 DB_FILE = "state_db.json"
 
-def cargar_estado_global():
+def cargar_estado_global(forzar_recarga=False):
     default_state = {
         'menu_principal_opcion': "Remates",
         'sub_remate_opcion': "En Vivo",
@@ -74,7 +75,7 @@ def cargar_estado_global():
             with open(DB_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 for k, v in default_state.items():
-                    if k not in st.session_state:
+                    if k not in st.session_state or forzar_recarga:
                         st.session_state[k] = data.get(k, v)
         except Exception:
             for k, v in default_state.items():
@@ -100,8 +101,6 @@ def guardar_estado_global():
     for k in keys_to_save:
         if k in st.session_state:
             val = st.session_state[k]
-            if k == 'imagenes_carreras' and isinstance(val, dict):
-                continue
             data[k] = val
     try:
         with open(DB_FILE, "w", encoding="utf-8") as f:
@@ -186,7 +185,7 @@ components.html("""
                         }
                     } else {
                         const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
-                                            doc.querySelector('[data-testid="collapsedControl"] button');
+                                              doc.querySelector('[data-testid="collapsedControl"] button');
                         if (collapseBtn) collapseBtn.click();
                     }
                 };
@@ -549,7 +548,7 @@ st.markdown(header_html, unsafe_allow_html=True)
 col_ref_sync1, col_ref_sync2 = st.columns([6, 1])
 with col_ref_sync2:
     if st.button("🔄 Sincronizar", use_container_width=True):
-        cargar_estado_global()
+        cargar_estado_global(forzar_recarga=True)
         st.rerun()
 
 def obtener_abreviatura_carrera(nombre_carrera, modo_ciego=False):
@@ -715,7 +714,6 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
     else:
-        # Asegurar que si hay nuevas carreras, también se agreguen a las modalidades existentes
         for c_disp in lista_carreras_disponibles:
             if c_disp not in st.session_state.carreras_por_modalidad[mod]:
                 st.session_state.carreras_por_modalidad[mod].append(c_disp)
@@ -864,8 +862,8 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }}, 400);
-                }}, 8000);
+                    }, 400);
+                }, 8000);
             }}
         }})();
     </script>
@@ -1434,28 +1432,16 @@ elif menu_principal_opcion == "Dupletas":
         dist_h = det_h.get('distancia', '1200 mts')
         hora_h = det_h.get('hora', '02:00 PM')
         
-        img_carr_b64 = ""
+        img_src_html = ""
         if carr_h in st.session_state.imagenes_carreras:
-            try:
-                img_obj = st.session_state.imagenes_carreras[carr_h]
-                if hasattr(img_obj, "read"):
-                    img_bytes = img_obj.getvalue()
-                else:
-                    with open(img_obj, "rb") as f_img:
-                        img_bytes = f_img.read()
-                img_carr_b64 = base64.b64encode(img_bytes).decode('utf-8')
-            except Exception:
-                pass
-
-        if img_carr_b64:
-            media_content = f'<img src="data:image/jpeg;base64,{img_carr_b64}" style="width:100%; height:320px; object-fit:cover; border-radius:10px; margin-bottom:12px;" />'
+            img_src_html = f'<img src="{st.session_state.imagenes_carreras[carr_h]}" style="width:100%; height:320px; object-fit:cover; border-radius:10px; margin-bottom:12px;" />'
         else:
-            media_content = f'<div style="width:100%; height:320px; background:#161b22; border:1px dashed #30363d; display:flex; align-items:center; justify-content:center; border-radius:10px; margin-bottom:12px; color:#8b949e; font-size:14px; font-weight:700;">{carr_h}</div>'
+            img_src_html = f'<div style="width:100%; height:320px; background:#161b22; border:1px dashed #30363d; display:flex; align-items:center; justify-content:center; border-radius:10px; margin-bottom:12px; color:#8b949e; font-size:14px; font-weight:700;">{carr_h}</div>'
 
         cards_html_slider += f"""
             <div style="flex: 0 0 240px; background: #0d1117; border: 1px solid #30363d; border-radius: 14px; padding: 14px; text-align: left; box-shadow: 0px 6px 18px rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
-                    {media_content}
+                    {img_src_html}
                     <div style="color: #f1c40f; font-size: 16px; font-weight: 900; margin-bottom: 6px;">{carr_h}</div>
                     <div style="color: #8b949e; font-size: 11px; line-height: 1.4; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">{cond_h}</div>
                 </div>
@@ -2113,20 +2099,30 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     elif tab_actual == "🖼️ Imágenes":
         st.markdown("### 🖼️ Imágenes y Gacetas por Carrera")
         carr_img_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="adm_img_sel_carr")
+        
         with st.container(border=True):
             st.markdown("📸 **Imagen de la Carrera**")
             imagen_subida = st.file_uploader("Subir imagen (PNG, JPG)", type=["png", "jpg", "jpeg"], key=f"file_img_{carr_img_sel}")
+            
             if imagen_subida is not None:
                 if st.button("💾 Guardar Imagen", key=f"btn_save_img_{carr_img_sel}", use_container_width=True, type="primary"):
-                    st.session_state.imagenes_carreras[carr_img_sel] = imagen_subida
-                    guardar_estado_global()
-                    st.toast("✅ ¡Imagen guardada!")
-                    st.rerun()
+                    try:
+                        bytes_imagen = imagen_subida.getvalue()
+                        b64_imagen = base64.b64encode(bytes_imagen).decode('utf-8')
+                        st.session_state.imagenes_carreras[carr_img_sel] = f"data:image/jpeg;base64,{b64_imagen}"
+                        guardar_estado_global()
+                        st.toast("✅ ¡Imagen guardada de forma permanente!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error al procesar la imagen: {e}")
+
             if carr_img_sel in st.session_state.imagenes_carreras:
                 try:
-                    st.image(st.session_state.imagenes_carreras[carr_img_sel], width=250)
+                    img_guardada = st.session_state.imagenes_carreras[carr_img_sel]
+                    st.image(img_guardada, width=250, caption=f"Imagen guardada - {carr_img_sel}")
                 except Exception:
                     pass
+                
                 if st.button("🗑️ Eliminar Imagen", key=f"btn_del_img_{carr_img_sel}", use_container_width=True):
                     del st.session_state.imagenes_carreras[carr_img_sel]
                     guardar_estado_global()
@@ -2137,13 +2133,18 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         with st.container(border=True):
             st.markdown("📰 **Archivo Gaceta (PDF)**")
             gaceta_subida = st.file_uploader("Subir PDF de la Gaceta", type=["pdf"], key=f"file_gaceta_{carr_img_sel}")
+            
             if gaceta_subida is not None:
                 if st.button("💾 Guardar Gaceta", key=f"btn_save_gaceta_{carr_img_sel}", use_container_width=True, type="primary"):
-                    st.session_state.gacetas_carreras[carr_img_sel] = gaceta_subida.read()
-                    guardar_estado_global()
-                    st.toast("✅ ¡Gaceta guardada!")
-                    st.rerun()
-            if carr_img_sel in st.session_state.gacetas_carreras:
+                    try:
+                        st.session_state.gacetas_carreras[carr_img_sel] = gaceta_subida.read()
+                        guardar_estado_global()
+                        st.toast("✅ ¡Gaceta guardada!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error al guardar la gaceta: {e}")
+                        
+            if 'gacetas_carreras' in st.session_state and carr_img_sel in st.session_state.gacetas_carreras:
                 st.success("✅ Gaceta disponible para descarga en esta carrera.")
                 if st.button("🗑️ Eliminar Gaceta", key=f"btn_del_gaceta_{carr_img_sel}", use_container_width=True):
                     del st.session_state.gacetas_carreras[carr_img_sel]
@@ -2157,6 +2158,59 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             "Pegar texto:", value="", height=200, key="text_area_web_copiado",
             placeholder="Primera Carrera - 1.200 mts - 02:00 PM\n1 - Rey David\n2 - Gran Amigo"
         )
+        def procesar_texto_flexible(texto):
+            lineas = texto.strip().split('\n')
+            carrera_actual = None
+            procesados = 0
+            
+            for linea in lineas:
+                linea_limpia = linea.strip()
+                if not linea_limpia:
+                    continue
+                    
+                match_carrera = re.search(r'(carrera\s*\d+|[1-9]º?\s*carrera|primera|segunda|tercera|cuarta|quinta|sexta|séptima|octava|novena|décima)', linea_limpia, re.IGNORECASE)
+                if match_carrera or "mts" in linea_limpia.lower() or "hipodromo" in linea_limpia.lower():
+                    match_num = re.search(r'\d+', linea_limpia)
+                    if match_num:
+                        carrera_actual = f"Carrera {match_num.group(0)}"
+                    else:
+                        carrera_actual = linea_limpia[:30].title()
+                        
+                    if carrera_actual not in st.session_state.remates:
+                        st.session_state.banco_caballos_por_carrera[carrera_actual] = []
+                        st.session_state.remates[carrera_actual] = {}
+                        st.session_state.detalles_carreras[carrera_actual] = {
+                            "condicion": linea_limpia,
+                            "distancia": "1200 mts",
+                            "hora": "02:00 PM",
+                            "monto_fijo_ciego": 500.0,
+                            "incentivo_adelantados": 0.0,
+                            "incentivo_ciegos": 0.0,
+                            "incentivo_envivo": 0.0,
+                            "hora_cierre_real": "No registrada"
+                        }
+                    continue
+                    
+                match_ejemplar = re.match(r'^(\d{1,2})[\s\-\.\)]+(.+)', linea_limpia)
+                if match_ejemplar and carrera_actual:
+                    num_str = match_ejemplar.group(1)
+                    nombre_ej = match_ejemplar.group(2).strip().title()
+                    formato_ej = f"{num_str} - {nombre_ej}"
+                    
+                    if formato_ej not in st.session_state.banco_caballos_por_carrera[carrera_actual]:
+                        st.session_state.banco_caballos_por_carrera[carrera_actual].append(formato_ej)
+                        st.session_state.remates[carrera_actual][formato_ej] = {"jugador": "Sin Postor", "monto": 0.0}
+                        procesados += 1
+
+            if procesados > 0:
+                for carr in st.session_state.banco_caballos_por_carrera:
+                    try:
+                        st.session_state.banco_caballos_por_carrera[carr].sort(key=lambda x: int(re.match(r'^(\d+)', x).group(1)))
+                    except Exception:
+                        pass
+                return True
+            return False
+
         if st.button("🚀 Procesar Contenido", key="btn_procesar_texto_pegado", use_container_width=True, type="primary"):
             if texto_copiado_web.strip():
                 if procesar_texto_flexible(texto_copiado_web):
@@ -2169,7 +2223,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.warning("⚠️ El campo está vacío.")
 
 # =========================================================================
-# TRANSMISIÓN EN VIVO
+# TRANSMISIÓN EN VIVO Y BUCLE AUTOMÁTICO DE REFRESCO EN TIEMPO REAL
 # =========================================================================
 url_live_video = st.session_state.get('url_video_en_vivo', '').strip()
 
@@ -2189,3 +2243,8 @@ if url_live_video:
             st.video(url_live_video)
         except Exception:
             st.video(url_live_video)
+
+# --- SINCRONIZACIÓN AUTOMÁTICA EN SEGUNDO PLANO (CADA 3 SEGUNDOS) ---
+time.sleep(3)
+cargar_estado_global(forzar_recarga=True)
+st.rerun()
