@@ -714,6 +714,11 @@ for mod in ["Adelantados", "Ciegos", "En Vivo"]:
             st.session_state.carreras_por_modalidad[mod] = lista_carreras_disponibles[:2]
         else:
             st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
+    else:
+        # Asegurar que si hay nuevas carreras, también se agreguen a las modalidades existentes
+        for c_disp in lista_carreras_disponibles:
+            if c_disp not in st.session_state.carreras_por_modalidad[mod]:
+                st.session_state.carreras_por_modalidad[mod].append(c_disp)
 
 # --- MENÚ PRINCIPAL HORIZONTAL ---
 st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
