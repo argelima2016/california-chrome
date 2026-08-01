@@ -95,7 +95,7 @@ def guardar_estado_global():
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
-        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras'
+        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'gacetas_carreras'
     ]
     data = {}
     for k in keys_to_save:
@@ -1764,7 +1764,7 @@ elif menu_principal_opcion == "Cuentas":
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Panel de Configuración y Administración</div>", unsafe_allow_html=True)
     
-    opciones_admin_tabs = ["✍️ Caballos", "👥 Usuarios", "⚙️ Dupletas/Polla", "📺 Video", "📊 Saldos", "🖼️ Imágenes", "📄 Importar"]
+    opciones_admin_tabs = ["✍️ Caballos", "👥 Usuarios", "⚙️ Dupletas/Polla", "📺 Video", "📊 Saldos", "🖼️ Imágenes"]
     
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
     cols_adm_tabs = st.columns(len(opciones_admin_tabs), gap="small")
@@ -2150,76 +2150,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     guardar_estado_global()
                     st.toast("🗑️ Gaceta removida")
                     st.rerun()
-
-    elif tab_actual == "📄 Importar":
-        st.markdown("### 📄 Importar Contenido")
-        texto_copiado_web = st.text_area(
-            "Pegar texto:", value="", height=200, key="text_area_web_copiado",
-            placeholder="Primera Carrera - 1.200 mts - 02:00 PM\n1 - Rey David\n2 - Gran Amigo"
-        )
-        def procesar_texto_flexible(texto):
-            lineas = texto.strip().split('\n')
-            carrera_actual = None
-            procesados = 0
-            
-            for linea in lineas:
-                linea_limpia = linea.strip()
-                if not linea_limpia:
-                    continue
-                    
-                match_carrera = re.search(r'(carrera\s*\d+|[1-9]º?\s*carrera|primera|segunda|tercera|cuarta|quinta|sexta|séptima|octava|novena|décima)', linea_limpia, re.IGNORECASE)
-                if match_carrera or "mts" in linea_limpia.lower() or "hipodromo" in linea_limpia.lower():
-                    match_num = re.search(r'\d+', linea_limpia)
-                    if match_num:
-                        carrera_actual = f"Carrera {match_num.group(0)}"
-                    else:
-                        carrera_actual = linea_limpia[:30].title()
-                        
-                    if carrera_actual not in st.session_state.remates:
-                        st.session_state.banco_caballos_por_carrera[carrera_actual] = []
-                        st.session_state.remates[carrera_actual] = {}
-                        st.session_state.detalles_carreras[carrera_actual] = {
-                            "condicion": linea_limpia,
-                            "distancia": "1200 mts",
-                            "hora": "02:00 PM",
-                            "monto_fijo_ciego": 500.0,
-                            "incentivo_adelantados": 0.0,
-                            "incentivo_ciegos": 0.0,
-                            "incentivo_envivo": 0.0,
-                            "hora_cierre_real": "No registrada"
-                        }
-                    continue
-                    
-                match_ejemplar = re.match(r'^(\d{1,2})[\s\-\.\)]+(.+)', linea_limpia)
-                if match_ejemplar and carrera_actual:
-                    num_str = match_ejemplar.group(1)
-                    nombre_ej = match_ejemplar.group(2).strip().title()
-                    formato_ej = f"{num_str} - {nombre_ej}"
-                    
-                    if formato_ej not in st.session_state.banco_caballos_por_carrera[carrera_actual]:
-                        st.session_state.banco_caballos_por_carrera[carrera_actual].append(formato_ej)
-                        st.session_state.remates[carrera_actual][formato_ej] = {"jugador": "Sin Postor", "monto": 0.0}
-                        procesados += 1
-
-            if procesados > 0:
-                for carr in st.session_state.banco_caballos_por_carrera:
-                    try:
-                        st.session_state.banco_caballos_por_carrera[carr].sort(key=lambda x: int(re.match(r'^(\d+)', x).group(1)))
-                    except Exception:
-                        pass
-                return True
-            return False
-
-        if st.button("🚀 Procesar Contenido", key="btn_procesar_texto_pegado", use_container_width=True, type="primary"):
-            if texto_copiado_web.strip():
-                if procesar_texto_flexible(texto_copiado_web):
-                    guardar_estado_global()
-                    st.success("✅ ¡Procesado con éxito!")
-                    st.rerun()
-                else:
-                    st.warning("⚠️ Asegúrate de incluir el nombre de la carrera y los ejemplares numerados.")
-            else:
-                st.warning("⚠️ El campo está vacío.")
 
 # =========================================================================
 # TRANSMISIÓN EN VIVO Y BUCLE AUTOMÁTICO DE REFRESCO EN TIEMPO REAL
