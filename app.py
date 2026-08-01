@@ -693,8 +693,14 @@ if not st.session_state.remates:
 
 lista_carreras_disponibles = list(st.session_state.remates.keys())
 
+# --- GARANTIZAR QUE TODAS LAS CARRERAS ESTÉN ACTIVAS POR DEFECTO ---
 if not st.session_state.carreras_activas_remate and lista_carreras_disponibles:
     st.session_state.carreras_activas_remate = list(lista_carreras_disponibles)
+else:
+    for c_disp in lista_carreras_disponibles:
+        if c_disp not in st.session_state.carreras_activas_remate:
+            st.session_state.carreras_activas_remate.append(c_disp)
+
 if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_dupleta = list(lista_carreras_disponibles)
 if not st.session_state.carreras_habilitadas_tripleta and lista_carreras_disponibles:
@@ -1743,7 +1749,7 @@ elif menu_principal_opcion == "Cuentas":
     if todos_tickets_multiples:
         st.markdown("#### 🎟️ Tickets de Dupletas, Tripletas y Polla Hípica")
         for t in reversed(todos_tickets_multiples):
-            detalles_legs = " ➔ ".join([f"**{l['carrera']}**: {l['ejemplar']}" for t_legs in [t['legs']] for l in t_legs])
+            detalles_legs = " ➔ ".join([f"**{l['carrera']}**: {l['ejemplar']}" for l in t['legs']])
             estado_t = t.get('estado', 'Pendiente')
             color_est = "#2ed573" if estado_t == 'Pendiente' else "#ff4757"
 
