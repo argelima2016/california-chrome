@@ -414,6 +414,90 @@ st.markdown("""
         margin-bottom: 4px;
         font-weight: 600;
     }
+    
+    /* --- ESTILOS MODERNOS PARA LA CABECERA --- */
+    .header-container-modern {
+        background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+        border: 1px solid #30363d;
+        border-radius: 12px;
+        padding: 10px 14px;
+        margin-bottom: 10px;
+        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .header-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        gap: 8px;
+    }
+    .header-clock-box {
+        display: flex;
+        flex-direction: column;
+        background: #080a0f;
+        border: 1px solid #21262d;
+        padding: 5px 10px;
+        border-radius: 8px;
+    }
+    .h-time {
+        color: #00ffff;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+    }
+    .h-date {
+        color: #8b949e;
+        font-size: 10px;
+        font-weight: 700;
+    }
+    .header-user-card {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #080a0f;
+        border: 1px solid #30363d;
+        padding: 5px 10px;
+        border-radius: 8px;
+    }
+    .user-details {
+        display: flex;
+        flex-direction: column;
+        text-align: right;
+    }
+    .u-name {
+        color: #f0f6fc;
+        font-size: 12px;
+        font-weight: 800;
+    }
+    .u-bal {
+        font-size: 10px;
+        font-weight: 700;
+    }
+    .u-avatar-badge {
+        width: 28px;
+        height: 28px;
+        background: #1f6feb;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+    }
+    .header-bottom-row-logo {
+        text-align: center;
+        border-top: 1px solid #21262d;
+        padding-top: 8px;
+    }
+    .header-logo-img {
+        max-height: 45px;
+        width: auto;
+        object-fit: contain;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -434,9 +518,13 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR ---
+ahora_dt = obtener_hora_venezuela_local()
+hora_texto = ahora_dt.strftime('%I:%M:%S %p')
+fecha_texto = ahora_dt.strftime('%d/%m/%Y')
+
+# --- CABECERA SUPERIOR MODERNA ---
 header_html = f"""
-    <div class="premium-header-two-rows">
+    <div class="header-container-modern">
         <div class="header-top-row">
             <div class="header-clock-box">
                 <span class="h-time">⚡ {hora_texto}</span>
@@ -445,7 +533,7 @@ header_html = f"""
             <div class="header-user-card">
                 <div class="user-details">
                     <span class="u-name">{usuario_en_sesion}</span>
-                    <span class="u-bal">{etiqueta_balance}</span>
+                    <span class="u-bal" style="color: {color_balance};">{etiqueta_balance}</span>
                 </div>
                 <div class="u-avatar-badge">🐺</div>
             </div>
