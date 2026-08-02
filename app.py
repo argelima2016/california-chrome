@@ -92,7 +92,7 @@ def guardar_estado_global():
         'detalles_carreras', 'historial_ganadores', 'carreras_cerradas_remate',
         'remates_cargados_en_cuentas', 'cuentas', 'historial_jugadas', 'ganancia_casa',
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
-        'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_monts_especiales',
+        'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
         'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'admin_tab_seleccionada'
     ]
@@ -1251,13 +1251,13 @@ if menu_principal_opcion == "Remates":
             c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
             c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
 
-            # --- ANUNCIO ÉPICO Y LLAMATIVO DEL GANADOR ---
+            # --- ANUNCIO ÉPICO Y LLAMATIVO DEL GANADOR CON NOMBRE Y NÚMERO ---
             if carr_activa in st.session_state.historial_ganadores:
                 info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
                 ganador_nombre = info_ganador_prev.get('Ganador', 'N/A')
                 premio_ganado = info_ganador_prev.get('Premio', '0')
                 
-                # Buscamos el ejemplar ganador específico
+                # Buscamos el ejemplar ganador específico en las jugadas
                 ejemplar_ganador_str = "N/A"
                 for h in st.session_state.historial_jugadas:
                     if h.get('carrera') == carr_activa and h.get('jugador') == ganador_nombre and "Remate" in h.get('tipo', ''):
@@ -1268,7 +1268,7 @@ if menu_principal_opcion == "Remates":
                     <div class="ganador-banner-epic">
                         <div class="ganador-titulo-epic">🏆 ¡RESULTADO OFICIAL - {carr_activa.upper()}! 🏆</div>
                         <div class="ganador-nombre-epic">🎉 {ganador_nombre} 🎉</div>
-                        <div style="color: #f0f6fc; font-size: 13px; font-weight: 700; margin-bottom: 6px;">Ejemplar: <b>{ejemplar_ganador_str.upper()}</b></div>
+                        <div style="color: #00ffff; font-size: 16px; font-weight: 900; margin-bottom: 4px; text-shadow: 0 0 8px rgba(0,255,255,0.7);">🐎 EJEMPLAR: {ejemplar_ganador_str.upper()}</div>
                         <div class="ganador-premio-epic">💰 Premio Liquidado: {premio_ganado}</div>
                     </div>
                 """, unsafe_allow_html=True)
