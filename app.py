@@ -1389,14 +1389,18 @@ if menu_principal_opcion == "Remates":
                             
                         st.markdown(f"🔹 **1. Seleccionar Ejemplar (Disponibles: {len(lista_caballos_activos)}):**")
                         
-                        # --- ESTILOS COMPACTOS Y DINÁMICOS PARA LOS 3 COLORES (FILAS DE 5) ---
+                        # --- ESTILOS COMPACTOS, DINÁMICOS Y SIN ESPACIOS VERTICALES (FILAS DE 5) ---
                         st.markdown("""
                             <style>
+                            div[data-testid="stHorizontalBlock"] {
+                                gap: 4px !important;
+                                margin-bottom: 4px !important;
+                            }
                             div[data-testid="column"] button.btn-libre {
                                 background-color: #e2e8f0 !important;
                                 color: #1e293b !important;
                                 border: 1px solid #cbd5e1 !important;
-                                min-width: 50px !important;
+                                min-width: 40px !important;
                                 width: 100% !important;
                             }
                             div[data-testid="column"] button.btn-libre:hover {
@@ -1406,7 +1410,7 @@ if menu_principal_opcion == "Remates":
                                 background-color: #22c55e !important;
                                 color: #ffffff !important;
                                 border: 1px solid #16a34a !important;
-                                min-width: 50px !important;
+                                min-width: 40px !important;
                                 width: 100% !important;
                             }
                             div[data-testid="column"] button.btn-tuyo:hover {
@@ -1416,7 +1420,7 @@ if menu_principal_opcion == "Remates":
                                 background-color: #ef4444 !important;
                                 color: #ffffff !important;
                                 border: 1px solid #dc2626 !important;
-                                min-width: 50px !important;
+                                min-width: 40px !important;
                                 width: 100% !important;
                             }
                             div[data-testid="column"] button.btn-otro:hover {
