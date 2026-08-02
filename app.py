@@ -66,8 +66,7 @@ def cargar_estado_global(forzar_recarga=False):
         'total_carreras_semana': 10,
         'url_video_en_vivo': "",
         'admin_tab_seleccionada': "✍️ Caballos",
-        'imagenes_carreras': {},
-        'gacetas_carreras': {}
+        'imagenes_carreras': {}
     }
     
     if os.path.exists(DB_FILE):
@@ -95,7 +94,7 @@ def guardar_estado_global():
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
-        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'gacetas_carreras'
+        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras'
     ]
     data = {}
     for k in keys_to_save:
@@ -163,7 +162,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -1053,7 +1052,8 @@ def renderizar_cuerpo_principal():
                         </div>
                     """, unsafe_allow_html=True)
                 with col_st2:
-                    if carr_activa in st.session_state.gacetas_carreras:
+                    gaceta_path = f"gaceta_{carr_activa.lower().replace(' ', '_')}.pdf"
+                    if os.path.exists(gaceta_path):
                         st.markdown("""
                             <style>
                             div[data-testid="column"]:nth-of-type(2) .stDownloadButton,
@@ -1064,10 +1064,12 @@ def renderizar_cuerpo_principal():
                             }
                             </style>
                         """, unsafe_allow_html=True)
+                        with open(gaceta_path, "rb") as f_gaceta:
+                            bytes_gaceta = f_gaceta.read()
                         st.download_button(
                             label="📰 Gaceta",
-                            data=st.session_state.gacetas_carreras[carr_activa],
-                            file_name=f"gaceta_{carr_activa.lower().replace(' ', '_')}.pdf",
+                            data=bytes_gaceta,
+                            file_name=gaceta_path,
                             mime="application/pdf",
                             key=f"btn_descargar_gaceta_{carr_activa}",
                             use_container_width=False
@@ -2149,18 +2151,22 @@ def renderizar_cuerpo_principal():
                 if gaceta_subida is not None:
                     if st.button("💾 Guardar Gaceta", key=f"btn_save_gaceta_{carr_img_sel}", use_container_width=True, type="primary"):
                         try:
-                            st.session_state.gacetas_carreras[carr_img_sel] = gaceta_subida.read()
-                            guardar_estado_global()
-                            st.toast("✅ ¡Gaceta guardada!")
+                            gaceta_filename = f"gaceta_{carr_img_sel.lower().replace(' ', '_')}.pdf"
+                            with open(gaceta_filename, "wb") as f_out:
+                                f_out.write(gaceta_subida.getbuffer())
+                            st.toast("✅ ¡Gaceta guardada permanentemente!")
                             st.rerun()
                         except Exception as e:
                             st.error(f"Error al guardar la gaceta: {e}")
                             
-                if 'gacetas_carreras' in st.session_state and carr_img_sel in st.session_state.gacetas_carreras:
+                gaceta_filename_check = f"gaceta_{carr_img_sel.lower().replace(' ', '_')}.pdf"
+                if os.path.exists(gaceta_filename_check):
                     st.success("✅ Gaceta disponible para descarga en esta carrera.")
                     if st.button("🗑️ Eliminar Gaceta", key=f"btn_del_gaceta_{carr_img_sel}", use_container_width=True):
-                        del st.session_state.gacetas_carreras[carr_img_sel]
-                        guardar_estado_global()
+                        try:
+                            os.remove(gaceta_filename_check)
+                        except Exception:
+                            pass
                         st.toast("🗑️ Gaceta removida")
                         st.rerun()
 
