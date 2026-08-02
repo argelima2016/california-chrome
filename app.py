@@ -48,10 +48,10 @@ def cargar_estado_global(forzar_recarga=False):
         'historial_ganadores': {},
         'carreras_cerradas_remate': {},
         'remates_cargados_en_cuentas': {},
-        'fechas_horas_inicio_remate': {},
-        'fechas_horas_cierre_remate': {},
-        'estado_conteo_carrera': {},
-        'tiempo_inicio_conteo': {},
+        'fechas_horas_inicio_remate_modalidad': {},
+        'fechas_horas_cierre_remate_modalidad': {},
+        'estado_conteo_carrera_modalidad': {},
+        'tiempo_inicio_conteo_modalidad': {},
         'cuentas': {"CASA": {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}},
         'historial_jugadas': [],
         'ganancia_casa': 0.0,
@@ -92,7 +92,8 @@ def guardar_estado_global():
         'menu_principal_opcion', 'sub_remate_opcion', 'sub_dupleta_opcion', 'usuario_activo',
         'lista_usuarios', 'banco_caballos_por_carrera', 'remates', 'ejemplares_retirados',
         'ejemplares_no_valido', 'detalles_carreras', 'historial_ganadores', 'carreras_cerradas_remate',
-        'remates_cargados_en_cuentas', 'fechas_horas_inicio_remate', 'fechas_horas_cierre_remate', 'cuentas', 'historial_jugadas', 'ganancia_casa',
+        'remates_cargados_en_cuentas', 'fechas_horas_inicio_remate_modalidad', 'fechas_horas_cierre_remate_modalidad', 
+        'estado_conteo_carrera_modalidad', 'cuentas', 'historial_jugadas', 'ganancia_casa',
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
@@ -1197,12 +1198,12 @@ if menu_principal_opcion == "Remates":
                     st.toast("✅ ¡Ejemplares retirados actualizados y tickets ajustados!")
                     st.rerun()
 
-            # --- VERIFICACIÓN DE INICIO Y CIERRE AUTOMÁTICO ---
-            dt_inicio = st.session_state.fechas_horas_inicio_remate.get(carr_activa)
-            dt_limite = st.session_state.fechas_horas_cierre_remate.get(carr_activa)
-            estado_conteo = st.session_state.estado_conteo_carrera.get(carr_activa, "INACTIVO")
+            # --- VERIFICACIÓN DE INICIO Y CIERRE AUTOMÁTICO POR MODALIDAD ---
+            clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
+            dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
+            dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
+            estado_conteo = st.session_state.estado_conteo_carrera_modalidad.get(clave_mod_carr, "INACTIVO")
 
-            # Control de apertura automática si hay hora de inicio establecida y el remate estaba cerrado por defecto
             if dt_inicio and carrera_cerrada:
                 if ahora_dt >= dt_inicio:
                     st.session_state.carreras_cerradas_remate[carr_activa] = False
@@ -1210,37 +1211,37 @@ if menu_principal_opcion == "Remates":
                     carrera_cerrada = False
 
             if dt_inicio:
-                st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:4px; border:1px solid #30363d; font-size:12px;'>🟢 Inicio Remate: <b>{dt_inicio.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:4px; border:1px solid #30363d; font-size:12px;'>🟢 Inicio Remate ({modo_actual_remate}): <b>{dt_inicio.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
             if dt_limite:
-                st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:8px; border:1px solid #30363d; font-size:12px;'>⏰ Cierre Estricto: <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:8px; border:1px solid #30363d; font-size:12px;'>⏰ Cierre Estricto ({modo_actual_remate}): <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
 
             if dt_limite and not carrera_cerrada:
                 diferencia_segundos = (dt_limite - ahora_dt).total_seconds()
                 if estado_conteo == "INACTIVO":
                     if 0 < diferencia_segundos <= 10:
-                        st.session_state.estado_conteo_carrera[carr_activa] = "CONTEO_10S"
-                        st.session_state.tiempo_inicio_conteo[carr_activa] = ahora_dt
+                        st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CONTEO_10S"
+                        st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = ahora_dt
                         guardar_estado_global()
                         st.rerun()
                     elif diferencia_segundos <= 0:
                         st.session_state.carreras_cerradas_remate[carr_activa] = True
-                        st.session_state.estado_conteo_carrera[carr_activa] = "CERRADO"
+                        st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
                         st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
                         guardar_estado_global()
                         st.rerun()
                 elif estado_conteo == "CONTEO_10S":
-                    tiempo_inicio = st.session_state.tiempo_inicio_conteo.get(carr_activa, ahora_dt)
+                    tiempo_inicio = st.session_state.tiempo_inicio_conteo_modalidad.get(clave_mod_carr, ahora_dt)
                     transcurridos = (ahora_dt - tiempo_inicio).total_seconds()
                     if transcurridos >= 12:
                         st.session_state.carreras_cerradas_remate[carr_activa] = True
-                        st.session_state.estado_conteo_carrera[carr_activa] = "CERRADO"
+                        st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
                         st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
                         guardar_estado_global()
                         st.rerun()
                     else:
                         restantes_10s = max(0, 10 - int(transcurridos))
                         if restantes_10s > 0:
-                            st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa})</div>", unsafe_allow_html=True)
+                            st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa} - {modo_actual_remate})</div>", unsafe_allow_html=True)
 
             tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
             cantidad_filas = len(st.session_state.remates[carr_activa])
@@ -1442,7 +1443,7 @@ if menu_principal_opcion == "Remates":
                                         "monto": monto_puja
                                     })
                                     if estado_conteo == "CONTEO_10S":
-                                        st.session_state.tiempo_inicio_conteo[carr_activa] = obtener_hora_venezuela_local()
+                                        st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = obtener_hora_venezuela_local()
                                     guardar_estado_global()
                                     st.success("✅ ¡Puja registrada correctamente!")
                                     st.rerun()
@@ -1980,24 +1981,28 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Detalles e incentivos guardados!")
                 st.rerun()
 
-        # --- CONFIGURACIÓN DE INICIO Y CIERRE ESTRICTO EN CABALLOS ---
+        # --- CONFIGURACIÓN DE INICIO Y CIERRE INDEPENDIENTE POR MODALIDAD ---
         st.markdown("---")
         with st.container(border=True):
-            st.markdown(f"⏰ **Control de Horarios (Inicio y Cierre) - {carr_banco_sel}**")
+            st.markdown(f"⏰ **Control de Horarios Individuales por Modalidad ({carr_banco_sel})**")
+            mod_seleccionada_horarios = st.selectbox("Seleccionar Modalidad para Configurar Horarios", ["Adelantados", "Ciegos", "En Vivo"], key=f"sel_mod_horarios_{carr_banco_sel}")
+            
+            clave_mod_carr_adm = f"{mod_seleccionada_horarios}_{carr_banco_sel}"
+            
             col_h1, col_h2 = st.columns(2)
             with col_h1:
-                f_ini = st.date_input("Fecha Inicio", value=ahora_dt.date(), key=f"f_ini_{carr_banco_sel}")
-                h_ini = st.time_input("Hora Inicio", value=datetime.now().time(), key=f"h_ini_{carr_banco_sel}")
+                f_ini = st.date_input(f"Fecha Inicio ({mod_seleccionada_horarios})", value=ahora_dt.date(), key=f"f_ini_{clave_mod_carr_adm}")
+                h_ini = st.time_input(f"Hora Inicio ({mod_seleccionada_horarios})", value=datetime.now().time(), key=f"h_ini_{clave_mod_carr_adm}")
             with col_h2:
-                f_cier = st.date_input("Fecha Cierre", value=ahora_dt.date(), key=f"f_cier_{carr_banco_sel}")
-                h_cier = st.time_input("Hora Cierre", value=datetime.now().time(), key=f"h_cier_{carr_banco_sel}")
+                f_cier = st.date_input(f"Fecha Cierre ({mod_seleccionada_horarios})", value=ahora_dt.date(), key=f"f_cier_{clave_mod_carr_adm}")
+                h_cier = st.time_input(f"Hora Cierre ({mod_seleccionada_horarios})", value=datetime.now().time(), key=f"h_cier_{clave_mod_carr_adm}")
 
-            if st.button("💾 Guardar Horarios de Inicio y Cierre", key=f"btn_save_horarios_{carr_banco_sel}", use_container_width=True, type="primary"):
-                st.session_state.fechas_horas_inicio_remate[carr_banco_sel] = datetime.combine(f_ini, h_ini)
-                st.session_state.fechas_horas_cierre_remate[carr_banco_sel] = datetime.combine(f_cier, h_cier)
-                st.session_state.estado_conteo_carrera[carr_banco_sel] = "INACTIVO"
+            if st.button(f"💾 Guardar Horarios para {mod_seleccionada_horarios}", key=f"btn_save_horarios_{clave_mod_carr_adm}", use_container_width=True, type="primary"):
+                st.session_state.fechas_horas_inicio_remate_modalidad[clave_mod_carr_adm] = datetime.combine(f_ini, h_ini)
+                st.session_state.fechas_horas_cierre_remate_modalidad[clave_mod_carr_adm] = datetime.combine(f_cier, h_cier)
+                st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr_adm] = "INACTIVO"
                 guardar_estado_global()
-                st.toast(f"✅ ¡Horarios guardados para {carr_banco_sel}!")
+                st.toast(f"✅ ¡Horarios guardados para {carr_banco_sel} en modalidad {mod_seleccionada_horarios}!")
                 st.rerun()
 
         st.markdown("---")
