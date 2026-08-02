@@ -164,7 +164,7 @@ components.html("""
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
                         const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
-                                         (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
+                                       (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
                             sidebar.setAttribute('aria-expanded', 'true');
@@ -184,7 +184,7 @@ components.html("""
                         }
                     } else {
                         const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
-                                              doc.querySelector('[data-testid="collapsedControl"] button');
+                                          doc.querySelector('[data-testid="collapsedControl"] button');
                         if (collapseBtn) collapseBtn.click();
                     }
                 };
@@ -742,7 +742,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BANNER MARQUESINA DINÁMICO ---
+# --- BANNER MARQUESINA DINÁMICO (NUNCA PARA) ---
 elementos_carrusel_info = []
 
 remates_abiertos = [c for c in lista_carreras_disponibles if not st.session_state.carreras_cerradas_remate.get(c, False)]
@@ -789,7 +789,8 @@ if elementos_carrusel_info:
         .marquee-text {{
             display: inline-block;
             white-space: nowrap;
-            animation: scrollRight 80s linear infinite;
+            animation: scrollRight 80s linear infinite !important;
+            animation-play-state: running !important;
             font-family: 'Arial Black', Gadget, sans-serif;
             font-size: 15px;
             font-weight: 900;
@@ -808,7 +809,7 @@ if elementos_carrusel_info:
             }}
         }}
         .marquee-container:hover .marquee-text {{
-            animation-play-state: paused;
+            animation-play-state: running !important;
         }}
     </style>
     <div class="marquee-container">
@@ -1190,7 +1191,7 @@ if menu_principal_opcion == "Remates":
             altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
-            # --- POTE, PREMIO E INCENTIVO LLAMATIVO DEBAJO DE LA TABLA DE REMATE ---
+            # --- POTE, PREMIO E INCENTIVO LLAMATIVO DEBAJO DE LA TABLA DE REMATE (INTERCAMBIADOS) ---
             retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
             total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in retirados_carr_activa])
             monto_casa = total_pote * (porcentaje_casa / 100)
@@ -1208,13 +1209,14 @@ if menu_principal_opcion == "Remates":
             if incentivo_actual > 0:
                 st.markdown(f"""
                     <div class="incentivo-llamativo">
-                        <div class="incentivo-llamativo-monto">🎁 {formatear_bs(incentivo_actual)}</div>
+                        <div style="font-size: 11px; font-weight: 800; color: #00ffff; text-transform: uppercase; margin-bottom: 2px;">PREMIO TOTAL</div>
+                        <div class="incentivo-llamativo-monto">🎁 {formatear_bs(premio_total_calculado)}</div>
                     </div>
                 """, unsafe_allow_html=True)
 
             c_m1, c_m2 = st.columns(2)
             c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
-            c_m2.metric(f"🏆 Premio Total ({carr_activa})", formatear_bs(premio_total_calculado))
+            c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
 
             with st.container(border=True):
                 st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Ganador - {carr_activa}</p>", unsafe_allow_html=True)
