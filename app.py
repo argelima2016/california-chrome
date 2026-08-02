@@ -247,7 +247,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS GENERALES ---
+# --- ESTILOS CSS GENERALES Y COMPACTACIÓN EXTREMA DEL GRID DE PUJAS ---
 st.markdown("""
     <style>
     * {
@@ -312,6 +312,15 @@ st.markdown("""
         width: 55px !important;
     }
     
+    /* --- ELIMINAR ESPACIOS VERTICALES ENTRE FILAS DE BOTONES DE PUJA --- */
+    div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"]:has(button.btn-libre, button.btn-tuyo, button.btn-otro) {
+        margin-top: -14px !important;
+        margin-bottom: -14px !important;
+    }
+    div[data-testid="column"]:has(button.btn-libre, button.btn-tuyo, button.btn-otro) {
+        padding: 0px 2px !important;
+    }
+
     .stButton button {
         border-radius: 6px !important;
         font-weight: 700 !important;
@@ -1371,21 +1380,16 @@ if menu_principal_opcion == "Remates":
                             
                         st.markdown(f"🔹 **1. Seleccionar Ejemplar (Disponibles: {len(lista_caballos_activos)}):**")
                         
-                        # --- ESTILOS COMPACTOS (FILAS DE 5 PEGADAS SIN ESPACIOS VERTICALES) ---
+                        # --- ESTILOS COMPACTOS (FILAS DE 5 ESTRICTAS Y PEGADAS) ---
                         st.markdown("""
                             <style>
-                            div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {
-                                gap: 4px !important;
-                                margin-top: 0px !important;
-                                margin-bottom: 0px !important;
-                                padding-top: 0px !important;
-                                padding-bottom: 0px !important;
+                            div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"]:has(button.btn-libre, button.btn-tuyo, button.btn-otro) {
+                                gap: 2px !important;
+                                margin-top: -12px !important;
+                                margin-bottom: -12px !important;
                             }
-                            div[data-testid="column"] {
-                                width: auto !important;
-                                flex: 1 !important;
-                                min-width: 0px !important;
-                                padding: 0px 2px !important;
+                            div[data-testid="column"]:has(button.btn-libre, button.btn-tuyo, button.btn-otro) {
+                                padding: 0px 1px !important;
                             }
                             div[data-testid="column"] button.btn-libre {
                                 background-color: #e2e8f0 !important;
@@ -1424,7 +1428,7 @@ if menu_principal_opcion == "Remates":
                         """, unsafe_allow_html=True)
 
                         cantidad_ejemplares = len(lista_caballos_activos)
-                        cols_ejemplares = 5  # Exactamente 5 columnas por fila
+                        cols_ejemplares = 5  # Forzar exactamente 5 columnas por fila
                         num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                         
                         idx_cab = 0
@@ -1746,7 +1750,7 @@ elif menu_principal_opcion == "Dupletas":
                                     ret_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
                                     noval_carr = st.session_state.get('ejemplares_no_valido', {}).get(carr_l, [])
                                     excl_carr = set(ret_carr) | set(noval_carr)
-                                    disponibles_l = [c for c in list(st.session_state.remates.get(carr_l, {}).keys()) if c not in excl_carr]
+                                    disponibles_l = [c for c in list(st.session_state.remates.get(carr_l, {}).keys()) if c not in excluidos_carr_t]
                                     
                                     idx_def = 0
                                     if ej_actual in disponibles_l:
