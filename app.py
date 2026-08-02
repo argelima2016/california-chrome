@@ -1042,41 +1042,14 @@ if menu_principal_opcion == "Remates":
             carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
             estado_icono = "🔴" if carrera_cerrada else "🟢"
             
-            # --- CABECERA DE CARRERA CON BOTÓN DE GACETA PEGADO A LA ESQUINA DERECHA ---
-            col_st1, col_st2 = st.columns([4, 1], gap="small")
-            with col_st1:
-                st.markdown(f"""
-                    <div style="font-size: 14px; font-weight: 800; color: #f0f6fc; display: flex; align-items: center; gap: 6px; margin-top: 8px;">
-                        <span>{estado_icono}</span>
-                        <span>{carr_activa}</span>
-                        <span style="font-size: 11px; font-weight: 600; color: #8b949e; background: #161b22; padding: 1px 6px; border-radius: 4px; border: 1px solid #30363d;">{modo_actual_remate}</span>
-                    </div>
-                """, unsafe_allow_html=True)
-            with col_st2:
-                gaceta_path = f"gaceta_{carr_activa.lower().replace(' ', '_')}.pdf"
-                if os.path.exists(gaceta_path):
-                    st.markdown("""
-                        <style>
-                        div[data-testid="column"]:nth-of-type(2) .stDownloadButton,
-                        div[data-testid="column"]:nth-of-type(2) .stDownloadButton button {
-                            float: right !important;
-                            margin-left: auto !important;
-                            display: block !important;
-                        }
-                        </style>
-                    """, unsafe_allow_html=True)
-                    with open(gaceta_path, "rb") as f_gaceta:
-                        bytes_gaceta = f_gaceta.read()
-                    st.download_button(
-                        label="📰 Gaceta",
-                        data=bytes_gaceta,
-                        file_name=gaceta_path,
-                        mime="application/pdf",
-                        key=f"btn_descargar_gaceta_{carr_activa}",
-                        use_container_width=False
-                    )
-                else:
-                    st.markdown("<span style='font-size: 10px; color: #8b949e; text-align: right; display: block; padding-top: 8px;'>Sin Gaceta</span>", unsafe_allow_html=True)
+            # --- CABECERA DE CARRERA LIMPIA (SIN GACETA) ---
+            st.markdown(f"""
+                <div style="font-size: 14px; font-weight: 800; color: #f0f6fc; display: flex; align-items: center; gap: 6px; margin-top: 8px; margin-bottom: 8px;">
+                    <span>{estado_icono}</span>
+                    <span>{carr_activa}</span>
+                    <span style="font-size: 11px; font-weight: 600; color: #8b949e; background: #161b22; padding: 1px 6px; border-radius: 4px; border: 1px solid #30363d;">{modo_actual_remate}</span>
+                </div>
+            """, unsafe_allow_html=True)
 
             if carr_activa not in st.session_state.detalles_carreras:
                 st.session_state.detalles_carreras[carr_activa] = {
@@ -2112,7 +2085,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.rerun()
 
     elif tab_actual == "🖼️ Imágenes":
-        st.markdown("### 🖼️ Imágenes y Gacetas por Carrera")
+        st.markdown("### 🖼️ Imágenes por Carrera")
         carr_img_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="adm_img_sel_carr")
         
         with st.container(border=True):
@@ -2142,33 +2115,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     del st.session_state.imagenes_carreras[carr_img_sel]
                     guardar_estado_global()
                     st.toast("🗑️ Imagen removida")
-                    st.rerun()
-
-        st.markdown("---")
-        with st.container(border=True):
-            st.markdown("📰 **Archivo Gaceta (PDF)**")
-            gaceta_subida = st.file_uploader("Subir PDF de la Gaceta", type=["pdf"], key=f"file_gaceta_{carr_img_sel}")
-            
-            if gaceta_subida is not None:
-                if st.button("💾 Guardar Gaceta", key=f"btn_save_gaceta_{carr_img_sel}", use_container_width=True, type="primary"):
-                    try:
-                        gaceta_filename = f"gaceta_{carr_img_sel.lower().replace(' ', '_')}.pdf"
-                        with open(gaceta_filename, "wb") as f_out:
-                            f_out.write(gaceta_subida.getbuffer())
-                        st.toast("✅ ¡Gaceta guardada permanentemente!")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Error al guardar la gaceta: {e}")
-                        
-            gaceta_filename_check = f"gaceta_{carr_img_sel.lower().replace(' ', '_')}.pdf"
-            if os.path.exists(gaceta_filename_check):
-                st.success("✅ Gaceta disponible para descarga en esta carrera.")
-                if st.button("🗑️ Eliminar Gaceta", key=f"btn_del_gaceta_{carr_img_sel}", use_container_width=True):
-                    try:
-                        os.remove(gaceta_filename_check)
-                    except Exception:
-                        pass
-                    st.toast("🗑️ Gaceta removida")
                     st.rerun()
 
 # =========================================================================
