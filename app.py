@@ -313,57 +313,24 @@ st.markdown("""
     }
     
     /* --- ELIMINAR ESPACIOS VERTICALES ENTRE FILAS DE BOTONES DE PUJA (3 COLUMNAS) --- */
-    div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"]:has(button.btn-libre, button.btn-tuyo, button.btn-otro) {
+    div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"]:has(button) {
         gap: 4px !important;
         margin-top: -18px !important;
         margin-bottom: -18px !important;
     }
-    div[data-testid="column"]:has(button.btn-libre, button.btn-tuyo, button.btn-otro) {
+    div[data-testid="column"]:has(button) {
         padding: 0px 2px !important;
-    }
-    div[data-testid="column"] button.btn-libre {
-        background-color: #e2e8f0 !important;
-        color: #1e293b !important;
-        border: 1px solid #cbd5e1 !important;
-        height: 38px !important;
-        min-height: 38px !important;
-        width: 100% !important;
-    }
-    div[data-testid="column"] button.btn-libre:hover {
-        background-color: #cbd5e1 !important;
-    }
-    div[data-testid="column"] button.btn-tuyo {
-        background-color: #22c55e !important;
-        color: #ffffff !important;
-        border: 1px solid #16a34a !important;
-        height: 38px !important;
-        min-height: 38px !important;
-        width: 100% !important;
-    }
-    div[data-testid="column"] button.btn-tuyo:hover {
-        background-color: #16a34a !important;
-    }
-    div[data-testid="column"] button.btn-otro {
-        background-color: #ef4444 !important;
-        color: #ffffff !important;
-        border: 1px solid #dc2626 !important;
-        height: 38px !important;
-        min-height: 38px !important;
-        width: 100% !important;
-    }
-    div[data-testid="column"] button.btn-otro:hover {
-        background-color: #dc2626 !important;
     }
 
     .stButton button {
         border-radius: 6px !important;
         font-weight: 700 !important;
         padding: 0.2rem 0.4rem !important;
-        min-height: 32px !important;
+        min-height: 38px !important;
         font-size: 12px !important;
         letter-spacing: 0.2px;
         white-space: nowrap !important;
-        max-width: 100% !important;
+        width: 100% !important;
     }
     .subasta-header {
         font-size: clamp(14px, 3.5vw, 18px);
@@ -1424,30 +1391,26 @@ if menu_principal_opcion == "Remates":
                                     info_remate_cab = st.session_state.remates[carr_activa].get(cab_item, {})
                                     propietario = info_remate_cab.get('jugador', 'Sin Postor')
                                     
+                                    # Determinar color inmediato reactivo
                                     if propietario == "Sin Postor" or propietario == "CASA" or info_remate_cab.get('monto', 0.0) == 0:
-                                        tipo_clase = "btn-libre"
+                                        color_estilo = "background-color: #e2e8f0 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important;"
                                     elif propietario == st.session_state.usuario_activo:
-                                        tipo_clase = "btn-tuyo"
+                                        color_estilo = "background-color: #22c55e !important; color: #ffffff !important; border: 1px solid #16a34a !important;"
                                     else:
-                                        tipo_clase = "btn-otro"
+                                        color_estilo = "background-color: #ef4444 !important; color: #ffffff !important; border: 1px solid #dc2626 !important;"
 
                                     with cols_fila[c]:
+                                        st.markdown(f"""
+                                            <style>
+                                            div[data-testid="stVerticalBlock"] button[key="rem_btn_cab_{carr_activa}_{idx_cab}"] {{
+                                                {color_estilo}
+                                            }}
+                                            </style>
+                                        """, unsafe_allow_html=True)
+
                                         if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{idx_cab}", use_container_width=True):
                                             st.session_state[k_sel_cab] = cab_item
                                             st.rerun()
-                                            
-                                    components.html(f"""
-                                        <script>
-                                            const doc = window.parent.document;
-                                            const buttons = doc.querySelectorAll('button');
-                                            buttons.forEach(btn => {{
-                                                if (btn.innerText.trim() === "#{num_parte}") {{
-                                                    btn.className = btn.className.replace(/btn-(libre|tuyo|otro)/g, '');
-                                                    btn.classList.add('{tipo_clase}');
-                                                }}
-                                            }});
-                                        </script>
-                                    """, height=0, width=0)
 
                                     idx_cab += 1
                         
