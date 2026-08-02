@@ -247,7 +247,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS GENERALES Y COMPACTACIÓN DEL GRID DE BOTONES ---
+# --- ESTILOS CSS GENERALES ---
 st.markdown("""
     <style>
     * {
@@ -312,32 +312,6 @@ st.markdown("""
         width: 55px !important;
     }
     
-    /* --- CSS PARA ELIMINAR EL ESPACIO VERTICAL EN EL GRID DE EJEMPLARES (FILAS DE 5) --- */
-    div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {
-        flex-wrap: wrap !important;
-        gap: 4px !important;
-        margin-bottom: -12px !important;
-    }
-    
-    div[data-testid="column"] button[kind="secondary"], 
-    div[data-testid="column"] button[kind="primary"] {
-        border-radius: 20px !important;
-        width: 100% !important;
-        height: 38px !important;
-        min-height: 38px !important;
-        max-height: 38px !important;
-        padding: 0 4px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin: 0 auto !important;
-        font-size: 11px !important;
-        font-weight: 900 !important;
-        letter-spacing: 0.5px !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-    }
     .stButton button {
         border-radius: 6px !important;
         font-weight: 700 !important;
@@ -1397,19 +1371,28 @@ if menu_principal_opcion == "Remates":
                             
                         st.markdown(f"🔹 **1. Seleccionar Ejemplar (Disponibles: {len(lista_caballos_activos)}):**")
                         
-                        # --- ESTILOS COMPACTOS Y DINÁMICOS (FILAS DE 5 ESTRICTAS) ---
+                        # --- ESTILOS COMPACTOS (FILAS DE 5 PEGADAS SIN ESPACIOS VERTICALES) ---
                         st.markdown("""
                             <style>
                             div[data-testid="stVerticalBlock"] > div[data-testid="stHorizontalBlock"] {
                                 gap: 4px !important;
-                                margin-bottom: 2px !important;
-                                margin-top: 2px !important;
+                                margin-top: 0px !important;
+                                margin-bottom: 0px !important;
+                                padding-top: 0px !important;
+                                padding-bottom: 0px !important;
+                            }
+                            div[data-testid="column"] {
+                                width: auto !important;
+                                flex: 1 !important;
+                                min-width: 0px !important;
+                                padding: 0px 2px !important;
                             }
                             div[data-testid="column"] button.btn-libre {
                                 background-color: #e2e8f0 !important;
                                 color: #1e293b !important;
                                 border: 1px solid #cbd5e1 !important;
-                                min-width: 45px !important;
+                                height: 36px !important;
+                                min-height: 36px !important;
                                 width: 100% !important;
                             }
                             div[data-testid="column"] button.btn-libre:hover {
@@ -1419,7 +1402,8 @@ if menu_principal_opcion == "Remates":
                                 background-color: #22c55e !important;
                                 color: #ffffff !important;
                                 border: 1px solid #16a34a !important;
-                                min-width: 45px !important;
+                                height: 36px !important;
+                                min-height: 36px !important;
                                 width: 100% !important;
                             }
                             div[data-testid="column"] button.btn-tuyo:hover {
@@ -1429,7 +1413,8 @@ if menu_principal_opcion == "Remates":
                                 background-color: #ef4444 !important;
                                 color: #ffffff !important;
                                 border: 1px solid #dc2626 !important;
-                                min-width: 45px !important;
+                                height: 36px !important;
+                                min-height: 36px !important;
                                 width: 100% !important;
                             }
                             div[data-testid="column"] button.btn-otro:hover {
@@ -1439,7 +1424,7 @@ if menu_principal_opcion == "Remates":
                         """, unsafe_allow_html=True)
 
                         cantidad_ejemplares = len(lista_caballos_activos)
-                        cols_ejemplares = 5  # Forzar exactamente 5 columnas por fila
+                        cols_ejemplares = 5  # Exactamente 5 columnas por fila
                         num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                         
                         idx_cab = 0
