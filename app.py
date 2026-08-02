@@ -957,25 +957,11 @@ with st.sidebar.expander("🏁 Cierre y Liquidación de Remates", expanded=False
     carr_seleccionada_liq = st.selectbox("Gestionar Carrera", lista_carreras_disponibles, key="sb_liq_sel_carrera")
     c_cerrada_actual = st.session_state.carreras_cerradas_remate.get(carr_seleccionada_liq, False)
     
-    col_cz1, col_cz2 = st.columns(2)
-    with col_cz1:
-        fecha_cierre_adm = st.date_input("Fecha límite", value=ahora_dt.date(), key=f"sb_f_cierre_{carr_seleccionada_liq}")
-    with col_cz2:
-        hora_cierre_adm = st.time_input("Hora límite", value=datetime.now().time(), key=f"sb_h_cierre_{carr_seleccionada_liq}")
-    
-    if st.button("💾 Guardar Cierre Estricto", key=f"sb_btn_guardar_h_{carr_seleccionada_liq}", use_container_width=True):
-        dt_cierre_estricto = datetime.combine(fecha_cierre_adm, hora_cierre_adm)
-        st.session_state.fechas_horas_cierre_remate[carr_seleccionada_liq] = dt_cierre_estricto
-        st.session_state.estado_conteo_carrera[carr_seleccionada_liq] = "INACTIVO"
-        guardar_estado_global()
-        st.toast(f"✅ Cierre estricto guardado para {carr_seleccionada_liq}")
-        st.rerun()
-
     st.markdown("---")
     if not c_cerrada_actual:
         if st.button("🔒 Cerrar Remate Manual", key=f"sb_liq_cerrar_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
             st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = True
-            st.session_state.estado_conteo_carrera[carr_seleccionada_liq] = "CERRADO"
+            st.session_state.estado_conteo_carrera_modalidad[carr_seleccionada_liq] = "CERRADO"
             st.session_state.detalles_carreras[carr_seleccionada_liq]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
             if not st.session_state.remates_cargados_en_cuentas.get(carr_seleccionada_liq, False):
                 retirados_carr = st.session_state.ejemplares_retirados.get(carr_seleccionada_liq, [])
@@ -1981,7 +1967,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Detalles e incentivos guardados!")
                 st.rerun()
 
-        # --- CONFIGURACIÓN DE INICIO Y CIERRE INDEPENDIENTE POR MODALIDAD ---
+        # --- CONFIGURACIÓN DE INICIO Y CIERRE INDEPENDIENTE POR MODALIDAD CON HORA MANUAL 12H ---
         st.markdown("---")
         with st.container(border=True):
             st.markdown(f"⏰ **Control de Horarios Individuales por Modalidad ({carr_banco_sel})**")
@@ -1991,15 +1977,43 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             
             col_h1, col_h2 = st.columns(2)
             with col_h1:
-                f_ini = st.date_input(f"Fecha Inicio ({mod_seleccionada_horarios})", value=ahora_dt.date(), key=f"f_ini_{clave_mod_carr_adm}")
-                h_ini = st.time_input(f"Hora Inicio ({mod_seleccionada_horarios})", value=datetime.now().time(), key=f"h_ini_{clave_mod_carr_adm}")
+                st.markdown(f"**🟢 Inicio ({mod_seleccionada_horarios})**")
+                f_ini = st.date_input("Fecha Inicio", value=ahora_dt.date(), key=f"f_ini_{clave_mod_carr_adm}")
+                
+                # Entradas manuales independientes para formato de 12 horas
+                c_hi1, c_hi2, c_hi3 = st.columns(3)
+                with c_hi1:
+                    h_ini_val = st.number_input("Hora (1-12)", min_value=1, max_value=12, value=2, key=f"hi_h_{clave_mod_carr_adm}")
+                with c_hi2:
+                    m_ini_val = st.number_input("Min (0-59)", min_value=0, max_value=59, value=0, key=f"hi_m_{clave_mod_carr_adm}")
+                with c_hi3:
+                    ampm_ini = st.selectbox("AM/PM", ["AM", "PM"], index=1, key=f"hi_ap_{clave_mod_carr_adm}")
+
             with col_h2:
-                f_cier = st.date_input(f"Fecha Cierre ({mod_seleccionada_horarios})", value=ahora_dt.date(), key=f"f_cier_{clave_mod_carr_adm}")
-                h_cier = st.time_input(f"Hora Cierre ({mod_seleccionada_horarios})", value=datetime.now().time(), key=f"h_cier_{clave_mod_carr_adm}")
+                st.markdown(f"**⏰ Cierre Estricto ({mod_seleccionada_horarios})**")
+                f_cier = st.date_input("Fecha Cierre", value=ahora_dt.date(), key=f"f_cier_{clave_mod_carr_adm}")
+                
+                c_hc1, c_hc2, c_hc3 = st.columns(3)
+                with c_hc1:
+                    h_cier_val = st.number_input("Hora (1-12)", min_value=1, max_value=12, value=2, key=f"hc_h_{clave_mod_carr_adm}")
+                with c_hc2:
+                    m_cier_val = st.number_input("Min (0-59)", min_value=0, max_value=59, value=30, key=f"hc_m_{clave_mod_carr_adm}")
+                with c_hc3:
+                    ampm_cier = st.selectbox("AM/PM", ["AM", "PM"], index=1, key=f"hc_ap_{clave_mod_carr_adm}")
 
             if st.button(f"💾 Guardar Horarios para {mod_seleccionada_horarios}", key=f"btn_save_horarios_{clave_mod_carr_adm}", use_container_width=True, type="primary"):
-                st.session_state.fechas_horas_inicio_remate_modalidad[clave_mod_carr_adm] = datetime.combine(f_ini, h_ini)
-                st.session_state.fechas_horas_cierre_remate_modalidad[clave_mod_carr_adm] = datetime.combine(f_cier, h_cier)
+                # Conversión de 12 horas a formato 24 horas para lógica interna
+                h_i_24 = h_ini_val if ampm_ini == "AM" else (h_ini_val + 12 if h_ini_val < 12 else 12)
+                if ampm_ini == "AM" and h_ini_val == 12: h_i_24 = 0
+                
+                h_c_24 = h_cier_val if ampm_cier == "AM" else (h_cier_val + 12 if h_cier_val < 12 else 12)
+                if ampm_cier == "AM" and h_cier_val == 12: h_c_24 = 0
+
+                dt_i_final = datetime.combine(f_ini, dtime(h_i_24, m_ini_val))
+                dt_c_final = datetime.combine(f_cier, dtime(h_c_24, m_cier_val))
+
+                st.session_state.fechas_horas_inicio_remate_modalidad[clave_mod_carr_adm] = dt_i_final
+                st.session_state.fechas_horas_cierre_remate_modalidad[clave_mod_carr_adm] = dt_c_final
                 st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr_adm] = "INACTIVO"
                 guardar_estado_global()
                 st.toast(f"✅ ¡Horarios guardados para {carr_banco_sel} en modalidad {mod_seleccionada_horarios}!")
