@@ -61,7 +61,7 @@ def cargar_estado_global(forzar_recarga=False):
         'carreras_habilitadas_dupleta': [],
         'carreras_habilitadas_tripleta': [],
         'carreras_habilitadas_polla': [],
-        'config_montos_especiales': {"Dupleta": 500.0, "Tripleta": 500.0, "Polla Hipica": 1000.0},
+        'config_montos_especiales': {"Dupleta": 500.0, "Tripleta": 500.0, "6 En Linea": 1000.0},
         'dupleta_bloqueada': False,
         'carreras_activas_remate': [],
         'carreras_por_modalidad': {"Adelantados": [], "Ciegos": [], "En Vivo": []},
@@ -772,7 +772,7 @@ with col_menu1:
         st.rerun()
 
 with col_menu2:
-    if st.button("DUPLETAS/POLLAS", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
+    if st.button("DUPLETA", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
         st.session_state.menu_principal_opcion = "Dupletas"
         guardar_estado_global()
         st.rerun()
@@ -939,7 +939,7 @@ with st.sidebar.expander("👤 Usuario Activo y Selector", expanded=True):
 with st.sidebar.expander("🏠 Retención de la Casa", expanded=False):
     porcentaje_casa = st.slider("Retención (%)", 0, 50, 30, key="sb_slider_retencion_casa")
 
-with st.sidebar.expander("🔒 Estado Dupletas / Polla", expanded=False):
+with st.sidebar.expander("🔒 Estado Dupletas / 6 En Linea", expanded=False):
     if st.session_state.dupleta_bloqueada:
         st.markdown("<p style='color: #ff4757; font-weight: bold;'>🔴 BLOQUEADAS</p>", unsafe_allow_html=True)
         if st.button("🔓 Desbloquear", key="sb_btn_desbloquear_dupleta", use_container_width=True):
@@ -1435,7 +1435,7 @@ if menu_principal_opcion == "Remates":
                                     st.rerun()
 
 # =========================================================================
-# 2. MÓDULO DE DUPLETAS, TRIPLETAS Y POLLA HÍPICA
+# 2. MÓDULO DE DUPLETAS Y 6 EN LINEA
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
@@ -1451,8 +1451,8 @@ elif menu_principal_opcion == "Dupletas":
             guardar_estado_global()
             st.rerun()
     with col_d3:
-        if st.button("🏇 Polla", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Polla Hipica" else "secondary"):
-            st.session_state.sub_dupleta_opcion = "Polla Hipica"
+        if st.button("🏇 6 En Linea", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "6 En Linea" else "secondary"):
+            st.session_state.sub_dupleta_opcion = "6 En Linea"
             guardar_estado_global()
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
@@ -1476,7 +1476,7 @@ elif menu_principal_opcion == "Dupletas":
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
     else:
         pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
-        st.metric("💰 Pote Acumulado Polla", formatear_bs(pote_total))
+        st.metric("💰 Pote Acumulado 6 En Linea", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
 
     cards_html_slider = ""
@@ -1547,7 +1547,7 @@ elif menu_principal_opcion == "Dupletas":
                     key=f"ticket_cab_{sub_dup_actual}_{paso}"
                 )
                 
-                if sub_dup_actual == "Polla Hipica" and cab_leg in excluidos_carr_t:
+                if sub_dup_actual == "6 En Linea" and cab_leg in excluidos_carr_t:
                     idx_ret = todos_caballos_carr.index(cab_leg)
                     siguiente_cab = None
                     for siguiente_c in todos_caballos_carr[idx_ret + 1:] + todos_caballos_carr[:idx_ret]:
@@ -1556,7 +1556,7 @@ elif menu_principal_opcion == "Dupletas":
                             break
                     if siguiente_cab:
                         cab_leg = f"{siguiente_cab} (Sustituto por retiro/invalidez)"
-                        st.info(f"🔄 **Polla Hípica:** El ejemplar seleccionado no era válido. Se asignó automáticamente el siguiente disponible: **{cab_leg}**")
+                        st.info(f"🔄 **6 En Linea:** El ejemplar seleccionado no era válido. Se asignó automáticamente el siguiente disponible: **{cab_leg}**")
 
                 if carr_leg in carreras_usadas:
                     valido_legs = False
@@ -1589,7 +1589,7 @@ elif menu_principal_opcion == "Dupletas":
                         if duplicado:
                             st.error("❌ **BLOQUEADO:** Ya existe un ticket con esta misma combinación.")
                         else:
-                            prefijo_id = "DUP" if sub_dup_actual == "Dupleta" else ("TRIP" if sub_dup_actual == "Tripleta" else "POLL")
+                            prefijo_id = "DUP" if sub_dup_actual == "Dupleta" else ("TRIP" if sub_dup_actual == "Tripleta" else "6L")
                             ticket_id = f"{prefijo_id}-{len(lista_tickets_activo) + 1:04d}"
                             
                             nuevo_ticket_dict = {
@@ -1643,7 +1643,7 @@ elif menu_principal_opcion == "Dupletas":
                 st.markdown(f"> {detalles_legs}")
                 st.caption(f"Emitido: {t['fecha']}")
 
-                if sub_dup_actual != "Polla Hipica":
+                if sub_dup_actual != "6 En Linea":
                     retirado_en_ticket = False
                     carrera_afectada = None
                     for leg in t['legs']:
@@ -1798,7 +1798,7 @@ elif menu_principal_opcion == "Cuentas":
     todos_tickets_multiples = tickets_usuario_dupletas + tickets_usuario_tripletas + tickets_usuario_pollas
 
     if todos_tickets_multiples:
-        st.markdown("#### 🎟️ Tickets de Dupletas, Tripletas y Polla Hípica")
+        st.markdown("#### 🎟️ Tickets de Dupletas, Tripletas y 6 En Linea")
         for t in reversed(todos_tickets_multiples):
             detalles_legs = " ➔ ".join([f"**{l['carrera']}**: {l['ejemplar']}" for l in t['legs']])
             estado_t = t.get('estado', 'Pendiente')
@@ -1817,7 +1817,7 @@ elif menu_principal_opcion == "Cuentas":
             """
             st.markdown(ticket_m_html, unsafe_allow_html=True)
     else:
-        st.info("ℹ️ No hay tickets de dupletas, tripletas o pollas registrados para este usuario.")
+        st.info("ℹ️ No hay tickets de dupletas, tripletas o 6 en linea registrados para este usuario.")
 
 # =========================================================================
 # 4. ZONA DE ADMINISTRADOR (CONFIGURACIÓN CON TABS NATIVAS)
@@ -1828,7 +1828,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "✍️ Caballos", 
         "👥 Usuarios", 
-        "⚙️ Dupletas/Polla", 
+        "⚙️ Dupletas/6L", 
         "📺 Video", 
         "📊 Saldos", 
         "🖼️ Imágenes"
@@ -1980,7 +1980,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.markdown(f"**🟢 Inicio ({mod_seleccionada_horarios})**")
                 f_ini = st.date_input("Fecha Inicio", value=ahora_dt.date(), key=f"f_ini_{clave_mod_carr_adm}")
                 
-                # Entradas manuales independientes para formato de 12 horas
                 c_hi1, c_hi2, c_hi3 = st.columns(3)
                 with c_hi1:
                     h_ini_val = st.number_input("Hora (1-12)", min_value=1, max_value=12, value=2, key=f"hi_h_{clave_mod_carr_adm}")
@@ -2002,7 +2001,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     ampm_cier = st.selectbox("AM/PM", ["AM", "PM"], index=1, key=f"hc_ap_{clave_mod_carr_adm}")
 
             if st.button(f"💾 Guardar Horarios para {mod_seleccionada_horarios}", key=f"btn_save_horarios_{clave_mod_carr_adm}", use_container_width=True, type="primary"):
-                # Conversión de 12 horas a formato 24 horas para lógica interna
                 h_i_24 = h_ini_val if ampm_ini == "AM" else (h_ini_val + 12 if h_ini_val < 12 else 12)
                 if ampm_ini == "AM" and h_ini_val == 12: h_i_24 = 0
                 
@@ -2117,12 +2115,12 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             st.markdown("💰 **Montos Únicos**")
             monto_dup_cfg = st.number_input("Dupleta (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("Dupleta", 500.0)), step=50.0, key="cfg_monto_dupleta")
             monto_trip_cfg = st.number_input("Tripleta (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("Tripleta", 500.0)), step=50.0, key="cfg_monto_tripleta")
-            monto_polla_cfg = st.number_input("Polla (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("Polla Hipica", 1000.0)), step=50.0, key="cfg_monto_polla")
+            monto_polla_cfg = st.number_input("6 En Linea (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("6 En Linea", 1000.0)), step=50.0, key="cfg_monto_polla")
             
             if st.button("💾 Guardar Montos", key="btn_save_montos_cfg", use_container_width=True, type="primary"):
                 st.session_state.config_montos_especiales["Dupleta"] = monto_dup_cfg
                 st.session_state.config_montos_especiales["Tripleta"] = monto_trip_cfg
-                st.session_state.config_montos_especiales["Polla Hipica"] = monto_polla_cfg
+                st.session_state.config_montos_especiales["6 En Linea"] = monto_polla_cfg
                 guardar_estado_global()
                 st.toast("✅ ¡Guardado!")
                 st.rerun()
@@ -2138,7 +2136,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
             sel_dup_hab = st.multiselect("Dupleta", options=carr_disp_all, default=def_dup, key="multiselect_hab_dup")
             sel_trip_hab = st.multiselect("Tripleta", options=carr_disp_all, default=def_trip, key="multiselect_hab_trip")
-            sel_polla_hab = st.multiselect("Polla", options=carr_disp_all, default=def_polla, key="multiselect_hab_polla")
+            sel_polla_hab = st.multiselect("6 En Linea", options=carr_disp_all, default=def_polla, key="multiselect_hab_polla")
 
             if st.button("💾 Guardar Habilitadas", key="btn_save_carr_hab", use_container_width=True, type="primary"):
                 st.session_state.carreras_habilitadas_dupleta = sel_dup_hab
