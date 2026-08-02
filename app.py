@@ -92,7 +92,7 @@ def guardar_estado_global():
         'detalles_carreras', 'historial_ganadores', 'carreras_cerradas_remate',
         'remates_cargados_en_cuentas', 'cuentas', 'historial_jugadas', 'ganancia_casa',
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
-        'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
+        'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_monts_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
         'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'admin_tab_seleccionada'
     ]
@@ -244,7 +244,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS AGRESIVOS PARA MÓVILES Y ANCHO ESPACIOSO DE BARRA LATERAL ---
+# --- ESTILOS CSS Y ANIMACIONES LLAMATIVAS PARA EL GANADOR ---
 st.markdown("""
     <style>
     * {
@@ -383,6 +383,47 @@ st.markdown("""
         letter-spacing: 0.5px;
         text-shadow: 2px 2px 4px #000000;
     }
+    
+    /* --- ESTILOS ULTRA LLAMATIVOS PARA EL ANUNCIO DEL GANADOR --- */
+    @keyframes parpadeoGanador {
+        0% { transform: scale(1); box-shadow: 0 0 15px #f1c40f, inset 0 0 15px #f1c40f; }
+        50% { transform: scale(1.02); box-shadow: 0 0 35px #00ffff, inset 0 0 25px #00ffff; }
+        100% { transform: scale(1); box-shadow: 0 0 15px #f1c40f, inset 0 0 15px #f1c40f; }
+    }
+    .ganador-banner-epic {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        border: 3px solid #f1c40f;
+        border-radius: 14px;
+        padding: 16px;
+        text-align: center;
+        margin: 12px 0;
+        animation: parpadeoGanador 2s infinite ease-in-out;
+    }
+    .ganador-titulo-epic {
+        color: #00ffff;
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
+    }
+    .ganador-nombre-epic {
+        color: #f1c40f;
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        text-shadow: 2px 2px 6px #000000, 0 0 12px rgba(241, 196, 15, 0.9);
+    }
+    .ganador-premio-epic {
+        color: #2ed573;
+        font-size: 18px;
+        font-weight: 900;
+        text-shadow: 1px 1px 4px #000000;
+    }
+
     .ticket-jugador-card {
         background: #0d1117;
         border: 2px solid #30363d;
@@ -1210,12 +1251,31 @@ if menu_principal_opcion == "Remates":
             c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
             c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
 
+            # --- ANUNCIO ÉPICO Y LLAMATIVO DEL GANADOR ---
+            if carr_activa in st.session_state.historial_ganadores:
+                info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
+                ganador_nombre = info_ganador_prev.get('Ganador', 'N/A')
+                premio_ganado = info_ganador_prev.get('Premio', '0')
+                
+                # Buscamos el ejemplar ganador específico
+                ejemplar_ganador_str = "N/A"
+                for h in st.session_state.historial_jugadas:
+                    if h.get('carrera') == carr_activa and h.get('jugador') == ganador_nombre and "Remate" in h.get('tipo', ''):
+                        ejemplar_ganador_str = h.get('detalle', 'N/A')
+                        break
+
+                st.markdown(f"""
+                    <div class="ganador-banner-epic">
+                        <div class="ganador-titulo-epic">🏆 ¡RESULTADO OFICIAL - {carr_activa.upper()}! 🏆</div>
+                        <div class="ganador-nombre-epic">🎉 {ganador_nombre} 🎉</div>
+                        <div style="color: #f0f6fc; font-size: 13px; font-weight: 700; margin-bottom: 6px;">Ejemplar: <b>{ejemplar_ganador_str.upper()}</b></div>
+                        <div class="ganador-premio-epic">💰 Premio Liquidado: {premio_ganado}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+
             with st.container(border=True):
-                st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Ganador - {carr_activa}</p>", unsafe_allow_html=True)
-                if carr_activa in st.session_state.historial_ganadores:
-                    info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
-                    st.success(f"✅ Ganador: **{info_ganador_prev.get('Ganador', 'N/A')}** | Premio: **{info_ganador_prev.get('Premio', '0')}**")
-                else:
+                st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Seleccionar y Liquidar Ganador - {carr_activa}</p>", unsafe_allow_html=True)
+                if carr_activa not in st.session_state.historial_ganadores:
                     caballos_lista_ganador = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in st.session_state.ejemplares_retirados.get(carr_activa, [])]
                     if not caballos_lista_ganador:
                         caballos_lista_ganador = list(st.session_state.remates[carr_activa].keys())
@@ -1223,7 +1283,7 @@ if menu_principal_opcion == "Remates":
                     with col_g1:
                         caballo_ganador_elegido = st.selectbox("Ejemplar Ganador", caballos_lista_ganador, key=f"rem_sel_ganador_{carr_activa}", label_visibility="collapsed")
                     with col_g2:
-                        if st.button("🏆 Liquidar", key=f"rem_btn_liquidar_{carr_activa}", use_container_width=True, type="primary"):
+                        if st.button("🏆 Liquidar Ganador", key=f"rem_btn_liquidar_{carr_activa}", use_container_width=True, type="primary"):
                             retirados_carr_liq = st.session_state.ejemplares_retirados.get(carr_activa, [])
                             pote_carr_total = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in retirados_carr_liq])
                             monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
@@ -1245,7 +1305,6 @@ if menu_principal_opcion == "Remates":
                             st.session_state.ganancia_casa += monto_casa_calc
                             st.session_state.historial_ganadores[carr_activa] = {"Ganador": info_g['jugador'], "Premio": formatear_bs(premio_final_liq)}
                             guardar_estado_global()
-                            st.success(f"✅ ¡Premio liquidado a **{info_g['jugador']}**!")
                             st.rerun()
 
             with st.expander(f"📜 Historial de Pujas - {carr_activa} ({modo_actual_remate})", expanded=False):
