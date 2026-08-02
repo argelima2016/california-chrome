@@ -797,11 +797,7 @@ if dupletas_hab:
 if st.session_state.historial_ganadores:
     for carr_g, info_g in st.session_state.historial_ganadores.items():
         ganador_jugador = info_g.get('Ganador', 'N/A')
-        ejemplar_ganador_nombre = "N/A"
-        for h in st.session_state.historial_jugadas:
-            if h.get('carrera') == carr_g and h.get('jugador') == ganador_jugador and "Remate" in h.get('tipo', ''):
-                ejemplar_ganador_nombre = h.get('detalle', 'N/A')
-                break
+        ejemplar_ganador_nombre = info_g.get('Caballo', 'N/A')
         texto_ganador = "🏆 " + carr_g.upper() + " GANADOR: " + ganador_jugador + " (" + ejemplar_ganador_nombre + ")"
         elementos_carrusel_info.append(texto_ganador)
 else:
@@ -1256,19 +1252,13 @@ if menu_principal_opcion == "Remates":
                 info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
                 ganador_nombre = info_ganador_prev.get('Ganador', 'N/A')
                 premio_ganado = info_ganador_prev.get('Premio', '0')
-                
-                # Buscamos el ejemplar ganador específico en las jugadas
-                ejemplar_ganador_str = "N/A"
-                for h in st.session_state.historial_jugadas:
-                    if h.get('carrera') == carr_activa and h.get('jugador') == ganador_nombre and "Remate" in h.get('tipo', ''):
-                        ejemplar_ganador_str = h.get('detalle', 'N/A')
-                        break
+                caballo_ganador_str = info_ganador_prev.get('Caballo', 'N/A')
 
                 st.markdown(f"""
                     <div class="ganador-banner-epic">
                         <div class="ganador-titulo-epic">🏆 ¡RESULTADO OFICIAL - {carr_activa.upper()}! 🏆</div>
                         <div class="ganador-nombre-epic">🎉 {ganador_nombre} 🎉</div>
-                        <div style="color: #00ffff; font-size: 16px; font-weight: 900; margin-bottom: 4px; text-shadow: 0 0 8px rgba(0,255,255,0.7);">🐎 EJEMPLAR: {ejemplar_ganador_str.upper()}</div>
+                        <div style="color: #00ffff; font-size: 16px; font-weight: 900; margin-bottom: 4px; text-shadow: 0 0 8px rgba(0,255,255,0.7);">🐎 EJEMPLAR: {caballo_ganador_str.upper()}</div>
                         <div class="ganador-premio-epic">💰 Premio Liquidado: {premio_ganado}</div>
                     </div>
                 """, unsafe_allow_html=True)
@@ -1303,7 +1293,11 @@ if menu_principal_opcion == "Remates":
                                     st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
                                 st.session_state.cuentas[info_g['jugador']]['Premios'] += premio_final_liq
                             st.session_state.ganancia_casa += monto_casa_calc
-                            st.session_state.historial_ganadores[carr_activa] = {"Ganador": info_g['jugador'], "Premio": formatear_bs(premio_final_liq)}
+                            st.session_state.historial_ganadores[carr_activa] = {
+                                "Ganador": info_g['jugador'], 
+                                "Premio": formatear_bs(premio_final_liq),
+                                "Caballo": caballo_ganador_elegido
+                            }
                             guardar_estado_global()
                             st.rerun()
 
@@ -1712,7 +1706,7 @@ elif menu_principal_opcion == "Dupletas":
 # 3. MÓDULO DE CUENTAS
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
-    st.markdown("<div class='subasta-header'>📊 Mis Cuentas y Historial de Jugador en Formato Ticket</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subasta-header'>📊 Mis Cuentas y Historial de Jugador in Formato Ticket</div>", unsafe_allow_html=True)
     jugador_actual = st.session_state.usuario_activo
     st.markdown(f"👤 **Jugador en Sesión:** `{jugador_actual}`")
 
