@@ -1389,6 +1389,37 @@ if menu_principal_opcion == "Remates":
                             st.session_state[k_sel_cab] = lista_caballos_activos[0]
                             
                         st.markdown(f"🔹 **1. Seleccionar Ejemplar (Disponibles: {len(lista_caballos_activos)}):**")
+                        
+                        # --- ESTILOS DINÁMICOS PARA LOS 3 COLORES (LIBRE, TUYO, OTRO) ---
+                        st.markdown("""
+                            <style>
+                            div[data-testid="column"] button.btn-libre {
+                                background-color: #e2e8f0 !important;
+                                color: #1e293b !important;
+                                border: 1px solid #cbd5e1 !important;
+                            }
+                            div[data-testid="column"] button.btn-libre:hover {
+                                background-color: #cbd5e1 !important;
+                            }
+                            div[data-testid="column"] button.btn-tuyo {
+                                background-color: #22c55e !important;
+                                color: #ffffff !important;
+                                border: 1px solid #16a34a !important;
+                            }
+                            div[data-testid="column"] button.btn-tuyo:hover {
+                                background-color: #16a34a !important;
+                            }
+                            div[data-testid="column"] button.btn-otro {
+                                background-color: #ef4444 !important;
+                                color: #ffffff !important;
+                                border: 1px solid #dc2626 !important;
+                            }
+                            div[data-testid="column"] button.btn-otro:hover {
+                                background-color: #dc2626 !important;
+                            }
+                            </style>
+                        """, unsafe_allow_html=True)
+
                         cantidad_ejemplares = len(lista_caballos_activos)
                         cols_ejemplares = min(5, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
                         num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
@@ -1400,13 +1431,40 @@ if menu_principal_opcion == "Remates":
                                 if idx_cab < cantidad_ejemplares:
                                     cab_item = lista_caballos_activos[idx_cab]
                                     num_parte = cab_item.split(" - ")[0]
+                                    
+                                    info_remate_cab = st.session_state.remates[carr_activa].get(cab_item, {})
+                                    propietario = info_remate_cab.get('jugador', 'Sin Postor')
+                                    
+                                    if propietario == "Sin Postor" or propietario == "CASA" or info_remate_cab.get('monto', 0.0) == 0:
+                                        tipo_clase = "btn-libre"
+                                    elif propietario == st.session_state.usuario_activo:
+                                        tipo_clase = "btn-tuyo"
+                                    else:
+                                        tipo_clase = "btn-otro"
+
                                     with cols_fila[c]:
                                         if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{idx_cab}", use_container_width=True):
                                             st.session_state[k_sel_cab] = cab_item
+                                            st.rerun()
+                                            
+                                    components.html(f"""
+                                        <script>
+                                            const doc = window.parent.document;
+                                            const buttons = doc.querySelectorAll('button');
+                                            buttons.forEach(btn => {{
+                                                if (btn.innerText.includes("#{num_parte}")) {{
+                                                    btn.className = btn.className.replace(/btn-(libre|tuyo|otro)/g, '');
+                                                    btn.classList.add('{tipo_clase}');
+                                                }}
+                                            }});
+                                        </script>
+                                    """, height=0, width=0)
+
                                     idx_cab += 1
                         
                         caballo_seleccionado = st.session_state[k_sel_cab]
-                        st.info(f"Ejemplar activo en {carr_activa}: **{caballo_seleccionado}**")
+                        propietario_actual_sel = st.session_state.remates[carr_activa][caballo_seleccionado].get('jugador', 'Sin Postor')
+                        st.info(f"Ejemplar activo: **{caballo_seleccionado}** (Poseedor actual: **{propietario_actual_sel}**)")
 
                         puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
                         opciones_escala = obtener_siguientes_montos(puja_actual)
@@ -1435,7 +1493,7 @@ if menu_principal_opcion == "Remates":
                                     st.rerun()
 
 # =========================================================================
-# 2. MÓDULO DE DUPLETAS Y 6 EN LINEA
+# 2. MÓDULO DE DUPLETA Y 6 EN LINEA
 # =========================================================================
 elif menu_principal_opcion == "Dupletas":
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
@@ -1828,7 +1886,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "✍️ Caballos", 
         "👥 Usuarios", 
-        "⚙️ Dupletas/6L", 
+        "⚙️ Dupleta/6L", 
         "📺 Video", 
         "📊 Saldos", 
         "🖼️ Imágenes"
