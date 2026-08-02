@@ -65,6 +65,7 @@ def cargar_estado_global(forzar_recarga=False):
         'carreras_por_modalidad': {"Adelantados": [], "Ciegos": [], "En Vivo": []},
         'total_carreras_semana': 10,
         'url_video_en_vivo': "",
+        'url_retirados_web': "",
         'admin_tab_seleccionada': "✍️ Caballos",
         'imagenes_carreras': {}
     }
@@ -94,7 +95,7 @@ def guardar_estado_global():
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
-        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'admin_tab_seleccionada'
+        'total_carreras_semana', 'url_video_en_vivo', 'url_retirados_web', 'imagenes_carreras', 'admin_tab_seleccionada'
     ]
     data = {}
     for k in keys_to_save:
@@ -162,7 +163,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -1042,7 +1043,6 @@ if menu_principal_opcion == "Remates":
             carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
             estado_icono = "🔴" if carrera_cerrada else "🟢"
             
-            # --- CABECERA DE CARRERA LIMPIA (SIN GACETA) ---
             st.markdown(f"""
                 <div style="font-size: 14px; font-weight: 800; color: #f0f6fc; display: flex; align-items: center; gap: 6px; margin-top: 8px; margin-bottom: 8px;">
                     <span>{estado_icono}</span>
