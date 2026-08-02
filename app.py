@@ -43,6 +43,7 @@ def cargar_estado_global(forzar_recarga=False):
         'banco_caballos_por_carrera': {},
         'remates': {},
         'ejemplares_retirados': {},
+        'ejemplares_no_valido': {},
         'detalles_carreras': {},
         'historial_ganadores': {},
         'carreras_cerradas_remate': {},
@@ -89,7 +90,7 @@ def guardar_estado_global():
     keys_to_save = [
         'menu_principal_opcion', 'sub_remate_opcion', 'sub_dupleta_opcion', 'usuario_activo',
         'lista_usuarios', 'banco_caballos_por_carrera', 'remates', 'ejemplares_retirados',
-        'detalles_carreras', 'historial_ganadores', 'carreras_cerradas_remate',
+        'ejemplares_no_valido', 'detalles_carreras', 'historial_ganadores', 'carreras_cerradas_remate',
         'remates_cargados_en_cuentas', 'cuentas', 'historial_jugadas', 'ganancia_casa',
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
@@ -594,7 +595,7 @@ def obtener_abreviatura_carrera(nombre_carrera, modo_ciego=False):
         return f"C{match.group(0)}"
     return nombre_carrera[:3].upper()
 
-def generar_tabla_html_remate(remates_dict, retirados_list):
+def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
     html = """
     <style>
         .tabla-referencia {
@@ -653,6 +654,11 @@ def generar_tabla_html_remate(remates_dict, retirados_list):
             color: #990000 !important;
             text-decoration: line-through;
         }
+        .novale-row td {
+            background-color: #fff3cd !important;
+            color: #856404 !important;
+            font-style: italic;
+        }
     </style>
     <div style="background-color: #ffffff; padding: 3px; border-radius: 6px; overflow-x: auto; width: 100%;">
         <table class="tabla-referencia">
@@ -685,15 +691,24 @@ def generar_tabla_html_remate(remates_dict, retirados_list):
         else: badge_class = "badge-default"
         
         es_retirado = cab in retirados_list
-        clase_fila = "retirado-row" if es_retirado else ""
-        etiqueta_estado = " (RETIRADO)" if es_retirado else ""
+        es_novale = cab in no_validos_list
+        
+        if es_retirado:
+            clase_fila = "retirado-row"
+            etiqueta_estado = " (RETIRADO)"
+        elif es_novale:
+            clase_fila = "novale-row"
+            etiqueta_estado = " (NO VALE)"
+        else:
+            clase_fila = ""
+            etiqueta_estado = ""
         
         html += f"""
                 <tr class="{clase_fila}">
                     <td><span class="badge-numero {badge_class}">{num}</span></td>
                     <td style="font-weight: 800; font-size: 12px;" title="{nombre_solo.upper()}{etiqueta_estado}">{nombre_solo.upper()}{etiqueta_estado}</td>
                     <td title="{info['jugador']}">{info['jugador']}</td>
-                    <td style="font-weight: bold; color: { '#990000' if es_retirado else '#000000' };">{formatear_bs(info['monto'])}</td>
+                    <td style="font-weight: bold; color: { '#990000' if es_retirado else ('#856404' if es_novale else '#000000') };">{formatear_bs(info['monto'])}</td>
                 </tr>
         """
     html += """
@@ -889,7 +904,7 @@ if lista_b64_banners:
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
                     }}, 400);
-                }}, 8000);
+                }, 8000);
             }}
         }})();
     </script>
@@ -965,8 +980,9 @@ with st.sidebar.expander("🏁 Cierre y Liquidación de Remates", expanded=False
             st.session_state.detalles_carreras[carr_seleccionada_liq]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
             if not st.session_state.remates_cargados_en_cuentas.get(carr_seleccionada_liq, False):
                 retirados_carr = st.session_state.ejemplares_retirados.get(carr_seleccionada_liq, [])
+                no_val_carr = st.session_state.get('ejemplares_no_valido', {}).get(carr_seleccionada_liq, [])
                 for cab, info in st.session_state.remates[carr_seleccionada_liq].items():
-                    if cab in retirados_carr:
+                    if cab in retirados_carr or cab in no_val_carr:
                         continue
                     if info['jugador'] != "Sin Postor" and info['monto'] > 0:
                         if info['jugador'] not in st.session_state.cuentas:
@@ -1106,9 +1122,14 @@ if menu_principal_opcion == "Remates":
 
             if carr_activa not in st.session_state.ejemplares_retirados:
                 st.session_state.ejemplares_retirados[carr_activa] = []
+            if 'ejemplares_no_valido' not in st.session_state:
+                st.session_state.ejemplares_no_valido = {}
+            if carr_activa not in st.session_state.ejemplares_no_valido:
+                st.session_state.ejemplares_no_valido[carr_activa] = []
             
             lista_todos_caballos_carr = list(st.session_state.remates[carr_activa].keys())
             retirados_actuales_carr = [c for c in st.session_state.ejemplares_retirados[carr_activa] if c in lista_todos_caballos_carr]
+            no_validos_actuales_carr = [c for c in st.session_state.ejemplares_no_valido[carr_activa] if c in lista_todos_caballos_carr]
 
             with st.expander("🚫 Gestionar Ejemplares Retirados", expanded=False):
                 nuevos_retirados = st.multiselect(
@@ -1146,7 +1167,7 @@ if menu_principal_opcion == "Remates":
                                 idx_ret = lista_todos_caballos_carr.index(base_ej_p)
                                 siguiente_cab = None
                                 for siguiente_c in lista_todos_caballos_carr[idx_ret + 1:] + lista_todos_caballos_carr[:idx_ret]:
-                                    if siguiente_c not in nuevos_retirados:
+                                    if siguiente_c not in nuevos_retirados and siguiente_c not in no_validos_actuales_carr:
                                         siguiente_cab = siguiente_c
                                         break
                                 if siguiente_cab:
@@ -1215,14 +1236,17 @@ if menu_principal_opcion == "Remates":
                         if restantes_10s > 0:
                             st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa})</div>", unsafe_allow_html=True)
 
-            tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []))
+            tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
             cantidad_filas = len(st.session_state.remates[carr_activa])
             altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
             components.html(tabla_html, height=altura_dinamica, scrolling=True)
             
             # --- POTE, PREMIO E INCENTIVO LLAMATIVO DEBAJO DE LA TABLA DE REMATE ---
             retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
-            total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in retirados_carr_activa])
+            no_validos_carr_activa = st.session_state.ejemplares_no_valido.get(carr_activa, [])
+            excluidos_carr_activa = set(retirados_carr_activa) | set(no_validos_carr_activa)
+
+            total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_carr_activa])
             monto_casa = total_pote * (porcentaje_casa / 100)
             pote_neto_base = total_pote - monto_casa
 
@@ -1266,7 +1290,7 @@ if menu_principal_opcion == "Remates":
             with st.container(border=True):
                 st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Seleccionar y Liquidar Ganador - {carr_activa}</p>", unsafe_allow_html=True)
                 if carr_activa not in st.session_state.historial_ganadores:
-                    caballos_lista_ganador = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in st.session_state.ejemplares_retirados.get(carr_activa, [])]
+                    caballos_lista_ganador = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
                     if not caballos_lista_ganador:
                         caballos_lista_ganador = list(st.session_state.remates[carr_activa].keys())
                     col_g1, col_g2 = st.columns([3, 2], gap="small")
@@ -1274,8 +1298,7 @@ if menu_principal_opcion == "Remates":
                         caballo_ganador_elegido = st.selectbox("Ejemplar Ganador", caballos_lista_ganador, key=f"rem_sel_ganador_{carr_activa}", label_visibility="collapsed")
                     with col_g2:
                         if st.button("🏆 Liquidar Ganador", key=f"rem_btn_liquidar_{carr_activa}", use_container_width=True, type="primary"):
-                            retirados_carr_liq = st.session_state.ejemplares_retirados.get(carr_activa, [])
-                            pote_carr_total = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in retirados_carr_liq])
+                            pote_carr_total = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_carr_activa])
                             monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
                             
                             if modo_actual_remate == "Adelantados":
@@ -1327,7 +1350,7 @@ if menu_principal_opcion == "Remates":
 
                     caballos_disponibles_ciego = [
                         cab for cab, info in st.session_state.remates[carr_activa].items() 
-                        if (info['jugador'] == "Sin Postor" or info['monto'] <= 0) and cab not in retirados_carr_activa
+                        if (info['jugador'] == "Sin Postor" or info['monto'] <= 0) and cab not in excluidos_carr_activa
                     ]
 
                     if not caballos_disponibles_ciego:
@@ -1363,10 +1386,10 @@ if menu_principal_opcion == "Remates":
                                         st.rerun()
                 else:
                     st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
-                    lista_caballos_activos = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in retirados_carr_activa]
+                    lista_caballos_activos = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
                     
                     if not lista_caballos_activos:
-                        st.warning("No hay ejemplares disponibles.")
+                        st.warning("No hay ejemplares disponibles para pujar.")
                     else:
                         k_sel_cab = f"rem_caballo_activo_click_{carr_activa}"
                         if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
@@ -1516,11 +1539,14 @@ elif menu_principal_opcion == "Dupletas":
                 st.markdown(f"🏁 **Carrera fija:** `{carr_leg}`")
                 
                 retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
+                no_val_carr_t = st.session_state.get('ejemplares_no_valido', {}).get(carr_leg, [])
+                excluidos_carr_t = set(retirados_carr_t) | set(no_val_carr_t)
+
                 todos_caballos_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
-                caballos_in_carr = [c for c in todos_caballos_carr if c not in retirados_carr_t]
+                caballos_in_carr = [c for c in todos_caballos_carr if c not in excluidos_carr_t]
                 
-                if retirados_carr_t and sub_dup_actual in ["Dupleta", "Tripleta"]:
-                    st.markdown(f"<p style='color: #ff4757; font-size: 11px; font-weight: bold;'>⚠️ Hay ejemplares retirados en esta carrera. Puede cambiar el ejemplar seleccionado:</p>", unsafe_allow_html=True)
+                if excluidos_carr_t and sub_dup_actual in ["Dupleta", "Tripleta"]:
+                    st.markdown(f"<p style='color: #ff4757; font-size: 11px; font-weight: bold;'>⚠️ Hay ejemplares retirados o sin validez en esta carrera. Puede cambiar el ejemplar seleccionado:</p>", unsafe_allow_html=True)
 
                 cab_leg = st.selectbox(
                     f"Selecciona el Ejemplar para {carr_leg}", 
@@ -1528,16 +1554,16 @@ elif menu_principal_opcion == "Dupletas":
                     key=f"ticket_cab_{sub_dup_actual}_{paso}"
                 )
                 
-                if sub_dup_actual == "Polla Hipica" and cab_leg in retirados_carr_t:
+                if sub_dup_actual == "Polla Hipica" and cab_leg in excluidos_carr_t:
                     idx_ret = todos_caballos_carr.index(cab_leg)
                     siguiente_cab = None
                     for siguiente_c in todos_caballos_carr[idx_ret + 1:] + todos_caballos_carr[:idx_ret]:
-                        if siguiente_c not in retirados_carr_t:
+                        if siguiente_c not in excluidos_carr_t:
                             siguiente_cab = siguiente_c
                             break
                     if siguiente_cab:
-                        cab_leg = f"{siguiente_cab} (Sustituto por retiro)"
-                        st.info(f"🔄 **Polla Hípica:** El ejemplar seleccionado estaba retirado. Se asignó automáticamente el siguiente disponible: **{cab_leg}**")
+                        cab_leg = f"{siguiente_cab} (Sustituto por retiro/invalidez)"
+                        st.info(f"🔄 **Polla Hípica:** El ejemplar seleccionado no era válido. Se asignó automáticamente el siguiente disponible: **{cab_leg}**")
 
                 if carr_leg in carreras_usadas:
                     valido_legs = False
@@ -1631,14 +1657,15 @@ elif menu_principal_opcion == "Dupletas":
                         carr_l = leg['carrera']
                         ej_l = leg['ejemplar'].split(" (")[0]
                         retirados_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
-                        if ej_l in retirados_carr:
+                        noval_carr = st.session_state.get('ejemplares_no_valido', {}).get(carr_l, [])
+                        if ej_l in retirados_carr or ej_l in noval_carr:
                             retirado_en_ticket = True
                             carrera_afectada = carr_l
                             break
 
                     if retirado_en_ticket:
                         if t.get('estado') == 'Pendiente':
-                            t['estado'] = 'Nulo (Retirado)'
+                            t['estado'] = 'Nulo (Retirado/No Valido)'
                             jug_t = t['jugador']
                             monto_t = t['monto']
                             if jug_t in st.session_state.cuentas:
@@ -1646,14 +1673,14 @@ elif menu_principal_opcion == "Dupletas":
                             st.session_state.historial_jugadas.append({
                                 "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
                                 "jugador": jug_t,
-                                "tipo": "Ticket Anulado (Retiro)",
+                                "tipo": "Ticket Anulado (Retiro/Invalidez)",
                                 "carrera": carrera_afectada,
-                                "detalle": f"Ticket {t['id']} anulado por retiro",
+                                "detalle": f"Ticket {t['id']} anulado por retiro/invalidez",
                                 "monto": -monto_t
                             })
                             guardar_estado_global()
 
-                        st.error(f"❌ El ticket **{t['id']}** está **NULO** y su monto ha sido restado porque el ejemplar de la **{carrera_afectada}** fue retirado. Seleccione un nuevo ejemplar para reactivarlo:")
+                        st.error(f"❌ El ticket **{t['id']}** está **NULO** y su monto ha sido restado porque el ejemplar de la **{carrera_afectada}** fue retirado o marcado como no válido. Seleccione un nuevo ejemplar para reactivarlo:")
                         
                         with st.form(key=f"form_modificar_ticket_{t['id']}_{idx_t}"):
                             nuevas_legs = []
@@ -1663,19 +1690,21 @@ elif menu_principal_opcion == "Dupletas":
                                 
                                 if carr_l == carrera_afectada:
                                     ret_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
-                                    disponibles_l = [c for c in list(st.session_state.remates.get(carr_l, {}).keys()) if c not in ret_carr]
+                                    noval_carr = st.session_state.get('ejemplares_no_valido', {}).get(carr_l, [])
+                                    excl_carr = set(ret_carr) | set(noval_carr)
+                                    disponibles_l = [c for c in list(st.session_state.remates.get(carr_l, {}).keys()) if c not in excl_carr]
                                     
                                     idx_def = 0
                                     if ej_actual in disponibles_l:
                                         idx_def = disponibles_l.index(ej_actual)
 
                                     nuevo_ej = st.selectbox(
-                                        f"Elija nuevo ejemplar para {carr_l} (Retirado: {ej_actual})",
+                                        f"Elija nuevo ejemplar para {carr_l} (Invalido/Retirado: {ej_actual})",
                                         options=disponibles_l if disponibles_l else [ej_actual],
                                         index=idx_def,
                                         key=f"mod_ticket_{t['id']}_carr_{carr_l}"
                                     )
-                                    nuevas_legs.append({"carrera": carr_l, "ejemplar": f"{nuevo_ej} (Cambiado por retiro)"})
+                                    nuevas_legs.append({"carrera": carr_l, "ejemplar": f"{nuevo_ej} (Cambiado por retiro/invalidez)"})
                                 else:
                                     nuevas_legs.append(leg)
 
@@ -1733,7 +1762,8 @@ elif menu_principal_opcion == "Cuentas":
         for ej_k, info_rem in remates_carr.items():
             if info_rem['jugador'] == jugador_actual and info_rem['monto'] > 0:
                 retirados_c = st.session_state.ejemplares_retirados.get(carr_k, [])
-                if ej_k not in retirados_c:
+                noval_c = st.session_state.get('ejemplares_no_valido', {}).get(carr_k, [])
+                if ej_k not in retirados_c and ej_k not in noval_c:
                     remates_ganados_por_carrera[carr_k] = {
                         "ejemplar": ej_k,
                         "monto": info_rem['monto']
@@ -1966,6 +1996,30 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     guardar_estado_global()
                     st.toast("✅ ¡Agregado!")
                     st.rerun()
+
+        # --- GESTIÓN DE EJEMPLARES "NO VALE" EN EL BANCO DE CABALLOS ---
+        st.markdown("---")
+        st.markdown("#### ⚠️ Gestionar Ejemplares 'NO VALE'")
+        if 'ejemplares_no_valido' not in st.session_state:
+            st.session_state.ejemplares_no_valido = {}
+        if carr_banco_sel not in st.session_state.ejemplares_no_valido:
+            st.session_state.ejemplares_no_valido[carr_banco_sel] = []
+
+        lista_todos_carr_banco = st.session_state.banco_caballos_por_carrera.get(carr_banco_sel, [])
+        bloqueados_actuales_banco = st.session_state.ejemplares_no_valido[carr_banco_sel]
+
+        with st.container(border=True):
+            nuevos_no_validos = st.multiselect(
+                f"Selecciona los ejemplares que **NO VALEN** en {carr_banco_sel}:",
+                options=lista_todos_carr_banco,
+                default=[c for c in bloqueados_actuales_banco if c in lista_todos_carr_banco],
+                key=f"multiselect_no_vale_{carr_banco_sel}"
+            )
+            if st.button("💾 Guardar Cambios 'NO VALE'", key=f"btn_save_no_vale_{carr_banco_sel}", use_container_width=True, type="primary"):
+                st.session_state.ejemplares_no_valido[carr_banco_sel] = nuevos_no_validos
+                guardar_estado_global()
+                st.toast(f"✅ ¡Ejemplares 'NO VALE' actualizados para {carr_banco_sel}!")
+                st.rerun()
 
         for idx_b, ej_item in enumerate(st.session_state.banco_caballos_por_carrera[carr_banco_sel]):
             col_ib1, col_ib2 = st.columns([5, 1])
