@@ -903,7 +903,7 @@ for n_b in nombres_banners_posibles:
             continue
 
 if lista_b64_banners:
-    js_images_array = str(lista_b64_banners)
+    js_images_array = json.dumps(lista_b64_banners)
     html_slider = f"""
     <style>
         body {{ margin: 0; padding: 0; background-color: #080a0f; overflow: hidden; }}
@@ -926,7 +926,7 @@ if lista_b64_banners:
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
                     }}, 400);
-                }, 8000);
+                }}, 8000);
             }}
         }})();
     </script>
