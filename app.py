@@ -1042,8 +1042,8 @@ def renderizar_cuerpo_principal():
                 carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
                 estado_icono = "🔴" if carrera_cerrada else "🟢"
                 
-                # --- CABECERA DE CARRERA CON BOTÓN DE GACETA ALINEADO A LA DERECHA ---
-                col_st1, col_st2 = st.columns([3, 2], gap="small")
+                # --- CABECERA DE CARRERA CON BOTÓN DE GACETA PEGADO A LA ESQUINA DERECHA ---
+                col_st1, col_st2 = st.columns([4, 1], gap="small")
                 with col_st1:
                     st.markdown(f"""
                         <div style="font-size: 14px; font-weight: 800; color: #f0f6fc; display: flex; align-items: center; gap: 6px; margin-top: 8px;">
@@ -1054,7 +1054,16 @@ def renderizar_cuerpo_principal():
                     """, unsafe_allow_html=True)
                 with col_st2:
                     if carr_activa in st.session_state.gacetas_carreras:
-                        st.markdown('<div style="display: flex; justify-content: flex-end;">', unsafe_allow_html=True)
+                        st.markdown("""
+                            <style>
+                            div[data-testid="column"]:nth-of-type(2) .stDownloadButton,
+                            div[data-testid="column"]:nth-of-type(2) .stDownloadButton button {
+                                float: right !important;
+                                margin-left: auto !important;
+                                display: block !important;
+                            }
+                            </style>
+                        """, unsafe_allow_html=True)
                         st.download_button(
                             label="📰 Gaceta",
                             data=st.session_state.gacetas_carreras[carr_activa],
@@ -1063,7 +1072,6 @@ def renderizar_cuerpo_principal():
                             key=f"btn_descargar_gaceta_{carr_activa}",
                             use_container_width=False
                         )
-                        st.markdown('</div>', unsafe_allow_html=True)
                     else:
                         st.markdown("<span style='font-size: 10px; color: #8b949e; text-align: right; display: block; padding-top: 8px;'>Sin Gaceta</span>", unsafe_allow_html=True)
 
