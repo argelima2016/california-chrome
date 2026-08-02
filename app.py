@@ -1042,10 +1042,11 @@ def renderizar_cuerpo_principal():
                 carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
                 estado_icono = "🔴" if carrera_cerrada else "🟢"
                 
-                col_st1, col_st2 = st.columns([3, 1], gap="small")
+                # --- CABECERA DE CARRERA CON BOTÓN DE GACETA ALINEADO A LA DERECHA ---
+                col_st1, col_st2 = st.columns([3, 2], gap="small")
                 with col_st1:
                     st.markdown(f"""
-                        <div style="font-size: 14px; font-weight: 800; color: #f0f6fc; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                        <div style="font-size: 14px; font-weight: 800; color: #f0f6fc; display: flex; align-items: center; gap: 6px; margin-top: 8px;">
                             <span>{estado_icono}</span>
                             <span>{carr_activa}</span>
                             <span style="font-size: 11px; font-weight: 600; color: #8b949e; background: #161b22; padding: 1px 6px; border-radius: 4px; border: 1px solid #30363d;">{modo_actual_remate}</span>
@@ -1053,16 +1054,18 @@ def renderizar_cuerpo_principal():
                     """, unsafe_allow_html=True)
                 with col_st2:
                     if carr_activa in st.session_state.gacetas_carreras:
+                        st.markdown('<div style="display: flex; justify-content: flex-end;">', unsafe_allow_html=True)
                         st.download_button(
                             label="📰 Gaceta",
                             data=st.session_state.gacetas_carreras[carr_activa],
                             file_name=f"gaceta_{carr_activa.lower().replace(' ', '_')}.pdf",
                             mime="application/pdf",
                             key=f"btn_descargar_gaceta_{carr_activa}",
-                            use_container_width=True
+                            use_container_width=False
                         )
+                        st.markdown('</div>', unsafe_allow_html=True)
                     else:
-                        st.markdown("<span style='font-size: 10px; color: #8b949e; text-align: right; display: block; padding-top: 6px;'>Sin Gaceta</span>", unsafe_allow_html=True)
+                        st.markdown("<span style='font-size: 10px; color: #8b949e; text-align: right; display: block; padding-top: 8px;'>Sin Gaceta</span>", unsafe_allow_html=True)
 
                 if carr_activa not in st.session_state.detalles_carreras:
                     st.session_state.detalles_carreras[carr_activa] = {
@@ -1201,7 +1204,7 @@ def renderizar_cuerpo_principal():
                 altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
                 components.html(tabla_html, height=altura_dinamica, scrolling=True)
                 
-                # --- POTE, PREMIO E INCENTIVO LLAMATIVO DEBAJO DE LA TABLA DE REMATE (INTERCAMBIADOS) ---
+                # --- POTE, PREMIO E INCENTIVO LLAMATIVO DEBAJO DE LA TABLA DE REMATE ---
                 retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
                 total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in retirados_carr_activa])
                 monto_casa = total_pote * (porcentaje_casa / 100)
