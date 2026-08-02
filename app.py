@@ -50,6 +50,8 @@ def cargar_estado_global(forzar_recarga=False):
         'remates_cargados_en_cuentas': {},
         'fechas_horas_inicio_remate_modalidad': {},
         'fechas_horas_cierre_remate_modalidad': {},
+        'fechas_horas_inicio_modalidad_multiple': {},
+        'fechas_horas_cierre_modalidad_multiple': {},
         'estado_conteo_carrera_modalidad': {},
         'tiempo_inicio_conteo_modalidad': {},
         'cuentas': {"CASA": {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}},
@@ -92,7 +94,8 @@ def guardar_estado_global():
         'menu_principal_opcion', 'sub_remate_opcion', 'sub_dupleta_opcion', 'usuario_activo',
         'lista_usuarios', 'banco_caballos_por_carrera', 'remates', 'ejemplares_retirados',
         'ejemplares_no_valido', 'detalles_carreras', 'historial_ganadores', 'carreras_cerradas_remate',
-        'remates_cargados_en_cuentas', 'fechas_horas_inicio_remate_modalidad', 'fechas_horas_cierre_remate_modalidad', 
+        'remates_cargados_en_cuentas', 'fechas_horas_inicio_remate_modalidad', 'fechas_horas_cierre_remate_modalidad',
+        'fechas_horas_inicio_modalidad_multiple', 'fechas_horas_cierre_modalidad_multiple', 
         'estado_conteo_carrera_modalidad', 'cuentas', 'historial_jugadas', 'ganancia_casa',
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
@@ -165,7 +168,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -1442,12 +1445,10 @@ def renderizar_tiempo_real_universal():
                                         st.success("✅ ¡Puja registrada correctamente!")
                                         st.rerun()
 
-renderizar_tiempo_real_universal()
-
 # =========================================================================
 # 2. MÓDULO DE DUPLETA Y 6 EN LINEA
 # =========================================================================
-if menu_principal_opcion == "Dupletas":
+elif menu_principal_opcion == "Dupletas":
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
     col_d1, col_d2, col_d3 = st.columns(3, gap="small")
     with col_d1:
@@ -1471,7 +1472,26 @@ if menu_principal_opcion == "Dupletas":
     sub_dup_actual = st.session_state.sub_dupleta_opcion
 
     st.markdown(f"<div class='subasta-header'>🎟️ Armado Visual de {sub_dup_actual}</div>", unsafe_allow_html=True)
-    if st.session_state.dupleta_bloqueada:
+    
+    # --- VERIFICACIÓN DE HORARIOS Y BLOQUEO AUTOMÁTICO DE MULTIPLES ---
+    clave_mod_mult = sub_dup_actual
+    dt_inicio_m = st.session_state.fechas_horas_inicio_modalidad_multiple.get(clave_mod_mult)
+    dt_cierre_m = st.session_state.fechas_horas_cierre_modalidad_multiple.get(clave_mod_mult)
+
+    bloqueo_por_horario = False
+    if dt_inicio_m and ahora_dt < dt_inicio_m:
+        bloqueo_por_horario = True
+        st.warning(f"⏳ **AÚN NO ABRE:** Esta modalidad abre el {dt_inicio_m.strftime('%d/%m/%Y a las %I:%M %p')}.")
+    elif dt_cierre_m and ahora_dt > dt_cierre_m:
+        bloqueo_por_horario = True
+        st.error(f"🔒 **CERRADO ESTRICTO:** El horario de emisión finalizó el {dt_cierre_m.strftime('%d/%m/%Y a las %I:%M %p')}.")
+
+    if dt_inicio_m:
+        st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:4px; border:1px solid #30363d; font-size:12px;'>🟢 Apertura ({sub_dup_actual}): <b>{dt_inicio_m.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+    if dt_cierre_m:
+        st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:8px; border:1px solid #30363d; font-size:12px;'>⏰ Cierre Estricto ({sub_dup_actual}): <b>{dt_cierre_m.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+
+    if st.session_state.dupleta_bloqueada or bloqueo_por_horario:
         st.error("🔒 **BLOQUEADO:** Emisión cerrada temporalmente.")
 
     monto_unico_seccion = st.session_state.config_montos_especiales.get(sub_dup_actual, 500.0)
@@ -1574,7 +1594,7 @@ if menu_principal_opcion == "Dupletas":
                 seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
                 st.markdown("---")
 
-            if not st.session_state.dupleta_bloqueada:
+            if not st.session_state.dupleta_bloqueada and not bloqueo_por_horario:
                 if st.button(f"🚀 Emitir Ticket de {sub_dup_actual}", key=f"btn_emitir_{sub_dup_actual}", use_container_width=True, type="primary"):
                     if not valido_legs:
                         st.error("⚠️ No puedes repetir la misma carrera en el mismo ticket.")
@@ -2120,7 +2140,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                         st.rerun()
 
     with tab3:
-        st.markdown("### ⚙️ Configuración de Montos y Carreras")
+        st.markdown("### ⚙️ Configuración de Montos, Horarios y Carreras")
         with st.container(border=True):
             st.markdown("💰 **Montos Únicos**")
             monto_dup_cfg = st.number_input("Dupleta (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("Dupleta", 500.0)), step=50.0, key="cfg_monto_dupleta")
@@ -2133,6 +2153,53 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.session_state.config_montos_especiales["6 En Linea"] = monto_polla_cfg
                 guardar_estado_global()
                 st.toast("✅ ¡Guardado!")
+                st.rerun()
+
+        # --- CONFIGURACIÓN DE HORARIOS INDEPENDIENTES PARA MULTIPLES (Dupleta, Tripleta, 6 En Linea) ---
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown("⏰ **Control de Horarios Independientes por Modalidad (Dupleta / Tripleta / 6 En Linea)**")
+            mod_mult_sel = st.selectbox("Seleccionar Modalidad Múltiple", ["Dupleta", "Tripleta", "6 En Linea"], key="sel_mod_multiple_horarios")
+            
+            col_hm1, col_hm2 = st.columns(2)
+            with col_hm1:
+                st.markdown(f"**🟢 Inicio ({mod_mult_sel})**")
+                f_ini_m = st.date_input("Fecha Inicio Múltiple", value=ahora_dt.date(), key=f"f_ini_m_{mod_mult_sel}")
+                
+                c_hmi1, c_hmi2, c_hmi3 = st.columns(3)
+                with c_hmi1:
+                    h_ini_m_val = st.number_input("Hora (1-12)", min_value=1, max_value=12, value=2, key=f"him_h_{mod_mult_sel}")
+                with c_hmi2:
+                    m_ini_m_val = st.number_input("Min (0-59)", min_value=0, max_value=59, value=0, key=f"him_m_{mod_mult_sel}")
+                with c_hmi3:
+                    ampm_ini_m = st.selectbox("AM/PM", ["AM", "PM"], index=1, key=f"him_ap_{mod_mult_sel}")
+
+            with col_hm2:
+                st.markdown(f"**⏰ Cierre Estricto ({mod_mult_sel})**")
+                f_cier_m = st.date_input("Fecha Cierre Múltiple", value=ahora_dt.date(), key=f"f_cier_m_{mod_mult_sel}")
+                
+                c_hmc1, c_hmc2, c_hmc3 = st.columns(3)
+                with c_hmc1:
+                    h_cier_m_val = st.number_input("Hora (1-12)", min_value=1, max_value=12, value=2, key=f"hcm_h_{mod_mult_sel}")
+                with c_hmc2:
+                    m_cier_m_val = st.number_input("Min (0-59)", min_value=0, max_value=59, value=30, key=f"hcm_m_{mod_mult_sel}")
+                with c_hmc3:
+                    ampm_cier_m = st.selectbox("AM/PM", ["AM", "PM"], index=1, key=f"hcm_ap_{mod_mult_sel}")
+
+            if st.button(f"💾 Guardar Horarios para {mod_mult_sel}", key=f"btn_save_horarios_m_{mod_mult_sel}", use_container_width=True, type="primary"):
+                h_im_24 = h_ini_m_val if ampm_ini_m == "AM" else (h_ini_m_val + 12 if h_ini_m_val < 12 else 12)
+                if ampm_ini_m == "AM" and h_ini_m_val == 12: h_im_24 = 0
+                
+                h_cm_24 = h_cier_m_val if ampm_cier_m == "AM" else (h_cier_m_val + 12 if h_cier_m_val < 12 else 12)
+                if ampm_cier_m == "AM" and h_cier_m_val == 12: h_cm_24 = 0
+
+                dt_im_final = datetime.combine(f_ini_m, dtime(h_im_24, m_ini_m_val))
+                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cier_m_val))
+
+                st.session_state.fechas_horas_inicio_modalidad_multiple[mod_mult_sel] = dt_im_final
+                st.session_state.fechas_horas_cierre_modalidad_multiple[mod_mult_sel] = dt_cm_final
+                guardar_estado_global()
+                st.toast(f"✅ ¡Horarios guardados para {mod_mult_sel}!")
                 st.rerun()
 
         st.markdown("---")
