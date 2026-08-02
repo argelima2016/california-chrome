@@ -816,7 +816,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BANNER MARQUESINA DINÁMICO (NUNCA PARA) ---
+# --- BANNER MARQUESINA DINÁMICO (LENTO 150s Y NUNCA PAUSA) ---
 elementos_carrusel_info = []
 
 remates_abiertos = [c for c in lista_carreras_disponibles if not st.session_state.carreras_cerradas_remate.get(c, False)]
@@ -859,7 +859,7 @@ if elementos_carrusel_info:
         .marquee-text {{
             display: inline-block;
             white-space: nowrap;
-            animation: scrollRight 80s linear infinite !important;
+            animation: scrollRight 150s linear infinite !important;
             animation-play-state: running !important;
             font-family: 'Arial Black', Gadget, sans-serif;
             font-size: 15px;
@@ -877,9 +877,6 @@ if elementos_carrusel_info:
             100% {{
                 transform: translateX(100%);
             }}
-        }}
-        .marquee-container:hover .marquee-text {{
-            animation-play-state: running !important;
         }}
     </style>
     <div class="marquee-container">
