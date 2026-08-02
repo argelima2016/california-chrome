@@ -572,115 +572,6 @@ def obtener_abreviatura_carrera(nombre_carrera, modo_ciego=False):
         return f"C{match.group(0)}"
     return nombre_carrera[:3].upper()
 
-def generar_tabla_html_remate(remates_dict, retirados_list):
-    html = """
-    <style>
-        .tabla-referencia {
-            width: 100%;
-            border-collapse: collapse;
-            font-family: sans-serif;
-            background-color: #ffffff;
-            color: #000000;
-            margin-bottom: 10px;
-            table-layout: fixed;
-        }
-        .tabla-referencia th {
-            border-top: 2px solid #dfc729;
-            border-bottom: 2px solid #dfc729;
-            padding: 6px 4px;
-            text-align: left;
-            font-weight: 800;
-            background-color: #ffffff;
-            color: #000000;
-            font-size: 11px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .tabla-referencia td {
-            border-bottom: 1px solid #dfc729;
-            padding: 6px 4px;
-            background-color: #fbfbfb;
-            color: #111111;
-            font-size: 11px;
-            vertical-align: middle;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .badge-numero {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 20px;
-            font-weight: bold;
-            font-size: 11px;
-            border-radius: 2px;
-            box-sizing: border-box;
-        }
-        .badge-1 { background-color: #e3242b; color: #ffffff; }
-        .badge-2 { background-color: #ffffff; color: #000000; border: 1.5px solid #000000; }
-        .badge-3 { background-color: #1d11c0; color: #ffffff; }
-        .badge-4 { background-color: #f1c40f; color: #000000; }
-        .badge-5 { background-color: #28a745; color: #ffffff; }
-        .badge-6 { background-color: #000000; color: #ffffff; }
-        .badge-7 { background-color: #fd7e14; color: #ffffff; }
-        .badge-default { background-color: #6c757d; color: #ffffff; }
-        .retirado-row td {
-            background-color: #ffe6e6 !important;
-            color: #990000 !important;
-            text-decoration: line-through;
-        }
-    </style>
-    <div style="background-color: #ffffff; padding: 3px; border-radius: 6px; overflow-x: auto; width: 100%;">
-        <table class="tabla-referencia">
-            <thead>
-                <tr>
-                    <th style="width: 12%;">No</th>
-                    <th style="width: 35%;">Ejemplar</th>
-                    <th style="width: 25%;">Comprador</th>
-                    <th style="width: 28%;">Monto</th>
-                </tr>
-            </thead>
-            <tbody>
-    """
-    for cab, info in remates_dict.items():
-        match_num = re.match(r'^(\d+)', cab)
-        if match_num:
-            num = int(match_num.group(1))
-            nombre_solo = cab.split(" - ", 1)[1] if " - " in cab else cab
-        else:
-            num = 0
-            nombre_solo = cab
-            
-        if num == 1: badge_class = "badge-1"
-        elif num == 2: badge_class = "badge-2"
-        elif num == 3: badge_class = "badge-3"
-        elif num == 4: badge_class = "badge-4"
-        elif num == 5: badge_class = "badge-5"
-        elif num == 6: badge_class = "badge-6"
-        elif num == 7: badge_class = "badge-7"
-        else: badge_class = "badge-default"
-        
-        es_retirado = cab in retirados_list
-        clase_fila = "retirado-row" if es_retirado else ""
-        etiqueta_estado = " (RETIRADO)" if es_retirado else ""
-        
-        html += f"""
-                <tr class="{clase_fila}">
-                    <td><span class="badge-numero {badge_class}">{num}</span></td>
-                    <td style="font-weight: 800; font-size: 12px;" title="{nombre_solo.upper()}{etiqueta_estado}">{nombre_solo.upper()}{etiqueta_estado}</td>
-                    <td title="{info['jugador']}">{info['jugador']}</td>
-                    <td style="font-weight: bold; color: { '#990000' if es_retirado else '#000000' };">{formatear_bs(info['monto'])}</td>
-                </tr>
-        """
-    html += """
-            </tbody>
-        </table>
-    </div>
-    """
-    return html
-
 if not st.session_state.remates:
     for i in range(1, st.session_state.total_carreras_semana + 1):
         carr_nombre = f"Carrera {i}"
@@ -961,8 +852,9 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# RENDERIZADO EXCLUSIVO Y ESTRICTO POR CADA MÓDULO PRINCIPAL
+# RENDERIZADO EXCLUSIVO UTILIZANDO TABLAS NATIVAS (SOLUCIÓN DEFINITIVA)
 # =========================================================================
+
 if menu_principal_opcion == "Remates":
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
     col_so1, col_so2, col_so3 = st.columns(3, gap="small")
@@ -1195,12 +1087,24 @@ if menu_principal_opcion == "Remates":
                             if restantes_10s > 0:
                                 st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa})</div>", unsafe_allow_html=True)
 
-                # --- RENDERIZADO ESTRICTO DE LA TABLA DE REMATES ---
-                if menu_principal_opcion == "Remates":
-                    tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []))
-                    cantidad_filas = len(st.session_state.remates[carr_activa])
-                    altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
-                    components.html(tabla_html, height=altura_dinamica, scrolling=True)
+                # --- TABLA NATIVA DE STREAMLIT (ELIMINA EL IFRAME HUÉRFANO) ---
+                datos_tabla = []
+                retirados_carr = st.session_state.ejemplares_retirados.get(carr_activa, [])
+                for cab, info in st.session_state.remates[carr_activa].items():
+                    match_num = re.match(r'^(\d+)', cab)
+                    num = int(match_num.group(1)) if match_num else 0
+                    nombre_solo = cab.split(" - ", 1)[1] if " - " in cab else cab
+                    es_ret = cab in retirados_carr
+                    
+                    datos_tabla.append({
+                        "No": num,
+                        "Ejemplar": f"{nombre_solo.upper()} {'(RETIRADO)' if es_ret else ''}",
+                        "Comprador": info['jugador'],
+                        "Monto": formatear_bs(info['monto'])
+                    })
+                
+                df_remates = pd.DataFrame(datos_tabla)
+                st.dataframe(df_remates, use_container_width=True, hide_index=True)
                 
                 # --- POTE, PREMIO E INCENTIVO LLAMATIVO DEBAJO DE LA TABLA DE REMATE ---
                 retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
