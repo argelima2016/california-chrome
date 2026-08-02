@@ -995,14 +995,13 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# BLOQUE FRAGMENTADO ANTI-PARPADEO EXCLUSIVO PARA REMATES Y CUENTAS
+# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (1 SEGUNDO PARA TABLAS Y TICKETS)
 # =========================================================================
-@st.fragment(run_every=3.0)
-def renderizar_tiempo_real():
+@st.fragment(run_every=1.0)
+def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
 
-if menu_principal_opcion != "🔒 Zona Admin":
-    renderizar_tiempo_real()
+renderizar_tiempo_real_universal()
 
 # =========================================================================
 # 1. MÓDULO DE REMATES
@@ -1390,13 +1389,15 @@ if menu_principal_opcion == "Remates":
                             
                         st.markdown(f"🔹 **1. Seleccionar Ejemplar (Disponibles: {len(lista_caballos_activos)}):**")
                         
-                        # --- ESTILOS DINÁMICOS PARA LOS 3 COLORES (LIBRE, TUYO, OTRO) ---
+                        # --- ESTILOS COMPACTOS Y DINÁMICOS PARA LOS 3 COLORES ---
                         st.markdown("""
                             <style>
                             div[data-testid="column"] button.btn-libre {
                                 background-color: #e2e8f0 !important;
                                 color: #1e293b !important;
                                 border: 1px solid #cbd5e1 !important;
+                                min-width: 42px !important;
+                                width: 100% !important;
                             }
                             div[data-testid="column"] button.btn-libre:hover {
                                 background-color: #cbd5e1 !important;
@@ -1405,6 +1406,8 @@ if menu_principal_opcion == "Remates":
                                 background-color: #22c55e !important;
                                 color: #ffffff !important;
                                 border: 1px solid #16a34a !important;
+                                min-width: 42px !important;
+                                width: 100% !important;
                             }
                             div[data-testid="column"] button.btn-tuyo:hover {
                                 background-color: #16a34a !important;
@@ -1413,6 +1416,8 @@ if menu_principal_opcion == "Remates":
                                 background-color: #ef4444 !important;
                                 color: #ffffff !important;
                                 border: 1px solid #dc2626 !important;
+                                min-width: 42px !important;
+                                width: 100% !important;
                             }
                             div[data-testid="column"] button.btn-otro:hover {
                                 background-color: #dc2626 !important;
@@ -1421,7 +1426,7 @@ if menu_principal_opcion == "Remates":
                         """, unsafe_allow_html=True)
 
                         cantidad_ejemplares = len(lista_caballos_activos)
-                        cols_ejemplares = min(5, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
+                        cols_ejemplares = min(10, cantidad_ejemplares) if cantidad_ejemplares > 0 else 1
                         num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                         
                         idx_cab = 0
@@ -1452,7 +1457,7 @@ if menu_principal_opcion == "Remates":
                                             const doc = window.parent.document;
                                             const buttons = doc.querySelectorAll('button');
                                             buttons.forEach(btn => {{
-                                                if (btn.innerText.includes("#{num_parte}")) {{
+                                                if (btn.innerText.trim() === "#{num_parte}") {{
                                                     btn.className = btn.className.replace(/btn-(libre|tuyo|otro)/g, '');
                                                     btn.classList.add('{tipo_clase}');
                                                 }}
