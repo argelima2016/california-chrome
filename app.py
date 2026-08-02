@@ -48,6 +48,7 @@ def cargar_estado_global(forzar_recarga=False):
         'historial_ganadores': {},
         'carreras_cerradas_remate': {},
         'remates_cargados_en_cuentas': {},
+        'fechas_horas_inicio_remate': {},
         'fechas_horas_cierre_remate': {},
         'estado_conteo_carrera': {},
         'tiempo_inicio_conteo': {},
@@ -91,7 +92,7 @@ def guardar_estado_global():
         'menu_principal_opcion', 'sub_remate_opcion', 'sub_dupleta_opcion', 'usuario_activo',
         'lista_usuarios', 'banco_caballos_por_carrera', 'remates', 'ejemplares_retirados',
         'ejemplares_no_valido', 'detalles_carreras', 'historial_ganadores', 'carreras_cerradas_remate',
-        'remates_cargados_en_cuentas', 'cuentas', 'historial_jugadas', 'ganancia_casa',
+        'remates_cargados_en_cuentas', 'fechas_horas_inicio_remate', 'fechas_horas_cierre_remate', 'cuentas', 'historial_jugadas', 'ganancia_casa',
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
@@ -581,8 +582,8 @@ header_html = f"""
 """
 st.markdown(header_html, unsafe_allow_html=True)
 
-def obtener_abreviatura_carrera(nombre_carrera, modo_ciego=False):
-    if modo_ciego:
+def obtener_abreviatura_carrera(nombre_carrera, modo_actual=""):
+    if modo_actual == "Ciegos":
         carreras_ciegas = st.session_state.carreras_por_modalidad.get("Ciegos", [])
         if len(carreras_ciegas) >= 2:
             if nombre_carrera == carreras_ciegas[0]:
@@ -744,23 +745,20 @@ else:
         if c_disp not in st.session_state.carreras_activas_remate:
             st.session_state.carreras_activas_remate.append(c_disp)
 
+for mod in ["Adelantados", "Ciegos", "En Vivo"]:
+    if not st.session_state.carreras_por_modalidad.get(mod) and lista_carreras_disponibles:
+        st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
+    else:
+        for c_disp in lista_carreras_disponibles:
+            if c_disp not in st.session_state.carreras_por_modalidad[mod]:
+                st.session_state.carreras_por_modalidad[mod].append(c_disp)
+
 if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_dupleta = list(lista_carreras_disponibles)
 if not st.session_state.carreras_habilitadas_tripleta and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_tripleta = list(lista_carreras_disponibles)
 if not st.session_state.carreras_habilitadas_polla and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_polla = list(lista_carreras_disponibles)
-
-for mod in ["Adelantados", "Ciegos", "En Vivo"]:
-    if not st.session_state.carreras_por_modalidad.get(mod) and lista_carreras_disponibles:
-        if mod == "Ciegos":
-            st.session_state.carreras_por_modalidad[mod] = lista_carreras_disponibles[:2]
-        else:
-            st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
-    else:
-        for c_disp in lista_carreras_disponibles:
-            if c_disp not in st.session_state.carreras_por_modalidad[mod]:
-                st.session_state.carreras_por_modalidad[mod].append(c_disp)
 
 # --- MENÚ PRINCIPAL HORIZONTAL ---
 st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
@@ -1049,8 +1047,6 @@ if menu_principal_opcion == "Remates":
         st.warning("⚠️ No hay carreras cargadas en el sistema.")
     else:
         carreras_modalidad_permitidas = st.session_state.carreras_por_modalidad.get(modo_actual_remate, lista_carreras_disponibles)
-        if modo_actual_remate == "Ciegos" and len(carreras_modalidad_permitidas) > 2:
-            carreras_modalidad_permitidas = carreras_modalidad_permitidas[:2]
         
         carreras_filtradas_visibles = [
             c for c in lista_carreras_disponibles 
@@ -1071,8 +1067,7 @@ if menu_principal_opcion == "Remates":
             st.markdown('<div class="carreras-scroll-container">', unsafe_allow_html=True)
             cols_carreras = st.columns(len(carreras_totales_visibles), gap="small")
             for idx, c_nombre in enumerate(carreras_totales_visibles):
-                es_modo_ciego = (modo_actual_remate == "Ciegos")
-                abreviatura = obtener_abreviatura_carrera(c_nombre, modo_ciego=es_modo_ciego)
+                abreviatura = obtener_abreviatura_carrera(c_nombre, modo_actual=modo_actual_remate)
                 es_activa = (c_nombre == carr_activa)
                 with cols_carreras[idx]:
                     if st.button(abreviatura, key=f"rem_btn_sel_carr_{idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
@@ -1202,11 +1197,22 @@ if menu_principal_opcion == "Remates":
                     st.toast("✅ ¡Ejemplares retirados actualizados y tickets ajustados!")
                     st.rerun()
 
+            # --- VERIFICACIÓN DE INICIO Y CIERRE AUTOMÁTICO ---
+            dt_inicio = st.session_state.fechas_horas_inicio_remate.get(carr_activa)
             dt_limite = st.session_state.fechas_horas_cierre_remate.get(carr_activa)
             estado_conteo = st.session_state.estado_conteo_carrera.get(carr_activa, "INACTIVO")
-            
+
+            # Control de apertura automática si hay hora de inicio establecida y el remate estaba cerrado por defecto
+            if dt_inicio and carrera_cerrada:
+                if ahora_dt >= dt_inicio:
+                    st.session_state.carreras_cerradas_remate[carr_activa] = False
+                    guardar_estado_global()
+                    carrera_cerrada = False
+
+            if dt_inicio:
+                st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:4px; border:1px solid #30363d; font-size:12px;'>🟢 Inicio Remate: <b>{dt_inicio.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
             if dt_limite:
-                st.markdown(f"<div class='cierre-info-box' style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:8px; border:1px solid #30363d;'>⏰ Cierre Estricto: <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:8px; border:1px solid #30363d; font-size:12px;'>⏰ Cierre Estricto: <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
 
             if dt_limite and not carrera_cerrada:
                 diferencia_segundos = (dt_limite - ahora_dt).total_seconds()
@@ -1874,7 +1880,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
         st.markdown("---")
         with st.container(border=True):
-            st.markdown("⚡ **Panel Didáctico: Carreras Activas para Remate**")
+            st.markdown("⚡ **Panel Didáctico: Carreras Activas para Remate General**")
             carreras_disponibles_todas = list(st.session_state.remates.keys())
             if not carreras_disponibles_todas:
                 st.warning("⚠️ No hay carreras en el banco.")
@@ -1900,25 +1906,26 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
         st.markdown("---")
         with st.container(border=True):
-            st.markdown("🙈 **Selección de las 2 Carreras para Remate Ciego (1V y 6V)**")
+            st.markdown("🎯 **Asignación Independiente de Carreras por Modalidad**")
             carreras_existentes = list(st.session_state.remates.keys())
-            carreras_ciego_actuales = st.session_state.carreras_por_modalidad.get("Ciegos", [])
-            default_ciego = [c for c in carreras_ciego_actuales if c in carreras_existentes][:2]
+            
+            modalidades_dict = st.session_state.carreras_por_modalidad
+            
+            def_adel = [c for c in modalidades_dict.get("Adelantados", []) if c in carreras_existentes]
+            def_ciego = [c for c in modalidades_dict.get("Ciegos", []) if c in carreras_existentes]
+            def_envivo = [c for c in modalidades_dict.get("En Vivo", []) if c in carreras_existentes]
 
-            carreras_ciego_seleccionadas = st.multiselect(
-                "Elige exactamente 2 carreras:",
-                options=carreras_existentes,
-                default=default_ciego,
-                key="multiselect_carreras_ciego"
-            )
-            if st.button("💾 Guardar Ciegos", key="btn_save_carr_ciego", use_container_width=True, type="primary"):
-                if len(carreras_ciego_seleccionadas) != 2:
-                    st.error("⚠️ Debes seleccionar exactamente 2 carreras.")
-                else:
-                    st.session_state.carreras_por_modalidad["Ciegos"] = carreras_ciego_seleccionadas
-                    guardar_estado_global()
-                    st.toast("✅ ¡Guardado!")
-                    st.rerun()
+            sel_adel = st.multiselect("Carreras para ⏱️ Adelantados", options=carreras_existentes, default=def_adel, key="multiselect_carr_adelantados")
+            sel_ciego = st.multiselect("Carreras para 🙈 Ciegos", options=carreras_existentes, default=def_ciego, key="multiselect_carr_ciegos")
+            sel_envivo = st.multiselect("Carreras para ⚡ En Vivo", options=carreras_existentes, default=def_envivo, key="multiselect_carr_envivo")
+
+            if st.button("💾 Guardar Modalidades Independientes", key="btn_save_mod_independientes", use_container_width=True, type="primary"):
+                st.session_state.carreras_por_modalidad["Adelantados"] = sel_adel
+                st.session_state.carreras_por_modalidad["Ciegos"] = sel_ciego
+                st.session_state.carreras_por_modalidad["En Vivo"] = sel_envivo
+                guardar_estado_global()
+                st.toast("✅ ¡Modalidades guardadas correctamente!")
+                st.rerun()
 
         st.markdown("---")
         carr_banco_sel = st.selectbox("Seleccionar Carrera para Editar", lista_carreras_disponibles, key="adm_banco_sel_carrera")
@@ -1971,6 +1978,26 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 }
                 guardar_estado_global()
                 st.toast("✅ ¡Detalles e incentivos guardados!")
+                st.rerun()
+
+        # --- CONFIGURACIÓN DE INICIO Y CIERRE ESTRICTO EN CABALLOS ---
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown(f"⏰ **Control de Horarios (Inicio y Cierre) - {carr_banco_sel}**")
+            col_h1, col_h2 = st.columns(2)
+            with col_h1:
+                f_ini = st.date_input("Fecha Inicio", value=ahora_dt.date(), key=f"f_ini_{carr_banco_sel}")
+                h_ini = st.time_input("Hora Inicio", value=datetime.now().time(), key=f"h_ini_{carr_banco_sel}")
+            with col_h2:
+                f_cier = st.date_input("Fecha Cierre", value=ahora_dt.date(), key=f"f_cier_{carr_banco_sel}")
+                h_cier = st.time_input("Hora Cierre", value=datetime.now().time(), key=f"h_cier_{carr_banco_sel}")
+
+            if st.button("💾 Guardar Horarios de Inicio y Cierre", key=f"btn_save_horarios_{carr_banco_sel}", use_container_width=True, type="primary"):
+                st.session_state.fechas_horas_inicio_remate[carr_banco_sel] = datetime.combine(f_ini, h_ini)
+                st.session_state.fechas_horas_cierre_remate[carr_banco_sel] = datetime.combine(f_cier, h_cier)
+                st.session_state.estado_conteo_carrera[carr_banco_sel] = "INACTIVO"
+                guardar_estado_global()
+                st.toast(f"✅ ¡Horarios guardados para {carr_banco_sel}!")
                 st.rerun()
 
         st.markdown("---")
