@@ -186,7 +186,7 @@ components.html("""
                         }
                     } else {
                         const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
-                                          doc.querySelector('[data-testid="collapsedControl"] button');
+                                            doc.querySelector('[data-testid="collapsedControl"] button');
                         if (collapseBtn) collapseBtn.click();
                     }
                 };
@@ -247,7 +247,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS GENERALES Y COMPACTACIÓN EXTREMA DEL GRID DE PUJAS ---
+# --- ESTILOS CSS GENERALES Y GRID DE PUJAS DE 3 COLUMNAS COMPACTO ---
 st.markdown("""
     <style>
     * {
@@ -312,13 +312,47 @@ st.markdown("""
         width: 55px !important;
     }
     
-    /* --- ELIMINAR ESPACIOS VERTICALES ENTRE FILAS DE BOTONES DE PUJA --- */
+    /* --- ELIMINAR ESPACIOS VERTICALES ENTRE FILAS DE BOTONES DE PUJA (3 COLUMNAS) --- */
     div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"]:has(button.btn-libre, button.btn-tuyo, button.btn-otro) {
-        margin-top: -14px !important;
-        margin-bottom: -14px !important;
+        gap: 4px !important;
+        margin-top: -18px !important;
+        margin-bottom: -18px !important;
     }
     div[data-testid="column"]:has(button.btn-libre, button.btn-tuyo, button.btn-otro) {
         padding: 0px 2px !important;
+    }
+    div[data-testid="column"] button.btn-libre {
+        background-color: #e2e8f0 !important;
+        color: #1e293b !important;
+        border: 1px solid #cbd5e1 !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        width: 100% !important;
+    }
+    div[data-testid="column"] button.btn-libre:hover {
+        background-color: #cbd5e1 !important;
+    }
+    div[data-testid="column"] button.btn-tuyo {
+        background-color: #22c55e !important;
+        color: #ffffff !important;
+        border: 1px solid #16a34a !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        width: 100% !important;
+    }
+    div[data-testid="column"] button.btn-tuyo:hover {
+        background-color: #16a34a !important;
+    }
+    div[data-testid="column"] button.btn-otro {
+        background-color: #ef4444 !important;
+        color: #ffffff !important;
+        border: 1px solid #dc2626 !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        width: 100% !important;
+    }
+    div[data-testid="column"] button.btn-otro:hover {
+        background-color: #dc2626 !important;
     }
 
     .stButton button {
@@ -378,7 +412,6 @@ st.markdown("""
         text-shadow: 2px 2px 4px #000000;
     }
     
-    /* --- ESTILOS ULTRA LLAMATIVOS PARA EL ANUNCIO DEL GANADOR --- */
     @keyframes parpadeoGanador {
         0% { transform: scale(1); box-shadow: 0 0 15px #f1c40f, inset 0 0 15px #f1c40f; }
         50% { transform: scale(1.02); box-shadow: 0 0 35px #00ffff, inset 0 0 25px #00ffff; }
@@ -444,7 +477,6 @@ st.markdown("""
         font-weight: 600;
     }
     
-    /* --- ESTILOS MODERNOS PARA LA CABECERA CON LOGO MÁS GRANDE --- */
     .header-container-modern {
         background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
         border: 1px solid #30363d;
@@ -894,7 +926,7 @@ if lista_b64_banners:
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
                     }}, 400);
-                }}, 8000);
+                }, 8000);
             }}
         }})();
     </script>
@@ -1340,7 +1372,7 @@ if menu_principal_opcion == "Remates":
                         st.warning("⚠️ Todos los ejemplares disponibles de esta carrera ya han sido adquiridos.")
                     else:
                         st.markdown("🎲 **Panel Didáctico (Elige un número para asignar):**")
-                        cols_ciego_grid = st.columns(min(5, len(caballos_disponibles_ciego)), gap="small")
+                        cols_ciego_grid = st.columns(min(3, len(caballos_disponibles_ciego)), gap="small")
                         for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
                             c_idx = idx_cb % len(cols_ciego_grid)
                             num_cb_parte = cb_disp.split(" - ")[0]
@@ -1380,55 +1412,8 @@ if menu_principal_opcion == "Remates":
                             
                         st.markdown(f"🔹 **1. Seleccionar Ejemplar (Disponibles: {len(lista_caballos_activos)}):**")
                         
-                        # --- ESTILOS COMPACTOS (FILAS DE 5 ESTRICTAS Y PEGADAS) ---
-                        st.markdown("""
-                            <style>
-                            div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"]:has(button.btn-libre, button.btn-tuyo, button.btn-otro) {
-                                gap: 2px !important;
-                                margin-top: -12px !important;
-                                margin-bottom: -12px !important;
-                            }
-                            div[data-testid="column"]:has(button.btn-libre, button.btn-tuyo, button.btn-otro) {
-                                padding: 0px 1px !important;
-                            }
-                            div[data-testid="column"] button.btn-libre {
-                                background-color: #e2e8f0 !important;
-                                color: #1e293b !important;
-                                border: 1px solid #cbd5e1 !important;
-                                height: 36px !important;
-                                min-height: 36px !important;
-                                width: 100% !important;
-                            }
-                            div[data-testid="column"] button.btn-libre:hover {
-                                background-color: #cbd5e1 !important;
-                            }
-                            div[data-testid="column"] button.btn-tuyo {
-                                background-color: #22c55e !important;
-                                color: #ffffff !important;
-                                border: 1px solid #16a34a !important;
-                                height: 36px !important;
-                                min-height: 36px !important;
-                                width: 100% !important;
-                            }
-                            div[data-testid="column"] button.btn-tuyo:hover {
-                                background-color: #16a34a !important;
-                            }
-                            div[data-testid="column"] button.btn-otro {
-                                background-color: #ef4444 !important;
-                                color: #ffffff !important;
-                                border: 1px solid #dc2626 !important;
-                                height: 36px !important;
-                                min-height: 36px !important;
-                                width: 100% !important;
-                            }
-                            div[data-testid="column"] button.btn-otro:hover {
-                                background-color: #dc2626 !important;
-                            }
-                            </style>
-                        """, unsafe_allow_html=True)
-
                         cantidad_ejemplares = len(lista_caballos_activos)
-                        cols_ejemplares = 5  # Forzar exactamente 5 columnas por fila
+                        cols_ejemplares = 3  # <--- ESTRICTAMENTE 3 COLUMNAS POR FILA
                         num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                         
                         idx_cab = 0
