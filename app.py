@@ -125,7 +125,7 @@ for dict_key in ['fechas_horas_inicio_remate', 'fechas_horas_cierre_remate']:
                 except Exception:
                     pass
 
-# --- SCRIPT JS OPTIMIZADO PARA EVITAR PARPADEOS ---
+# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN EN TIEMPO REAL Y CONTROL TOTAL ---
 components.html("""
     <script>
         function sincronizacionEnVivo() {
@@ -963,7 +963,6 @@ menu_principal_opcion = st.session_state.menu_principal_opcion
 # =========================================================================
 # RENDERIZADO EXCLUSIVO Y ESTRICTO POR CADA MÓDULO PRINCIPAL
 # =========================================================================
-
 if menu_principal_opcion == "Remates":
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
     col_so1, col_so2, col_so3 = st.columns(3, gap="small")
@@ -2236,7 +2235,7 @@ if url_live_video:
         except Exception:
             st.video(url_live_video)
 
-# --- SINCRONIZACIÓN AUTOMÁTICA OPTIMIZADA (6 SEGUNDOS PARA EVITAR PARPADEOS) ---
+# --- SINCRONIZACIÓN AUTOMÁTICA OPTIMIZADA (6 SEGUNDOS) ---
 if menu_principal_opcion != "🔒 Zona Admin":
     time.sleep(6)
     cargar_estado_global(forzar_recarga=True)
