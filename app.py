@@ -65,8 +65,6 @@ def cargar_estado_global(forzar_recarga=False):
         'carreras_por_modalidad': {"Adelantados": [], "Ciegos": [], "En Vivo": []},
         'total_carreras_semana': 10,
         'url_video_en_vivo': "",
-        'url_retirados_web': "",
-        'admin_tab_seleccionada': "✍️ Caballos",
         'imagenes_carreras': {}
     }
     
@@ -95,7 +93,7 @@ def guardar_estado_global():
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
-        'total_carreras_semana', 'url_video_en_vivo', 'url_retirados_web', 'imagenes_carreras', 'admin_tab_seleccionada'
+        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras'
     ]
     data = {}
     for k in keys_to_save:
@@ -163,7 +161,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -276,9 +274,6 @@ st.markdown("""
     }
     footer, #MainMenu {
         visibility: hidden !important;
-        display: none !important;
-    }
-    div[data-testid="stTabs"] {
         display: none !important;
     }
     .block-container {
@@ -967,7 +962,6 @@ menu_principal_opcion = st.session_state.menu_principal_opcion
 def renderizar_tiempo_real():
     cargar_estado_global(forzar_recarga=True)
 
-# Solo ejecutamos el fragmento en segundo plano si NO estamos en Zona Admin
 if menu_principal_opcion != "🔒 Zona Admin":
     renderizar_tiempo_real()
 
@@ -1749,28 +1743,22 @@ elif menu_principal_opcion == "Cuentas":
         st.info("ℹ️ No hay tickets de dupletas, tripletas o pollas registrados para este usuario.")
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR (CONFIGURACIÓN)
+# 4. ZONA DE ADMINISTRADOR (CONFIGURACIÓN CON TABS NATIVAS)
 # =========================================================================
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Panel de Configuración y Administración</div>", unsafe_allow_html=True)
     
-    opciones_admin_tabs = ["✍️ Caballos", "👥 Usuarios", "⚙️ Dupletas/Polla", "📺 Video", "📊 Saldos", "🖼️ Imágenes"]
-    
-    st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
-    cols_adm_tabs = st.columns(len(opciones_admin_tabs), gap="small")
-    for idx, tab_nombre in enumerate(opciones_admin_tabs):
-        with cols_adm_tabs[idx]:
-            es_tab_activa = (st.session_state.admin_tab_seleccionada == tab_nombre)
-            if st.button(tab_nombre, key=f"adm_tab_btn_{idx}", use_container_width=True, type="primary" if es_tab_activa else "secondary"):
-                st.session_state.admin_tab_seleccionada = tab_nombre
-                guardar_estado_global()
-                st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Uso de st.tabs nativo para garantizar navegación fluida y sin bloqueos
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "✍️ Caballos", 
+        "👥 Usuarios", 
+        "⚙️ Dupletas/Polla", 
+        "📺 Video", 
+        "📊 Saldos", 
+        "🖼️ Imágenes"
+    ])
 
-    st.markdown("<hr style='margin: 0.5rem 0; border-color: #30363d;'>", unsafe_allow_html=True)
-    tab_actual = st.session_state.admin_tab_seleccionada
-
-    if tab_actual == "✍️ Caballos":
+    with tab1:
         st.markdown("### ✍️ Banco de Caballos y Carreras Activas")
         with st.container(border=True):
             st.markdown("📅 **Configuración General de la Semana**")
@@ -1937,7 +1925,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     guardar_estado_global()
                     st.rerun()
 
-    elif tab_actual == "👥 Usuarios":
+    with tab2:
         st.markdown("### 👥 Registro de Usuarios")
         with st.container(border=True):
             nuevo_usuario_input = st.text_input("Nuevo Usuario", placeholder="Ej: JUAN", key="input_nuevo_usuario_reg")
@@ -1970,7 +1958,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                         guardar_estado_global()
                         st.rerun()
 
-    elif tab_actual == "⚙️ Dupletas/Polla":
+    with tab3:
         st.markdown("### ⚙️ Configuración de Montos y Carreras")
         with st.container(border=True):
             st.markdown("💰 **Montos Únicos**")
@@ -2007,7 +1995,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Guardado!")
                 st.rerun()
 
-    elif tab_actual == "📺 Video":
+    with tab4:
         st.markdown("### 📺 Video en Vivo")
         with st.container(border=True):
             nueva_url_video = st.text_input("URL", value=st.session_state.get('url_video_en_vivo', ''), placeholder="https://youtube.com/watch?v=...", key="input_live_video_url")
@@ -2025,7 +2013,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.toast("🗑️ Desactivado.")
                     st.rerun()
 
-    elif tab_actual == "📊 Saldos":
+    with tab5:
         st.markdown("### 📊 Saldos de Usuarios")
         usuarios_futuros = [u for u in st.session_state.lista_usuarios if u != "CASA"]
         if not usuarios_futuros:
@@ -2084,7 +2072,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.toast(f"✅ Retiro de {formatear_bs(monto_retiro)} deducido a {jugador_retirar}")
                     st.rerun()
 
-    elif tab_actual == "🖼️ Imágenes":
+    with tab6:
         st.markdown("### 🖼️ Imágenes por Carrera")
         carr_img_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="adm_img_sel_carr")
         
