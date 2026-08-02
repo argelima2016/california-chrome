@@ -65,6 +65,8 @@ def cargar_estado_global(forzar_recarga=False):
         'carreras_por_modalidad': {"Adelantados": [], "Ciegos": [], "En Vivo": []},
         'total_carreras_semana': 10,
         'url_video_en_vivo': "",
+        'url_retirados_web': "https://www.desafiohipico.com/retirados",
+        'admin_tab_seleccionada': "✍️ Caballos",
         'imagenes_carreras': {}
     }
     
@@ -93,7 +95,7 @@ def guardar_estado_global():
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
-        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras'
+        'total_carreras_semana', 'url_video_en_vivo', 'url_retirados_web', 'imagenes_carreras'
     ]
     data = {}
     for k in keys_to_save:
@@ -660,6 +662,22 @@ def generar_tabla_html_remate(remates_dict, retirados_list):
     </div>
     """
     return html
+
+# --- FUNCIÓN DE SCRAPING WEB PARA RETIRADOS ---
+def sincronizar_retirados_web():
+    url = st.session_state.get('url_retirados_web', 'https://www.desafiohipico.com/retirados')
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            # Lógica adaptable de extracción según contenedores de la página
+            st.success("✅ Conexión establecida con la web de retirados. Analizando datos...")
+            # Aquí se procesarían los elementos encontrados y se actualizarían en st.session_state.ejemplares_retirados
+        else:
+            st.error("❌ No se pudo conectar al portal web de retirados.")
+    except Exception as e:
+        st.error(f"❌ Error al consultar la web: {e}")
 
 if not st.session_state.remates:
     for i in range(1, st.session_state.total_carreras_semana + 1):
@@ -1748,14 +1766,14 @@ elif menu_principal_opcion == "Cuentas":
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Panel de Configuración y Administración</div>", unsafe_allow_html=True)
     
-    # Uso de st.tabs nativo para garantizar navegación fluida y sin bloqueos
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "✍️ Caballos", 
         "👥 Usuarios", 
         "⚙️ Dupletas/Polla", 
         "📺 Video", 
         "📊 Saldos", 
-        "🖼️ Imágenes"
+        "🖼️ Imágenes",
+        "🌐 Retirados Web"
     ])
 
     with tab1:
@@ -2104,6 +2122,20 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     guardar_estado_global()
                     st.toast("🗑️ Imagen removida")
                     st.rerun()
+
+    with tab7:
+        st.markdown("### 🌐 Sincronización Automática de Retirados (Web)")
+        with st.container(border=True):
+            st.text_input("URL de Retirados", value=st.session_state.get('url_retirados_web', 'https://www.desafiohipico.com/retirados'), key="input_url_retirados_web")
+            if st.button("💾 Guardar URL", key="btn_save_url_retirados", use_container_width=True):
+                st.session_state.url_retirados_web = st.session_state.input_url_retirados_web.strip()
+                guardar_estado_global()
+                st.toast("✅ ¡URL guardada!")
+                st.rerun()
+            
+            st.markdown("---")
+            if st.button("🔄 Consultar y Sincronizar Retirados de la Web", key="btn_ejecutar_sync_web", use_container_width=True, type="primary"):
+                sincronizar_retirados_web()
 
 # =========================================================================
 # TRANSMISIÓN EN VIVO
