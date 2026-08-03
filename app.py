@@ -16,7 +16,7 @@ from pypdf import PdfReader
 # Configuración de pantalla completa
 st.set_page_config(page_title="California Chrome", layout="wide", page_icon="🐺")
 
-# --- HORA LOCAL DE VENEZUELA ---
+# --- HORA LOCAL DE VENEZUELA (SIEMPRE NAIVE PARA EVITAR CHOQUES) ---
 def obtener_hora_venezuela_local():
     try:
         zona_venezuela = ZoneInfo("America/Caracas")
@@ -26,11 +26,21 @@ def obtener_hora_venezuela_local():
     tz_venezuela = timezone(timedelta(hours=-4))
     return datetime.now(tz_venezuela).replace(tzinfo=None)
 
+def parsear_dt_seguro(val):
+    if isinstance(val, datetime):
+        return val.replace(tzinfo=None)
+    if isinstance(val, str):
+        try:
+            return datetime.fromisoformat(val).replace(tzinfo=None)
+        except Exception:
+            pass
+    return None
+
 def formatear_bs(monto):
     numero_formateado = f"{monto:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return f"Bs. {numero_formateado}"
 
-# --- SISTEMA DE PERSISTENCIA GLOBAL (JSON) PARA SINCRONIZAR A TODOS LOS USUARIOS ---
+# --- SISTEMA DE PERSISTENCIA GLOBAL (JSON) ---
 DB_FILE = "state_db.json"
 
 def cargar_estado_global(forzar_recarga=False):
@@ -79,7 +89,15 @@ def cargar_estado_global(forzar_recarga=False):
                 data = json.load(f)
                 for k, v in default_state.items():
                     if k not in st.session_state or forzar_recarga:
-                        st.session_state[k] = data.get(k, v)
+                        val_json = data.get(k, v)
+                        # Reconstruir fechas serializadas si aplica
+                        if "fechas_horas" in k and isinstance(val_json, dict):
+                            val_reconstruido = {}
+                            for dk, dv in val_json.items():
+                                val_reconstruido[dk] = parsear_dt_seguro(dv) or dv
+                            st.session_state[k] = val_reconstruido
+                        else:
+                            st.session_state[k] = val_json
         except Exception:
             for k, v in default_state.items():
                 if k not in st.session_state:
@@ -106,7 +124,17 @@ def guardar_estado_global():
     for k in keys_to_save:
         if k in st.session_state:
             val = st.session_state[k]
-            data[k] = val
+            # Serializar datetimes a string ISO si están en diccionarios de fechas
+            if "fechas_horas" in k and isinstance(val, dict):
+                val_serializable = {}
+                for dk, dv in val.items():
+                    if isinstance(dv, datetime):
+                        val_serializable[dk] = dv.isoformat()
+                    else:
+                        val_serializable[dk] = dv
+                data[k] = val_serializable
+            else:
+                data[k] = val
     try:
         with open(DB_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
@@ -970,11 +998,14 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (1 SEGUNDO CON PROTECCIÓN DE CLAVES)
+# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (1 SEGUNDO SEGURO)
 # =========================================================================
 @st.fragment(run_every=1.0)
 def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
+
+    # Re-sincronizar hora local de Venezuela segura dentro del fragmento
+    ahora_dt = obtener_hora_venezuela_local()
 
     lista_carreras_locales = list(st.session_state.remates.keys())
     if not lista_carreras_locales:
@@ -1132,10 +1163,10 @@ def renderizar_tiempo_real_universal():
                         st.toast("✅ ¡Ejemplares retirados actualizados!")
                         st.rerun()
 
-                # --- VERIFICACIÓN DE INICIO Y CIERRE AUTOMÁTICO ---
+                # --- VERIFICACIÓN DE INICIO Y CIERRE AUTOMÁTICO SEGURA ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
-                dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
-                dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
+                dt_inicio = parsear_dt_seguro(st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr))
+                dt_limite = parsear_dt_seguro(st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr))
                 estado_conteo = st.session_state.estado_conteo_carrera_modalidad.get(clave_mod_carr, "INACTIVO")
 
                 if dt_inicio and carrera_cerrada:
@@ -1164,7 +1195,7 @@ def renderizar_tiempo_real_universal():
                             guardar_estado_global()
                             st.rerun()
                     elif estado_conteo == "CONTEO_10S":
-                        tiempo_inicio = st.session_state.tiempo_inicio_conteo_modalidad.get(clave_mod_carr, ahora_dt)
+                        tiempo_inicio = parsear_dt_seguro(st.session_state.tiempo_inicio_conteo_modalidad.get(clave_mod_carr)) or ahora_dt
                         transcurridos = (ahora_dt - tiempo_inicio).total_seconds()
                         if transcurridos >= 12:
                             st.session_state.carreras_cerradas_remate[carr_activa] = True
@@ -1415,8 +1446,8 @@ if menu_principal_opcion == "Dupletas":
     st.markdown(f"<div class='subasta-header'>🎟️ Armado Visual de {sub_dup_actual}</div>", unsafe_allow_html=True)
     
     clave_mod_mult = sub_dup_actual
-    dt_inicio_m = st.session_state.fechas_horas_inicio_modalidad_multiple.get(clave_mod_mult)
-    dt_cierre_m = st.session_state.fechas_horas_cierre_modalidad_multiple.get(clave_mod_mult)
+    dt_inicio_m = parsear_dt_seguro(st.session_state.fechas_horas_inicio_modalidad_multiple.get(clave_mod_mult))
+    dt_cierre_m = parsear_dt_seguro(st.session_state.fechas_horas_cierre_modalidad_multiple.get(clave_mod_mult))
 
     bloqueo_por_horario = False
     if dt_inicio_m and ahora_dt < dt_inicio_m:
