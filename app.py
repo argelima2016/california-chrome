@@ -1081,86 +1081,54 @@ def renderizar_tiempo_real_universal():
         modo_actual_remate = st.session_state.sub_remate_opcion
 
         if modo_actual_remate == "Ciegos":
-            carreras_ciegas_activas = st.session_state.carreras_por_modalidad.get("Ciegos", [])
-            if len(carreras_ciegas_activas) >= 2:
-                c1_ciego = carreras_ciegas_activas[0]
-                c6_ciego = carreras_ciegas_activas[1]
-                
-                if 'sub_ciego_opcion' not in st.session_state:
+            if 'sub_ciego_opcion' not in st.session_state:
+                st.session_state.sub_ciego_opcion = "1V"
+            
+            col_sc1, col_sc2 = st.columns(2, gap="small")
+            with col_sc1:
+                if st.button("🙈 Remate 1V", key="btn_ciego_1v_tab", use_container_width=True, type="primary" if st.session_state.sub_ciego_opcion == "1V" else "secondary"):
                     st.session_state.sub_ciego_opcion = "1V"
-                
-                col_sc1, col_sc2 = st.columns(2, gap="small")
-                with col_sc1:
-                    if st.button(f"🙈 Remate 1V ({c1_ciego})", key="btn_ciego_1v", use_container_width=True, type="primary" if st.session_state.sub_ciego_opcion == "1V" else "secondary"):
-                        st.session_state.sub_ciego_opcion = "1V"
-                        guardar_estado_global()
-                        st.rerun()
-                with col_sc2:
-                    if st.button(f"🙈 Remate 6V ({c6_ciego})", key="btn_ciego_6v", use_container_width=True, type="primary" if st.session_state.sub_ciego_opcion == "6V" else "secondary"):
-                        st.session_state.sub_ciego_opcion = "6V"
-                        guardar_estado_global()
-                        st.rerun()
-                st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+                    guardar_estado_global()
+                    st.rerun()
+            with col_sc2:
+                if st.button("🙈 Remate 6V", key="btn_ciego_6v_tab", use_container_width=True, type="primary" if st.session_state.sub_ciego_opcion == "6V" else "secondary"):
+                    st.session_state.sub_ciego_opcion = "6V"
+                    guardar_estado_global()
+                    st.rerun()
+            st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-                # Definir nombres virtuales para los remates iniciales de 14 ejemplares
-                nombre_carrera_virtual = "Remate 1V (14 Ejemplares)" if st.session_state.sub_ciego_opcion == "1V" else "Remate 6V (14 Ejemplares)"
-                
-                if nombre_carrera_virtual not in st.session_state.remates:
-                    st.session_state.remates[nombre_carrera_virtual] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 15)}
-                    st.session_state.detalles_carreras[nombre_carrera_virtual] = {
-                        "condicion": "Remate inicial ciego de 14 ejemplares",
-                        "distancia": "1200 mts",
-                        "hora": "02:00 PM",
-                        "monto_fijo_ciego": 500.0,
-                        "incentivo_adelantados": 0.0,
-                        "incentivo_ciegos": 0.0,
-                        "incentivo_envivo": 0.0,
-                        "hora_cierre_real": "No registrada"
-                    }
-
-                # Selector de asignación de carrera real
-                carreras_reales_disponibles = list(st.session_state.remates.keys())
-                carreras_reales_disponibles = [c for c in carreras_reales_disponibles if "Remate" not in c]
-                
-                if 'mapeo_ciegos_carreras' not in st.session_state:
-                    st.session_state.mapeo_ciegos_carreras = {}
-
-                carrera_asignada_actual = st.session_state.mapeo_ciegos_carreras.get(nombre_carrera_virtual, carreras_reales_disponibles[0] if carreras_reales_disponibles else "")
-
-                col_map1, col_map2 = st.columns([3, 1], gap="small")
-                with col_map1:
-                    carrera_nueva_asignada = st.selectbox(
-                        f"🔗 Asignar {nombre_carrera_virtual} a Carrera Real:",
-                        options=carreras_reales_disponibles if carreras_reales_disponibles else ["Sin Carreras Real"],
-                        index=carreras_reales_disponibles.index(carrera_asignada_actual) if carrera_asignada_actual in carreras_reales_disponibles else 0,
-                        key=f"sel_mapeo_{nombre_carrera_virtual}"
-                    )
-                with col_map2:
-                    if st.button("🔗 Vincular", key=f"btn_vincular_{nombre_carrera_virtual}", use_container_width=True, type="primary"):
-                        st.session_state.mapeo_ciegos_carreras[nombre_carrera_virtual] = carrera_nueva_asignada
-                        guardar_estado_global()
-                        st.toast(f"✅ ¡Vinculado a {carrera_nueva_asignada}!")
-                        st.rerun()
-
-                carr_activa = nombre_carrera_virtual
-                carrera_real_destino = st.session_state.mapeo_ciegos_carreras.get(nombre_carrera_virtual, "")
-
-                # Sincronización estricta de ejemplares: si la carrera real tiene menos ejemplares (por ejemplo 10), filtramos y los demás no van jugando
-                if carrera_real_destino and carrera_real_destino in st.session_state.banco_caballos_por_carrera:
-                    caballos_reales_oficiales = st.session_state.banco_caballos_por_carrera[carrera_real_destino]
-                    # Asegurar que el diccionario de remates solo contenga los ejemplares válidos de la carrera real asignada
-                    remates_actuales_virtuales = st.session_state.remates[nombre_carrera_virtual]
-                    remates_filtrados_nuevos = {}
-                    for cab_oficial in caballos_reales_oficiales:
-                        if cab_oficial in remates_actuales_virtuales:
-                            remates_filtrados_nuevos[cab_oficial] = remates_actuales_virtuales[cab_oficial]
-                        else:
-                            remates_filtrados_nuevos[cab_oficial] = {"jugador": "Sin Postor", "monto": 0.0}
-                    st.session_state.remates[nombre_carrera_virtual] = remates_filtrados_nuevos
+            nombre_carrera_virtual = "Remate 1V" if st.session_state.sub_ciego_opcion == "1V" else "Remate 6V"
+            
+            if nombre_carrera_virtual not in st.session_state.remates:
+                st.session_state.remates[nombre_carrera_virtual] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 15)}
+                st.session_state.detalles_carreras[nombre_carrera_virtual] = {
+                    "condicion": "Remate inicial ciego de 14 ejemplares",
+                    "distancia": "1200 mts",
+                    "hora": "02:00 PM",
+                    "monto_fijo_ciego": 500.0,
+                    "incentivo_adelantados": 0.0,
+                    "incentivo_ciegos": 0.0,
+                    "incentivo_envivo": 0.0,
+                    "hora_cierre_real": "No registrada"
+                }
 
             carr_activa = nombre_carrera_virtual
             carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
             detalles_carr = st.session_state.detalles_carreras.get(carr_activa, {"condicion": "Remate Ciego", "distancia": "1200 mts", "hora": "02:00 PM"})
+
+            # Sincronización estricta de ejemplares asignados en Zona Admin
+            carrera_real_asignada = st.session_state.mapeo_ciegos_carreras.get(nombre_carrera_virtual, "")
+            if carrera_real_asignada and carrera_real_asignada in st.session_state.banco_caballos_por_carrera:
+                caballos_reales_oficiales = st.session_state.banco_caballos_por_carrera[carrera_real_asignada]
+                remates_actuales_virtuales = st.session_state.remates[nombre_carrera_virtual]
+                remates_filtrados_nuevos = {}
+                for cab_oficial in caballos_reales_oficiales:
+                    if cab_oficial in remates_actuales_virtuales:
+                        remates_filtrados_nuevos[cab_oficial] = remates_actuales_virtuales[cab_oficial]
+                    else:
+                        remates_filtrados_nuevos[cab_oficial] = {"jugador": "Sin Postor", "monto": 0.0}
+                st.session_state.remates[nombre_carrera_virtual] = remates_filtrados_nuevos
+                st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:8px; border:1px solid #30363d; font-size:12px;'>🔗 Vinculado a: <b>{carrera_real_asignada}</b> ({len(caballos_reales_oficiales)} ejemplares activos)</div>", unsafe_allow_html=True)
 
             tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
             cantidad_filas = len(st.session_state.remates[carr_activa])
@@ -2066,10 +2034,44 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast(f"✅ ¡Jornada ajustada a {nueva_cantidad_carreras} carreras!")
                 st.rerun()
 
+        # --- NUEVA SECCIÓN EN ZONA ADMIN CABALLOS: VINCULACIÓN REMATE 1V Y 6V ---
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown("🔗 **Asignación de Carreras para Remates Ciegos (1V y 6V)**")
+            carreras_disponibles_admin = list(st.session_state.remates.keys())
+            carreras_reales_admin = [c for c in carreras_disponibles_admin if "Remate" not in c]
+
+            if 'mapeo_ciegos_carreras' not in st.session_state:
+                st.session_state.mapeo_ciegos_carreras = {}
+
+            col_v1, col_v2 = st.columns(2, gap="small")
+            with col_v1:
+                asignacion_1v = st.selectbox(
+                    "Remate 1V se asigna a:",
+                    options=carreras_reales_admin if carreras_reales_admin else ["Sin Carreras"],
+                    index=carreras_reales_admin.index(st.session_state.mapeo_ciegos_carreras.get("Remate 1V", "")) if st.session_state.mapeo_ciegos_carreras.get("Remate 1V", "") in carreras_reales_admin else 0,
+                    key="sel_admin_map_1v"
+                )
+            with col_v2:
+                asignacion_6v = st.selectbox(
+                    "Remate 6V se asigna a:",
+                    options=carreras_reales_admin if carreras_reales_admin else ["Sin Carreras"],
+                    index=carreras_reales_admin.index(st.session_state.mapeo_ciegos_carreras.get("Remate 6V", "")) if st.session_state.mapeo_ciegos_carreras.get("Remate 6V", "") in carreras_reales_admin else 0,
+                    key="sel_admin_map_6v"
+                )
+
+            if st.button("💾 Guardar Vinculación 1V y 6V", key="btn_save_vinculacion_ciegos", use_container_width=True, type="primary"):
+                st.session_state.mapeo_ciegos_carreras["Remate 1V"] = asignacion_1v
+                st.session_state.mapeo_ciegos_carreras["Remate 6V"] = asignacion_6v
+                guardar_estado_global()
+                st.toast("✅ ¡Vinculación de Remates Ciegos guardada con éxito!")
+                st.rerun()
+
         st.markdown("---")
         with st.container(border=True):
             st.markdown("⚡ **Panel Didáctico: Carreras Activas para Remate General**")
             carreras_disponibles_todas = list(st.session_state.remates.keys())
+            carreras_disponibles_todas = [c for c in carreras_disponibles_todas if "Remate" not in c]
             if not carreras_disponibles_todas:
                 st.warning("⚠️ No hay carreras en el banco.")
             else:
@@ -2096,6 +2098,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         with st.container(border=True):
             st.markdown("🎯 **Asignación Independiente de Carreras por Modalidad**")
             carreras_existentes = list(st.session_state.remates.keys())
+            carreras_existentes = [c for c in carreras_existentes if "Remate" not in c]
             
             modalidades_dict = st.session_state.carreras_por_modalidad
             
@@ -2116,7 +2119,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.rerun()
 
         st.markdown("---")
-        carr_banco_sel = st.selectbox("Seleccionar Carrera para Editar", lista_carreras_disponibles, key="adm_banco_sel_carrera")
+        carr_banco_sel = st.selectbox("Seleccionar Carrera para Editar", [c for c in lista_carreras_disponibles if "Remate" not in c], key="adm_banco_sel_carrera")
         
         if carr_banco_sel not in st.session_state.banco_caballos_por_carrera:
             st.session_state.banco_caballos_por_carrera[carr_banco_sel] = []
@@ -2377,6 +2380,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         with st.container(border=True):
             st.markdown("🏇 **Carreras Habilitadas**")
             carr_disp_all = list(st.session_state.remates.keys())
+            carr_disp_all = [c for c in carr_disp_all if "Remate" not in c]
             
             def_dup = [c for c in st.session_state.carreras_habilitadas_dupleta if c in carr_disp_all]
             def_trip = [c for c in st.session_state.carreras_habilitadas_tripleta if c in carr_disp_all]
@@ -2473,7 +2477,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
     with tab6:
         st.markdown("### 🖼️ Imágenes por Carrera")
-        carr_img_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="adm_img_sel_carr")
+        carr_img_sel = st.selectbox("Seleccionar Carrera", [c for c in lista_carreras_disponibles if "Remate" not in c], key="adm_img_sel_carr")
         
         with st.container(border=True):
             st.markdown("📸 **Imagen de la Carrera**")
@@ -2501,7 +2505,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if st.button("🗑️ Eliminar Imagen", key=f"btn_del_img_{carr_img_sel}", use_container_width=True):
                     del st.session_state.imagenes_carreras[carr_img_sel]
                     guardar_estado_global()
-                    st.toast("🗑️ Imagen removida")
+                    st.toast("🗑️ Removida")
                     st.rerun()
 
 # =========================================================================
