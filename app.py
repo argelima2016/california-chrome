@@ -273,6 +273,7 @@ else:
     logo_display = '<span style="color: #f1c40f; font-size: 38px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
+hora_inicial_txt = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
 # --- ESTILOS CSS GENERALES ---
@@ -599,12 +600,12 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR MODERNA CON RELOJ DINÁMICO EN VIVO (UTC-4 FIJO) ---
+# --- CABECERA SUPERIOR MODERNA CON HORA INICIAL CARGADA DESDE PYTHON ---
 header_html = f"""
     <div class="header-container-modern">
         <div class="header-top-row">
             <div class="header-clock-box">
-                <span id="reloj-vivo-header" class="h-time">⚡ --:--:-- --</span>
+                <span id="reloj-vivo-header" class="h-time">⚡ {hora_inicial_txt}</span>
                 <span class="h-date">📅 {fecha_texto}</span>
             </div>
             <div class="header-user-card">
@@ -640,7 +641,6 @@ header_html = f"""
             el.innerText = '⚡ ' + h + ':' + m + ':' + s + ' ' + ampm;
         }}
         setInterval(actualizarRelojHeaderExacto, 1000);
-        actualizarRelojHeaderExacto();
     </script>
 """
 st.markdown(header_html, unsafe_allow_html=True)
