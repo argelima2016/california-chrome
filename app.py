@@ -670,11 +670,15 @@ def renderizar_tiempo_real_universal():
                             st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
                             lista_caballos_activos = list(remates_actuales_mod.keys())
                             if lista_caballos_activos:
-                                cab_sel = st.selectbox("Ejemplar", lista_caballos_activos, key=f"sel_cab_{modo_actual_remate}_{carr_activa}")
+                                # Llaves estrictamente unidas a la modalidad y carrera para evitar que el estado se cruce
+                                k_sel_cab = f"reg_cab_{modo_actual_remate}_{carr_activa}"
+                                k_sel_mont = f"reg_mont_{modo_actual_remate}_{carr_activa}"
+
+                                cab_sel = st.selectbox("Ejemplar", lista_caballos_activos, key=k_sel_cab)
                                 puja_act = remates_actuales_mod[cab_sel]['monto']
-                                monto_p = st.selectbox("Monto", obtener_siguientes_montos(puja_act), format_func=lambda x: formatear_bs(x), key=f"sel_m_{modo_actual_remate}_{carr_activa}")
+                                monto_p = st.selectbox("Monto", obtener_siguientes_montos(puja_act), format_func=lambda x: formatear_bs(x), key=k_sel_mont)
                                 
-                                if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"btn_c_{modo_actual_remate}_{carr_activa}", use_container_width=True, type="primary"):
+                                if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"btn_confirmar_puja_{modo_actual_remate}_{carr_activa}", use_container_width=True, type="primary"):
                                     if monto_p <= puja_act:
                                         st.error("El monto debe ser mayor a la puja actual.")
                                     else:
