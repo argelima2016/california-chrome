@@ -1445,10 +1445,12 @@ def renderizar_tiempo_real_universal():
                                         st.success("✅ ¡Puja registrada correctamente!")
                                         st.rerun()
 
+renderizar_tiempo_real_universal()
+
 # =========================================================================
 # 2. MÓDULO DE DUPLETA Y 6 EN LINEA
 # =========================================================================
-elif menu_principal_opcion == "Dupletas":
+if menu_principal_opcion == "Dupletas":
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
     col_d1, col_d2, col_d3 = st.columns(3, gap="small")
     with col_d1:
