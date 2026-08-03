@@ -70,7 +70,8 @@ def cargar_estado_global(forzar_recarga=False):
         'total_carreras_semana': 10,
         'url_video_en_vivo': "",
         'admin_tab_seleccionada': "✍️ Caballos",
-        'imagenes_carreras': {}
+        'imagenes_carreras': {},
+        'mapeo_ciegos_carreras': {}
     }
     
     if os.path.exists(DB_FILE):
@@ -100,7 +101,8 @@ def guardar_estado_global():
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
-        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'admin_tab_seleccionada'
+        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'admin_tab_seleccionada',
+        'mapeo_ciegos_carreras'
     ]
     data = {}
     for k in keys_to_save:
@@ -1078,354 +1080,455 @@ def renderizar_tiempo_real_universal():
         st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
         modo_actual_remate = st.session_state.sub_remate_opcion
 
-        if not lista_carreras_disponibles:
-            st.warning("⚠️ No hay carreras cargadas en el sistema.")
-        else:
-            carreras_modalidad_permitidas = st.session_state.carreras_por_modalidad.get(modo_actual_remate, lista_carreras_disponibles)
-            
-            carreras_filtradas_visibles = [
-                c for c in lista_carreras_disponibles 
-                if c in carreras_modalidad_permitidas and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
-            ]
-            
-            if not carreras_filtradas_visibles:
-                st.info(f"ℹ️ No hay carreras habilitadas para la modalidad **{modo_actual_remate}**.")
-            else:
-                if "carrera_remate_activa_seleccionada" not in st.session_state or st.session_state["carrera_remate_activa_seleccionada"] not in carreras_filtradas_visibles:
-                    carr_activa = carreras_filtradas_visibles[0]
-                    st.session_state["carrera_remate_activa_seleccionada"] = carr_activa
-                else:
-                    carr_activa = st.session_state["carrera_remate_activa_seleccionada"]
-
-                st.markdown("🔹 **Seleccionar Carrera:**")
-                carreras_totales_visibles = list(carreras_filtradas_visibles)
-                st.markdown('<div class="carreras-scroll-container">', unsafe_allow_html=True)
-                cols_carreras = st.columns(len(carreras_totales_visibles), gap="small")
-                for idx, c_nombre in enumerate(carreras_totales_visibles):
-                    abreviatura = obtener_abreviatura_carrera(c_nombre, modo_actual=modo_actual_remate)
-                    es_activa = (c_nombre == carr_activa)
-                    with cols_carreras[idx]:
-                        if st.button(abreviatura, key=f"rem_btn_sel_carr_{idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
-                            st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
-                            guardar_estado_global()
-                            st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
-                st.markdown("---")
-
-                if carr_activa in st.session_state.imagenes_carreras:
-                    try:
-                        st.image(st.session_state.imagenes_carreras[carr_activa], caption=f"Imagen oficial - {carr_activa}", use_container_width=True)
-                    except Exception:
-                        pass
-
-                carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
-                estado_icono = "🔴" if carrera_cerrada else "🟢"
+        if modo_actual_remate == "Ciegos":
+            carreras_ciegas_activas = st.session_state.carreras_por_modalidad.get("Ciegos", [])
+            if len(carreras_ciegas_activas) >= 2:
+                c1_ciego = carreras_ciegas_activas[0]
+                c6_ciego = carreras_ciegas_activas[1]
                 
-                st.markdown(f"""
-                    <div style="font-size: 14px; font-weight: 800; color: #f0f6fc; display: flex; align-items: center; gap: 6px; margin-top: 8px; margin-bottom: 8px;">
-                        <span>{estado_icono}</span>
-                        <span>{carr_activa}</span>
-                        <span style="font-size: 11px; font-weight: 600; color: #8b949e; background: #161b22; padding: 1px 6px; border-radius: 4px; border: 1px solid #30363d;">{modo_actual_remate}</span>
-                    </div>
-                """, unsafe_allow_html=True)
+                if 'sub_ciego_opcion' not in st.session_state:
+                    st.session_state.sub_ciego_opcion = "1V"
+                
+                col_sc1, col_sc2 = st.columns(2, gap="small")
+                with col_sc1:
+                    if st.button(f"🙈 Remate 1V ({c1_ciego})", key="btn_ciego_1v", use_container_width=True, type="primary" if st.session_state.sub_ciego_opcion == "1V" else "secondary"):
+                        st.session_state.sub_ciego_opcion = "1V"
+                        guardar_estado_global()
+                        st.rerun()
+                with col_sc2:
+                    if st.button(f"🙈 Remate 6V ({c6_ciego})", key="btn_ciego_6v", use_container_width=True, type="primary" if st.session_state.sub_ciego_opcion == "6V" else "secondary"):
+                        st.session_state.sub_ciego_opcion = "6V"
+                        guardar_estado_global()
+                        st.rerun()
+                st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-                if carr_activa not in st.session_state.detalles_carreras:
-                    st.session_state.detalles_carreras[carr_activa] = {
-                        "condicion": "Condición general", 
-                        "distancia": "1200 mts", 
-                        "hora": "02:00 PM", 
-                        "monto_fijo_ciego": 500.0, 
+                # Definir nombres virtuales para los remates iniciales de 14 ejemplares
+                nombre_carrera_virtual = "Remate 1V (14 Ejemplares)" if st.session_state.sub_ciego_opcion == "1V" else "Remate 6V (14 Ejemplares)"
+                
+                if nombre_carrera_virtual not in st.session_state.remates:
+                    st.session_state.remates[nombre_carrera_virtual] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 15)}
+                    st.session_state.detalles_carreras[nombre_carrera_virtual] = {
+                        "condicion": "Remate inicial ciego de 14 ejemplares",
+                        "distancia": "1200 mts",
+                        "hora": "02:00 PM",
+                        "monto_fijo_ciego": 500.0,
                         "incentivo_adelantados": 0.0,
                         "incentivo_ciegos": 0.0,
                         "incentivo_envivo": 0.0,
                         "hora_cierre_real": "No registrada"
                     }
-                
-                detalles_carr = st.session_state.detalles_carreras[carr_activa]
-                st.markdown(f"""
-                    <div class="carrera-condicion-card">
-                        <b>🏁 {carr_activa}</b><br>
-                        🏷️ <b>Condición:</b> {detalles_carr.get('condicion', 'N/A')}<br>
-                        📏 <b>Distancia:</b> {detalles_carr.get('distancia', 'N/A')} &nbsp;|&nbsp; ⏰ <b>Hora:</b> {detalles_carr.get('hora', 'N/A')}
-                    </div>
-                """, unsafe_allow_html=True)
 
-                if carr_activa not in st.session_state.ejemplares_retirados:
-                    st.session_state.ejemplares_retirados[carr_activa] = []
-                if 'ejemplares_no_valido' not in st.session_state:
-                    st.session_state.ejemplares_no_valido = {}
-                if carr_activa not in st.session_state.ejemplares_no_valido:
-                    st.session_state.ejemplares_no_valido[carr_activa] = []
+                # Selector de asignación de carrera real
+                carreras_reales_disponibles = list(st.session_state.remates.keys())
+                carreras_reales_disponibles = [c for c in carreras_reales_disponibles if "Remate" not in c]
                 
-                lista_todos_caballos_carr = list(st.session_state.remates[carr_activa].keys())
-                retirados_actuales_carr = [c for c in st.session_state.ejemplares_retirados[carr_activa] if c in lista_todos_caballos_carr]
-                no_validos_actuales_carr = [c for c in st.session_state.ejemplares_no_valido[carr_activa] if c in lista_todos_caballos_carr]
+                if 'mapeo_ciegos_carreras' not in st.session_state:
+                    st.session_state.mapeo_ciegos_carreras = {}
 
-                with st.expander("🚫 Gestionar Ejemplares Retirados", expanded=False):
-                    nuevos_retirados = st.multiselect(
-                        "Selecciona los ejemplares retirados en esta carrera:",
-                        options=lista_todos_caballos_carr,
-                        default=retirados_actuales_carr,
-                        key=f"multiselect_retirados_{carr_activa}"
+                carrera_asignada_actual = st.session_state.mapeo_ciegos_carreras.get(nombre_carrera_virtual, carreras_reales_disponibles[0] if carreras_reales_disponibles else "")
+
+                col_map1, col_map2 = st.columns([3, 1], gap="small")
+                with col_map1:
+                    carrera_nueva_asignada = st.selectbox(
+                        f"🔗 Asignar {nombre_carrera_virtual} a Carrera Real:",
+                        options=carreras_reales_disponibles if carreras_reales_disponibles else ["Sin Carreras Real"],
+                        index=carreras_reales_disponibles.index(carrera_asignada_actual) if carrera_asignada_actual in carreras_reales_disponibles else 0,
+                        key=f"sel_mapeo_{nombre_carrera_virtual}"
                     )
-                    if st.button("💾 Actualizar Retirados", key=f"btn_save_retirados_{carr_activa}", use_container_width=True, type="primary"):
-                        retirados_anteriores = set(retirados_actuales_carr)
-                        retirados_nuevos_set = set(nuevos_retirados)
-                        recien_retirados = retirados_nuevos_set - retirados_anteriores
-
-                        for cab_ret in recien_retirados:
-                            info_cab = st.session_state.remates[carr_activa].get(cab_ret, {})
-                            comprador = info_cab.get('jugador', 'Sin Postor')
-                            monto_ej = info_cab.get('monto', 0.0)
-
-                            if comprador != "Sin Postor" and monto_ej > 0:
-                                if comprador in st.session_state.cuentas:
-                                    st.session_state.cuentas[comprador]['Pujas'] = max(0.0, st.session_state.cuentas[comprador]['Pujas'] - monto_ej)
-                                    st.session_state.historial_jugadas.append({
-                                        "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                        "jugador": comprador,
-                                        "tipo": "Retirado (Descuento)",
-                                        "carrera": carr_activa,
-                                        "detalle": f"Ejemplar retirado: {cab_ret}",
-                                        "monto": -monto_ej
-                                    })
-
-                        for t_polla in st.session_state.polla_tickets:
-                            for leg in t_polla['legs']:
-                                base_ej_p = leg['ejemplar'].split(" (")[0]
-                                if leg['carrera'] == carr_activa and base_ej_p in nuevos_retirados:
-                                    idx_ret = lista_todos_caballos_carr.index(base_ej_p)
-                                    siguiente_cab = None
-                                    for siguiente_c in lista_todos_caballos_carr[idx_ret + 1:] + lista_todos_caballos_carr[:idx_ret]:
-                                        if siguiente_c not in nuevos_retirados and siguiente_c not in no_validos_actuales_carr:
-                                            siguiente_cab = siguiente_c
-                                            break
-                                    if siguiente_cab:
-                                        leg['ejemplar'] = f"{siguiente_cab} (Sustituto por retiro)"
-
-                        for lista_tkts in [st.session_state.dupletas_tickets, st.session_state.tripleta_tickets]:
-                            for t_dup in lista_tkts:
-                                if t_dup.get('estado', 'Pendiente') == 'Pendiente':
-                                    afect = False
-                                    for leg in t_dup['legs']:
-                                        base_ej_t = leg['ejemplar'].split(" (")[0]
-                                        if leg['carrera'] == carr_activa and base_ej_t in nuevos_retirados:
-                                            afect = True
-                                            break
-                                    if afect:
-                                        t_dup['estado'] = 'Nulo (Retirado)'
-                                        jug_t = t_dup['jugador']
-                                        monto_t = t_dup['monto']
-                                        if jug_t in st.session_state.cuentas:
-                                            st.session_state.cuentas[jug_t]['Pujas'] = max(0.0, st.session_state.cuentas[jug_t]['Pujas'] - monto_t)
-                                        st.session_state.historial_jugadas.append({
-                                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                            "jugador": jug_t,
-                                            "tipo": "Ticket Anulado (Retiro)",
-                                            "carrera": carr_activa,
-                                            "detalle": f"Ticket {t_dup['id']} anulado por retiro",
-                                            "monto": -monto_t
-                                        })
-
-                        st.session_state.ejemplares_retirados[carr_activa] = nuevos_retirados
+                with col_map2:
+                    if st.button("🔗 Vincular", key=f"btn_vincular_{nombre_carrera_virtual}", use_container_width=True, type="primary"):
+                        st.session_state.mapeo_ciegos_carreras[nombre_carrera_virtual] = carrera_nueva_asignada
                         guardar_estado_global()
-                        st.toast("✅ ¡Ejemplares retirados actualizados y tickets ajustados!")
+                        st.toast(f"✅ ¡Vinculado a {carrera_nueva_asignada}!")
                         st.rerun()
 
-                # --- VERIFICACIÓN DE INICIO Y CIERRE AUTOMÁTICO POR MODALIDAD ---
-                clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
-                dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
-                dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
-                estado_conteo = st.session_state.estado_conteo_carrera_modalidad.get(clave_mod_carr, "INACTIVO")
+                carr_activa = nombre_carrera_virtual
+                carrera_real_destino = st.session_state.mapeo_ciegos_carreras.get(nombre_carrera_virtual, "")
 
-                if dt_inicio and carrera_cerrada:
-                    if ahora_dt >= dt_inicio:
-                        st.session_state.carreras_cerradas_remate[carr_activa] = False
-                        guardar_estado_global()
-                        carrera_cerrada = False
-
-                if dt_inicio:
-                    st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:4px; border:1px solid #30363d; font-size:12px;'>🟢 Inicio Remate ({modo_actual_remate}): <b>{dt_inicio.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
-                if dt_limite:
-                    st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:8px; border:1px solid #30363d; font-size:12px;'>⏰ Cierre Estricto ({modo_actual_remate}): <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
-
-                if dt_limite and not carrera_cerrada:
-                    diferencia_segundos = (dt_limite - ahora_dt).total_seconds()
-                    if estado_conteo == "INACTIVO":
-                        if 0 < diferencia_segundos <= 10:
-                            st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CONTEO_10S"
-                            st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = ahora_dt
-                            guardar_estado_global()
-                            st.rerun()
-                        elif diferencia_segundos <= 0:
-                            st.session_state.carreras_cerradas_remate[carr_activa] = True
-                            st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
-                            st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
-                            guardar_estado_global()
-                            st.rerun()
-                    elif estado_conteo == "CONTEO_10S":
-                        tiempo_inicio = st.session_state.tiempo_inicio_conteo_modalidad.get(clave_mod_carr, ahora_dt)
-                        transcurridos = (ahora_dt - tiempo_inicio).total_seconds()
-                        if transcurridos >= 12:
-                            st.session_state.carreras_cerradas_remate[carr_activa] = True
-                            st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
-                            st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
-                            guardar_estado_global()
-                            st.rerun()
+                # Sincronización estricta de ejemplares: si la carrera real tiene menos ejemplares (por ejemplo 10), filtramos y los demás no van jugando
+                if carrera_real_destino and carrera_real_destino in st.session_state.banco_caballos_por_carrera:
+                    caballos_reales_oficiales = st.session_state.banco_caballos_por_carrera[carrera_real_destino]
+                    # Asegurar que el diccionario de remates solo contenga los ejemplares válidos de la carrera real asignada
+                    remates_actuales_virtuales = st.session_state.remates[nombre_carrera_virtual]
+                    remates_filtrados_nuevos = {}
+                    for cab_oficial in caballos_reales_oficiales:
+                        if cab_oficial in remates_actuales_virtuales:
+                            remates_filtrados_nuevos[cab_oficial] = remates_actuales_virtuales[cab_oficial]
                         else:
-                            restantes_10s = max(0, 10 - int(transcurridos))
-                            if restantes_10s > 0:
-                                st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa} - {modo_actual_remate})</div>", unsafe_allow_html=True)
+                            remates_filtrados_nuevos[cab_oficial] = {"jugador": "Sin Postor", "monto": 0.0}
+                    st.session_state.remates[nombre_carrera_virtual] = remates_filtrados_nuevos
 
-                tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
-                cantidad_filas = len(st.session_state.remates[carr_activa])
-                altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
-                components.html(tabla_html, height=altura_dinamica, scrolling=True)
-                
-                # --- POTE, PREMIO E INCENTIVO LLAMATIVO DEBAJO DE LA TABLA DE REMATE ---
-                retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
-                no_validos_carr_activa = st.session_state.ejemplares_no_valido.get(carr_activa, [])
-                excluidos_carr_activa = set(retirados_carr_activa) | set(no_validos_carr_activa)
+            carr_activa = nombre_carrera_virtual
+            carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
+            detalles_carr = st.session_state.detalles_carreras.get(carr_activa, {"condicion": "Remate Ciego", "distancia": "1200 mts", "hora": "02:00 PM"})
 
-                total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_carr_activa])
-                monto_casa = total_pote * (porcentaje_casa / 100)
-                pote_neto_base = total_pote - monto_casa
+            tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
+            cantidad_filas = len(st.session_state.remates[carr_activa])
+            altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
+            components.html(tabla_html, height=altura_dinamica, scrolling=True)
 
-                if modo_actual_remate == "Adelantados":
-                    incentivo_actual = float(detalles_carr.get('incentivo_adelantados', 0.0))
-                elif modo_actual_remate == "Ciegos":
-                    incentivo_actual = float(detalles_carr.get('incentivo_ciegos', 0.0))
+            total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items()])
+            monto_casa = total_pote * (porcentaje_casa / 100)
+            pote_neto_base = total_pote - monto_casa
+            incentivo_actual = float(detalles_carr.get('incentivo_ciegos', 0.0))
+            premio_total_calculado = pote_neto_base + incentivo_actual
+
+            st.markdown(f"""
+                <div class="incentivo-llamativo">
+                    <div style="font-size: 11px; font-weight: 800; color: #00ffff; text-transform: uppercase; margin-bottom: 2px;">PREMIO TOTAL</div>
+                    <div class="incentivo-llamativo-monto">🎁 {formatear_bs(premio_total_calculado)}</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+            c_m1, c_m2 = st.columns(2)
+            c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
+            c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
+
+            with st.container(border=True):
+                st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
+                monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
+                caballos_disponibles_ciego = [cab for cab, info in st.session_state.remates[carr_activa].items() if info['jugador'] == "Sin Postor" or info['monto'] <= 0]
+
+                if not caballos_disponibles_ciego:
+                    st.warning("⚠️ Todos los ejemplares disponibles de este remate ya han sido adquiridos.")
                 else:
-                    incentivo_actual = float(detalles_carr.get('incentivo_envivo', 0.0))
+                    st.markdown("🎲 **Panel Didáctico (Elige un número para asignar):**")
+                    cols_ciego_grid = st.columns(min(3, len(caballos_disponibles_ciego)), gap="small")
+                    for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
+                        c_idx = idx_cb % len(cols_ciego_grid)
+                        num_cb_parte = cb_disp.split(" - ")[0]
+                        with cols_ciego_grid[c_idx]:
+                            if carrera_cerrada:
+                                st.button(f"🔒#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, disabled=True)
+                            else:
+                                if st.button(f"#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, type="primary"):
+                                    st.session_state.remates[carr_activa][cb_disp] = {
+                                        "jugador": st.session_state.usuario_activo, 
+                                        "monto": monto_fijo_carrera
+                                    }
+                                    st.session_state.historial_jugadas.append({
+                                        "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                        "jugador": st.session_state.usuario_activo,
+                                        "tipo": f"Remate Ciego ({modo_actual_remate})",
+                                        "carrera": carr_activa,
+                                        "detalle": cb_disp,
+                                        "monto": monto_fijo_carrera
+                                    })
+                                    if st.session_state.usuario_activo not in st.session_state.cuentas:
+                                        st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                    st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
+                                    guardar_estado_global()
+                                    st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
+                                    st.rerun()
 
-                premio_total_calculado = pote_neto_base + incentivo_actual
+        else:
+            if not lista_carreras_disponibles:
+                st.warning("⚠️ No hay carreras cargadas en el sistema.")
+            else:
+                carreras_modalidad_permitidas = st.session_state.carreras_por_modalidad.get(modo_actual_remate, lista_carreras_disponibles)
+                
+                carreras_filtradas_visibles = [
+                    c for c in lista_carreras_disponibles 
+                    if c in carreras_modalidad_permitidas and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
+                ]
+                
+                if not carreras_filtradas_visibles:
+                    st.info(f"ℹ️ No hay carreras habilitadas para la modalidad **{modo_actual_remate}**.")
+                else:
+                    if "carrera_remate_activa_seleccionada" not in st.session_state or st.session_state["carrera_remate_activa_seleccionada"] not in carreras_filtradas_visibles:
+                        carr_activa = carreras_filtradas_visibles[0]
+                        st.session_state["carrera_remate_activa_seleccionada"] = carr_activa
+                    else:
+                        carr_activa = st.session_state["carrera_remate_activa_seleccionada"]
 
-                # --- PREMIO TOTAL LLAMATIVO VISIBLE EN TODAS LAS MODALIDADES DE REMATE ---
-                st.markdown(f"""
-                    <div class="incentivo-llamativo">
-                        <div style="font-size: 11px; font-weight: 800; color: #00ffff; text-transform: uppercase; margin-bottom: 2px;">PREMIO TOTAL</div>
-                        <div class="incentivo-llamativo-monto">🎁 {formatear_bs(premio_total_calculado)}</div>
-                    </div>
-                """, unsafe_allow_html=True)
+                    st.markdown("🔹 **Seleccionar Carrera:**")
+                    carreras_totales_visibles = list(carreras_filtradas_visibles)
+                    st.markdown('<div class="carreras-scroll-container">', unsafe_allow_html=True)
+                    cols_carreras = st.columns(len(carreras_totales_visibles), gap="small")
+                    for idx, c_nombre in enumerate(carreras_totales_visibles):
+                        abreviatura = obtener_abreviatura_carrera(c_nombre, modo_actual=modo_actual_remate)
+                        es_activa = (c_nombre == carr_activa)
+                        with cols_carreras[idx]:
+                            if st.button(abreviatura, key=f"rem_btn_sel_carr_{idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
+                                st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
+                                guardar_estado_global()
+                                st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    st.markdown("---")
 
-                c_m1, c_m2 = st.columns(2)
-                c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
-                c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
+                    if carr_activa in st.session_state.imagenes_carreras:
+                        try:
+                            st.image(st.session_state.imagenes_carreras[carr_activa], caption=f"Imagen oficial - {carr_activa}", use_container_width=True)
+                        except Exception:
+                            pass
 
-                # --- ANUNCIO ÉPICO Y LLAMATIVO DEL GANADOR CON NOMBRE Y NÚMERO ---
-                if carr_activa in st.session_state.historial_ganadores:
-                    info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
-                    ganador_nombre = info_ganador_prev.get('Ganador', 'N/A')
-                    premio_ganado = info_ganador_prev.get('Premio', '0')
-                    caballo_ganador_str = info_ganador_prev.get('Caballo', 'N/A')
-
+                    carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
+                    estado_icono = "🔴" if carrera_cerrada else "🟢"
+                    
                     st.markdown(f"""
-                        <div class="ganador-banner-epic">
-                            <div class="ganador-titulo-epic">🏆 ¡RESULTADO OFICIAL - {carr_activa.upper()}! 🏆</div>
-                            <div class="ganador-nombre-epic">🎉 {ganador_nombre} 🎉</div>
-                            <div style="color: #00ffff; font-size: 16px; font-weight: 900; margin-bottom: 4px; text-shadow: 0 0 8px rgba(0,255,255,0.7);">🐎 EJEMPLAR: {caballo_ganador_str.upper()}</div>
-                            <div class="ganador-premio-epic">💰 Premio Liquidado: {premio_ganado}</div>
+                        <div style="font-size: 14px; font-weight: 800; color: #f0f6fc; display: flex; align-items: center; gap: 6px; margin-top: 8px; margin-bottom: 8px;">
+                            <span>{estado_icono}</span>
+                            <span>{carr_activa}</span>
+                            <span style="font-size: 11px; font-weight: 600; color: #8b949e; background: #161b22; padding: 1px 6px; border-radius: 4px; border: 1px solid #30363d;">{modo_actual_remate}</span>
                         </div>
                     """, unsafe_allow_html=True)
 
-                with st.container(border=True):
-                    st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Seleccionar y Liquidar Ganador - {carr_activa}</p>", unsafe_allow_html=True)
-                    if carr_activa not in st.session_state.historial_ganadores:
-                        caballos_lista_ganador = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
-                        if not caballos_lista_ganador:
-                            caballos_lista_ganador = list(st.session_state.remates[carr_activa].keys())
-                        col_g1, col_g2 = st.columns([3, 2], gap="small")
-                        with col_g1:
-                            caballo_ganador_elegido = st.selectbox("Ejemplar Ganador", caballos_lista_ganador, key=f"rem_sel_ganador_{carr_activa}", label_visibility="collapsed")
-                        with col_g2:
-                            if st.button("🏆 Liquidar Ganador", key=f"rem_btn_liquidar_{carr_activa}", use_container_width=True, type="primary"):
-                                pote_carr_total = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_carr_activa])
-                                monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
-                                
-                                if modo_actual_remate == "Adelantados":
-                                    incentivo_establecido = float(detalles_carr.get('incentivo_adelantados', 0.0))
-                                elif modo_actual_remate == "Ciegos":
-                                    incentivo_establecido = float(detalles_carr.get('incentivo_ciegos', 0.0))
-                                else:
-                                    incentivo_establecido = float(detalles_carr.get('incentivo_envivo', 0.0))
+                    if carr_activa not in st.session_state.detalles_carreras:
+                        st.session_state.detalles_carreras[carr_activa] = {
+                            "condicion": "Condición general", 
+                            "distancia": "1200 mts", 
+                            "hora": "02:00 PM", 
+                            "monto_fijo_ciego": 500.0, 
+                            "incentivo_adelantados": 0.0,
+                            "incentivo_ciegos": 0.0,
+                            "incentivo_envivo": 0.0,
+                            "hora_cierre_real": "No registrada"
+                        }
+                    
+                    detalles_carr = st.session_state.detalles_carreras[carr_activa]
+                    st.markdown(f"""
+                        <div class="carrera-condicion-card">
+                            <b>🏁 {carr_activa}</b><br>
+                            🏷️ <b>Condición:</b> {detalles_carr.get('condicion', 'N/A')}<br>
+                            📏 <b>Distancia:</b> {detalles_carr.get('distancia', 'N/A')} &nbsp;|&nbsp; ⏰ <b>Hora:</b> {detalles_carr.get('hora', 'N/A')}
+                        </div>
+                    """, unsafe_allow_html=True)
 
-                                premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_establecido
-                                
-                                info_g = st.session_state.remates[carr_activa][caballo_ganador_elegido]
-                                if info_g['jugador'] != "Sin Postor":
-                                    if info_g['jugador'] not in st.session_state.cuentas:
-                                        st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                                    st.session_state.cuentas[info_g['jugador']]['Premios'] += premio_final_liq
-                                st.session_state.ganancia_casa += monto_casa_calc
-                                st.session_state.historial_ganadores[carr_activa] = {
-                                    "Ganador": info_g['jugador'], 
-                                    "Premio": formatear_bs(premio_final_liq),
-                                    "Caballo": caballo_ganador_elegido
-                                }
-                                guardar_estado_global()
-                                st.rerun()
+                    if carr_activa not in st.session_state.ejemplares_retirados:
+                        st.session_state.ejemplares_retirados[carr_activa] = []
+                    if 'ejemplares_no_valido' not in st.session_state:
+                        st.session_state.ejemplares_no_valido = {}
+                    if carr_activa not in st.session_state.ejemplares_no_valido:
+                        st.session_state.ejemplares_no_valido[carr_activa] = []
+                    
+                    lista_todos_caballos_carr = list(st.session_state.remates[carr_activa].keys())
+                    retirados_actuales_carr = [c for c in st.session_state.ejemplares_retirados[carr_activa] if c in lista_todos_caballos_carr]
+                    no_validos_actuales_carr = [c for c in st.session_state.ejemplares_no_valido[carr_activa] if c in lista_todos_caballos_carr]
 
-                with st.expander(f"📜 Historial de Pujas - {carr_activa} ({modo_actual_remate})", expanded=False):
-                    historial_carrera_actual = [
-                        h for h in st.session_state.historial_jugadas 
-                        if h.get('carrera') == carr_activa and "Remate" in h.get('type', h.get('tipo', ''))
-                    ]
-                    if not historial_carrera_actual:
-                        st.info(f"ℹ️ No hay registros de pujas para {carr_activa}.")
-                    else:
-                        datos_h_carr = []
-                        for h in reversed(historial_carrera_actual):
-                            datos_h_carr.append({
-                                "Fecha / Hora": h.get('fecha', ''),
-                                "Modo": h.get('tipo', ''),
-                                "Jugador": h.get('jugador', ''),
-                                "Ejemplar": h.get('detalle', ''),
-                                "Monto": formatear_bs(h.get('monto', 0.0))
-                            })
-                        st.dataframe(pd.DataFrame(datos_h_carr), use_container_width=True, hide_index=True)
+                    with st.expander("🚫 Gestionar Ejemplares Retirados", expanded=False):
+                        nuevos_retirados = st.multiselect(
+                            "Selecciona los ejemplares retirados en esta carrera:",
+                            options=lista_todos_caballos_carr,
+                            default=retirados_actuales_carr,
+                            key=f"multiselect_retirados_{carr_activa}"
+                        )
+                        if st.button("💾 Actualizar Retirados", key=f"btn_save_retirados_{carr_activa}", use_container_width=True, type="primary"):
+                            retirados_anteriores = set(retirados_actuales_carr)
+                            retirados_nuevos_set = set(nuevos_retirados)
+                            recien_retirados = retirados_nuevos_set - retirados_anteriores
 
-                with st.container(border=True):
-                    if modo_actual_remate == "Ciegos":
-                        st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
-                        monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
+                            for cab_ret in recien_retirados:
+                                info_cab = st.session_state.remates[carr_activa].get(cab_ret, {})
+                                comprador = info_cab.get('jugador', 'Sin Postor')
+                                monto_ej = info_cab.get('monto', 0.0)
 
-                        caballos_disponibles_ciego = [
-                            cab for cab, info in st.session_state.remates[carr_activa].items() 
-                            if (info['jugador'] == "Sin Postor" or info['monto'] <= 0) and cab not in excluidos_carr_activa
-                        ]
+                                if comprador != "Sin Postor" and monto_ej > 0:
+                                    if comprador in st.session_state.cuentas:
+                                        st.session_state.cuentas[comprador]['Pujas'] = max(0.0, st.session_state.cuentas[comprador]['Pujas'] - monto_ej)
+                                        st.session_state.historial_jugadas.append({
+                                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                            "jugador": comprador,
+                                            "tipo": "Retirado (Descuento)",
+                                            "carrera": carr_activa,
+                                            "detalle": f"Ejemplar retirado: {cab_ret}",
+                                            "monto": -monto_ej
+                                        })
 
-                        if not caballos_disponibles_ciego:
-                            st.warning("⚠️ Todos los ejemplares disponibles de esta carrera ya han sido adquiridos.")
-                        else:
-                            st.markdown("🎲 **Panel Didáctico (Elige un número para asignar):**")
-                            cols_ciego_grid = st.columns(min(3, len(caballos_disponibles_ciego)), gap="small")
-                            for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
-                                c_idx = idx_cb % len(cols_ciego_grid)
-                                num_cb_parte = cb_disp.split(" - ")[0]
-                                with cols_ciego_grid[c_idx]:
-                                    if carrera_cerrada:
-                                        st.button(f"🔒#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, disabled=True)
-                                    else:
-                                        if st.button(f"#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, type="primary"):
-                                            st.session_state.remates[carr_activa][cb_disp] = {
-                                                "jugador": st.session_state.usuario_activo, 
-                                                "monto": monto_fijo_carrera
-                                            }
+                            for t_polla in st.session_state.polla_tickets:
+                                for leg in t_polla['legs']:
+                                    base_ej_p = leg['ejemplar'].split(" (")[0]
+                                    if leg['carrera'] == carr_activa and base_ej_p in nuevos_retirados:
+                                        idx_ret = lista_todos_caballos_carr.index(base_ej_p)
+                                        siguiente_cab = None
+                                        for siguiente_c in lista_todos_caballos_carr[idx_ret + 1:] + lista_todos_caballos_carr[:idx_ret]:
+                                            if siguiente_c not in nuevos_retirados and siguiente_c not in no_validos_actuales_carr:
+                                                siguiente_cab = siguiente_c
+                                                break
+                                        if siguiente_cab:
+                                            leg['ejemplar'] = f"{siguiente_cab} (Sustituto por retiro)"
+
+                            for lista_tkts in [st.session_state.dupletas_tickets, st.session_state.tripleta_tickets]:
+                                for t_dup in lista_tkts:
+                                    if t_dup.get('estado', 'Pendiente') == 'Pendiente':
+                                        afect = False
+                                        for leg in t_dup['legs']:
+                                            base_ej_t = leg['ejemplar'].split(" (")[0]
+                                            if leg['carrera'] == carr_activa and base_ej_t in nuevos_retirados:
+                                                afect = True
+                                                break
+                                        if afect:
+                                            t_dup['estado'] = 'Nulo (Retirado)'
+                                            jug_t = t_dup['jugador']
+                                            monto_t = t_dup['monto']
+                                            if jug_t in st.session_state.cuentas:
+                                                st.session_state.cuentas[jug_t]['Pujas'] = max(0.0, st.session_state.cuentas[jug_t]['Pujas'] - monto_t)
                                             st.session_state.historial_jugadas.append({
                                                 "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                                "jugador": st.session_state.usuario_activo,
-                                                "tipo": f"Remate Ciego ({modo_actual_remate})",
+                                                "jugador": jug_t,
+                                                "tipo": "Ticket Anulado (Retiro)",
                                                 "carrera": carr_activa,
-                                                "detalle": cb_disp,
-                                                "monto": monto_fijo_carrera
+                                                "detalle": f"Ticket {t_dup['id']} anulado por retiro",
+                                                "monto": -monto_t
                                             })
-                                            if st.session_state.usuario_activo not in st.session_state.cuentas:
-                                                st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                                            st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
-                                            guardar_estado_global()
-                                            st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
-                                            st.rerun()
+
+                            st.session_state.ejemplares_retirados[carr_activa] = nuevos_retirados
+                            guardar_estado_global()
+                            st.toast("✅ ¡Ejemplares retirados actualizados y tickets ajustados!")
+                            st.rerun()
+
+                    # --- VERIFICACIÓN DE INICIO Y CIERRE AUTOMÁTICO POR MODALIDAD ---
+                    clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
+                    dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
+                    dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
+                    estado_conteo = st.session_state.estado_conteo_carrera_modalidad.get(clave_mod_carr, "INACTIVO")
+
+                    if dt_inicio and carrera_cerrada:
+                        if ahora_dt >= dt_inicio:
+                            st.session_state.carreras_cerradas_remate[carr_activa] = False
+                            guardar_estado_global()
+                            carrera_cerrada = False
+
+                    if dt_inicio:
+                        st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:4px; border:1px solid #30363d; font-size:12px;'>🟢 Inicio Remate ({modo_actual_remate}): <b>{dt_inicio.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+                    if dt_limite:
+                        st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:8px; border:1px solid #30363d; font-size:12px;'>⏰ Cierre Estricto ({modo_actual_remate}): <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+
+                    if dt_limite and not carrera_cerrada:
+                        diferencia_segundos = (dt_limite - ahora_dt).total_seconds()
+                        if estado_conteo == "INACTIVO":
+                            if 0 < diferencia_segundos <= 10:
+                                st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CONTEO_10S"
+                                st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = ahora_dt
+                                guardar_estado_global()
+                                st.rerun()
+                            elif diferencia_segundos <= 0:
+                                st.session_state.carreras_cerradas_remate[carr_activa] = True
+                                st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
+                                st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
+                                guardar_estado_global()
+                                st.rerun()
+                        elif estado_conteo == "CONTEO_10S":
+                            tiempo_inicio = st.session_state.tiempo_inicio_conteo_modalidad.get(clave_mod_carr, ahora_dt)
+                            transcurridos = (ahora_dt - tiempo_inicio).total_seconds()
+                            if transcurridos >= 12:
+                                st.session_state.carreras_cerradas_remate[carr_activa] = True
+                                st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
+                                st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
+                                guardar_estado_global()
+                                st.rerun()
+                            else:
+                                restantes_10s = max(0, 10 - int(transcurridos))
+                                if restantes_10s > 0:
+                                    st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa} - {modo_actual_remate})</div>", unsafe_allow_html=True)
+
+                    tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
+                    cantidad_filas = len(st.session_state.remates[carr_activa])
+                    altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
+                    components.html(tabla_html, height=altura_dinamica, scrolling=True)
+                    
+                    # --- POTE, PREMIO E INCENTIVO LLAMATIVO DEBAJO DE LA TABLA DE REMATE ---
+                    retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
+                    no_validos_carr_activa = st.session_state.ejemplares_no_valido.get(carr_activa, [])
+                    excluidos_carr_activa = set(retirados_carr_activa) | set(no_validos_carr_activa)
+
+                    total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_carr_activa])
+                    monto_casa = total_pote * (porcentaje_casa / 100)
+                    pote_neto_base = total_pote - monto_casa
+
+                    if modo_actual_remate == "Adelantados":
+                        incentivo_actual = float(detalles_carr.get('incentivo_adelantados', 0.0))
+                    elif modo_actual_remate == "Ciegos":
+                        incentivo_actual = float(detalles_carr.get('incentivo_ciegos', 0.0))
                     else:
+                        incentivo_actual = float(detalles_carr.get('incentivo_envivo', 0.0))
+
+                    premio_total_calculado = pote_neto_base + incentivo_actual
+
+                    # --- PREMIO TOTAL LLAMATIVO VISIBLE EN TODAS LAS MODALIDADES DE REMATE ---
+                    st.markdown(f"""
+                        <div class="incentivo-llamativo">
+                            <div style="font-size: 11px; font-weight: 800; color: #00ffff; text-transform: uppercase; margin-bottom: 2px;">PREMIO TOTAL</div>
+                            <div class="incentivo-llamativo-monto">🎁 {formatear_bs(premio_total_calculado)}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                    c_m1, c_m2 = st.columns(2)
+                    c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
+                    c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
+
+                    # --- ANUNCIO ÉPICO Y LLAMATIVO DEL GANADOR CON NOMBRE Y NÚMERO ---
+                    if carr_activa in st.session_state.historial_ganadores:
+                        info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
+                        ganador_nombre = info_ganador_prev.get('Ganador', 'N/A')
+                        premio_ganado = info_ganador_prev.get('Premio', '0')
+                        caballo_ganador_str = info_ganador_prev.get('Caballo', 'N/A')
+
+                        st.markdown(f"""
+                            <div class="ganador-banner-epic">
+                                <div class="ganador-titulo-epic">🏆 ¡RESULTADO OFICIAL - {carr_activa.upper()}! 🏆</div>
+                                <div class="ganador-nombre-epic">🎉 {ganador_nombre} 🎉</div>
+                                <div style="color: #00ffff; font-size: 16px; font-weight: 900; margin-bottom: 4px; text-shadow: 0 0 8px rgba(0,255,255,0.7);">🐎 EJEMPLAR: {caballo_ganador_str.upper()}</div>
+                                <div class="ganador-premio-epic">💰 Premio Liquidado: {premio_ganado}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+
+                    with st.container(border=True):
+                        st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Seleccionar y Liquidar Ganador - {carr_activa}</p>", unsafe_allow_html=True)
+                        if carr_activa not in st.session_state.historial_ganadores:
+                            caballos_lista_ganador = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
+                            if not caballos_lista_ganador:
+                                caballos_lista_ganador = list(st.session_state.remates[carr_activa].keys())
+                            col_g1, col_g2 = st.columns([3, 2], gap="small")
+                            with col_g1:
+                                caballo_ganador_elegido = st.selectbox("Ejemplar Ganador", caballos_lista_ganador, key=f"rem_sel_ganador_{carr_activa}", label_visibility="collapsed")
+                            with col_g2:
+                                if st.button("🏆 Liquidar Ganador", key=f"rem_btn_liquidar_{carr_activa}", use_container_width=True, type="primary"):
+                                    pote_carr_total = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_carr_activa])
+                                    monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
+                                    
+                                    if modo_actual_remate == "Adelantados":
+                                        incentivo_establecido = float(detalles_carr.get('incentivo_adelantados', 0.0))
+                                    elif modo_actual_remate == "Ciegos":
+                                        incentivo_establecido = float(detalles_carr.get('incentivo_ciegos', 0.0))
+                                    else:
+                                        incentivo_establecido = float(detalles_carr.get('incentivo_envivo', 0.0))
+
+                                    premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_establecido
+                                    
+                                    info_g = st.session_state.remates[carr_activa][caballo_ganador_elegido]
+                                    if info_g['jugador'] != "Sin Postor":
+                                        if info_g['jugador'] not in st.session_state.cuentas:
+                                            st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                        st.session_state.cuentas[info_g['jugador']]['Premios'] += premio_final_liq
+                                    st.session_state.ganancia_casa += monto_casa_calc
+                                    st.session_state.historial_ganadores[carr_activa] = {
+                                        "Ganador": info_g['jugador'], 
+                                        "Premio": formatear_bs(premio_final_liq),
+                                        "Caballo": caballo_ganador_elegido
+                                    }
+                                    guardar_estado_global()
+                                    st.rerun()
+
+                    with st.expander(f"📜 Historial de Pujas - {carr_activa} ({modo_actual_remate})", expanded=False):
+                        historial_carrera_actual = [
+                            h for h in st.session_state.historial_jugadas 
+                            if h.get('carrera') == carr_activa and "Remate" in h.get('type', h.get('tipo', ''))
+                        ]
+                        if not historial_carrera_actual:
+                            st.info(f"ℹ️ No hay registros de pujas para {carr_activa}.")
+                        else:
+                            datos_h_carr = []
+                            for h in reversed(historial_carrera_actual):
+                                datos_h_carr.append({
+                                    "Fecha / Hora": h.get('fecha', ''),
+                                    "Modo": h.get('tipo', ''),
+                                    "Jugador": h.get('jugador', ''),
+                                    "Ejemplar": h.get('detalle', ''),
+                                    "Monto": formatear_bs(h.get('monto', 0.0))
+                                })
+                            st.dataframe(pd.DataFrame(datos_h_carr), use_container_width=True, hide_index=True)
+
+                    with st.container(border=True):
                         st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
                         lista_caballos_activos = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
                         
