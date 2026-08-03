@@ -380,10 +380,49 @@ def obtener_abreviatura_carrera(nombre_carrera, modo_actual=""):
 def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
     html = """
     <style>
-        .tabla-referencia { width: 100%; border-collapse: collapse; font-family: sans-serif; background-color: #ffffff; color: #000000; margin-bottom: 10px; table-layout: fixed; }
-        .tabla-referencia th { border-top: 2px solid #dfc729; border-bottom: 2px solid #dfc729; padding: 6px 4px; text-align: left; font-weight: 800; background-color: #ffffff; color: #000000; font-size: 11px; }
-        .tabla-referencia td { border-bottom: 1px solid #dfc729; padding: 6px 4px; background-color: #fbfbfb; color: #111111; font-size: 11px; vertical-align: middle; white-space: nowrap; }
-        .badge-numero { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; font-weight: bold; font-size: 11px; border-radius: 2px; }
+        .tabla-referencia {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            margin-bottom: 10px;
+            table-layout: fixed;
+        }
+        .tabla-referencia th {
+            border-top: 2px solid #dfc729;
+            border-bottom: 2px solid #dfc729;
+            padding: 6px 4px;
+            text-align: left;
+            font-weight: 800;
+            background-color: #ffffff;
+            color: #000000;
+            font-size: 11px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tabla-referencia td {
+            border-bottom: 1px solid #dfc729;
+            padding: 6px 4px;
+            background-color: #fbfbfb;
+            color: #111111;
+            font-size: 11px;
+            vertical-align: middle;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .badge-numero {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            font-weight: bold;
+            font-size: 11px;
+            border-radius: 2px;
+            box-sizing: border-box;
+        }
         .badge-1 { background-color: #e3242b; color: #ffffff; }
         .badge-2 { background-color: #ffffff; color: #000000; border: 1.5px solid #000000; }
         .badge-3 { background-color: #1d11c0; color: #ffffff; }
@@ -392,8 +431,16 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
         .badge-6 { background-color: #000000; color: #ffffff; }
         .badge-7 { background-color: #fd7e14; color: #ffffff; }
         .badge-default { background-color: #6c757d; color: #ffffff; }
-        .retirado-row td { background-color: #ffe6e6 !important; color: #990000 !important; text-decoration: line-through; }
-        .novale-row td { background-color: #fff3cd !important; color: #856404 !important; font-style: italic; }
+        .retirado-row td {
+            background-color: #ffe6e6 !important;
+            color: #990000 !important;
+            text-decoration: line-through;
+        }
+        .novale-row td {
+            background-color: #fff3cd !important;
+            color: #856404 !important;
+            font-style: italic;
+        }
     </style>
     <div style="background-color: #ffffff; padding: 3px; border-radius: 6px; overflow-x: auto; width: 100%;">
         <table class="tabla-referencia">
@@ -409,24 +456,48 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
     """
     for cab, info in remates_dict.items():
         match_num = re.match(r'^(\d+)', cab)
-        num = int(match_num.group(1)) if match_num else 0
-        nombre_solo = cab.split(" - ", 1)[1] if " - " in cab else cab
-        badge_class = f"badge-{num}" if 1 <= num <= 7 else "badge-default"
+        if match_num:
+            num = int(match_num.group(1))
+            nombre_solo = cab.split(" - ", 1)[1] if " - " in cab else cab
+        else:
+            num = 0
+            nombre_solo = cab
+            
+        if num == 1: badge_class = "badge-1"
+        elif num == 2: badge_class = "badge-2"
+        elif num == 3: badge_class = "badge-3"
+        elif num == 4: badge_class = "badge-4"
+        elif num == 5: badge_class = "badge-5"
+        elif num == 6: badge_class = "badge-6"
+        elif num == 7: badge_class = "badge-7"
+        else: badge_class = "badge-default"
         
         es_retirado = cab in retirados_list
         es_novale = cab in no_validos_list
-        clase_fila = "retirado-row" if es_retirado else ("novale-row" if es_novale else "")
-        etiqueta_estado = " (RETIRADO)" if es_retirado else (" (NO VALE)" if es_novale else "")
+        
+        if es_retirado:
+            clase_fila = "retirado-row"
+            etiqueta_estado = " (RETIRADO)"
+        elif es_novale:
+            clase_fila = "novale-row"
+            etiqueta_estado = " (NO VALE)"
+        else:
+            clase_fila = ""
+            etiqueta_estado = ""
         
         html += f"""
                 <tr class="{clase_fila}">
                     <td><span class="badge-numero {badge_class}">{num}</span></td>
-                    <td style="font-weight: 800; font-size: 12px;">{nombre_solo.upper()}{etiqueta_estado}</td>
-                    <td>{info['jugador']}</td>
-                    <td style="font-weight: bold;">{formatear_bs(info['monto'])}</td>
+                    <td style="font-weight: 800; font-size: 12px;" title="{nombre_solo.upper()}{etiqueta_estado}">{nombre_solo.upper()}{etiqueta_estado}</td>
+                    <td title="{info['jugador']}">{info['jugador']}</td>
+                    <td style="font-weight: bold; color: { '#990000' if es_retirado else ('#856404' if es_novale else '#000000') };">{formatear_bs(info['monto'])}</td>
                 </tr>
         """
-    html += "</tbody></table></div>"
+    html += """
+            </tbody>
+        </table>
+    </div>
+    """
     return html
 
 if not st.session_state.banco_caballos_por_carrera:
