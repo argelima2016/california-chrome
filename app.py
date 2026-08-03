@@ -517,17 +517,20 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR MODERNA CON LOGOTIPO NÍTIDO Y RELOJ VIVO ---
+# --- CABECERA SUPERIOR MODERNA (RAYO QUITADO DEL RELOJ Y PULSADOR EN LINEA AL LADO DE CASA) ---
 header_top_html = f"""
     <div style="background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); border: 1px solid #30363d; border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; gap: 14px; width: 100%; box-sizing: border-box; font-family: sans-serif;">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px;">
             <div style="display: flex; flex-direction: column; background: #080a0f; border: 1px solid #21262d; padding: 6px 12px; border-radius: 8px;">
-                <span id="reloj-vivo-header" style="color: #00ffff; font-size: 14px; font-weight: 900; letter-spacing: 0.5px;">⚡ {hora_inicial_txt}</span>
+                <span id="reloj-vivo-header" style="color: #00ffff; font-size: 14px; font-weight: 900; letter-spacing: 0.5px;">{hora_inicial_txt}</span>
                 <span style="color: #8b949e; font-size: 10px; font-weight: 700;">📅 {fecha_texto}</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px; background: #080a0f; border: 1px solid #30363d; padding: 5px 10px; border-radius: 8px;">
                 <div style="display: flex; flex-direction: column; text-align: right;">
-                    <span style="color: #f0f6fc; font-size: 12px; font-weight: 800;">{usuario_en_sesion}</span>
+                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+                        <span style="color: #f0f6fc; font-size: 12px; font-weight: 800;">{usuario_en_sesion}</span>
+                        <span style="display: inline-block; width: 9px; height: 9px; background-color: #2ed573; border-radius: 50%; box-shadow: 0 0 6px #2ed573;" title="En Línea"></span>
+                    </div>
                     <span style="font-size: 10px; font-weight: 700; color: {color_balance};">{etiqueta_balance}</span>
                 </div>
                 <div style="width: 28px; height: 28px; background: #1f6feb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;">🐺</div>
@@ -555,7 +558,7 @@ header_top_html = f"""
             m = m < 10 ? '0' + m : m;
             s = s < 10 ? '0' + s : s;
             
-            el.innerText = '⚡ ' + h + ':' + m + ':' + s + ' ' + ampm;
+            el.innerText = h + ':' + m + ':' + s + ' ' + ampm;
         }}
         setInterval(actualizarRelojHeaderExacto, 1000);
     </script>
