@@ -707,12 +707,12 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
     """
     return html
 
-# --- INICIALIZACIÓN GLOBAL SEGURA ---
+# --- INICIALIZACIÓN GLOBAL SEGURA (14 EJEMPLARES POR DEFECTO) ---
 if not st.session_state.remates:
     for i in range(1, st.session_state.total_carreras_semana + 1):
         carr_nombre = f"Carrera {i}"
-        st.session_state.banco_caballos_por_carrera[carr_nombre] = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
-        st.session_state.remates[carr_nombre] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
+        st.session_state.banco_caballos_por_carrera[carr_nombre] = [f"{j} - Ejemplar {j}" for j in range(1, 15)]
+        st.session_state.remates[carr_nombre] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 15)}
         st.session_state.detalles_carreras[carr_nombre] = {
             "condicion": "Condición estándar", 
             "distancia": "1200 mts", 
@@ -979,7 +979,7 @@ def renderizar_tiempo_real_universal():
     if not lista_carreras_locales:
         for i in range(1, st.session_state.total_carreras_semana + 1):
             c_n = f"Carrera {i}"
-            st.session_state.remates[c_n] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
+            st.session_state.remates[c_n] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 15)}
         lista_carreras_locales = list(st.session_state.remates.keys())
 
     # =========================================================================
@@ -1280,7 +1280,6 @@ def renderizar_tiempo_real_universal():
                             cant_caballos_inscritos = len(banco_caballos_carr)
 
                             if cant_caballos_inscritos > 14:
-                                # SI SON MÁS DE 14: ASIGNAR LOS EXCEDENTES AUTOMÁTICAMENTE A CASA CON MONTO 0.0
                                 remates_carrera = st.session_state.remates.get(carr_activa, {})
                                 modificacion_hecha = False
                                 for idx_ex, cab_ex in enumerate(banco_caballos_carr):
@@ -1293,7 +1292,6 @@ def renderizar_tiempo_real_universal():
                                 st.info(f"ℹ️ La carrera {carr_activa} tiene {cant_caballos_inscritos} ejemplares. Los excedentes (>14) han sido asignados automáticamente a **CASA**.")
 
                             elif cant_caballos_inscritos < 14:
-                                # SI SON MENOS DE 14: SE LE QUITAN DE INMEDIATO AL JUGADOR Y NO PAGAN (MARCADOS COMO NO VALE O SIN POSTOR)
                                 remates_carrera = st.session_state.remates.get(carr_activa, {})
                                 modificacion_hecha = False
                                 for cab_m, info_m in remates_carrera.items():
@@ -1692,8 +1690,8 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 for i in range(1, nueva_cantidad_carreras + 1):
                     c_n = f"Carrera {i}"
                     if c_n not in st.session_state.banco_caballos_por_carrera:
-                        st.session_state.banco_caballos_por_carrera[c_n] = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
-                        st.session_state.remates[c_n] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
+                        st.session_state.banco_caballos_por_carrera[c_n] = [f"{j} - Ejemplar {j}" for j in range(1, 15)]
+                        st.session_state.remates[c_n] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 15)}
                         st.session_state.detalles_carreras[c_n] = {
                             "condicion": "Condición estándar", 
                             "distancia": "1200 mts", 
