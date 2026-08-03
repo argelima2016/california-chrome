@@ -268,9 +268,9 @@ nombres_archivos = [
 img_b64 = get_image_base64(nombres_archivos)
 
 if img_b64:
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" class="header-logo-img" />'
+    logo_html_render = f'<img src="data:image/png;base64,{img_b64}" style="max-height: 110px; width: auto; object-fit: contain; display: block; margin: 0 auto;" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 38px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
+    logo_html_render = '<span style="color: #f1c40f; font-size: 32px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
 hora_inicial_txt = ahora_dt.strftime('%I:%M:%S %p')
@@ -497,12 +497,6 @@ st.markdown("""
         margin-bottom: 4px;
         font-weight: 600;
     }
-    
-    .header-logo-img {
-        max-height: 120px;
-        width: auto;
-        object-fit: contain;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -523,7 +517,7 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR MODERNA CON COMPONENTE HTML DIRECTO PARA EL RELOJ VIVO ---
+# --- CABECERA SUPERIOR MODERNA CON LOGOTIPO NÍTIDO Y RELOJ VIVO ---
 header_top_html = f"""
     <div style="background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); border: 1px solid #30363d; border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; gap: 14px; width: 100%; box-sizing: border-box; font-family: sans-serif;">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px;">
@@ -540,7 +534,7 @@ header_top_html = f"""
             </div>
         </div>
         <div style="text-align: center; border-top: 1px solid #21262d; padding-top: 12px;">
-            {logo_display}
+            {logo_html_render}
         </div>
     </div>
     <script>
@@ -566,7 +560,7 @@ header_top_html = f"""
         setInterval(actualizarRelojHeaderExacto, 1000);
     </script>
 """
-components.html(header_top_html, height=185)
+components.html(header_top_html, height=195)
 
 def obtener_abreviatura_carrera(nombre_carrera, modo_actual=""):
     if modo_actual == "Ciegos":
