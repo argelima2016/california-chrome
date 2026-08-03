@@ -117,7 +117,7 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN Y CONTROL DE VISIBILIDAD DE CONFIG SEGÚN USUARIO ---
+# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN Y CONTROL ROBUSTO DE LA BARRA LATERAL ---
 usuario_actual_sesion = st.session_state.get("usuario_activo", "CASA")
 
 if usuario_actual_sesion == "CASA":
@@ -170,32 +170,27 @@ if usuario_actual_sesion == "CASA":
                     tuercaBtn.style.transition = 'transform 0.2s ease, background 0.2s ease';
 
                     tuercaBtn.onclick = function() {
-                        const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
-                        if (sidebar) {
-                            const currentTransform = window.getComputedStyle(sidebar).transform;
-                            const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
-                                     (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
-                            
-                            if (isClosed) {
-                                sidebar.setAttribute('aria-expanded', 'true');
-                                sidebar.style.transform = 'none';
-                                sidebar.style.visibility = 'visible';
-                                sidebar.style.display = 'block';
-                                sidebar.style.minWidth = '360px';
-                                sidebar.style.width = '360px';
-                                sidebar.style.position = 'relative';
-                            } else {
-                                sidebar.setAttribute('aria-expanded', 'false');
-                                sidebar.style.transform = 'translateX(-100%)';
-                                sidebar.style.visibility = 'hidden';
-                                sidebar.style.display = 'none';
-                                sidebar.style.minWidth = '0px';
-                                sidebar.style.width = '0px';
-                            }
+                        const nativeToggle = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
+                                             doc.querySelector('[data-testid="collapsedControl"] button') ||
+                                             doc.querySelector('button[aria-label="Close sidebar"]') ||
+                                             doc.querySelector('button[aria-label="Open sidebar"]');
+                        
+                        if (nativeToggle) {
+                            nativeToggle.click();
                         } else {
-                            const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
-                                              doc.querySelector('[data-testid="collapsedControl"] button');
-                            if (collapseBtn) collapseBtn.click();
+                            const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
+                            if (sidebar) {
+                                const isHidden = window.getComputedStyle(sidebar).display === 'none' || 
+                                                 sidebar.style.transform.includes('-100%');
+                                if (isHidden) {
+                                    sidebar.style.transform = 'none';
+                                    sidebar.style.visibility = 'visible';
+                                    sidebar.style.display = 'block';
+                                } else {
+                                    sidebar.style.transform = 'translateX(-100%)';
+                                    sidebar.style.visibility = 'hidden';
+                                }
+                            }
                         }
                     };
 
