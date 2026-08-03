@@ -87,7 +87,9 @@ def cargar_estado_global(forzar_recarga=False):
         'remates', 'cuentas', 'carreras_cerradas_remate', 'historial_ganadores', 
         'ganancia_casa', 'ejemplares_retirados', 'ejemplares_no_valido', 
         'detalles_carreras', 'carreras_activas_remate', 'carreras_por_modalidad',
-        'dupleta_bloqueada', 'historial_jugadas'
+        'dupleta_bloqueada', 'historial_jugadas', 'fechas_horas_inicio_remate_modalidad',
+        'fechas_horas_cierre_remate_modalidad', 'fechas_horas_inicio_modalidad_multiple',
+        'fechas_horas_cierre_modalidad_multiple'
     ]
     
     if os.path.exists(DB_FILE):
@@ -1147,50 +1149,29 @@ def renderizar_tiempo_real_universal():
                         st.toast("✅ ¡Ejemplares retirados actualizados!")
                         st.rerun()
 
-                # --- VERIFICACIÓN DE INICIO Y CIERRE AUTOMÁTICO SEGURA ---
+                # --- VALIDACIÓN DE HORARIOS Y BLOQUEO ESTRICTO ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = parsear_dt_seguro(st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr))
                 dt_limite = parsear_dt_seguro(st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr))
-                estado_conteo = st.session_state.estado_conteo_carrera_modalidad.get(clave_mod_carr, "INACTIVO")
 
-                if dt_inicio and carrera_cerrada:
-                    if ahora_dt >= dt_inicio:
-                        st.session_state.carreras_cerradas_remate[carr_activa] = False
+                bloqueo_horario_activo = False
+                mensaje_bloqueo_horario = ""
+
+                if dt_inicio and ahora_dt < dt_inicio:
+                    bloqueo_horario_activo = True
+                    mensaje_bloqueo_horario = f"⏳ **AÚN NO ABRE:** Esta modalidad abre el {dt_inicio.strftime('%d/%m/%Y a las %I:%M %p')}."
+                elif dt_limite and ahora_dt > dt_limite:
+                    bloqueo_horario_activo = True
+                    mensaje_bloqueo_horario = f"🔒 **CIERRE ESTRICTO ALCANZADO:** El horario de cierre finalizó el {dt_limite.strftime('%d/%m/%Y a las %I:%M %p')}."
+                    if not carrera_cerrada:
+                        st.session_state.carreras_cerradas_remate[carr_activa] = True
                         guardar_estado_global()
-                        carrera_cerrada = False
+                        carrera_cerrada = True
 
                 if dt_inicio:
-                    st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:4px; border:1px solid #30363d; font-size:12px;'>🟢 Inicio Remate ({modo_actual_remate}): <b>{dt_inicio.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:4px; border:1px solid #30363d; font-size:12px;'>🟢 Inicio ({modo_actual_remate}): <b>{dt_inicio.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
                 if dt_limite:
                     st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:8px; border:1px solid #30363d; font-size:12px;'>⏰ Cierre Estricto ({modo_actual_remate}): <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
-
-                if dt_limite and not carrera_cerrada:
-                    diferencia_segundos = (dt_limite - ahora_dt).total_seconds()
-                    if estado_conteo == "INACTIVO":
-                        if 0 < diferencia_segundos <= 10:
-                            st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CONTEO_10S"
-                            st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = ahora_dt
-                            guardar_estado_global()
-                            st.rerun()
-                        elif diferencia_segundos <= 0:
-                            st.session_state.carreras_cerradas_remate[carr_activa] = True
-                            st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
-                            st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
-                            guardar_estado_global()
-                            st.rerun()
-                    elif estado_conteo == "CONTEO_10S":
-                        tiempo_inicio = parsear_dt_seguro(st.session_state.tiempo_inicio_conteo_modalidad.get(clave_mod_carr)) or ahora_dt
-                        transcurridos = (ahora_dt - tiempo_inicio).total_seconds()
-                        if transcurridos >= 12:
-                            st.session_state.carreras_cerradas_remate[carr_activa] = True
-                            st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
-                            st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
-                            guardar_estado_global()
-                            st.rerun()
-                        else:
-                            restantes_10s = max(0, 10 - int(transcurridos))
-                            if restantes_10s > 0:
-                                st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa} - {modo_actual_remate})</div>", unsafe_allow_html=True)
 
                 tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
                 cantidad_filas = len(st.session_state.remates[carr_activa])
@@ -1279,7 +1260,14 @@ def renderizar_tiempo_real_universal():
                                 st.rerun()
 
                 with st.container(border=True):
-                    if modo_actual_remate == "Ciegos":
+                    if bloqueo_horario_activo:
+                        st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, #2c161c 0%, #1a080c 100%); border: 2px solid #ff4757; border-radius: 12px; padding: 14px; text-align: center; margin: 10px 0; box-shadow: 0 0 15px rgba(255,71,87,0.4);">
+                                <div style="color: #ff4757; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">🔒 PUJAS BLOQUEADAS POR HORARIO</div>
+                                <div style="color: #f0f6fc; font-size: 13px; font-weight: 700; margin-top: 4px;">{mensaje_bloqueo_horario}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                    elif modo_actual_remate == "Ciegos":
                         carreras_ciegas_config = st.session_state.carreras_por_modalidad.get("Ciegos", [])
                         
                         if len(carreras_ciegas_config) < 2:
@@ -1371,100 +1359,91 @@ def renderizar_tiempo_real_universal():
                                                 st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
                                                 st.rerun()
                     else:
-                        # --- VALIDACIÓN ESTRICTA: SI EL TIEMPO LLEGÓ A SU CIERRE, NO SE PUEDE PUJAR ---
-                        if dt_limite and ahora_dt >= dt_limite:
-                            st.markdown("""
-                                <div style="background: linear-gradient(135deg, #2c161c 0%, #1a080c 100%); border: 2px solid #ff4757; border-radius: 12px; padding: 14px; text-align: center; margin: 10px 0; box-shadow: 0 0 15px rgba(255,71,87,0.4);">
-                                    <div style="color: #ff4757; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">🔒 TIEMPO LÍMITE PARA PUJAR FINALIZÓ</div>
-                                    <div style="color: #f0f6fc; font-size: 13px; font-weight: 700; margin-top: 4px;">Las pujas están bloqueadas para esta carrera.</div>
+                        st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
+                        lista_caballos_activos = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
+                        
+                        if not lista_caballos_activos:
+                            st.warning("No hay ejemplares disponibles para pujar.")
+                        else:
+                            k_sel_cab = f"rem_caballo_activo_click_{carr_activa}"
+                            if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
+                                st.session_state[k_sel_cab] = lista_caballos_activos[0]
+                                
+                            st.markdown(f"🔹 **1. Seleccionar Ejemplar (Disponibles: {len(lista_caballos_activos)}):**")
+                            
+                            cantidad_ejemplares = len(lista_caballos_activos)
+                            cols_ejemplares = 3
+                            num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
+                            
+                            idx_cab = 0
+                            for f in range(num_filas):
+                                cols_fila = st.columns(cols_ejemplares, gap="small")
+                                for c in range(cols_ejemplares):
+                                    if idx_cab < cantidad_ejemplares:
+                                        cab_item = lista_caballos_activos[idx_cab]
+                                        num_parte = cab_item.split(" - ")[0]
+                                        
+                                        info_remate_cab = st.session_state.remates[carr_activa].get(cab_item, {})
+                                        propietario = info_remate_cab.get('jugador', 'Sin Postor')
+                                        
+                                        if propietario == "Sin Postor" or propietario == "CASA" or info_remate_cab.get('monto', 0.0) == 0:
+                                            color_estilo = "background-color: #e2e8f0 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important;"
+                                        elif propietario == st.session_state.usuario_activo:
+                                            color_estilo = "background-color: #22c55e !important; color: #ffffff !important; border: 1px solid #16a34a !important;"
+                                        else:
+                                            color_estilo = "background-color: #ef4444 !important; color: #ffffff !important; border: 1px solid #dc2626 !important;"
+
+                                        with cols_fila[c]:
+                                            st.markdown(f"""
+                                                <style>
+                                                div[data-testid="stVerticalBlock"] button[key="rem_btn_cab_{carr_activa}_{idx_cab}"] {{
+                                                    {color_estilo}
+                                                }}
+                                                </style>
+                                            """, unsafe_allow_html=True)
+
+                                            if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{idx_cab}", use_container_width=True):
+                                                st.session_state[k_sel_cab] = cab_item
+                                                st.rerun()
+
+                                        idx_cab += 1
+                            
+                            caballo_seleccionado = st.session_state[k_sel_cab]
+                            propietario_actual_sel = st.session_state.remates[carr_activa][caballo_seleccionado].get('jugador', 'Sin Postor')
+                            
+                            st.markdown(f"""
+                                <div class="ejemplar-activo-badge-epic">
+                                    <div class="ejemplar-activo-label">🐎 Ejemplar Activo</div>
+                                    <div class="ejemplar-activo-nombre">{caballo_seleccionado}</div>
+                                    <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">Dueño: <b>{propietario_actual_sel}</b></div>
                                 </div>
                             """, unsafe_allow_html=True)
-                        else:
-                            st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
-                            lista_caballos_activos = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
+
+                            puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
+                            opciones_escala = obtener_siguientes_montos(puja_actual)
+                            monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{carr_activa}_{caballo_seleccionado}")
                             
-                            if not lista_caballos_activos:
-                                st.warning("No hay ejemplares disponibles para pujar.")
+                            if carrera_cerrada:
+                                st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary", disabled=True)
                             else:
-                                k_sel_cab = f"rem_caballo_activo_click_{carr_activa}"
-                                if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
-                                    st.session_state[k_sel_cab] = lista_caballos_activos[0]
-                                    
-                                st.markdown(f"🔹 **1. Seleccionar Ejemplar (Disponibles: {len(lista_caballos_activos)}):**")
-                                
-                                cantidad_ejemplares = len(lista_caballos_activos)
-                                cols_ejemplares = 3
-                                num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
-                                
-                                idx_cab = 0
-                                for f in range(num_filas):
-                                    cols_fila = st.columns(cols_ejemplares, gap="small")
-                                    for c in range(cols_ejemplares):
-                                        if idx_cab < cantidad_ejemplares:
-                                            cab_item = lista_caballos_activos[idx_cab]
-                                            num_parte = cab_item.split(" - ")[0]
-                                            
-                                            info_remate_cab = st.session_state.remates[carr_activa].get(cab_item, {})
-                                            propietario = info_remate_cab.get('jugador', 'Sin Postor')
-                                            
-                                            if propietario == "Sin Postor" or propietario == "CASA" or info_remate_cab.get('monto', 0.0) == 0:
-                                                color_estilo = "background-color: #e2e8f0 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important;"
-                                            elif propietario == st.session_state.usuario_activo:
-                                                color_estilo = "background-color: #22c55e !important; color: #ffffff !important; border: 1px solid #16a34a !important;"
-                                            else:
-                                                color_estilo = "background-color: #ef4444 !important; color: #ffffff !important; border: 1px solid #dc2626 !important;"
-
-                                            with cols_fila[c]:
-                                                st.markdown(f"""
-                                                    <style>
-                                                    div[data-testid="stVerticalBlock"] button[key="rem_btn_cab_{carr_activa}_{idx_cab}"] {{
-                                                        {color_estilo}
-                                                    }}
-                                                    </style>
-                                                """, unsafe_allow_html=True)
-
-                                                if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{idx_cab}", use_container_width=True):
-                                                    st.session_state[k_sel_cab] = cab_item
-                                                    st.rerun()
-
-                                            idx_cab += 1
-                                
-                                caballo_seleccionado = st.session_state[k_sel_cab]
-                                propietario_actual_sel = st.session_state.remates[carr_activa][caballo_seleccionado].get('jugador', 'Sin Postor')
-                                
-                                st.markdown(f"""
-                                    <div class="ejemplar-activo-badge-epic">
-                                        <div class="ejemplar-activo-label">🐎 Ejemplar Activo</div>
-                                        <div class="ejemplar-activo-nombre">{caballo_seleccionado}</div>
-                                        <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">Dueño: <b>{propietario_actual_sel}</b></div>
-                                    </div>
-                                """, unsafe_allow_html=True)
-
-                                puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
-                                opciones_escala = obtener_siguientes_montos(puja_actual)
-                                monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{carr_activa}_{caballo_seleccionado}")
-                                
-                                if carrera_cerrada:
-                                    st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary", disabled=True)
-                                else:
-                                    if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary"):
-                                        if monto_puja <= puja_actual:
-                                            st.error("El monto debe ser mayor a la puja actual.")
-                                        else:
-                                            st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
-                                            st.session_state.historial_jugadas.append({
-                                                "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                                "jugador": st.session_state.usuario_activo,
-                                                "tipo": f"Remate ({modo_actual_remate})",
-                                                "carrera": carr_activa,
-                                                "detalle": caballo_seleccionado,
-                                                "monto": monto_puja
-                                            })
-                                            if estado_conteo == "CONTEO_10S":
-                                                st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = obtener_hora_venezuela_local()
-                                            guardar_estado_global()
-                                            st.success("✅ ¡Puja registrada correctamente!")
-                                            st.rerun()
+                                if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary"):
+                                    if monto_puja <= puja_actual:
+                                        st.error("El monto debe ser mayor a la puja actual.")
+                                    else:
+                                        st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
+                                        st.session_state.historial_jugadas.append({
+                                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                            "jugador": st.session_state.usuario_activo,
+                                            "tipo": f"Remate ({modo_actual_remate})",
+                                            "carrera": carr_activa,
+                                            "detalle": caballo_seleccionado,
+                                            "monto": monto_puja
+                                        })
+                                        if estado_conteo == "CONTEO_10S":
+                                            st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = obtener_hora_venezuela_local()
+                                        guardar_estado_global()
+                                        st.success("✅ ¡Puja registrada correctamente!")
+                                        st.rerun()
 
 renderizar_tiempo_real_universal()
 
@@ -1501,12 +1480,13 @@ if menu_principal_opcion == "Dupletas":
     dt_cierre_m = parsear_dt_seguro(st.session_state.fechas_horas_cierre_modalidad_multiple.get(clave_mod_mult))
 
     bloqueo_por_horario = False
+    mensaje_bloqueo_multiple = ""
     if dt_inicio_m and ahora_dt < dt_inicio_m:
         bloqueo_por_horario = True
-        st.warning(f"⏳ **AÚN NO ABRE:** Esta modalidad abre el {dt_inicio_m.strftime('%d/%m/%Y a las %I:%M %p')}.")
+        mensaje_bloqueo_multiple = f"⏳ **AÚN NO ABRE:** Esta modalidad abre el {dt_inicio_m.strftime('%d/%m/%Y a las %I:%M %p')}."
     elif dt_cierre_m and ahora_dt > dt_cierre_m:
         bloqueo_por_horario = True
-        st.error(f"🔒 **CERRADO ESTRICTO:** El horario de emisión finalizó el {dt_cierre_m.strftime('%d/%m/%Y a las %I:%M %p')}.")
+        mensaje_bloqueo_multiple = f"🔒 **CERRADO ESTRICTO:** El horario de emisión finalizó el {dt_cierre_m.strftime('%d/%m/%Y a las %I:%M %p')}."
 
     if dt_inicio_m:
         st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:4px; border:1px solid #30363d; font-size:12px;'>🟢 Apertura ({sub_dup_actual}): <b>{dt_inicio_m.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
@@ -1514,7 +1494,12 @@ if menu_principal_opcion == "Dupletas":
         st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:8px; border:1px solid #30363d; font-size:12px;'>⏰ Cierre Estricto ({sub_dup_actual}): <b>{dt_cierre_m.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
 
     if st.session_state.dupleta_bloqueada or bloqueo_por_horario:
-        st.error("🔒 **BLOQUEADO:** Emisión cerrada temporalmente.")
+        st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #2c161c 0%, #1a080c 100%); border: 2px solid #ff4757; border-radius: 12px; padding: 14px; text-align: center; margin: 10px 0; box-shadow: 0 0 15px rgba(255,71,87,0.4);">
+                <div style="color: #ff4757; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">🔒 MODALIDAD MÚLTIPLE BLOQUEADA</div>
+                <div style="color: #f0f6fc; font-size: 13px; font-weight: 700; margin-top: 4px;">{mensaje_bloqueo_multiple if bloqueo_por_horario else 'Emisión cerrada por la Casa.'}</div>
+            </div>
+        """, unsafe_allow_html=True)
 
     monto_unico_seccion = st.session_state.config_montos_especiales.get(sub_dup_actual, 500.0)
 
@@ -1822,41 +1807,32 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
         st.markdown("---")
         with st.container(border=True):
-            st.markdown(f"⏰ **Control de Horarios Individuales por Modalidad ({carr_banco_sel})**")
+            st.markdown(f"⏰ **Control de Horarios (Inicio y Cierre) por Modalidad ({carr_banco_sel})**")
             mod_seleccionada_horarios = st.selectbox("Seleccionar Modalidad", ["Adelantados", "Ciegos", "En Vivo"], key=f"sel_mod_horarios_{carr_banco_sel}")
             clave_mod_carr_adm = f"{mod_seleccionada_horarios}_{carr_banco_sel}"
             
+            dt_ini_prev = parsear_dt_seguro(st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr_adm))
+            dt_cier_prev = parsear_dt_seguro(st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr_adm))
+
+            t_ini_default = dt_ini_prev.time() if dt_ini_prev else dtime(13, 0)
+            t_cier_default = dt_cier_prev.time() if dt_cier_prev else dtime(14, 0)
+
             col_h1, col_h2 = st.columns(2)
             with col_h1:
-                st.markdown(f"**🟢 Inicio ({mod_seleccionada_horarios})**")
-                f_ini = st.date_input("Fecha Inicio", value=ahora_dt.date(), key=f"f_ini_{clave_mod_carr_adm}")
-                c_hi1, c_hi2, c_hi3 = st.columns(3)
-                with c_hi1: h_ini_val = st.number_input("Hora (1-12)", min_value=1, max_value=12, value=2, key=f"hi_h_{clave_mod_carr_adm}")
-                with c_hi2: m_ini_val = st.number_input("Min (0-59)", min_value=0, max_value=59, value=0, key=f"hi_m_{clave_mod_carr_adm}")
-                with c_hi3: ampm_ini = st.selectbox("AM/PM", ["AM", "PM"], index=1, key=f"hi_ap_{clave_mod_carr_adm}")
-
+                f_ini = st.date_input("Fecha Inicio", value=dt_ini_prev.date() if dt_ini_prev else ahora_dt.date(), key=f"f_ini_{clave_mod_carr_adm}")
+                t_ini = st.time_input("Hora de Inicio", value=t_ini_default, key=f"t_ini_{clave_mod_carr_adm}")
             with col_h2:
-                st.markdown(f"**⏰ Cierre Estricto ({mod_seleccionada_horarios})**")
-                f_cier = st.date_input("Fecha Cierre", value=ahora_dt.date(), key=f"f_cier_{clave_mod_carr_adm}")
-                c_hc1, c_hc2, c_hc3 = st.columns(3)
-                with c_hc1: h_cier_val = st.number_input("Hora (1-12)", min_value=1, max_value=12, value=2, key=f"hc_h_{clave_mod_carr_adm}")
-                with c_hc2: m_cier_val = st.number_input("Min (0-59)", min_value=0, max_value=59, value=30, key=f"hc_m_{clave_mod_carr_adm}")
-                with c_hc3: ampm_cier = st.selectbox("AM/PM", ["AM", "PM"], index=1, key=f"hc_ap_{clave_mod_carr_adm}")
+                f_cier = st.date_input("Fecha Cierre", value=dt_cier_prev.date() if dt_cier_prev else ahora_dt.date(), key=f"f_cier_{clave_mod_carr_adm}")
+                t_cier = st.time_input("Hora de Cierre Estricto", value=t_cier_default, key=f"t_cier_{clave_mod_carr_adm}")
 
             if st.button(f"💾 Guardar Horarios para {mod_seleccionada_horarios}", key=f"btn_save_horarios_{clave_mod_carr_adm}", use_container_width=True, type="primary"):
-                h_i_24 = h_ini_val if ampm_ini == "AM" else (h_ini_val + 12 if h_ini_val < 12 else 12)
-                if ampm_ini == "AM" and h_ini_val == 12: h_i_24 = 0
-                h_c_24 = h_cier_val if ampm_cier == "AM" else (h_cier_val + 12 if h_cier_val < 12 else 12)
-                if ampm_cier == "AM" and h_cier_val == 12: h_c_24 = 0
-
-                dt_i_final = datetime.combine(f_ini, dtime(h_i_24, m_ini_val))
-                dt_c_final = datetime.combine(f_cier, dtime(h_c_24, m_cier_val))
+                dt_i_final = datetime.combine(f_ini, t_ini)
+                dt_c_final = datetime.combine(f_cier, t_cier)
 
                 st.session_state.fechas_horas_inicio_remate_modalidad[clave_mod_carr_adm] = dt_i_final
                 st.session_state.fechas_horas_cierre_remate_modalidad[clave_mod_carr_adm] = dt_c_final
-                st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr_adm] = "INACTIVO"
                 guardar_estado_global()
-                st.toast("✅ ¡Horarios guardados!")
+                st.toast("✅ ¡Horarios guardados con éxito!")
                 st.rerun()
 
         st.markdown("---")
@@ -1969,31 +1945,23 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             st.markdown("⏰ **Control de Horarios Múltiples (Dupleta / Tripleta / 6 En Linea)**")
             mod_mult_sel = st.selectbox("Seleccionar Modalidad", ["Dupleta", "Tripleta", "6 En Linea"], key="sel_mod_multiple_horarios")
             
+            dt_im_prev = parsear_dt_seguro(st.session_state.fechas_horas_inicio_modalidad_multiple.get(mod_mult_sel))
+            dt_cm_prev = parsear_dt_seguro(st.session_state.fechas_horas_cierre_modalidad_multiple.get(mod_mult_sel))
+
+            t_im_default = dt_im_prev.time() if dt_im_prev else dtime(13, 0)
+            t_cm_default = dt_cm_prev.time() if dt_cm_prev else dtime(14, 0)
+
             col_hm1, col_hm2 = st.columns(2)
             with col_hm1:
-                st.markdown(f"**🟢 Inicio ({mod_mult_sel})**")
-                f_ini_m = st.date_input("Fecha Inicio", value=ahora_dt.date(), key=f"f_ini_m_{mod_mult_sel}")
-                c_hmi1, c_hmi2, c_hmi3 = st.columns(3)
-                with c_hmi1: h_ini_m_val = st.number_input("Hora", min_value=1, max_value=12, value=2, key=f"him_h_{mod_mult_sel}")
-                with c_hmi2: m_ini_m_val = st.number_input("Min", min_value=0, max_value=59, value=0, key=f"him_m_{mod_mult_sel}")
-                with c_hmi3: ampm_ini_m = st.selectbox("AM/PM", ["AM", "PM"], index=1, key=f"him_ap_{mod_mult_sel}")
-
+                f_ini_m = st.date_input("Fecha Inicio", value=dt_im_prev.date() if dt_im_prev else ahora_dt.date(), key=f"f_ini_m_{mod_mult_sel}")
+                t_ini_m = st.time_input("Hora de Inicio", value=t_im_default, key=f"t_ini_m_{mod_mult_sel}")
             with col_hm2:
-                st.markdown(f"**⏰ Cierre Estricto ({mod_mult_sel})**")
-                f_cier_m = st.date_input("Fecha Cierre", value=ahora_dt.date(), key=f"f_cier_m_{mod_mult_sel}")
-                c_hmc1, c_hmc2, c_hmc3 = st.columns(3)
-                with c_hmc1: h_cier_m_val = st.number_input("Hora", min_value=1, max_value=12, value=2, key=f"hcm_h_{mod_mult_sel}")
-                with c_hmc2: m_cier_m_val = st.number_input("Min", min_value=0, max_value=59, value=30, key=f"hcm_m_{mod_mult_sel}")
-                with c_hmc3: ampm_cier_m = st.selectbox("AM/PM", ["AM", "PM"], index=1, key=f"hcm_ap_{mod_mult_sel}")
+                f_cier_m = st.date_input("Fecha Cierre", value=dt_cm_prev.date() if dt_cm_prev else ahora_dt.date(), key=f"f_cier_m_{mod_mult_sel}")
+                t_cier_m = st.time_input("Hora de Cierre Estricto", value=t_cm_default, key=f"t_cier_m_{mod_mult_sel}")
 
             if st.button(f"💾 Guardar Horarios para {mod_mult_sel}", key=f"btn_save_horarios_m_{mod_mult_sel}", use_container_width=True, type="primary"):
-                h_im_24 = h_ini_m_val if ampm_ini_m == "AM" else (h_ini_m_val + 12 if h_ini_m_val < 12 else 12)
-                if ampm_ini_m == "AM" and h_ini_m_val == 12: h_im_24 = 0
-                h_cm_24 = h_cier_m_val if ampm_cier_m == "AM" else (h_cier_m_val + 12 if h_cier_m_val < 12 else 12)
-                if ampm_cier_m == "AM" and h_cier_m_val == 12: h_cm_24 = 0
-
-                dt_im_final = datetime.combine(f_ini_m, dtime(h_im_24, m_ini_m_val))
-                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cier_m_val))
+                dt_im_final = datetime.combine(f_ini_m, t_ini_m)
+                dt_cm_final = datetime.combine(f_cier_m, t_cier_m)
 
                 st.session_state.fechas_horas_inicio_modalidad_multiple[mod_mult_sel] = dt_im_final
                 st.session_state.fechas_horas_cierre_modalidad_multiple[mod_mult_sel] = dt_cm_final
