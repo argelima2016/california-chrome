@@ -40,7 +40,7 @@ def formatear_bs(monto):
     numero_formateado = f"{monto:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return f"Bs. {numero_formateado}"
 
-# --- SISTEMA DE PERSISTENCIA GLOBAL (JSON) ---
+# --- SISTEMA DE PERSISTENCIA GLOBAL CON SINCRONIZACIÓN INSTÁNTANEA (JSON) ---
 DB_FILE = "state_db.json"
 
 def cargar_estado_global(forzar_recarga=False):
@@ -83,20 +83,31 @@ def cargar_estado_global(forzar_recarga=False):
         'imagenes_carreras': {}
     }
     
+    keys_compartidas = [
+        'remates', 'cuentas', 'carreras_cerradas_remate', 'historial_ganadores', 
+        'ganancia_casa', 'ejemplares_retirados', 'ejemplares_no_valido', 
+        'detalles_carreras', 'carreras_activas_remate', 'carreras_por_modalidad',
+        'dupleta_bloqueada', 'historial_jugadas'
+    ]
+    
     if os.path.exists(DB_FILE):
         try:
             with open(DB_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 for k, v in default_state.items():
-                    if k not in st.session_state or forzar_recarga:
-                        val_json = data.get(k, v)
-                        if "fechas_horas" in k and isinstance(val_json, dict):
-                            val_reconstruido = {}
-                            for dk, dv in val_json.items():
-                                val_reconstruido[dk] = parsear_dt_seguro(dv) or dv
-                            st.session_state[k] = val_reconstruido
-                        else:
-                            st.session_state[k] = val_json
+                    val_json = data.get(k, v)
+                    if "fechas_horas" in k and isinstance(val_json, dict):
+                        val_reconstruido = {}
+                        for dk, dv in val_json.items():
+                            val_reconstruido[dk] = parsear_dt_seguro(dv) or dv
+                        val_final = val_reconstruido
+                    else:
+                        val_final = val_json
+                    
+                    if k not in st.session_state or (forzar_recarga and k in keys_compartidas):
+                        st.session_state[k] = val_final
+                    elif k not in st.session_state:
+                        st.session_state[k] = val_final
         except Exception:
             for k, v in default_state.items():
                 if k not in st.session_state:
