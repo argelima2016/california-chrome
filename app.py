@@ -1274,13 +1274,13 @@ def renderizar_tiempo_real_universal():
 
                 premio_total_calculado = pote_neto_base + incentivo_actual
 
-                if incentivo_actual > 0:
-                    st.markdown(f"""
-                        <div class="incentivo-llamativo">
-                            <div style="font-size: 11px; font-weight: 800; color: #00ffff; text-transform: uppercase; margin-bottom: 2px;">PREMIO TOTAL</div>
-                            <div class="incentivo-llamativo-monto">🎁 {formatear_bs(premio_total_calculado)}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
+                # --- PREMIO TOTAL LLAMATIVO VISIBLE EN TODAS LAS MODALIDADES DE REMATE ---
+                st.markdown(f"""
+                    <div class="incentivo-llamativo">
+                        <div style="font-size: 11px; font-weight: 800; color: #00ffff; text-transform: uppercase; margin-bottom: 2px;">PREMIO TOTAL</div>
+                        <div class="incentivo-llamativo-monto">🎁 {formatear_bs(premio_total_calculado)}</div>
+                    </div>
+                """, unsafe_allow_html=True)
 
                 c_m1, c_m2 = st.columns(2)
                 c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
