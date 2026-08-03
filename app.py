@@ -967,7 +967,7 @@ if lista_b64_banners:
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
                     }}, 400);
-                }, 8000);
+                }}, 8000);
             }}
         }})();
     </script>
