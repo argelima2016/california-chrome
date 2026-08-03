@@ -276,7 +276,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_inicial_txt = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS GENERALES Y ANIMACIÓN ÉPICA PARA EL CONTEO ---
+# --- ESTILOS CSS GENERALES ---
 st.markdown("""
     <style>
     * {
@@ -368,37 +368,17 @@ st.markdown("""
         border-bottom: 2px solid #f1e05a;
         padding-bottom: 3px;
     }
-    
-    @keyframes pulsoAlerta {
-        0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 71, 87, 0.6); }
-        50% { transform: scale(1.02); box-shadow: 0 0 35px rgba(255, 71, 87, 0.9); }
-        100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 71, 87, 0.6); }
-    }
-    .timer-box-epic {
-        background: linear-gradient(135deg, #2a080c 0%, #160407 100%);
-        border: 2px solid #ff4757;
-        padding: 12px;
-        border-radius: 12px;
+    .timer-box {
+        background-color: #161b22;
+        border: 1px solid #ff4757;
+        padding: 6px;
+        border-radius: 6px;
         text-align: center;
-        margin-bottom: 12px;
-        animation: pulsoAlerta 0.8s infinite ease-in-out;
-    }
-    .timer-title {
+        font-size: clamp(12px, 3vw, 15px);
+        font-weight: bold;
         color: #ff4757;
-        font-size: 12px;
-        font-weight: 900;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        margin-bottom: 4px;
+        margin-bottom: 8px;
     }
-    .timer-numero-gigante {
-        color: #ffffff;
-        font-size: 38px;
-        font-weight: 900;
-        letter-spacing: 2px;
-        text-shadow: 0 0 12px #ff4757;
-    }
-
     .carrera-condicion-card {
         background-color: #161b22;
         border: 1px solid #30363d;
@@ -537,7 +517,7 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR MODERNA CON RELOJ VIVO ---
+# --- CABECERA SUPERIOR MODERNA ---
 header_top_html = f"""
     <div style="background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); border: 1px solid #30363d; border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; gap: 14px; width: 100%; box-sizing: border-box; font-family: sans-serif;">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px;">
@@ -979,7 +959,7 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (1 SEGUNDO SEGURO CON CONTEO CONTINUO Y LLAMATIVO)
+# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (1 SEGUNDO SEGURO)
 # =========================================================================
 @st.fragment(run_every=1.0)
 def renderizar_tiempo_real_universal():
@@ -1143,7 +1123,7 @@ def renderizar_tiempo_real_universal():
                         st.toast("✅ ¡Ejemplares retirados actualizados!")
                         st.rerun()
 
-                # --- VERIFICACIÓN DE INICIO Y CIERRE AUTOMÁTICO CON CONTEO CONTINUO 10, 9, 8... ---
+                # --- VERIFICACIÓN DE INICIO Y CIERRE AUTOMÁTICO SEGURA ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = parsear_dt_seguro(st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr))
                 dt_limite = parsear_dt_seguro(st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr))
@@ -1162,21 +1142,31 @@ def renderizar_tiempo_real_universal():
 
                 if dt_limite and not carrera_cerrada:
                     diferencia_segundos = (dt_limite - ahora_dt).total_seconds()
-                    if 0 < diferencia_segundos <= 10:
-                        restantes_cont = max(0, int(diferencia_segundos))
-                        if restantes_cont > 0:
-                            st.markdown(f"""
-                                <div class="timer-box-epic">
-                                    <div class="timer-title">⚠️ ¡CIERRE INMINENTE EN {carr_activa.upper()}! ⚠️</div>
-                                    <div class="timer-numero-gigante">{restantes_cont}</div>
-                                </div>
-                            """, unsafe_allow_html=True)
-                    elif diferencia_segundos <= 0:
-                        st.session_state.carreras_cerradas_remate[carr_activa] = True
-                        st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
-                        st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
-                        guardar_estado_global()
-                        st.rerun()
+                    if estado_conteo == "INACTIVO":
+                        if 0 < diferencia_segundos <= 10:
+                            st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CONTEO_10S"
+                            st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = ahora_dt
+                            guardar_estado_global()
+                            st.rerun()
+                        elif diferencia_segundos <= 0:
+                            st.session_state.carreras_cerradas_remate[carr_activa] = True
+                            st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
+                            st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
+                            guardar_estado_global()
+                            st.rerun()
+                    elif estado_conteo == "CONTEO_10S":
+                        tiempo_inicio = parsear_dt_seguro(st.session_state.tiempo_inicio_conteo_modalidad.get(clave_mod_carr)) or ahora_dt
+                        transcurridos = (ahora_dt - tiempo_inicio).total_seconds()
+                        if transcurridos >= 12:
+                            st.session_state.carreras_cerradas_remate[carr_activa] = True
+                            st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
+                            st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
+                            guardar_estado_global()
+                            st.rerun()
+                        else:
+                            restantes_10s = max(0, 10 - int(transcurridos))
+                            if restantes_10s > 0:
+                                st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa} - {modo_actual_remate})</div>", unsafe_allow_html=True)
 
                 tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
                 cantidad_filas = len(st.session_state.remates[carr_activa])
@@ -1308,10 +1298,10 @@ def renderizar_tiempo_real_universal():
                     else:
                         # --- VALIDACIÓN ESTRICTA: SI EL TIEMPO LLEGÓ A SU CIERRE, NO SE PUEDE PUJAR ---
                         if dt_limite and ahora_dt >= dt_limite:
-                            st.markdown(f"""
+                            st.markdown("""
                                 <div style="background: linear-gradient(135deg, #2c161c 0%, #1a080c 100%); border: 2px solid #ff4757; border-radius: 12px; padding: 14px; text-align: center; margin: 10px 0; box-shadow: 0 0 15px rgba(255,71,87,0.4);">
-                                    <div style="color: #ff4757; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">🔒 TIEMPO LÍMITE PARA PUJAR EN {carr_activa.upper()} FINALIZÓ</div>
-                                    <div style="color: #f0f6fc; font-size: 13px; font-weight: 700; margin-top: 4px;">Las horas de cierre se cumplieron a las {dt_limite.strftime('%I:%M:%S %p')}. Las pujas están bloqueadas.</div>
+                                    <div style="color: #ff4757; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">🔒 TIEMPO LÍMITE PARA PUJAR FINALIZÓ</div>
+                                    <div style="color: #f0f6fc; font-size: 13px; font-weight: 700; margin-top: 4px;">Las pujas están bloqueadas para esta carrera.</div>
                                 </div>
                             """, unsafe_allow_html=True)
                         else:
