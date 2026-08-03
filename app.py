@@ -946,31 +946,38 @@ if lista_b64_banners:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# --- BARRA LATERAL CON RELOJ DIGITAL EN VIVO (ACTUALIZACIÓN DOM DIRECTA) ---
+# --- BARRA LATERAL CON RELOJ EXACTO Y SINCRONIZADO A VENEZUELA (UTC-4) ---
 st.sidebar.header("barra lateral")
 
 components.html("""
     <div style="background: #161b22; border: 1px solid #30363d; padding: 10px; border-radius: 8px; margin-bottom: 12px; text-align: center;">
         <span style="color: #8b949e; font-size: 11px; font-weight: 700; display: block; margin-bottom: 3px;">🕒 HORA VENEZUELA (EN VIVO)</span>
-        <span id="reloj-vivo-sidebar" style="color: #00ffff; font-size: 16px; font-weight: 900; letter-spacing: 0.8px;">--:--:-- --</span>
+        <span id="reloj-vivo-sidebar" style="color: #00ffff; font-size: 15px; font-weight: 900; letter-spacing: 0.5px;">--:--:-- --</span>
     </div>
     <script>
-        function iniciarRelojRealTime() {
+        function actualizarRelojExacto() {
             const el = document.getElementById('reloj-vivo-sidebar');
             if (!el) return;
-            function tick() {
-                const now = new Date();
-                const opt = { timeZone: 'America/Caracas', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-                el.innerText = new Intl.DateTimeFormat('en-US', opt).format(now);
-            }
-            tick();
-            setInterval(tick, 1000);
+            // Forzar offset fijo de Venezuela (UTC-4) para evitar retrasos locales del navegador
+            const ahora = new Date();
+            const utc = ahora.getTime() + (ahora.getTimezoneOffset() * 60000);
+            const offsetVenezuela = -4; // UTC-4
+            const horaVenezuela = new Date(utc + (3600000 * offsetVenezuela));
+            
+            let h = horaVenezuela.getHours();
+            let m = horaVenezuela.getMinutes();
+            let s = horaVenezuela.getSeconds();
+            let ampm = h >= 12 ? 'PM' : 'AM';
+            
+            h = h % 12;
+            h = h ? h : 12; // La hora '0' se convierte en '12'
+            m = m < 10 ? '0' + m : m;
+            s = s < 10 ? '0' + s : s;
+            
+            el.innerText = h + ':' + m + ':' + s + ' ' + ampm;
         }
-        if (document.readyState === 'complete') {
-            iniciarRelojRealTime();
-        } else {
-            window.addEventListener('load', iniciarRelojRealTime);
-        }
+        setInterval(actualizarRelojExacto, 1000);
+        actualizarRelojExacto();
     </script>
 """, height=65)
 
