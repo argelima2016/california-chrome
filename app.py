@@ -273,6 +273,7 @@ else:
     logo_display = '<span style="color: #f1c40f; font-size: 38px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
+hora_inicial_txt = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
 # --- ESTILOS CSS GENERALES ---
@@ -497,83 +498,6 @@ st.markdown("""
         font-weight: 600;
     }
     
-    .header-container-modern {
-        background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
-        border: 1px solid #30363d;
-        border-radius: 12px;
-        padding: 14px 18px;
-        margin-bottom: 10px;
-        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6);
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    .header-top-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-        gap: 8px;
-    }
-    .header-clock-box {
-        display: flex;
-        flex-direction: column;
-        background: #080a0f;
-        border: 1px solid #21262d;
-        padding: 5px 10px;
-        border-radius: 8px;
-    }
-    .h-time {
-        color: #00ffff;
-        font-size: 14px;
-        font-weight: 900;
-        letter-spacing: 0.5px;
-    }
-    .h-date {
-        color: #8b949e;
-        font-size: 10px;
-        font-weight: 700;
-    }
-    .header-user-card {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: #080a0f;
-        border: 1px solid #30363d;
-        padding: 5px 10px;
-        border-radius: 8px;
-    }
-    .user-details {
-        display: flex;
-        flex-direction: column;
-        text-align: right;
-    }
-    .u-name {
-        color: #f0f6fc;
-        font-size: 12px;
-        font-weight: 800;
-    }
-    .u-bal {
-        font-size: 10px;
-        font-weight: 700;
-    }
-    .u-avatar-badge {
-        width: 28px;
-        height: 28px;
-        background: #1f6feb;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-    }
-    .header-bottom-row-logo {
-        text-align: center;
-        border-top: 1px solid #21262d;
-        padding-top: 12px;
-    }
     .header-logo-img {
         max-height: 120px;
         width: auto;
@@ -604,7 +528,7 @@ header_top_html = f"""
     <div style="background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); border: 1px solid #30363d; border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; gap: 14px; width: 100%; box-sizing: border-box; font-family: sans-serif;">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px;">
             <div style="display: flex; flex-direction: column; background: #080a0f; border: 1px solid #21262d; padding: 6px 12px; border-radius: 8px;">
-                <span id="reloj-vivo-header" style="color: #00ffff; font-size: 14px; font-weight: 900; letter-spacing: 0.5px;">⚡ Calculando...</span>
+                <span id="reloj-vivo-header" style="color: #00ffff; font-size: 14px; font-weight: 900; letter-spacing: 0.5px;">⚡ {hora_inicial_txt}</span>
                 <span style="color: #8b949e; font-size: 10px; font-weight: 700;">📅 {fecha_texto}</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px; background: #080a0f; border: 1px solid #30363d; padding: 5px 10px; border-radius: 8px;">
@@ -638,9 +562,8 @@ header_top_html = f"""
             s = s < 10 ? '0' + s : s;
             
             el.innerText = '⚡ ' + h + ':' + m + ':' + s + ' ' + ampm;
-        }
+        }}
         setInterval(actualizarRelojHeaderExacto, 1000);
-        actualizarRelojHeaderExacto();
     </script>
 """
 components.html(header_top_html, height=185)
