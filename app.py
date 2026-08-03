@@ -517,7 +517,7 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR MODERNA (RAYO QUITADO Y PULSADOR EN LÍNEA AL LADO DE CASA) ---
+# --- CABECERA SUPERIOR MODERNA ---
 header_top_html = f"""
     <div style="background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); border: 1px solid #30363d; border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; gap: 14px; width: 100%; box-sizing: border-box; font-family: sans-serif;">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px;">
@@ -959,7 +959,7 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (1 SEGUNDO SEGURO CON RESTRICCIÓN DE CIERRE)
+# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (1 SEGUNDO SEGURO)
 # =========================================================================
 @st.fragment(run_every=1.0)
 def renderizar_tiempo_real_universal():
@@ -1298,7 +1298,12 @@ def renderizar_tiempo_real_universal():
                     else:
                         # --- VALIDACIÓN ESTRICTA: SI EL TIEMPO LLEGÓ A SU CIERRE, NO SE PUEDE PUJAR ---
                         if dt_limite and ahora_dt >= dt_limite:
-                            st.error(f"🔒 **CIERRE ESTRICTO ALCANZADO:** El tiempo límite para pujar en {carr_activa} finalizó a las {dt_limite.strftime('%I:%M:%S %p')}. Las pujas están bloqueadas.")
+                            st.markdown("""
+                                <div style="background: linear-gradient(135deg, #2c161c 0%, #1a080c 100%); border: 2px solid #ff4757; border-radius: 12px; padding: 14px; text-align: center; margin: 10px 0; box-shadow: 0 0 15px rgba(255,71,87,0.4);">
+                                    <div style="color: #ff4757; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">🔒 TIEMPO LÍMITE PARA PUJAR FINALIZÓ</div>
+                                    <div style="color: #f0f6fc; font-size: 13px; font-weight: 700; margin-top: 4px;">Las pujas están bloqueadas para esta carrera.</div>
+                                </div>
+                            """, unsafe_allow_html=True)
                         else:
                             st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
                             lista_caballos_activos = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
