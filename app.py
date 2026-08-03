@@ -558,6 +558,32 @@ st.markdown("""
         display: inline-block;
         animation: pulsoLed 2s infinite;
     }
+
+    /* --- ESTILOS POTE LLAMATIVO MÚLTIPLES --- */
+    .pote-llamativo-box {
+        background: linear-gradient(135deg, #11141d 0%, #1f2937 100%);
+        border: 2px solid #f1c40f;
+        border-radius: 12px;
+        padding: 14px;
+        text-align: center;
+        margin-bottom: 14px;
+        box-shadow: 0px 0px 20px rgba(241, 196, 15, 0.3);
+    }
+    .pote-llamativo-titulo {
+        color: #00ffff;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    .pote-llamativo-monto {
+        color: #f1c40f;
+        font-size: 26px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        text-shadow: 2px 2px 6px #000000;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -1535,16 +1561,21 @@ if menu_principal_opcion == "Dupletas":
 
     if sub_dup_actual == "Dupleta":
         pote_total = sum([t['monto'] for t in st.session_state.dupletas_tickets if t.get('estado') == 'Pendiente'])
-        st.metric("💰 Pote Acumulado Dupletas", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
     elif sub_dup_actual == "Tripleta":
         pote_total = sum([t['monto'] for t in st.session_state.tripleta_tickets if t.get('estado') == 'Pendiente'])
-        st.metric("💰 Pote Acumulado Tripletas", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
     else:
         pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
-        st.metric("💰 Pote Acumulado 6 En Linea", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
+
+    # --- POTE ACUMULADO LLAMATIVO Y MODERNO ---
+    st.markdown(f"""
+        <div class="pote-llamativo-box">
+            <div class="pote-llamativo-titulo">💰 Pote Acumulado de {sub_dup_actual}</div>
+            <div class="pote-llamativo-monto">{formatear_bs(pote_total)}</div>
+        </div>
+    """, unsafe_allow_html=True)
 
     cards_html_slider = ""
     for carr_h in carreras_permitidas:
