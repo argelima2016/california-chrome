@@ -80,7 +80,21 @@ def cargar_estado_global(forzar_recarga=False):
                 data = json.load(f)
                 for k, v in default_state.items():
                     if k not in st.session_state or forzar_recarga:
-                        st.session_state[k] = data.get(k, v)
+                        val_cargado = data.get(k, v)
+                        # Restaurar objetos datetime si fueron guardados como string ISO
+                        if k in ['fechas_horas_inicio_remate_modalidad', 'fechas_horas_cierre_remate_modalidad', 'fechas_horas_inicio_modalidad_multiple', 'fechas_horas_cierre_modalidad_multiple', 'tiempo_inicio_conteo_modalidad'] and isinstance(val_cargado, dict):
+                            dict_restaurado = {}
+                            for sub_k, sub_v in val_cargado.items():
+                                if isinstance(sub_v, str):
+                                    try:
+                                        dict_restaurado[sub_k] = datetime.fromisoformat(sub_v)
+                                    except Exception:
+                                        dict_restaurado[sub_k] = sub_v
+                                else:
+                                    dict_restaurado[sub_k] = sub_v
+                            st.session_state[k] = dict_restaurado
+                        else:
+                            st.session_state[k] = val_cargado
         except Exception:
             for k, v in default_state.items():
                 if k not in st.session_state:
@@ -108,7 +122,19 @@ def guardar_estado_global():
     for k in keys_to_save:
         if k in st.session_state:
             val = st.session_state[k]
-            data[k] = val
+            # Serializar diccionarios con fechas datetime a formato ISO
+            if isinstance(val, dict):
+                dict_limpio = {}
+                for sub_k, sub_v in val.items():
+                    if isinstance(sub_v, datetime):
+                        dict_limpio[sub_k] = sub_v.isoformat()
+                    else:
+                        dict_limpio[sub_k] = sub_v
+                data[k] = dict_limpio
+            elif isinstance(val, datetime):
+                data[k] = val.isoformat()
+            else:
+                data[k] = val
     try:
         with open(DB_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
