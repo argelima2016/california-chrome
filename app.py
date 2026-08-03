@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 from pypdf import PdfReader
 
 # Configuración de pantalla completa
-st.set_page_config(page_title="Wolf Ready to Run", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="California Chrome", layout="wide", page_icon="🐺")
 
 # --- HORA LOCAL DE VENEZUELA ---
 def obtener_hora_venezuela_local():
@@ -529,6 +529,35 @@ st.markdown("""
         width: auto;
         object-fit: contain;
     }
+    
+    /* --- ESTILOS PARA INDICADOR DE CONEXIÓN PRO --- */
+    @keyframes pulsoLed {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 213, 115, 0.6); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 0, 0, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+    }
+    .badge-conexion-pro {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #080a0f;
+        border: 1px solid #30363d;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-family: sans-serif;
+        font-size: 10px;
+        font-weight: 800;
+        color: #f0f6fc;
+        letter-spacing: 0.5px;
+    }
+    .punto-led-pro {
+        width: 8px;
+        height: 8px;
+        background-color: #2ed573;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulsoLed 2s infinite;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -553,7 +582,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- CABECERA SUPERIOR MODERNA CON LOGO MÁS GRANDE ---
+# --- CABECERA SUPERIOR MODERNA CON LOGO Y EL INDICADOR DE CONEXIÓN PRO ---
 header_html = f"""
     <div class="header-container-modern">
         <div class="header-top-row">
@@ -561,12 +590,18 @@ header_html = f"""
                 <span class="h-time">⚡ {hora_texto}</span>
                 <span class="h-date">📅 {fecha_texto}</span>
             </div>
-            <div class="header-user-card">
-                <div class="user-details">
-                    <span class="u-name">{usuario_en_sesion}</span>
-                    <span class="u-bal" style="color: {color_balance};">{etiqueta_balance}</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="badge-conexion-pro">
+                    <span class="punto-led-pro"></span>
+                    <span>EN LÍNEA</span>
                 </div>
-                <div class="u-avatar-badge">🐺</div>
+                <div class="header-user-card">
+                    <div class="user-details">
+                        <span class="u-name">{usuario_en_sesion}</span>
+                        <span class="u-bal" style="color: {color_balance};">{etiqueta_balance}</span>
+                    </div>
+                    <div class="u-avatar-badge">🐺</div>
+                </div>
             </div>
         </div>
         <div class="header-bottom-row-logo">
@@ -892,8 +927,8 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }}, 400);
-                }}, 8000);
+                    }, 400);
+                }, 8000);
             }}
         }})();
     </script>
