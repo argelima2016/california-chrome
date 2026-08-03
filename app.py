@@ -946,7 +946,7 @@ if lista_b64_banners:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# --- BARRA LATERAL CON RELOJ EXACTO Y SINCRONIZADO A VENEZUELA (UTC-4) ---
+# --- BARRA LATERAL CON RELOJ MATEMÁTICO INEXPUGNABLE (UTC-4 FIJO) ---
 st.sidebar.header("barra lateral")
 
 components.html("""
@@ -955,29 +955,29 @@ components.html("""
         <span id="reloj-vivo-sidebar" style="color: #00ffff; font-size: 15px; font-weight: 900; letter-spacing: 0.5px;">--:--:-- --</span>
     </div>
     <script>
-        function actualizarRelojExacto() {
+        function actualizarRelojUniversal() {
             const el = document.getElementById('reloj-vivo-sidebar');
             if (!el) return;
-            // Forzar offset fijo de Venezuela (UTC-4) para evitar retrasos locales del navegador
-            const ahora = new Date();
-            const utc = ahora.getTime() + (ahora.getTimezoneOffset() * 60000);
-            const offsetVenezuela = -4; // UTC-4
-            const horaVenezuela = new Date(utc + (3600000 * offsetVenezuela));
             
-            let h = horaVenezuela.getHours();
-            let m = horaVenezuela.getMinutes();
-            let s = horaVenezuela.getSeconds();
+            // Obtener fecha universal UTC pura y restar exactamente 4 horas (Venezuela UTC-4)
+            const ahora = new Date();
+            const utcTime = ahora.getTime() + (ahora.getTimezoneOffset() * 60000);
+            const venezuelaTime = new Date(utcTime + (-4 * 3600000));
+            
+            let h = venezuelaTime.getHours();
+            let m = venezuelaTime.getMinutes();
+            let s = venezuelaTime.getSeconds();
             let ampm = h >= 12 ? 'PM' : 'AM';
             
             h = h % 12;
-            h = h ? h : 12; // La hora '0' se convierte en '12'
+            h = h ? h : 12; 
             m = m < 10 ? '0' + m : m;
             s = s < 10 ? '0' + s : s;
             
             el.innerText = h + ':' + m + ':' + s + ' ' + ampm;
         }
-        setInterval(actualizarRelojExacto, 1000);
-        actualizarRelojExacto();
+        setInterval(actualizarRelojUniversal, 1000);
+        actualizarRelojUniversal();
     </script>
 """, height=65)
 
