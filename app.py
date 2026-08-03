@@ -517,7 +517,7 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR MODERNA (RAYO QUITADO DEL RELOJ Y PULSADOR EN LINEA AL LADO DE CASA) ---
+# --- CABECERA SUPERIOR MODERNA (RAYO QUITADO Y PULSADOR EN LÍNEA AL LADO DE CASA) ---
 header_top_html = f"""
     <div style="background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); border: 1px solid #30363d; border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; gap: 14px; width: 100%; box-sizing: border-box; font-family: sans-serif;">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px;">
@@ -959,7 +959,7 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (1 SEGUNDO SEGURO)
+# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (1 SEGUNDO SEGURO CON RESTRICCIÓN DE CIERRE)
 # =========================================================================
 @st.fragment(run_every=1.0)
 def renderizar_tiempo_real_universal():
@@ -1296,91 +1296,95 @@ def renderizar_tiempo_real_universal():
                                             st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
                                             st.rerun()
                     else:
-                        st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
-                        lista_caballos_activos = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
-                        
-                        if not lista_caballos_activos:
-                            st.warning("No hay ejemplares disponibles para pujar.")
+                        # --- VALIDACIÓN ESTRICTA: SI EL TIEMPO LLEGÓ A SU CIERRE, NO SE PUEDE PUJAR ---
+                        if dt_limite and ahora_dt >= dt_limite:
+                            st.error(f"🔒 **CIERRE ESTRICTO ALCANZADO:** El tiempo límite para pujar en {carr_activa} finalizó a las {dt_limite.strftime('%I:%M:%S %p')}. Las pujas están bloqueadas.")
                         else:
-                            k_sel_cab = f"rem_caballo_activo_click_{carr_activa}"
-                            if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
-                                st.session_state[k_sel_cab] = lista_caballos_activos[0]
-                                
-                            st.markdown(f"🔹 **1. Seleccionar Ejemplar (Disponibles: {len(lista_caballos_activos)}):**")
+                            st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
+                            lista_caballos_activos = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
                             
-                            cantidad_ejemplares = len(lista_caballos_activos)
-                            cols_ejemplares = 3
-                            num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
-                            
-                            idx_cab = 0
-                            for f in range(num_filas):
-                                cols_fila = st.columns(cols_ejemplares, gap="small")
-                                for c in range(cols_ejemplares):
-                                    if idx_cab < cantidad_ejemplares:
-                                        cab_item = lista_caballos_activos[idx_cab]
-                                        num_parte = cab_item.split(" - ")[0]
-                                        
-                                        info_remate_cab = st.session_state.remates[carr_activa].get(cab_item, {})
-                                        propietario = info_remate_cab.get('jugador', 'Sin Postor')
-                                        
-                                        if propietario == "Sin Postor" or propietario == "CASA" or info_remate_cab.get('monto', 0.0) == 0:
-                                            color_estilo = "background-color: #e2e8f0 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important;"
-                                        elif propietario == st.session_state.usuario_activo:
-                                            color_estilo = "background-color: #22c55e !important; color: #ffffff !important; border: 1px solid #16a34a !important;"
-                                        else:
-                                            color_estilo = "background-color: #ef4444 !important; color: #ffffff !important; border: 1px solid #dc2626 !important;"
-
-                                        with cols_fila[c]:
-                                            st.markdown(f"""
-                                                <style>
-                                                div[data-testid="stVerticalBlock"] button[key="rem_btn_cab_{carr_activa}_{idx_cab}"] {{
-                                                    {color_estilo}
-                                                }}
-                                                </style>
-                                            """, unsafe_allow_html=True)
-
-                                            if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{idx_cab}", use_container_width=True):
-                                                st.session_state[k_sel_cab] = cab_item
-                                                st.rerun()
-
-                                        idx_cab += 1
-                            
-                            caballo_seleccionado = st.session_state[k_sel_cab]
-                            propietario_actual_sel = st.session_state.remates[carr_activa][caballo_seleccionado].get('jugador', 'Sin Postor')
-                            
-                            st.markdown(f"""
-                                <div class="ejemplar-activo-badge-epic">
-                                    <div class="ejemplar-activo-label">🐎 Ejemplar Activo</div>
-                                    <div class="ejemplar-activo-nombre">{caballo_seleccionado}</div>
-                                    <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">Dueño: <b>{propietario_actual_sel}</b></div>
-                                </div>
-                            """, unsafe_allow_html=True)
-
-                            puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
-                            opciones_escala = obtener_siguientes_montos(puja_actual)
-                            monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{carr_activa}_{caballo_seleccionado}")
-                            
-                            if carrera_cerrada:
-                                st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary", disabled=True)
+                            if not lista_caballos_activos:
+                                st.warning("No hay ejemplares disponibles para pujar.")
                             else:
-                                if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary"):
-                                    if monto_puja <= puja_actual:
-                                        st.error("El monto debe ser mayor a la puja actual.")
-                                    else:
-                                        st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
-                                        st.session_state.historial_jugadas.append({
-                                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                            "jugador": st.session_state.usuario_activo,
-                                            "tipo": f"Remate ({modo_actual_remate})",
-                                            "carrera": carr_activa,
-                                            "detalle": caballo_seleccionado,
-                                            "monto": monto_puja
-                                        })
-                                        if estado_conteo == "CONTEO_10S":
-                                            st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = obtener_hora_venezuela_local()
-                                        guardar_estado_global()
-                                        st.success("✅ ¡Puja registrada correctamente!")
-                                        st.rerun()
+                                k_sel_cab = f"rem_caballo_activo_click_{carr_activa}"
+                                if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
+                                    st.session_state[k_sel_cab] = lista_caballos_activos[0]
+                                    
+                                st.markdown(f"🔹 **1. Seleccionar Ejemplar (Disponibles: {len(lista_caballos_activos)}):**")
+                                
+                                cantidad_ejemplares = len(lista_caballos_activos)
+                                cols_ejemplares = 3
+                                num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
+                                
+                                idx_cab = 0
+                                for f in range(num_filas):
+                                    cols_fila = st.columns(cols_ejemplares, gap="small")
+                                    for c in range(cols_ejemplares):
+                                        if idx_cab < cantidad_ejemplares:
+                                            cab_item = lista_caballos_activos[idx_cab]
+                                            num_parte = cab_item.split(" - ")[0]
+                                            
+                                            info_remate_cab = st.session_state.remates[carr_activa].get(cab_item, {})
+                                            propietario = info_remate_cab.get('jugador', 'Sin Postor')
+                                            
+                                            if propietario == "Sin Postor" or propietario == "CASA" or info_remate_cab.get('monto', 0.0) == 0:
+                                                color_estilo = "background-color: #e2e8f0 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important;"
+                                            elif propietario == st.session_state.usuario_activo:
+                                                color_estilo = "background-color: #22c55e !important; color: #ffffff !important; border: 1px solid #16a34a !important;"
+                                            else:
+                                                color_estilo = "background-color: #ef4444 !important; color: #ffffff !important; border: 1px solid #dc2626 !important;"
+
+                                            with cols_fila[c]:
+                                                st.markdown(f"""
+                                                    <style>
+                                                    div[data-testid="stVerticalBlock"] button[key="rem_btn_cab_{carr_activa}_{idx_cab}"] {{
+                                                        {color_estilo}
+                                                    }}
+                                                    </style>
+                                                """, unsafe_allow_html=True)
+
+                                                if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{idx_cab}", use_container_width=True):
+                                                    st.session_state[k_sel_cab] = cab_item
+                                                    st.rerun()
+
+                                            idx_cab += 1
+                                
+                                caballo_seleccionado = st.session_state[k_sel_cab]
+                                propietario_actual_sel = st.session_state.remates[carr_activa][caballo_seleccionado].get('jugador', 'Sin Postor')
+                                
+                                st.markdown(f"""
+                                    <div class="ejemplar-activo-badge-epic">
+                                        <div class="ejemplar-activo-label">🐎 Ejemplar Activo</div>
+                                        <div class="ejemplar-activo-nombre">{caballo_seleccionado}</div>
+                                        <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">Dueño: <b>{propietario_actual_sel}</b></div>
+                                    </div>
+                                """, unsafe_allow_html=True)
+
+                                puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
+                                opciones_escala = obtener_siguientes_montos(puja_actual)
+                                monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{carr_activa}_{caballo_seleccionado}")
+                                
+                                if carrera_cerrada:
+                                    st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary", disabled=True)
+                                else:
+                                    if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary"):
+                                        if monto_puja <= puja_actual:
+                                            st.error("El monto debe ser mayor a la puja actual.")
+                                        else:
+                                            st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
+                                            st.session_state.historial_jugadas.append({
+                                                "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                                "jugador": st.session_state.usuario_activo,
+                                                "tipo": f"Remate ({modo_actual_remate})",
+                                                "carrera": carr_activa,
+                                                "detalle": caballo_seleccionado,
+                                                "monto": monto_puja
+                                            })
+                                            if estado_conteo == "CONTEO_10S":
+                                                st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = obtener_hora_venezuela_local()
+                                            guardar_estado_global()
+                                            st.success("✅ ¡Puja registrada correctamente!")
+                                            st.rerun()
 
 renderizar_tiempo_real_universal()
 
