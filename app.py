@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 from pypdf import PdfReader
 
 # Configuración de pantalla completa
-st.set_page_config(page_title="California Chrome", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺")
 
 # --- HORA LOCAL DE VENEZUELA (SIEMPRE NAIVE PARA EVITAR CHOQUES) ---
 def obtener_hora_venezuela_local():
@@ -573,6 +573,11 @@ def obtener_abreviatura_carrera(nombre_carrera, modo_actual=""):
                 return "1V"
             elif nombre_carrera == carreras_ciegas[1]:
                 return "6V"
+            else:
+                return "CIEGO"
+        elif len(carreras_ciegas) == 1:
+            if nombre_carrera == carreras_ciegas[0]:
+                return "1V"
      
     match = re.search(r'\d+', nombre_carrera)
     if match:
@@ -730,7 +735,10 @@ else:
 
 for mod in ["Adelantados", "Ciegos", "En Vivo"]:
     if not st.session_state.carreras_por_modalidad.get(mod) and lista_carreras_disponibles:
-        st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
+        if mod == "Ciegos":
+            st.session_state.carreras_por_modalidad[mod] = lista_carreras_disponibles[:2] if len(lista_carreras_disponibles) >= 2 else list(lista_carreras_disponibles)
+        else:
+            st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
     else:
         for c_disp in lista_carreras_disponibles:
             if c_disp not in st.session_state.carreras_por_modalidad[mod]:
@@ -1256,45 +1264,53 @@ def renderizar_tiempo_real_universal():
 
                 with st.container(border=True):
                     if modo_actual_remate == "Ciegos":
-                        st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
-                        monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
-
-                        caballos_disponibles_ciego = [
-                            cab for cab, info in st.session_state.remates[carr_activa].items() 
-                            if (info['jugador'] == "Sin Postor" or info['monto'] <= 0) and cab not in excluidos_carr_activa
-                        ]
-
-                        if not caballos_disponibles_ciego:
-                            st.warning("⚠️ Todos los ejemplares disponibles de esta carrera ya han sido adquiridos.")
+                        carreras_ciegas_config = st.session_state.carreras_por_modalidad.get("Ciegos", [])
+                        
+                        if len(carreras_ciegas_config) < 2:
+                            st.warning("⚠️ Debes configurar exactamente 2 carreras para la modalidad 'Ciegos' desde la Zona Admin (Pestaña '✍️ Caballos').")
                         else:
-                            st.markdown("🎲 **Panel Didáctico (Elige un número para asignar):**")
-                            cols_ciego_grid = st.columns(min(3, len(caballos_disponibles_ciego)), gap="small")
-                            for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
-                                c_idx = idx_cb % len(cols_ciego_grid)
-                                num_cb_parte = cb_disp.split(" - ")[0]
-                                with cols_ciego_grid[c_idx]:
-                                    if carrera_cerrada:
-                                        st.button(f"🔒#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, disabled=True)
-                                    else:
-                                        if st.button(f"#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, type="primary"):
-                                            st.session_state.remates[carr_activa][cb_disp] = {
-                                                "jugador": st.session_state.usuario_activo, 
-                                                "monto": monto_fijo_carrera
-                                            }
-                                            st.session_state.historial_jugadas.append({
-                                                "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                                "jugador": st.session_state.usuario_activo,
-                                                "tipo": f"Remate Ciego ({modo_actual_remate})",
-                                                "carrera": carr_activa,
-                                                "detalle": cb_disp,
-                                                "monto": monto_fijo_carrera
-                                            })
-                                            if st.session_state.usuario_activo not in st.session_state.cuentas:
-                                                st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                                            st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
-                                            guardar_estado_global()
-                                            st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
-                                            st.rerun()
+                            es_primera_valida = (carr_activa == carreras_ciegas_config[0])
+                            etiqueta_ciego_tipo = "1V (Válida 1)" if es_primera_valida else "6V (Válida 6)"
+                            
+                            st.markdown(f"🙈 **Remate Ciego - {etiqueta_ciego_tipo} [{carr_activa}]**")
+                            monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
+
+                            caballos_disponibles_ciego = [
+                                cab for cab, info in st.session_state.remates[carr_activa].items() 
+                                if (info['jugador'] == "Sin Postor" or info['monto'] <= 0) and cab not in excluidos_carr_activa
+                            ]
+
+                            if not caballos_disponibles_ciego:
+                                st.warning("⚠️ Todos los ejemplares disponibles de esta carrera ya han sido adquiridos.")
+                            else:
+                                st.markdown("🎲 **Panel Didáctico (Elige un número para asignar):**")
+                                cols_ciego_grid = st.columns(min(3, len(caballos_disponibles_ciego)), gap="small")
+                                for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
+                                    c_idx = idx_cb % len(cols_ciego_grid)
+                                    num_cb_parte = cb_disp.split(" - ")[0]
+                                    with cols_ciego_grid[c_idx]:
+                                        if carrera_cerrada:
+                                            st.button(f"🔒#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, disabled=True)
+                                        else:
+                                            if st.button(f"#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, type="primary"):
+                                                st.session_state.remates[carr_activa][cb_disp] = {
+                                                    "jugador": st.session_state.usuario_activo, 
+                                                    "monto": monto_fijo_carrera
+                                                }
+                                                st.session_state.historial_jugadas.append({
+                                                    "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                                    "jugador": st.session_state.usuario_activo,
+                                                    "tipo": f"Remate Ciego ({etiqueta_ciego_tipo})",
+                                                    "carrera": carr_activa,
+                                                    "detalle": cb_disp,
+                                                    "monto": monto_fijo_carrera
+                                                })
+                                                if st.session_state.usuario_activo not in st.session_state.cuentas:
+                                                    st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                                st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
+                                                guardar_estado_global()
+                                                st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
+                                                st.rerun()
                     else:
                         # --- VALIDACIÓN ESTRICTA: SI EL TIEMPO LLEGÓ A SU CIERRE, NO SE PUEDE PUJAR ---
                         if dt_limite and ahora_dt >= dt_limite:
@@ -1681,7 +1697,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             def_envivo = [c for c in modalidades_dict.get("En Vivo", []) if c in carreras_existentes]
 
             sel_adel = st.multiselect("Carreras para ⏱️ Adelantados", options=carreras_existentes, default=def_adel, key="multiselect_carr_adelantados")
-            sel_ciego = st.multiselect("Carreras para 🙈 Ciegos", options=carreras_existentes, default=def_ciego, key="multiselect_carr_ciegos")
+            sel_ciego = st.multiselect("Carreras para 🙈 Ciegos (Selecciona exactamente 2: 1V y 6V)", options=carreras_existentes, default=def_ciego, max_selections=2, key="multiselect_carr_ciegos")
             sel_envivo = st.multiselect("Carreras para ⚡ En Vivo", options=carreras_existentes, default=def_envivo, key="multiselect_carr_envivo")
 
             if st.button("💾 Guardar Modalidades Independientes", key="btn_save_mod_independientes", use_container_width=True, type="primary"):
