@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 from pypdf import PdfReader
 
 # Configuración de pantalla completa
-st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="California Chrome", layout="wide", page_icon="🐺")
 
 # --- HORA LOCAL DE VENEZUELA (SIEMPRE NAIVE PARA EVITAR CHOQUES) ---
 def obtener_hora_venezuela_local():
@@ -1275,6 +1275,51 @@ def renderizar_tiempo_real_universal():
                             st.markdown(f"🙈 **Remate Ciego - {etiqueta_ciego_tipo} [{carr_activa}]**")
                             monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
 
+                            # --- VALIDACIÓN AUTOMÁTICA DE 14 CABALLOS INICIALES EN 1V y 6V ---
+                            banco_caballos_carr = st.session_state.banco_caballos_por_carrera.get(carr_activa, [])
+                            cant_caballos_inscritos = len(banco_caballos_carr)
+
+                            if cant_caballos_inscritos > 14:
+                                # SI SON MÁS DE 14: ASIGNAR LOS EXCEDENTES AUTOMÁTICAMENTE A CASA CON MONTO 0.0
+                                remates_carrera = st.session_state.remates.get(carr_activa, {})
+                                modificacion_hecha = False
+                                for idx_ex, cab_ex in enumerate(banco_caballos_carr):
+                                    if idx_ex >= 14:
+                                        if cab_ex not in remates_carrera or remates_carrera[cab_ex]['jugador'] != "CASA":
+                                            remates_carrera[cab_ex] = {"jugador": "CASA", "monto": 0.0}
+                                            modificacion_hecha = True
+                                if modificacion_hecha:
+                                    guardar_estado_global()
+                                st.info(f"ℹ️ La carrera {carr_activa} tiene {cant_caballos_inscritos} ejemplares. Los excedentes (>14) han sido asignados automáticamente a **CASA**.")
+
+                            elif cant_caballos_inscritos < 14:
+                                # SI SON MENOS DE 14: SE LE QUITAN DE INMEDIATO AL JUGADOR Y NO PAGAN (MARCADOS COMO NO VALE O SIN POSTOR)
+                                remates_carrera = st.session_state.remates.get(carr_activa, {})
+                                modificacion_hecha = False
+                                for cab_m, info_m in remates_carrera.items():
+                                    match_num = re.match(r'^(\d+)', cab_m)
+                                    if match_num:
+                                        n_num = int(match_num.group(1))
+                                        if n_num > cant_caballos_inscritos:
+                                            if info_m['jugador'] != "Sin Postor" and info_m['monto'] > 0:
+                                                jug_afectado = info_m['jugador']
+                                                monto_dev = info_m['monto']
+                                                if jug_afectado in st.session_state.cuentas:
+                                                    st.session_state.cuentas[jug_afectado]['Pujas'] = max(0.0, st.session_state.cuentas[jug_afectado]['Pujas'] - monto_dev)
+                                                st.session_state.historial_jugadas.append({
+                                                    "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                                    "jugador": jug_afectado,
+                                                    "tipo": f"Exclusión Automática (<14 caballos)",
+                                                    "carrera": carr_activa,
+                                                    "detalle": f"Ejemplar {cab_m} removido por cupo menor a 14",
+                                                    "monto": -monto_dev
+                                                })
+                                            remates_carrera[cab_m] = {"jugador": "Sin Postor", "monto": 0.0}
+                                            modificacion_hecha = True
+                                if modificacion_hecha:
+                                    guardar_estado_global()
+                                st.warning(f"⚠️ La carrera {carr_activa} tiene menos de 14 ejemplares ({cant_caballos_inscritos}). Los ejemplares fuera del rango fueron retirados de cuentas y marcados como sin postor.")
+
                             caballos_disponibles_ciego = [
                                 cab for cab, info in st.session_state.remates[carr_activa].items() 
                                 if (info['jugador'] == "Sin Postor" or info['monto'] <= 0) and cab not in excluidos_carr_activa
@@ -1693,7 +1738,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             modalidades_dict = st.session_state.carreras_por_modalidad
             
             def_adel = [c for c in modalidades_dict.get("Adelantados", []) if c in carreras_existentes]
-            def_ciego = [c for c in modalidades_dict.get("Ciegos", []) if c in carreras_existentes]
+            def_ciego = [c for c in modalidades_dict.get("Ciegos", []) if c in carreras_existentes][:2]
             def_envivo = [c for c in modalidades_dict.get("En Vivo", []) if c in carreras_existentes]
 
             sel_adel = st.multiselect("Carreras para ⏱️ Adelantados", options=carreras_existentes, default=def_adel, key="multiselect_carr_adelantados")
