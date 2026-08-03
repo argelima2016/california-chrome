@@ -97,7 +97,7 @@ def guardar_estado_global():
         'ejemplares_retirados', 'ejemplares_no_valido', 'detalles_carreras', 'carreras_cerradas_remate',
         'remates_cargados_en_cuentas', 'fechas_horas_inicio_remate_modalidad', 'fechas_horas_cierre_remate_modalidad',
         'fechas_horas_inicio_modalidad_multiple', 'fechas_horas_cierre_modalidad_multiple', 
-        'estado_conteo_carrera_modalidad', 'cuentas', 'historial_jugadas', 'ganancia_casa',
+        'estado_conteo_carrera_modalidad', 'tiempo_inicio_conteo_modalidad', 'cuentas', 'historial_jugadas', 'ganancia_casa',
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
@@ -1386,6 +1386,7 @@ def renderizar_tiempo_real_universal():
                             st.toast("✅ ¡Ejemplares retirados actualizados!")
                             st.rerun()
 
+                    # --- CONTROL ANTI-SNIPER Y CRONÓMETRO SINCRONIZADO ---
                     clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                     dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                     dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
@@ -1428,7 +1429,12 @@ def renderizar_tiempo_real_universal():
                             else:
                                 restantes_10s = max(0, 10 - int(transcurridos))
                                 if restantes_10s > 0:
-                                    st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa} - {modo_actual_remate})</div>", unsafe_allow_html=True)
+                                    st.markdown(f"""
+                                        <div class='timer-box'>
+                                            ⚠️ ¡ATENCIÓN! CIERRE INMINENTE EN: <b>{restantes_10s}s</b> 
+                                            <br><span style='font-size: 10px; color: #00ffff;'>🛡️ Sistema Anti-Sniper Activo ({carr_activa} - {modo_actual_remate})</span>
+                                        </div>
+                                    """, unsafe_allow_html=True)
 
                     tabla_html = generar_tabla_html_remate(remates_actuales_mod, st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
                     cantidad_filas = len(remates_actuales_mod)
@@ -1665,6 +1671,7 @@ def renderizar_tiempo_real_universal():
                                             "detalle": caballero_seleccionado,
                                             "monto": monto_puja
                                         })
+                                        # 🛡️ Anti-Sniper: Si se puja durante el conteo de los 10s, se reinicia el tiempo de gracia
                                         if estado_conteo == "CONTEO_10S":
                                             st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = obtener_hora_venezuela_local()
                                         guardar_estado_global()
