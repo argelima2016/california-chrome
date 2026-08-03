@@ -291,16 +291,16 @@ st.markdown("""
     div[data-testid="stHorizontalBlock"] > div { flex: 0 0 auto !important; width: auto !important; min-width: 110px !important; max-width: none !important; }
     .carreras-scroll-container div[data-testid="stHorizontalBlock"] > div { min-width: 55px !important; width: 55px !important; }
     
-    /* ESTILOS PARA COMPACTAR LOS BOTONES DE LA CUADRÍCULA DE PUJAS */
+    /* ESTILOS PARA COMPACTAR LOS BOTONES DE LA CUADRÍCULA DE PUJAS EN COLUMNAS DE 3 */
     div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"]:has(button) {
-        gap: 2px !important;
-        margin-top: -12px !important;
-        margin-bottom: -12px !important;
+        gap: 3px !important;
+        margin-top: -10px !important;
+        margin-bottom: -10px !important;
     }
     div[data-testid="column"]:has(button) {
-        padding: 0px 1px !important;
+        padding: 0px 2px !important;
     }
-    .stButton button { border-radius: 6px !important; font-weight: 700 !important; padding: 0.15rem 0.2rem !important; min-height: 34px !important; font-size: 12px !important; width: 100% !important; }
+    .stButton button { border-radius: 6px !important; font-weight: 700 !important; padding: 0.2rem 0.3rem !important; min-height: 36px !important; font-size: 13px !important; width: 100% !important; }
 
     .subasta-header { font-size: clamp(14px, 3.5vw, 18px); font-weight: 800; color: #f1e05a; margin-bottom: 4px; border-bottom: 2px solid #f1e05a; padding-bottom: 3px; }
     .timer-box { background-color: #161b22; border: 1px solid #ff4757; padding: 6px; border-radius: 6px; text-align: center; font-size: clamp(12px, 3vw, 15px); font-weight: bold; color: #ff4757; margin-bottom: 8px; }
@@ -453,7 +453,7 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
             font-style: italic;
         }
     </style>
-    <div style="background-color: #ffffff; padding: 2px; border-radius: 6px; overflow-y: auto; max-height: 480px; width: 100%; border: 1px solid #dfc729;">
+    <div style="background-color: #ffffff; padding: 2px; border-radius: 6px; overflow-y: auto; max-height: 520px; width: 100%; border: 1px solid #dfc729;">
         <table class="tabla-referencia">
             <thead>
                 <tr>
@@ -680,7 +680,7 @@ def renderizar_tiempo_real_universal():
             carr_activa = nombre_carrera_virtual
             carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
             tabla_html = generar_tabla_html_remate(st.session_state.remates_por_modalidad["Ciegos"][carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
-            components.html(tabla_html, height=350, scrolling=True)
+            components.html(tabla_html, height=400, scrolling=True)
 
         else:
             if lista_carreras_disponibles:
@@ -741,7 +741,7 @@ def renderizar_tiempo_real_universal():
 
                     remates_actuales_mod = st.session_state.remates_por_modalidad[modo_actual_remate].get(carr_activa, {})
                     tabla_html = generar_tabla_html_remate(remates_actuales_mod, st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
-                    components.html(tabla_html, height=350, scrolling=True)
+                    components.html(tabla_html, height=400, scrolling=True)
 
                     if bloqueo_por_inicio:
                         st.warning(f"⏳ **Remate no disponible:** Abre a las {dt_inicio.strftime('%I:%M %p')}.")
@@ -765,9 +765,9 @@ def renderizar_tiempo_real_universal():
                                     
                                 st.markdown("🔹 **1. Seleccionar Ejemplar (Haz clic en el número):**")
                                 
-                                # --- CUADRÍCULA DE BOTONES DINÁMICOS COMPACTOS ---
+                                # --- CUADRÍCULA DE BOTONES DINÁMICOS EN COLUMNAS DE 3 COMPACTOS ---
                                 cantidad_ejemplares = len(lista_caballos_activos)
-                                cols_ejemplares = 4
+                                cols_ejemplares = 3
                                 num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                                 
                                 idx_cab = 0
