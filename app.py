@@ -946,10 +946,33 @@ if lista_b64_banners:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# --- BARRA LATERAL ---
+# --- BARRA LATERAL CON RELOJ DIGITAL EN VIVO (ACTUALIZACIÓN DOM DIRECTA) ---
 st.sidebar.header("barra lateral")
-ahora_dt = obtener_hora_venezuela_local()
-st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
+
+components.html("""
+    <div style="background: #161b22; border: 1px solid #30363d; padding: 10px; border-radius: 8px; margin-bottom: 12px; text-align: center;">
+        <span style="color: #8b949e; font-size: 11px; font-weight: 700; display: block; margin-bottom: 3px;">🕒 HORA VENEZUELA (EN VIVO)</span>
+        <span id="reloj-vivo-sidebar" style="color: #00ffff; font-size: 16px; font-weight: 900; letter-spacing: 0.8px;">--:--:-- --</span>
+    </div>
+    <script>
+        function iniciarRelojRealTime() {
+            const el = document.getElementById('reloj-vivo-sidebar');
+            if (!el) return;
+            function tick() {
+                const now = new Date();
+                const opt = { timeZone: 'America/Caracas', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+                el.innerText = new Intl.DateTimeFormat('en-US', opt).format(now);
+            }
+            tick();
+            setInterval(tick, 1000);
+        }
+        if (document.readyState === 'complete') {
+            iniciarRelojRealTime();
+        } else {
+            window.addEventListener('load', iniciarRelojRealTime);
+        }
+    </script>
+""", height=65)
 
 with st.sidebar.expander("👤 Usuario Activo y Selector", expanded=True):
     usuario_seleccionado_sidebar = st.selectbox(
@@ -1657,7 +1680,7 @@ elif menu_principal_opcion == "Cuentas":
     col_cu4.metric("⚖️ Neto", formatear_bs(balance_neto))
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR (COMPLETA Y RESTAURADA)
+# 4. ZONA DE ADMINISTRADOR
 # =========================================================================
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Panel de Configuración y Administración</div>", unsafe_allow_html=True)
@@ -1799,7 +1822,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Detalles e incentivos guardados!")
                 st.rerun()
 
-        # --- CONTROL DE HORARIOS INDIVIDUALES POR MODALIDAD ---
         st.markdown("---")
         with st.container(border=True):
             st.markdown(f"⏰ **Control de Horarios Individuales por Modalidad ({carr_banco_sel})**")
