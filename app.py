@@ -174,7 +174,7 @@ if usuario_actual_sesion == "CASA":
                         if (sidebar) {
                             const currentTransform = window.getComputedStyle(sidebar).transform;
                             const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
-                                           (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
+                                     (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                             
                             if (isClosed) {
                                 sidebar.setAttribute('aria-expanded', 'true');
@@ -554,20 +554,6 @@ st.markdown("""
         70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 0, 0, 0); }
         100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
     }
-    .badge-conexion-pro {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: #080a0f;
-        border: 1px solid #30363d;
-        padding: 4px 10px;
-        border-radius: 8px;
-        font-family: sans-serif;
-        font-size: 10px;
-        font-weight: 800;
-        color: #f0f6fc;
-        letter-spacing: 0.5px;
-    }
     .punto-led-pro {
         width: 8px;
         height: 8px;
@@ -633,13 +619,12 @@ header_html = f"""
                 <span class="h-date">📅 {fecha_texto}</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-                <div class="badge-conexion-pro">
-                    <span class="punto-led-pro"></span>
-                    <span>EN LÍNEA</span>
-                </div>
                 <div class="header-user-card">
                     <div class="user-details">
-                        <span class="u-name">{usuario_en_sesion}</span>
+                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 5px;">
+                            <span class="u-name">{usuario_en_sesion}</span>
+                            <span class="punto-led-pro" title="En Línea"></span>
+                        </div>
                         <span class="u-bal" style="color: {color_balance};">{etiqueta_balance}</span>
                     </div>
                     <div class="u-avatar-badge">🐺</div>
@@ -982,7 +967,7 @@ if lista_b64_banners:
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
                     }}, 400);
-                }}, 8000);
+                }, 8000);
             }}
         }})();
     </script>
