@@ -291,7 +291,6 @@ st.markdown("""
     div[data-testid="stHorizontalBlock"] > div { flex: 0 0 auto !important; width: auto !important; min-width: 110px !important; max-width: none !important; }
     .carreras-scroll-container div[data-testid="stHorizontalBlock"] > div { min-width: 55px !important; width: 55px !important; }
     
-    /* ESTILOS PARA COMPACTAR LOS BOTONES DE LA CUADRÍCULA DE PUJAS EN COLUMNAS DE 3 */
     div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"]:has(button) {
         gap: 3px !important;
         margin-top: -10px !important;
@@ -721,7 +720,13 @@ def renderizar_tiempo_real_universal():
 
                     if dt_limite and not carrera_cerrada:
                         diferencia_segundos = (dt_limite - ahora_dt).total_seconds()
-                        if estado_conteo == "INACTIVO" and 0 < diferencia_segundos <= 10:
+                        if diferencia_segundos <= 0:
+                            # Cierre automático estricto por tiempo cumplido
+                            st.session_state.carreras_cerradas_remate[carr_activa] = True
+                            st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
+                            guardar_estado_global()
+                            carrera_cerrada = True
+                        elif estado_conteo == "INACTIVO" and 0 < diferencia_segundos <= 10:
                             st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CONTEO_10S"
                             st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = ahora_dt
                             guardar_estado_global()
@@ -733,7 +738,7 @@ def renderizar_tiempo_real_universal():
                                 st.session_state.carreras_cerradas_remate[carr_activa] = True
                                 st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
                                 guardar_estado_global()
-                                st.rerun()
+                                carrera_cerrada = True
                             else:
                                 restantes = max(0, 10 - int(transcurridos))
                                 if restantes > 0:
@@ -743,10 +748,11 @@ def renderizar_tiempo_real_universal():
                     tabla_html = generar_tabla_html_remate(remates_actuales_mod, st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
                     components.html(tabla_html, height=400, scrolling=True)
 
+                    # --- BLOQUEO ESTRICTO DE PUJAS SI EL REMATE ESTÁ CERRADO O NO HA ABIERTO ---
                     if bloqueo_por_inicio:
                         st.warning(f"⏳ **Remate no disponible:** Abre a las {dt_inicio.strftime('%I:%M %p')}.")
                     elif carrera_cerrada:
-                        st.error("🔒 **Remate Cerrado:** El tiempo de apuestas finalizó.")
+                        st.error("🔒 **Remate Cerrado:** El tiempo de apuestas ha finalizado. No se permiten más pujas.")
                     else:
                         with st.container(border=True):
                             st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
@@ -835,8 +841,12 @@ def renderizar_tiempo_real_universal():
                                 opciones_escala = obtener_siguientes_montos(puja_actual)
                                 monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{modo_actual_remate}_{carr_activa}_{caballero_seleccionado}")
                                 
+                                # Botón de confirmación con doble validación de estado cerrado
                                 if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{modo_actual_remate}_{carr_activa}", use_container_width=True, type="primary"):
-                                    if monto_puja <= puja_actual:
+                                    # Doble verificación en tiempo real al hacer clic
+                                    if st.session_state.carreras_cerradas_remate.get(carr_activa, False):
+                                        st.error("❌ El remate acaba de cerrarse. No se procesó la puja.")
+                                    elif monto_puja <= puja_actual:
                                         st.error("El monto debe ser mayor a la puja actual.")
                                     else:
                                         st.session_state.remates_por_modalidad[modo_actual_remate][carr_activa][caballero_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
