@@ -290,7 +290,18 @@ st.markdown("""
     div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; overflow-x: auto !important; overflow-y: hidden !important; -webkit-overflow-scrolling: touch !important; width: 100% !important; gap: 6px !important; padding-bottom: 6px !important; scrollbar-width: thin; }
     div[data-testid="stHorizontalBlock"] > div { flex: 0 0 auto !important; width: auto !important; min-width: 110px !important; max-width: none !important; }
     .carreras-scroll-container div[data-testid="stHorizontalBlock"] > div { min-width: 55px !important; width: 55px !important; }
-    .stButton button { border-radius: 6px !important; font-weight: 700 !important; padding: 0.2rem 0.4rem !important; min-height: 38px !important; font-size: 12px !important; width: 100% !important; }
+    
+    /* ESTILOS PARA COMPACTAR LOS BOTONES DE LA CUADRÍCULA DE PUJAS */
+    div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"]:has(button) {
+        gap: 2px !important;
+        margin-top: -12px !important;
+        margin-bottom: -12px !important;
+    }
+    div[data-testid="column"]:has(button) {
+        padding: 0px 1px !important;
+    }
+    .stButton button { border-radius: 6px !important; font-weight: 700 !important; padding: 0.15rem 0.2rem !important; min-height: 34px !important; font-size: 12px !important; width: 100% !important; }
+
     .subasta-header { font-size: clamp(14px, 3.5vw, 18px); font-weight: 800; color: #f1e05a; margin-bottom: 4px; border-bottom: 2px solid #f1e05a; padding-bottom: 3px; }
     .timer-box { background-color: #161b22; border: 1px solid #ff4757; padding: 6px; border-radius: 6px; text-align: center; font-size: clamp(12px, 3vw, 15px); font-weight: bold; color: #ff4757; margin-bottom: 8px; }
     .carrera-condicion-card { background-color: #161b22; border: 1px solid #30363d; padding: 8px 12px; border-radius: 6px; font-size: 12px; color: #f0f6fc; margin-bottom: 10px; line-height: 1.4; word-break: break-word; }
@@ -403,7 +414,7 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
         }
         .tabla-referencia td {
             border-bottom: 1px solid #dfc729;
-            padding: 6px 4px;
+            padding: 5px 4px;
             background-color: #fbfbfb;
             color: #111111;
             font-size: 11px;
@@ -416,10 +427,10 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 10px;
             border-radius: 2px;
             box-sizing: border-box;
         }
@@ -442,13 +453,13 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
             font-style: italic;
         }
     </style>
-    <div style="background-color: #ffffff; padding: 3px; border-radius: 6px; overflow-x: auto; width: 100%;">
+    <div style="background-color: #ffffff; padding: 2px; border-radius: 6px; overflow-y: auto; max-height: 480px; width: 100%; border: 1px solid #dfc729;">
         <table class="tabla-referencia">
             <thead>
                 <tr>
-                    <th style="width: 12%;">No</th>
-                    <th style="width: 35%;">Ejemplar</th>
-                    <th style="width: 25%;">Comprador</th>
+                    <th style="width: 10%;">No</th>
+                    <th style="width: 38%;">Ejemplar</th>
+                    <th style="width: 24%;">Comprador</th>
                     <th style="width: 28%;">Monto</th>
                 </tr>
             </thead>
@@ -488,7 +499,7 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
         html += f"""
                 <tr class="{clase_fila}">
                     <td><span class="badge-numero {badge_class}">{num}</span></td>
-                    <td style="font-weight: 800; font-size: 12px;" title="{nombre_solo.upper()}{etiqueta_estado}">{nombre_solo.upper()}{etiqueta_estado}</td>
+                    <td style="font-weight: 800; font-size: 11px;" title="{nombre_solo.upper()}{etiqueta_estado}">{nombre_solo.upper()}{etiqueta_estado}</td>
                     <td title="{info['jugador']}">{info['jugador']}</td>
                     <td style="font-weight: bold; color: { '#990000' if es_retirado else ('#856404' if es_novale else '#000000') };">{formatear_bs(info['monto'])}</td>
                 </tr>
@@ -669,7 +680,7 @@ def renderizar_tiempo_real_universal():
             carr_activa = nombre_carrera_virtual
             carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
             tabla_html = generar_tabla_html_remate(st.session_state.remates_por_modalidad["Ciegos"][carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
-            components.html(tabla_html, height=220, scrolling=True)
+            components.html(tabla_html, height=350, scrolling=True)
 
         else:
             if lista_carreras_disponibles:
@@ -730,7 +741,7 @@ def renderizar_tiempo_real_universal():
 
                     remates_actuales_mod = st.session_state.remates_por_modalidad[modo_actual_remate].get(carr_activa, {})
                     tabla_html = generar_tabla_html_remate(remates_actuales_mod, st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
-                    components.html(tabla_html, height=220, scrolling=True)
+                    components.html(tabla_html, height=350, scrolling=True)
 
                     if bloqueo_por_inicio:
                         st.warning(f"⏳ **Remate no disponible:** Abre a las {dt_inicio.strftime('%I:%M %p')}.")
@@ -754,9 +765,9 @@ def renderizar_tiempo_real_universal():
                                     
                                 st.markdown("🔹 **1. Seleccionar Ejemplar (Haz clic en el número):**")
                                 
-                                # --- CUADRÍCULA DE BOTONES DINÁMICOS (REGISTRO DINÁMICO) ---
+                                # --- CUADRÍCULA DE BOTONES DINÁMICOS COMPACTOS ---
                                 cantidad_ejemplares = len(lista_caballos_activos)
-                                cols_ejemplares = 3
+                                cols_ejemplares = 4
                                 num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                                 
                                 idx_cab = 0
@@ -813,10 +824,10 @@ def renderizar_tiempo_real_universal():
                                     icono_poseedor = "🔴"
 
                                 st.markdown(f"""
-                                    <div style="background: {bg_tarjeta}; border: 2px solid {color_borde}; border-radius: 12px; padding: 12px; margin: 10px 0; text-align: center;">
+                                    <div style="background: {bg_tarjeta}; border: 2px solid {color_borde}; border-radius: 12px; padding: 10px; margin: 8px 0; text-align: center;">
                                         <div style="font-size: 11px; font-weight: 900; color: #00ffff; text-transform: uppercase;">🐎 Ejemplar Seleccionado</div>
-                                        <div style="font-size: 18px; font-weight: 900; color: #f1c40f; margin: 4px 0;">{caballero_seleccionado}</div>
-                                        <div style="font-size: 12px; font-weight: 700; color: {color_poseedor};">{icono_poseedor} Dueño Actual: <b>{propietario_actual_sel}</b></div>
+                                        <div style="font-size: 16px; font-weight: 900; color: #f1c40f; margin: 3px 0;">{caballero_seleccionado}</div>
+                                        <div style="font-size: 11px; font-weight: 700; color: {color_poseedor};">{icono_poseedor} Dueño Actual: <b>{propietario_actual_sel}</b></div>
                                     </div>
                                 """, unsafe_allow_html=True)
 
