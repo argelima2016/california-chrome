@@ -170,7 +170,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -791,7 +791,6 @@ if not st.session_state.banco_caballos_por_carrera:
             "hora_cierre_real": "No registrada"
         }
 
-# Inicializar remates independientes por modalidad
 for mod_key in ["Adelantados", "Ciegos", "En Vivo"]:
     if not st.session_state.remates_por_modalidad.get(mod_key):
         st.session_state.remates_por_modalidad[mod_key] = {}
@@ -1164,6 +1163,35 @@ def renderizar_tiempo_real_universal():
             c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
             c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
 
+            # --- SINCRONIZACIÓN AUTOMÁTICA DE RESULTADO DESDE ADELANTADOS (SI APLICAN) ---
+            if carrera_real_asignada and carrera_real_asignada in st.session_state.historial_ganadores_por_modalidad["Adelantados"]:
+                res_adel = st.session_state.historial_ganadores_por_modalidad["Adelantados"][carrera_real_asignada]
+                # Sincronizar automáticamente en Ciegos si aún no está liquidado aquí
+                if carr_activa not in st.session_state.historial_ganadores_por_modalidad["Ciegos"]:
+                    caballo_adelantado = res_adel.get('Caballo', '')
+                    # Buscar equivalente en ciegos
+                    for cab_ciego in st.session_state.remates_por_modalidad["Ciegos"][carr_activa].keys():
+                        num_adel = re.search(r'\d+', caballo_adelantado)
+                        num_ciego = re.search(r'\d+', cab_ciego)
+                        if num_adel and num_ciego and num_adel.group(0) == num_ciego.group(0):
+                            info_g = st.session_state.remates_por_modalidad["Ciegos"][carr_activa][cab_ciego]
+                            pote_carr_total = sum([info['monto'] for cab_n, info in st.session_state.remates_por_modalidad["Ciegos"][carr_activa].items()])
+                            monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
+                            premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_actual
+                            
+                            if info_g['jugador'] != "Sin Postor":
+                                if info_g['jugador'] not in st.session_state.cuentas:
+                                    st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                st.session_state.cuentas[info_g['jugador']]['Premios'] += premio_final_liq
+                            st.session_state.ganancia_casa += monto_casa_calc
+                            st.session_state.historial_ganadores_por_modalidad["Ciegos"][carr_activa] = {
+                                "Ganador": info_g['jugador'], 
+                                "Premio": formatear_bs(premio_final_liq),
+                                "Caballo": cab_ciego
+                            }
+                            guardar_estado_global()
+                            break
+
             # --- ANUNCIO ÉPICO Y LLAMATIVO DEL GANADOR ---
             historial_ganadores_ciegos = st.session_state.historial_ganadores_por_modalidad["Ciegos"]
             if carr_activa in historial_ganadores_ciegos:
@@ -1325,7 +1353,6 @@ def renderizar_tiempo_real_universal():
                     if carr_activa not in st.session_state.ejemplares_no_valido:
                         st.session_state.ejemplares_no_valido[carr_activa] = []
                     
-                    # Cargar remates específicos de esta modalidad
                     if carr_activa not in st.session_state.remates_por_modalidad[modo_actual_remate]:
                         st.session_state.remates_por_modalidad[modo_actual_remate][carr_activa] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
 
@@ -1446,6 +1473,33 @@ def renderizar_tiempo_real_universal():
                     c_m1, c_m2 = st.columns(2)
                     c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
                     c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
+
+                    # --- SINCRONIZACIÓN AUTOMÁTICA DE RESULTADO DESDE ADELANTADOS A EN VIVO ---
+                    if modo_actual_remate == "En Vivo" and carr_activa in st.session_state.historial_ganadores_por_modalidad["Adelantados"]:
+                        res_adel_vivo = st.session_state.historial_ganadores_por_modalidad["Adelantados"][carr_activa]
+                        if carr_activa not in st.session_state.historial_ganadores_por_modalidad["En Vivo"]:
+                            caballo_adelantado = res_adel_vivo.get('Caballo', '')
+                            for cab_envivo in remates_actuales_mod.keys():
+                                num_adel = re.search(r'\d+', caballo_adelantado)
+                                num_env = re.search(r'\d+', cab_envivo)
+                                if num_adel and num_env and num_adel.group(0) == num_env.group(0):
+                                    info_g = remates_actuales_mod[cab_envivo]
+                                    pote_carr_total = sum([info['monto'] for cab_n, info in remates_actuales_mod.items() if cab_n not in excluidos_carr_activa])
+                                    monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
+                                    premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_actual
+                                    
+                                    if info_g['jugador'] != "Sin Postor":
+                                        if info_g['jugador'] not in st.session_state.cuentas:
+                                            st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                        st.session_state.cuentas[info_g['jugador']]['Premios'] += premio_final_liq
+                                    st.session_state.ganancia_casa += monto_casa_calc
+                                    st.session_state.historial_ganadores_por_modalidad["En Vivo"][carr_activa] = {
+                                        "Ganador": info_g['jugador'], 
+                                        "Premio": formatear_bs(premio_final_liq),
+                                        "Caballo": cab_envivo
+                                    }
+                                    guardar_estado_global()
+                                    break
 
                     # --- ANUNCIO ÉPICO Y LLAMATIVO DEL GANADOR ---
                     historial_ganadores_mod = st.session_state.historial_ganadores_por_modalidad[modo_actual_remate]
@@ -2121,7 +2175,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if ampm_cier == "AM" and h_cier_val == 12: h_c_24 = 0
 
                 dt_i_final = datetime.combine(f_ini, dtime(h_i_24, m_ini_val))
-                dt_c_final = datetime.combine(f_cier, dtime(h_c_24, m_cier_val))
+                dt_c_final = datetime.combine(f_cier, dtime(h_c_24, m_c_24 if 'm_c_24' in locals() else m_cier_val)) # safely computed
 
                 st.session_state.fechas_horas_inicio_remate_modalidad[clave_mod_carr_adm] = dt_i_final
                 st.session_state.fechas_horas_cierre_remate_modalidad[clave_mod_carr_adm] = dt_c_final
