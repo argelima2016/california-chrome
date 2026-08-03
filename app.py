@@ -273,7 +273,6 @@ else:
     logo_display = '<span style="color: #f1c40f; font-size: 38px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
-hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
 # --- ESTILOS CSS GENERALES ---
@@ -528,7 +527,7 @@ st.markdown("""
     }
     .h-time {
         color: #00ffff;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 900;
         letter-spacing: 0.5px;
     }
@@ -600,15 +599,12 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-ahora_dt = obtener_hora_venezuela_local()
-hora_texto = ahora_dt.strftime('%I:%M:%S %p')
-fecha_texto = ahora_dt.strftime('%d/%m/%Y')
-
+# --- CABECERA SUPERIOR MODERNA CON RELOJ DINÁMICO EN VIVO (UTC-4 FIJO) ---
 header_html = f"""
     <div class="header-container-modern">
         <div class="header-top-row">
             <div class="header-clock-box">
-                <span class="h-time">⚡ {hora_texto}</span>
+                <span id="reloj-vivo-header" class="h-time">⚡ --:--:-- --</span>
                 <span class="h-date">📅 {fecha_texto}</span>
             </div>
             <div class="header-user-card">
@@ -623,6 +619,29 @@ header_html = f"""
             {logo_display}
         </div>
     </div>
+    <script>
+        function actualizarRelojHeaderExacto() {
+            const el = document.getElementById('reloj-vivo-header');
+            if (!el) return;
+            const ahora = new Date();
+            const utcTime = ahora.getTime() + (ahora.getTimezoneOffset() * 60000);
+            const venezuelaTime = new Date(utcTime + (-4 * 3600000));
+            
+            let h = venezuelaTime.getHours();
+            let m = venezuelaTime.getMinutes();
+            let s = venezuelaTime.getSeconds();
+            let ampm = h >= 12 ? 'PM' : 'AM';
+            
+            h = h % 12;
+            h = h ? h : 12; 
+            m = m < 10 ? '0' + m : m;
+            s = s < 10 ? '0' + s : s;
+            
+            el.innerText = '⚡ ' + h + ':' + m + ':' + s + ' ' + ampm;
+        }
+        setInterval(actualizarRelojHeaderExacto, 1000);
+        actualizarRelojHeaderExacto();
+    </script>
 """
 st.markdown(header_html, unsafe_allow_html=True)
 
@@ -946,40 +965,8 @@ if lista_b64_banners:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# --- BARRA LATERAL CON RELOJ MATEMÁTICO INEXPUGNABLE (UTC-4 FIJO) ---
+# --- BARRA LATERAL LIMPIA ---
 st.sidebar.header("barra lateral")
-
-components.html("""
-    <div style="background: #161b22; border: 1px solid #30363d; padding: 10px; border-radius: 8px; margin-bottom: 12px; text-align: center;">
-        <span style="color: #8b949e; font-size: 11px; font-weight: 700; display: block; margin-bottom: 3px;">🕒 HORA VENEZUELA (EN VIVO)</span>
-        <span id="reloj-vivo-sidebar" style="color: #00ffff; font-size: 15px; font-weight: 900; letter-spacing: 0.5px;">--:--:-- --</span>
-    </div>
-    <script>
-        function actualizarRelojUniversal() {
-            const el = document.getElementById('reloj-vivo-sidebar');
-            if (!el) return;
-            
-            // Obtener fecha universal UTC pura y restar exactamente 4 horas (Venezuela UTC-4)
-            const ahora = new Date();
-            const utcTime = ahora.getTime() + (ahora.getTimezoneOffset() * 60000);
-            const venezuelaTime = new Date(utcTime + (-4 * 3600000));
-            
-            let h = venezuelaTime.getHours();
-            let m = venezuelaTime.getMinutes();
-            let s = venezuelaTime.getSeconds();
-            let ampm = h >= 12 ? 'PM' : 'AM';
-            
-            h = h % 12;
-            h = h ? h : 12; 
-            m = m < 10 ? '0' + m : m;
-            s = s < 10 ? '0' + s : s;
-            
-            el.innerText = h + ':' + m + ':' + s + ' ' + ampm;
-        }
-        setInterval(actualizarRelojUniversal, 1000);
-        actualizarRelojUniversal();
-    </script>
-""", height=65)
 
 with st.sidebar.expander("👤 Usuario Activo y Selector", expanded=True):
     usuario_seleccionado_sidebar = st.selectbox(
