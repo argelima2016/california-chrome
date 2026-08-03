@@ -620,7 +620,7 @@ header_html = f"""
         </div>
     </div>
     <script>
-        function actualizarRelojHeaderExacto() {
+        function actualizarRelojHeaderExacto() {{
             const el = document.getElementById('reloj-vivo-header');
             if (!el) return;
             const ahora = new Date();
@@ -638,7 +638,7 @@ header_html = f"""
             s = s < 10 ? '0' + s : s;
             
             el.innerText = '⚡ ' + h + ':' + m + ':' + s + ' ' + ampm;
-        }
+        }}
         setInterval(actualizarRelojHeaderExacto, 1000);
         actualizarRelojHeaderExacto();
     </script>
