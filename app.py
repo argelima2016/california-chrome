@@ -668,26 +668,104 @@ def renderizar_tiempo_real_universal():
                     else:
                         with st.container(border=True):
                             st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
-                            lista_caballos_activos = list(remates_actuales_mod.keys())
-                            if lista_caballos_activos:
-                                # Llaves estrictamente unidas a la modalidad y carrera para evitar que el estado se cruce
-                                k_sel_cab = f"reg_cab_{modo_actual_remate}_{carr_activa}"
-                                k_sel_mont = f"reg_mont_{modo_actual_remate}_{carr_activa}"
+                            retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
+                            no_validos_carr_activa = st.session_state.ejemplares_no_valido.get(carr_activa, [])
+                            excluidos_carr_activa = set(retirados_carr_activa) | set(no_validos_carr_activa)
 
-                                cab_sel = st.selectbox("Ejemplar", lista_caballos_activos, key=k_sel_cab)
-                                puja_act = remates_actuales_mod[cab_sel]['monto']
-                                monto_p = st.selectbox("Monto", obtener_siguientes_montos(puja_act), format_func=lambda x: formatear_bs(x), key=k_sel_mont)
+                            lista_caballos_activos = [c for c in list(remates_actuales_mod.keys()) if c not in excluidos_carr_activa]
+                            
+                            if not lista_caballos_activos:
+                                st.warning("No hay ejemplares disponibles para pujar.")
+                            else:
+                                k_sel_cab = f"rem_caballo_activo_click_{modo_actual_remate}_{carr_activa}"
+                                if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
+                                    st.session_state[k_sel_cab] = lista_caballos_activos[0]
+                                    
+                                st.markdown("🔹 **1. Seleccionar Ejemplar (Haz clic en el número):**")
                                 
-                                if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"btn_confirmar_puja_{modo_actual_remate}_{carr_activa}", use_container_width=True, type="primary"):
-                                    if monto_p <= puja_act:
+                                # --- CUADRÍCULA DE BOTONES DINÁMICOS (REGISTRO DINÁMICO) ---
+                                cantidad_ejemplares = len(lista_caballos_activos)
+                                cols_ejemplares = 3
+                                num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
+                                
+                                idx_cab = 0
+                                for f in range(num_filas):
+                                    cols_fila = st.columns(cols_ejemplares, gap="small")
+                                    for c in range(cols_ejemplares):
+                                        if idx_cab < cantidad_ejemplares:
+                                            cab_item = lista_caballos_activos[idx_cab]
+                                            num_parte = cab_item.split(" - ")[0]
+                                            
+                                            info_remate_cab = remates_actuales_mod.get(cab_item, {})
+                                            propietario = info_remate_cab.get('jugador', 'Sin Postor')
+                                            
+                                            if propietario == "Sin Postor" or propietario == "CASA" or info_remate_cab.get('monto', 0.0) == 0:
+                                                color_estilo = "background-color: #e2e8f0 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important;"
+                                            elif propietario == st.session_state.usuario_activo:
+                                                color_estilo = "background-color: #22c55e !important; color: #ffffff !important; border: 1px solid #16a34a !important;"
+                                            else:
+                                                color_estilo = "background-color: #ef4444 !important; color: #ffffff !important; border: 1px solid #dc2626 !important;"
+
+                                            with cols_fila[c]:
+                                                st.markdown(f"""
+                                                    <style>
+                                                    div[data-testid="stVerticalBlock"] button[key="rem_btn_cab_{modo_actual_remate}_{carr_activa}_{idx_cab}"] {{
+                                                        {color_estilo}
+                                                    }}
+                                                    </style>
+                                                """, unsafe_allow_html=True)
+
+                                                if st.button(f"#{num_parte}", key=f"rem_btn_cab_{modo_actual_remate}_{carr_activa}_{idx_cab}", use_container_width=True):
+                                                    st.session_state[k_sel_cab] = cab_item
+                                                    st.rerun()
+
+                                            idx_cab += 1
+                                
+                                caballero_seleccionado = st.session_state[k_sel_cab]
+                                propietario_actual_sel = remates_actuales_mod[caballero_seleccionado].get('jugador', 'Sin Postor')
+                                
+                                # Tarjeta informativa del ejemplar seleccionado
+                                if propietario_actual_sel == "Sin Postor" or propietario_actual_sel == "CASA" or remates_actuales_mod[caballero_seleccionado].get('monto', 0.0) == 0:
+                                    bg_tarjeta = "linear-gradient(135deg, #161b22 0%, #21262d 100%)"
+                                    color_borde = "#30363d"
+                                    color_poseedor = "#8b949e"
+                                    icono_poseedor = "⚪"
+                                elif propietario_actual_sel == st.session_state.usuario_activo:
+                                    bg_tarjeta = "linear-gradient(135deg, #064e3b 0%, #065f46 100%)"
+                                    color_borde = "#10b981"
+                                    color_poseedor = "#34d399"
+                                    icono_poseedor = "🟢"
+                                else:
+                                    bg_tarjeta = "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)"
+                                    color_borde = "#ef4444"
+                                    color_poseedor = "#fca5a5"
+                                    icono_poseedor = "🔴"
+
+                                st.markdown(f"""
+                                    <div style="background: {bg_tarjeta}; border: 2px solid {color_borde}; border-radius: 12px; padding: 12px; margin: 10px 0; text-align: center;">
+                                        <div style="font-size: 11px; font-weight: 900; color: #00ffff; text-transform: uppercase;">🐎 Ejemplar Seleccionado</div>
+                                        <div style="font-size: 18px; font-weight: 900; color: #f1c40f; margin: 4px 0;">{caballero_seleccionado}</div>
+                                        <div style="font-size: 12px; font-weight: 700; color: {color_poseedor};">{icono_poseedor} Dueño Actual: <b>{propietario_actual_sel}</b></div>
+                                    </div>
+                                """, unsafe_allow_html=True)
+
+                                puja_actual = remates_actuales_mod[caballero_seleccionado]['monto']
+                                opciones_escala = obtener_siguientes_montos(puja_actual)
+                                monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{modo_actual_remate}_{carr_activa}_{caballero_seleccionado}")
+                                
+                                if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{modo_actual_remate}_{carr_activa}", use_container_width=True, type="primary"):
+                                    if monto_puja <= puja_actual:
                                         st.error("El monto debe ser mayor a la puja actual.")
                                     else:
-                                        st.session_state.remates_por_modalidad[modo_actual_remate][carr_activa][cab_sel] = {"jugador": st.session_state.usuario_activo, "monto": monto_p}
-                                        st.session_state.historial_jugadas.append({"fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'), "jugador": st.session_state.usuario_activo, "tipo": f"Remate ({modo_actual_remate})", "carrera": carr_activa, "detalle": cab_sel, "monto": monto_p})
+                                        st.session_state.remates_por_modalidad[modo_actual_remate][carr_activa][caballero_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
+                                        st.session_state.historial_jugadas.append({
+                                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'), "jugador": st.session_state.usuario_activo,
+                                            "tipo": f"Remate ({modo_actual_remate})", "carrera": carr_activa, "detalle": caballero_seleccionado, "monto": monto_puja
+                                        })
                                         if estado_conteo == "CONTEO_10S":
                                             st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = obtener_hora_venezuela_local()
                                         guardar_estado_global()
-                                        st.success("✅ ¡Puja registrada!")
+                                        st.success("✅ ¡Puja registrada correctamente!")
                                         st.rerun()
 
     # 2. MÓDULO DE DUPLETA
