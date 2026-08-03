@@ -584,8 +584,6 @@ def obtener_abreviatura_carrera(nombre_carrera, modo_actual=""):
                 return "1V"
             elif nombre_carrera == carreras_ciegas[1]:
                 return "6V"
-            else:
-                return "CIEGO"
         elif len(carreras_ciegas) == 1:
             if nombre_carrera == carreras_ciegas[0]:
                 return "1V"
@@ -1024,13 +1022,20 @@ def renderizar_tiempo_real_universal():
         else:
             carreras_modalidad_permitidas = st.session_state.carreras_por_modalidad.get(modo_actual_remate, lista_carreras_locales)
             
-            carreras_filtradas_visibles = [
-                c for c in lista_carreras_locales 
-                if c in carreras_modalidad_permitidas and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
-            ]
+            # --- CORRECCIÓN ESTRICTA PARA CIEGOS: SOLO MOSTRAR 1V y 6V ---
+            if modo_actual_remate == "Ciegos":
+                carreras_filtradas_visibles = [
+                    c for c in carreras_modalidad_permitidas 
+                    if c in lista_carreras_locales and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
+                ][:2]
+            else:
+                carreras_filtradas_visibles = [
+                    c for c in lista_carreras_locales 
+                    if c in carreras_modalidad_permitidas and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
+                ]
             
             if not carreras_filtradas_visibles:
-                carreras_filtradas_visibles = lista_carreras_locales
+                carreras_filtradas_visibles = lista_carreras_locales[:2] if modo_actual_remate == "Ciegos" else lista_carreras_locales
 
             if not carreras_filtradas_visibles:
                 st.info(f"ℹ️ No hay carreras habilitadas para la modalidad **{modo_actual_remate}**.")
