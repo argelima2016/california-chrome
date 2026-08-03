@@ -979,7 +979,7 @@ else:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # --- BARRA LATERAL (SE OCULTA/MUESTRA AUTOMÁTICAMENTE SEGÚN USUARIO ACTIVO) ---
-st.sidebar.header("barra lateral")
+st.sidebar.header("Barra Lateral")
 ahora_dt = obtener_hora_venezuela_local()
 st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
 
