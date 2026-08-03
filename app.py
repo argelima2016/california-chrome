@@ -884,8 +884,8 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }, 400);
-                }, 8000);
+                    }}, 400);
+                }}, 8000);
             }}
         }})();
     </script>
@@ -976,7 +976,6 @@ menu_principal_opcion = st.session_state.menu_principal_opcion
 def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
 
-    # Re-sincronizar lista de carreras disponibles tras recarga global
     lista_carreras_locales = list(st.session_state.remates.keys())
     if not lista_carreras_locales:
         for i in range(1, st.session_state.total_carreras_semana + 1):
