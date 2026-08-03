@@ -90,7 +90,6 @@ def cargar_estado_global(forzar_recarga=False):
                 for k, v in default_state.items():
                     if k not in st.session_state or forzar_recarga:
                         val_json = data.get(k, v)
-                        # Reconstruir fechas serializadas si aplica
                         if "fechas_horas" in k and isinstance(val_json, dict):
                             val_reconstruido = {}
                             for dk, dv in val_json.items():
@@ -124,7 +123,6 @@ def guardar_estado_global():
     for k in keys_to_save:
         if k in st.session_state:
             val = st.session_state[k]
-            # Serializar datetimes a string ISO si están en diccionarios de fechas
             if "fechas_horas" in k and isinstance(val, dict):
                 val_serializable = {}
                 for dk, dv in val.items():
@@ -278,7 +276,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS GENERALES Y GRID DE PUJAS DE 3 COLUMNAS COMPACTO ---
+# --- ESTILOS CSS GENERALES ---
 st.markdown("""
     <style>
     * {
@@ -409,6 +407,33 @@ st.markdown("""
         text-shadow: 2px 2px 4px #000000;
     }
     
+    /* --- TARJETA LLAMATIVA Y PEQUEÑA PARA EL EJEMPLAR ACTIVO --- */
+    .ejemplar-activo-badge-epic {
+        background: linear-gradient(135deg, #1f4068 0%, #162447 100%);
+        border: 1.5px solid #00ffff;
+        border-radius: 8px;
+        padding: 6px 10px;
+        text-align: center;
+        margin: 6px 0;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    }
+    .ejemplar-activo-label {
+        color: #00ffff;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+    }
+    .ejemplar-activo-nombre {
+        color: #f1c40f;
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        text-shadow: 1px 1px 3px #000000;
+    }
+
     @keyframes parpadeoGanador {
         0% { transform: scale(1); box-shadow: 0 0 15px #f1c40f, inset 0 0 15px #f1c40f; }
         50% { transform: scale(1.02); box-shadow: 0 0 35px #00ffff, inset 0 0 25px #00ffff; }
@@ -1004,7 +1029,6 @@ menu_principal_opcion = st.session_state.menu_principal_opcion
 def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
 
-    # Re-sincronizar hora local de Venezuela segura dentro del fragmento
     ahora_dt = obtener_hora_venezuela_local()
 
     lista_carreras_locales = list(st.session_state.remates.keys())
@@ -1387,7 +1411,15 @@ def renderizar_tiempo_real_universal():
                             
                             caballo_seleccionado = st.session_state[k_sel_cab]
                             propietario_actual_sel = st.session_state.remates[carr_activa][caballo_seleccionado].get('jugador', 'Sin Postor')
-                            st.info(f"Ejemplar activo: **{caballo_seleccionado}** (Poseedor actual: **{propietario_actual_sel}**)")
+                            
+                            # --- TARJETA LLAMATIVA Y PEQUEÑA PARA EL EJEMPLAR ACTIVO ---
+                            st.markdown(f"""
+                                <div class="ejemplar-activo-badge-epic">
+                                    <div class="ejemplar-activo-label">🐎 Ejemplar Activo</div>
+                                    <div class="ejemplar-activo-nombre">{caballo_seleccionado}</div>
+                                    <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">Dueño: <b>{propietario_actual_sel}</b></div>
+                                </div>
+                            """, unsafe_allow_html=True)
 
                             puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
                             opciones_escala = obtener_siguientes_montos(puja_actual)
