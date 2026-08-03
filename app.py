@@ -117,91 +117,109 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN EN TIEMPO REAL Y CONTROL TOTAL ---
-components.html("""
-    <script>
-        function sincronizacionEnVivo() {
-            const doc = window.parent.document;
-            const selectors = [
-                'header[data-testid="stHeader"]',
-                'footer',
-                '.stDeployButton',
-                'div[data-testid="stStatusWidget"]',
-                '[data-testid="stToolbar"]',
-                '#MainMenu',
-                'a[href*="streamlit.io"]'
-            ];
-            selectors.forEach(selector => {
-                doc.querySelectorAll(selector).forEach(el => {
-                    if (el) {
-                        el.style.display = 'none';
-                        el.style.visibility = 'hidden';
-                        el.style.opacity = '0';
-                        el.remove();
-                    }
-                });
-            });
+# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN Y CONTROL DE VISIBILIDAD DE CONFIG SEGÚN USUARIO ---
+usuario_actual_sesion = st.session_state.get("usuario_activo", "CASA")
 
-            let tuercaBtn = doc.getElementById('custom-tuerca-sidebar-btn');
-            if (!tuercaBtn) {
-                tuercaBtn = doc.createElement('button');
-                tuercaBtn.id = 'custom-tuerca-sidebar-btn';
-                tuercaBtn.innerHTML = '⚙️';
-                tuercaBtn.title = 'Abrir / Cerrar Barra Lateral';
-                
-                tuercaBtn.style.position = 'fixed';
-                tuercaBtn.style.top = '10px';
-                tuercaBtn.style.right = '15px';
-                tuercaBtn.style.zIndex = '999999';
-                tuercaBtn.style.background = '#161b22';
-                tuercaBtn.style.border = '1px solid #30363d';
-                tuercaBtn.style.borderRadius = '8px';
-                tuercaBtn.style.fontSize = '20px';
-                tuercaBtn.style.width = '42px';
-                tuercaBtn.style.height = '42px';
-                tuercaBtn.style.cursor = 'pointer';
-                tuercaBtn.style.display = 'flex';
-                tuercaBtn.style.alignItems = 'center';
-                tuercaBtn.style.justifyContent = 'center';
-                tuercaBtn.style.boxShadow = '0px 4px 12px rgba(0,0,0,0.5)';
-                tuercaBtn.style.transition = 'transform 0.2s ease, background 0.2s ease';
-
-                tuercaBtn.onclick = function() {
-                    const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
-                    if (sidebar) {
-                        const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
-                                       (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
-                        
-                        if (isClosed) {
-                            sidebar.setAttribute('aria-expanded', 'true');
-                            sidebar.style.transform = 'none';
-                            sidebar.style.visibility = 'visible';
-                            sidebar.style.display = 'block';
-                            sidebar.style.minWidth = '360px';
-                            sidebar.style.width = '360px';
-                            sidebar.style.position = 'relative';
-                        } else {
-                            sidebar.setAttribute('aria-expanded', 'false');
-                            sidebar.style.transform = 'translateX(-100%)';
-                            sidebar.style.visibility = 'hidden';
-                            sidebar.style.display = 'none';
-                            sidebar.style.minWidth = '0px';
-                            sidebar.style.width = '0px';
+if usuario_actual_sesion == "CASA":
+    components.html("""
+        <script>
+            function sincronizacionEnVivo() {
+                const doc = window.parent.document;
+                const selectors = [
+                    'header[data-testid="stHeader"]',
+                    'footer',
+                    '.stDeployButton',
+                    'div[data-testid="stStatusWidget"]',
+                    '[data-testid="stToolbar"]',
+                    '#MainMenu',
+                    'a[href*="streamlit.io"]'
+                ];
+                selectors.forEach(selector => {
+                    doc.querySelectorAll(selector).forEach(el => {
+                        if (el) {
+                            el.style.display = 'none';
+                            el.style.visibility = 'hidden';
+                            el.style.opacity = '0';
+                            el.remove();
                         }
-                    } else {
-                        const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
-                                            doc.querySelector('[data-testid="collapsedControl"] button');
-                        if (collapseBtn) collapseBtn.click();
-                    }
-                };
+                    });
+                });
 
-                doc.body.appendChild(tuercaBtn);
+                let tuercaBtn = doc.getElementById('custom-tuerca-sidebar-btn');
+                if (!tuercaBtn) {
+                    tuercaBtn = doc.createElement('button');
+                    tuercaBtn.id = 'custom-tuerca-sidebar-btn';
+                    tuercaBtn.innerHTML = '⚙️';
+                    tuercaBtn.title = 'Abrir / Cerrar Barra Lateral';
+                    
+                    tuercaBtn.style.position = 'fixed';
+                    tuercaBtn.style.top = '10px';
+                    tuercaBtn.style.right = '15px';
+                    tuercaBtn.style.zIndex = '999999';
+                    tuercaBtn.style.background = '#161b22';
+                    tuercaBtn.style.border = '1px solid #30363d';
+                    tuercaBtn.style.borderRadius = '8px';
+                    tuercaBtn.style.fontSize = '20px';
+                    tuercaBtn.style.width = '42px';
+                    tuercaBtn.style.height = '42px';
+                    tuercaBtn.style.cursor = 'pointer';
+                    tuercaBtn.style.display = 'flex';
+                    tuercaBtn.style.alignItems = 'center';
+                    tuercaBtn.style.justifyContent = 'center';
+                    tuercaBtn.style.boxShadow = '0px 4px 12px rgba(0,0,0,0.5)';
+                    tuercaBtn.style.transition = 'transform 0.2s ease, background 0.2s ease';
+
+                    tuercaBtn.onclick = function() {
+                        const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
+                        if (sidebar) {
+                            const currentTransform = window.getComputedStyle(sidebar).transform;
+                            const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
+                                           (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
+                            
+                            if (isClosed) {
+                                sidebar.setAttribute('aria-expanded', 'true');
+                                sidebar.style.transform = 'none';
+                                sidebar.style.visibility = 'visible';
+                                sidebar.style.display = 'block';
+                                sidebar.style.minWidth = '360px';
+                                sidebar.style.width = '360px';
+                                sidebar.style.position = 'relative';
+                            } else {
+                                sidebar.setAttribute('aria-expanded', 'false');
+                                sidebar.style.transform = 'translateX(-100%)';
+                                sidebar.style.visibility = 'hidden';
+                                sidebar.style.display = 'none';
+                                sidebar.style.minWidth = '0px';
+                                sidebar.style.width = '0px';
+                            }
+                        } else {
+                            const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
+                                              doc.querySelector('[data-testid="collapsedControl"] button');
+                            if (collapseBtn) collapseBtn.click();
+                        }
+                    };
+
+                    doc.body.appendChild(tuercaBtn);
+                }
             }
-        }
-        setInterval(sincronizacionEnVivo, 200);
-    </script>
-""", height=0, width=0)
+            setInterval(sincronizacionEnVivo, 200);
+        </script>
+    """, height=0, width=0)
+else:
+    components.html("""
+        <script>
+            const doc = window.parent.document;
+            let tuercaBtn = doc.getElementById('custom-tuerca-sidebar-btn');
+            if (tuercaBtn) { tuercaBtn.remove(); }
+            const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
+            if (sidebar) {
+                sidebar.setAttribute('aria-expanded', 'false');
+                sidebar.style.transform = 'translateX(-100%)';
+                sidebar.style.visibility = 'hidden';
+                sidebar.style.display = 'none';
+            }
+        </script>
+    """, height=0, width=0)
 
 # --- ESCALA DE PUJAS ---
 ESCALA_PUJAS = [
@@ -252,7 +270,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS GENERALES Y GRID DE PUJAS DE 3 COLUMNAS COMPACTO ---
+# --- ESTILOS CSS GENERALES ---
 st.markdown("""
     <style>
     * {
@@ -317,7 +335,6 @@ st.markdown("""
         width: 55px !important;
     }
     
-    /* --- ELIMINAR ESPACIOS VERTICALES ENTRE FILAS DE BOTONES DE PUJA (3 COLUMNAS) --- */
     div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"]:has(button) {
         gap: 4px !important;
         margin-top: -18px !important;
@@ -532,7 +549,6 @@ st.markdown("""
         object-fit: contain;
     }
     
-    /* --- ESTILOS PARA INDICADOR DE CONEXIÓN PRO --- */
     @keyframes pulsoLed {
         0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 213, 115, 0.6); }
         70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 0, 0, 0); }
@@ -561,7 +577,6 @@ st.markdown("""
         animation: pulsoLed 2s infinite;
     }
 
-    /* --- ESTILOS POTE LLAMATIVO MÚLTIPLES --- */
     .pote-llamativo-box {
         background: linear-gradient(135deg, #11141d 0%, #1f2937 100%);
         border: 2px solid #f1c40f;
@@ -610,7 +625,6 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- CABECERA SUPERIOR MODERNA CON LOGO Y EL INDICADOR DE CONEXIÓN PRO ---
 header_html = f"""
     <div class="header-container-modern">
         <div class="header-top-row">
@@ -800,7 +814,6 @@ for mod_key in ["Adelantados", "Ciegos", "En Vivo"]:
 
 lista_carreras_disponibles = list(st.session_state.banco_caballos_por_carrera.keys())
 
-# --- GARANTIZAR QUE TODAS LAS CARRERAS ESTÉN ACTIVAS POR DEFECTO ---
 if not st.session_state.carreras_activas_remate and lista_carreras_disponibles:
     st.session_state.carreras_activas_remate = list(lista_carreras_disponibles)
 else:
@@ -823,9 +836,14 @@ if not st.session_state.carreras_habilitadas_tripleta and lista_carreras_disponi
 if not st.session_state.carreras_habilitadas_polla and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_polla = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL ---
+# --- MENÚ PRINCIPAL HORIZONTAL (CONDICIONAL PARA CONFIG SEGÚN CASA) ---
+es_casa = (st.session_state.usuario_activo == "CASA")
+
 st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
-col_menu1, col_menu2, col_menu3, col_menu4 = st.columns(4, gap="small")
+if es_casa:
+    col_menu1, col_menu2, col_menu3, col_menu4 = st.columns(4, gap="small")
+else:
+    col_menu1, col_menu2, col_menu3 = st.columns(3, gap="small")
 
 with col_menu1:
     if st.button("REMATES", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
@@ -845,17 +863,21 @@ with col_menu3:
         guardar_estado_global()
         st.rerun()
 
-with col_menu4:
-    if st.button("⚙️ CONFIG", key="menu_btn_config_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "🔒 Zona Admin" else "secondary"):
-        st.session_state.menu_principal_opcion = "🔒 Zona Admin"
+if es_casa:
+    with col_menu4:
+        if st.button("⚙️ CONFIG", key="menu_btn_config_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "🔒 Zona Admin" else "secondary"):
+            st.session_state.menu_principal_opcion = "🔒 Zona Admin"
+            guardar_estado_global()
+            st.rerun()
+else:
+    if st.session_state.menu_principal_opcion == "🔒 Zona Admin":
+        st.session_state.menu_principal_opcion = "Remates"
         guardar_estado_global()
-        st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
-
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BANNER MARQUESINA DINÁMICO (LENTO 150s Y NUNCA PAUSA) ---
+# --- BANNER MARQUESINA DINÁMICO ---
 elementos_carrusel_info = []
 
 remates_abiertos = [c for c in lista_carreras_disponibles if not st.session_state.carreras_cerradas_remate.get(c, False)]
@@ -912,12 +934,8 @@ if elementos_carrusel_info:
             padding-right: 100%;
         }}
         @keyframes scrollRight {{
-            0% {{
-                transform: translateX(-100%);
-            }}
-            100% {{
-                transform: translateX(100%);
-            }}
+            0% {{ transform: translateX(-100%); }}
+            100% {{ transform: translateX(100%); }}
         }}
     </style>
     <div class="marquee-container">
@@ -963,8 +981,8 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }}, 400);
-                }}, 8000);
+                    }, 400);
+                }, 8000);
             }}
         }})();
     </script>
@@ -980,7 +998,7 @@ else:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# --- BARRA LATERAL ---
+# --- BARRA LATERAL (SE OCULTA/MUESTRA AUTOMÁTICAMENTE SEGÚN USUARIO ACTIVO) ---
 st.sidebar.header("barra lateral")
 ahora_dt = obtener_hora_venezuela_local()
 st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
@@ -1059,15 +1077,13 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (1 SEGUNDO PARA ACTUALIZACIÓN EN VIVO)
+# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (1 SEGUNDO)
 # =========================================================================
 @st.fragment(run_every=1.0)
 def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
 
-    # =========================================================================
-    # 1. MÓDULO DE REMATES (DENTRO DEL FRAGMENTO PARA ACTUALIZACIÓN EN VIVO)
-    # =========================================================================
+    # 1. MÓDULO DE REMATES
     if st.session_state.menu_principal_opcion == "Remates":
         st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
         col_so1, col_so2, col_so3 = st.columns(3, gap="small")
@@ -1127,7 +1143,6 @@ def renderizar_tiempo_real_universal():
             carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
             detalles_carr = st.session_state.detalles_carreras.get(carr_activa, {"condicion": "Remate Ciego", "distancia": "1200 mts", "hora": "02:00 PM"})
 
-            # Sincronización estricta de ejemplares asignados en Zona Admin
             carrera_real_asignada = st.session_state.mapeo_ciegos_carreras.get(nombre_carrera_virtual, "")
             if carrera_real_asignada and carrera_real_asignada in st.session_state.banco_caballos_por_carrera:
                 caballos_reales_oficiales = st.session_state.banco_caballos_por_carrera[carrera_real_asignada]
@@ -1163,13 +1178,10 @@ def renderizar_tiempo_real_universal():
             c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
             c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
 
-            # --- SINCRONIZACIÓN AUTOMÁTICA DE RESULTADO DESDE ADELANTADOS (SI APLICAN) ---
             if carrera_real_asignada and carrera_real_asignada in st.session_state.historial_ganadores_por_modalidad["Adelantados"]:
                 res_adel = st.session_state.historial_ganadores_por_modalidad["Adelantados"][carrera_real_asignada]
-                # Sincronizar automáticamente en Ciegos si aún no está liquidado aquí
                 if carr_activa not in st.session_state.historial_ganadores_por_modalidad["Ciegos"]:
                     caballo_adelantado = res_adel.get('Caballo', '')
-                    # Buscar equivalente en ciegos
                     for cab_ciego in st.session_state.remates_por_modalidad["Ciegos"][carr_activa].keys():
                         num_adel = re.search(r'\d+', caballo_adelantado)
                         num_ciego = re.search(r'\d+', cab_ciego)
@@ -1192,7 +1204,6 @@ def renderizar_tiempo_real_universal():
                             guardar_estado_global()
                             break
 
-            # --- ANUNCIO ÉPICO Y LLAMATIVO DEL GANADOR ---
             historial_ganadores_ciegos = st.session_state.historial_ganadores_por_modalidad["Ciegos"]
             if carr_activa in historial_ganadores_ciegos:
                 info_ganador_prev = historial_ganadores_ciegos[carr_activa]
@@ -1215,14 +1226,14 @@ def renderizar_tiempo_real_universal():
                     caballos_lista_ganador = list(st.session_state.remates_por_modalidad["Ciegos"][carr_activa].keys())
                     col_g1, col_g2 = st.columns([3, 2], gap="small")
                     with col_g1:
-                        caballo_ganador_elegido = st.selectbox("Ejemplar Ganador", caballos_lista_ganador, key=f"rem_sel_ganador_{carr_activa}", label_visibility="collapsed")
+                        caballero_ganador_elegido = st.selectbox("Ejemplar Ganador", caballos_lista_ganador, key=f"rem_sel_ganador_{carr_activa}", label_visibility="collapsed")
                     with col_g2:
                         if st.button("🏆 Liquidar Ganador", key=f"rem_btn_liquidar_{carr_activa}", use_container_width=True, type="primary"):
                             pote_carr_total = sum([info['monto'] for cab_n, info in st.session_state.remates_por_modalidad["Ciegos"][carr_activa].items()])
                             monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
                             premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_actual
                             
-                            info_g = st.session_state.remates_por_modalidad["Ciegos"][carr_activa][caballo_ganador_elegido]
+                            info_g = st.session_state.remates_por_modalidad["Ciegos"][carr_activa][caballero_ganador_elegido]
                             if info_g['jugador'] != "Sin Postor":
                                 if info_g['jugador'] not in st.session_state.cuentas:
                                     st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
@@ -1231,7 +1242,7 @@ def renderizar_tiempo_real_universal():
                             st.session_state.historial_ganadores_por_modalidad["Ciegos"][carr_activa] = {
                                 "Ganador": info_g['jugador'], 
                                 "Premio": formatear_bs(premio_final_liq),
-                                "Caballo": caballo_ganador_elegido
+                                "Caballo": caballero_ganador_elegido
                             }
                             guardar_estado_global()
                             st.rerun()
@@ -1395,7 +1406,6 @@ def renderizar_tiempo_real_universal():
                             st.toast("✅ ¡Ejemplares retirados actualizados!")
                             st.rerun()
 
-                    # --- VERIFICACIÓN DE INICIO Y CIERRE AUTOMÁTICO POR MODALIDAD ---
                     clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                     dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                     dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
@@ -1445,7 +1455,6 @@ def renderizar_tiempo_real_universal():
                     altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
                     components.html(tabla_html, height=altura_dinamica, scrolling=True)
                     
-                    # --- POTE, PREMIO E INCENTIVO LLAMATIVO ---
                     retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
                     no_validos_carr_activa = st.session_state.ejemplares_no_valido.get(carr_activa, [])
                     excluidos_carr_activa = set(retirados_carr_activa) | set(no_validos_carr_activa)
@@ -1474,13 +1483,12 @@ def renderizar_tiempo_real_universal():
                     c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
                     c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
 
-                    # --- SINCRONIZACIÓN AUTOMÁTICA DE RESULTADO DESDE ADELANTADOS A EN VIVO ---
                     if modo_actual_remate == "En Vivo" and carr_activa in st.session_state.historial_ganadores_por_modalidad["Adelantados"]:
                         res_adel_vivo = st.session_state.historial_ganadores_por_modalidad["Adelantados"][carr_activa]
                         if carr_activa not in st.session_state.historial_ganadores_por_modalidad["En Vivo"]:
-                            caballo_adelantado = res_adel_vivo.get('Caballo', '')
+                            caballero_adelantado = res_adel_vivo.get('Caballo', '')
                             for cab_envivo in remates_actuales_mod.keys():
-                                num_adel = re.search(r'\d+', caballo_adelantado)
+                                num_adel = re.search(r'\d+', caballero_adelantado)
                                 num_env = re.search(r'\d+', cab_envivo)
                                 if num_adel and num_env and num_adel.group(0) == num_env.group(0):
                                     info_g = remates_actuales_mod[cab_envivo]
@@ -1501,7 +1509,6 @@ def renderizar_tiempo_real_universal():
                                     guardar_estado_global()
                                     break
 
-                    # --- ANUNCIO ÉPICO Y LLAMATIVO DEL GANADOR ---
                     historial_ganadores_mod = st.session_state.historial_ganadores_por_modalidad[modo_actual_remate]
                     if carr_activa in historial_ganadores_mod:
                         info_ganador_prev = historial_ganadores_mod[carr_activa]
@@ -1526,14 +1533,14 @@ def renderizar_tiempo_real_universal():
                                 caballos_lista_ganador = list(remates_actuales_mod.keys())
                             col_g1, col_g2 = st.columns([3, 2], gap="small")
                             with col_g1:
-                                caballo_ganador_elegido = st.selectbox("Ejemplar Ganador", caballos_lista_ganador, key=f"rem_sel_ganador_{modo_actual_remate}_{carr_activa}", label_visibility="collapsed")
+                                caballero_ganador_elegido = st.selectbox("Ejemplar Ganador", caballos_lista_ganador, key=f"rem_sel_ganador_{modo_actual_remate}_{carr_activa}", label_visibility="collapsed")
                             with col_g2:
                                 if st.button("🏆 Liquidar Ganador", key=f"rem_btn_liquidar_{modo_actual_remate}_{carr_activa}", use_container_width=True, type="primary"):
                                     pote_carr_total = sum([info['monto'] for cab_n, info in remates_actuales_mod.items() if cab_n not in excluidos_carr_activa])
                                     monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
                                     premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_actual
                                     
-                                    info_g = remates_actuales_mod[caballo_ganador_elegido]
+                                    info_g = remates_actuales_mod[caballero_ganador_elegido]
                                     if info_g['jugador'] != "Sin Postor":
                                         if info_g['jugador'] not in st.session_state.cuentas:
                                             st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
@@ -1542,7 +1549,7 @@ def renderizar_tiempo_real_universal():
                                     st.session_state.historial_ganadores_por_modalidad[modo_actual_remate][carr_activa] = {
                                         "Ganador": info_g['jugador'], 
                                         "Premio": formatear_bs(premio_final_liq),
-                                        "Caballo": caballo_ganador_elegido
+                                        "Caballo": caballero_ganador_elegido
                                     }
                                     guardar_estado_global()
                                     st.rerun()
@@ -1616,13 +1623,13 @@ def renderizar_tiempo_real_universal():
 
                                         idx_cab += 1
                             
-                            caballo_seleccionado = st.session_state[k_sel_cab]
-                            propietario_actual_sel = remates_actuales_mod[caballo_seleccionado].get('jugador', 'Sin Postor')
-                            st.info(f"Ejemplar activo: **{caballo_seleccionado}** (Poseedor actual: **{propietario_actual_sel}**)")
+                            caballero_seleccionado = st.session_state[k_sel_cab]
+                            propietario_actual_sel = remates_actuales_mod[caballero_seleccionado].get('jugador', 'Sin Postor')
+                            st.info(f"Ejemplar activo: **{caballero_seleccionado}** (Poseedor actual: **{propietario_actual_sel}**)")
 
-                            puja_actual = remates_actuales_mod[caballo_seleccionado]['monto']
+                            puja_actual = remates_actuales_mod[caballero_seleccionado]['monto']
                             opciones_escala = obtener_siguientes_montos(puja_actual)
-                            monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{modo_actual_remate}_{carr_activa}_{caballo_seleccionado}")
+                            monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{modo_actual_remate}_{carr_activa}_{caballero_seleccionado}")
                             
                             if carrera_cerrada:
                                 st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{modo_actual_remate}_{carr_activa}", use_container_width=True, type="primary", disabled=True)
@@ -1631,13 +1638,13 @@ def renderizar_tiempo_real_universal():
                                     if monto_puja <= puja_actual:
                                         st.error("El monto debe ser mayor a la puja actual.")
                                     else:
-                                        st.session_state.remates_por_modalidad[modo_actual_remate][carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
+                                        st.session_state.remates_por_modalidad[modo_actual_remate][carr_activa][caballero_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
                                         st.session_state.historial_jugadas.append({
                                             "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
                                             "jugador": st.session_state.usuario_activo,
                                             "tipo": f"Remate ({modo_actual_remate})",
                                             "carrera": carr_activa,
-                                            "detalle": caballo_seleccionado,
+                                            "detalle": caballero_seleccionado,
                                             "monto": monto_puja
                                         })
                                         if estado_conteo == "CONTEO_10S":
@@ -1676,7 +1683,6 @@ if menu_principal_opcion == "Dupletas":
 
     st.markdown(f"<div class='subasta-header'>🎟️ Armado Visual de {sub_dup_actual}</div>", unsafe_allow_html=True)
     
-    # --- VERIFICACIÓN DE HORARIOS Y BLOQUEO AUTOMÁTICO DE MULTIPLES ---
     clave_mod_mult = sub_dup_actual
     dt_inicio_m = st.session_state.fechas_horas_inicio_modalidad_multiple.get(clave_mod_mult)
     dt_cierre_m = st.session_state.fechas_horas_cierre_modalidad_multiple.get(clave_mod_mult)
@@ -1709,7 +1715,6 @@ if menu_principal_opcion == "Dupletas":
         pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
 
-    # --- POTE ACUMULADO LLAMATIVO Y MODERNO ---
     st.markdown(f"""
         <div class="pote-llamativo-box">
             <div class="pote-llamativo-titulo">💰 Pote Acumulado de {sub_dup_actual}</div>
@@ -1953,9 +1958,9 @@ elif menu_principal_opcion == "Cuentas":
         st.info("ℹ️ No hay tickets de dupletas, tripletas o 6 en linea registrados para este usuario.")
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR (CONFIGURACIÓN CON TABS NATIVAS)
+# 4. ZONA DE ADMINISTRADOR (EXCLUSIVA PARA "CASA")
 # =========================================================================
-elif menu_principal_opcion == "🔒 Zona Admin":
+elif menu_principal_opcion == "🔒 Zona Admin" and es_casa:
     st.markdown("<div class='subasta-header'>🔒 Panel de Configuración y Administración</div>", unsafe_allow_html=True)
     
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
@@ -2000,7 +2005,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast(f"✅ ¡Jornada ajustada a {nueva_cantidad_carreras} carreras!")
                 st.rerun()
 
-        # --- ASIGNACIÓN DE REMATE 1V Y 6V EN ZONA ADMIN CABALLOS ---
         st.markdown("---")
         with st.container(border=True):
             st.markdown("🔗 **Asignación de Carreras para Remates Ciegos (1V y 6V)**")
@@ -2134,7 +2138,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Detalles e incentivos guardados!")
                 st.rerun()
 
-        # --- CONFIGURACIÓN DE INICIO Y CIERRE INDEPENDIENTE POR MODALIDAD CON HORA MANUAL 12H ---
         st.markdown("---")
         with st.container(border=True):
             st.markdown(f"⏰ **Control de Horarios Individuales por Modalidad ({carr_banco_sel})**")
@@ -2175,7 +2178,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if ampm_cier == "AM" and h_cier_val == 12: h_c_24 = 0
 
                 dt_i_final = datetime.combine(f_ini, dtime(h_i_24, m_ini_val))
-                dt_c_final = datetime.combine(f_cier, dtime(h_c_24, m_c_24 if 'm_c_24' in locals() else m_cier_val)) # safely computed
+                dt_c_final = datetime.combine(f_cier, dtime(h_c_24, m_cier_val))
 
                 st.session_state.fechas_horas_inicio_remate_modalidad[clave_mod_carr_adm] = dt_i_final
                 st.session_state.fechas_horas_cierre_remate_modalidad[clave_mod_carr_adm] = dt_c_final
@@ -2209,7 +2212,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.toast("✅ ¡Agregado!")
                     st.rerun()
 
-        # --- GESTIÓN DE EJEMPLARES "NO VALE" EN EL BANCO DE CABALLOS ---
         st.markdown("---")
         st.markdown("#### ⚠️ Gestionar Ejemplares 'NO VALE'")
         if 'ejemplares_no_valido' not in st.session_state:
@@ -2294,7 +2296,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Guardado!")
                 st.rerun()
 
-        # --- CONFIGURACIÓN DE HORARIOS INDEPENDIENTES PARA MULTIPLES (Dupleta, Tripleta, 6 En Linea) ---
         st.markdown("---")
         with st.container(border=True):
             st.markdown("⏰ **Control de Horarios Independientes por Modalidad (Dupleta / Tripleta / 6 En Linea)**")
