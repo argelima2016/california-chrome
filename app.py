@@ -1610,7 +1610,45 @@ def renderizar_tiempo_real_universal():
                             
                             caballero_seleccionado = st.session_state[k_sel_cab]
                             propietario_actual_sel = remates_actuales_mod[caballero_seleccionado].get('jugador', 'Sin Postor')
-                            st.info(f"Ejemplar activo: **{caballero_seleccionado}** (Poseedor actual: **{propietario_actual_sel}**)")
+                            
+                            # --- DISEÑO LLAMATIVO PARA EL EJEMPLAR SELECCIONADO ---
+                            if propietario_actual_sel == "Sin Postor" or propietario_actual_sel == "CASA" or remates_actuales_mod[caballero_seleccionado].get('monto', 0.0) == 0:
+                                bg_tarjeta = "linear-gradient(135deg, #161b22 0%, #21262d 100%)"
+                                color_borde = "#30363d"
+                                color_poseedor = "#8b949e"
+                                icono_poseedor = "⚪"
+                            elif propietario_actual_sel == st.session_state.usuario_activo:
+                                bg_tarjeta = "linear-gradient(135deg, #064e3b 0%, #065f46 100%)"
+                                color_borde = "#10b981"
+                                color_poseedor = "#34d399"
+                                icono_poseedor = "🟢"
+                            else:
+                                bg_tarjeta = "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)"
+                                color_borde = "#ef4444"
+                                color_poseedor = "#fca5a5"
+                                icono_poseedor = "🔴"
+
+                            st.markdown(f"""
+                                <div style="
+                                    background: {bg_tarjeta};
+                                    border: 2px solid {color_borde};
+                                    border-radius: 12px;
+                                    padding: 14px 18px;
+                                    margin: 10px 0 14px 0;
+                                    box-shadow: 0px 4px 15px rgba(0,0,0,0.5);
+                                    text-align: center;
+                                ">
+                                    <div style="font-size: 11px; font-weight: 900; color: #00ffff; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px;">
+                                        🐎 Ejemplar Seleccionado para Pujar
+                                    </div>
+                                    <div style="font-size: 20px; font-weight: 900; color: #f1c40f; margin-bottom: 6px; text-shadow: 2px 2px 4px #000000;">
+                                        {caballero_seleccionado}
+                                    </div>
+                                    <div style="font-size: 13px; font-weight: 700; color: {color_poseedor};">
+                                        {icono_poseedor} Poseedor Actual: <b>{propietario_actual_sel}</b>
+                                    </div>
+                                </div>
+                            """, unsafe_allow_html=True)
 
                             puja_actual = remates_actuales_mod[caballero_seleccionado]['monto']
                             opciones_escala = obtener_siguientes_montos(puja_actual)
