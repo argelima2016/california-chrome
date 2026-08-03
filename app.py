@@ -273,7 +273,6 @@ else:
     logo_display = '<span style="color: #f1c40f; font-size: 38px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
 
 ahora_dt = obtener_hora_venezuela_local()
-hora_inicial_txt = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
 # --- ESTILOS CSS GENERALES ---
@@ -600,23 +599,23 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR MODERNA CON HORA INICIAL CARGADA DESDE PYTHON ---
-header_html = f"""
-    <div class="header-container-modern">
-        <div class="header-top-row">
-            <div class="header-clock-box">
-                <span id="reloj-vivo-header" class="h-time">⚡ {hora_inicial_txt}</span>
-                <span class="h-date">📅 {fecha_texto}</span>
+# --- CABECERA SUPERIOR MODERNA CON COMPONENTE HTML DIRECTO PARA EL RELOJ VIVO ---
+header_top_html = f"""
+    <div style="background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); border: 1px solid #30363d; border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; gap: 14px; width: 100%; box-sizing: border-box; font-family: sans-serif;">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px;">
+            <div style="display: flex; flex-direction: column; background: #080a0f; border: 1px solid #21262d; padding: 6px 12px; border-radius: 8px;">
+                <span id="reloj-vivo-header" style="color: #00ffff; font-size: 14px; font-weight: 900; letter-spacing: 0.5px;">⚡ Calculando...</span>
+                <span style="color: #8b949e; font-size: 10px; font-weight: 700;">📅 {fecha_texto}</span>
             </div>
-            <div class="header-user-card">
-                <div class="user-details">
-                    <span class="u-name">{usuario_en_sesion}</span>
-                    <span class="u-bal" style="color: {color_balance};">{etiqueta_balance}</span>
+            <div style="display: flex; align-items: center; gap: 8px; background: #080a0f; border: 1px solid #30363d; padding: 5px 10px; border-radius: 8px;">
+                <div style="display: flex; flex-direction: column; text-align: right;">
+                    <span style="color: #f0f6fc; font-size: 12px; font-weight: 800;">{usuario_en_sesion}</span>
+                    <span style="font-size: 10px; font-weight: 700; color: {color_balance};">{etiqueta_balance}</span>
                 </div>
-                <div class="u-avatar-badge">🐺</div>
+                <div style="width: 28px; height: 28px; background: #1f6feb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;">🐺</div>
             </div>
         </div>
-        <div class="header-bottom-row-logo">
+        <div style="text-align: center; border-top: 1px solid #21262d; padding-top: 12px;">
             {logo_display}
         </div>
     </div>
@@ -639,11 +638,12 @@ header_html = f"""
             s = s < 10 ? '0' + s : s;
             
             el.innerText = '⚡ ' + h + ':' + m + ':' + s + ' ' + ampm;
-        }}
+        }
         setInterval(actualizarRelojHeaderExacto, 1000);
+        actualizarRelojHeaderExacto();
     </script>
 """
-st.markdown(header_html, unsafe_allow_html=True)
+components.html(header_top_html, height=185)
 
 def obtener_abreviatura_carrera(nombre_carrera, modo_actual=""):
     if modo_actual == "Ciegos":
