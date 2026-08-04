@@ -158,10 +158,10 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN EN TIEMPO REAL Y CONTROL TOTAL ---
+# --- SCRIPT JS ESTABLE PARA OCULTAR ELEMENTOS NATIVOS Y EVITAR OSCURECIMIENTO ---
 components.html("""
     <script>
-        function sincronizacionEnVivo() {
+        function limpiarInterfazStreamlit() {
             const doc = window.parent.document;
             const selectors = [
                 'header[data-testid="stHeader"]',
@@ -178,7 +178,6 @@ components.html("""
                         el.style.display = 'none';
                         el.style.visibility = 'hidden';
                         el.style.opacity = '0';
-                        el.remove();
                     }
                 });
             });
@@ -205,13 +204,12 @@ components.html("""
                 tuercaBtn.style.alignItems = 'center';
                 tuercaBtn.style.justifyContent = 'center';
                 tuercaBtn.style.boxShadow = '0px 4px 12px rgba(0,0,0,0.5)';
-                tuercaBtn.style.transition = 'transform 0.2s ease, background 0.2s ease';
 
                 tuercaBtn.onclick = function() {
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -221,14 +219,11 @@ components.html("""
                             sidebar.style.display = 'block';
                             sidebar.style.minWidth = '360px';
                             sidebar.style.width = '360px';
-                            sidebar.style.position = 'relative';
                         } else {
                             sidebar.setAttribute('aria-expanded', 'false');
                             sidebar.style.transform = 'translateX(-100%)';
                             sidebar.style.visibility = 'hidden';
                             sidebar.style.display = 'none';
-                            sidebar.style.minWidth = '0px';
-                            sidebar.style.width = '0px';
                         }
                     } else {
                         const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
@@ -236,11 +231,10 @@ components.html("""
                         if (collapseBtn) collapseBtn.click();
                     }
                 };
-
                 doc.body.appendChild(tuercaBtn);
             }
         }
-        setInterval(sincronizacionEnVivo, 200);
+        setTimeout(limpiarInterfazStreamlit, 500);
     </script>
 """, height=0, width=0)
 
@@ -312,19 +306,6 @@ st.markdown("""
         width: 360px !important;
         padding-left: 1.2rem !important;
         padding-right: 1.2rem !important;
-    }
-    [data-testid="stToolbar"] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-    header[data-testid="stHeader"] {
-        display: none !important;
-    }
-    footer, #MainMenu {
-        visibility: hidden !important;
-        display: none !important;
     }
     .block-container {
         padding-top: 0.4rem !important;
@@ -1060,8 +1041,6 @@ def renderizar_tiempo_real_universal():
                 components.html(tabla_html, height=420, scrolling=True)
 
                 total_pote_ciego = sum([info['monto'] for cab_n, info in st.session_state.remates_ciegos_genericos[carr_activa].items()])
-                
-                # --- CÁLCULO DE PREMIO ESTIMADO PARA REMATE CIEGO ---
                 monto_casa_ciego = total_pote_ciego * (porcentaje_casa / 100)
                 premio_est_ciego = total_pote_ciego - monto_casa_ciego
 
@@ -1231,7 +1210,7 @@ def renderizar_tiempo_real_universal():
                 incentivo_actual = float(detalles_carr.get('incentivo_adelantados', 0.0) if modo_actual_remate == "Adelantados" else detalles_carr.get('incentivo_envivo', 0.0))
                 premio_total_calculado = pote_neto_base + incentivo_actual
 
-                # --- SOLO EL PREMIO ES LLAMATIVO EN REMATE GENERAL (POTE Y INCENTIVO SE MANTIENEN NORMALES) ---
+                # --- SOLO EL PREMIO ES LLAMATIVO ---
                 st.markdown(f"""
                     <div class="premio-epic-card">
                         <div class="premio-epic-label">🎁 PREMIO ESTIMADO ({carr_activa})</div>
@@ -1449,13 +1428,8 @@ def renderizar_tiempo_real_universal():
             pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
             carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
 
-        # --- POTE LLAMATIVO PARA DUPLETAS / 6L ---
-        st.markdown(f"""
-            <div class="premio-epic-card">
-                <div class="premio-epic-label">💰 POTE ACUMULADO {sub_dup_actual.upper()}</div>
-                <div class="premio-epic-monto">{formatear_bs(pote_total)}</div>
-            </div>
-        """, unsafe_allow_html=True)
+        # --- POTE ACUMULADO NORMAL PARA DUPLETAS / 6L ---
+        st.metric(f"💰 Pote Acumulado {sub_dup_actual}", formatear_bs(pote_total))
 
         cards_html_slider = ""
         for carr_h in carreras_permitidas:
