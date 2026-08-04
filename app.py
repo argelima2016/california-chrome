@@ -200,7 +200,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -644,7 +644,6 @@ header_html = f"""
         <div class="header-top-row">
             <div></div>
             <div class="header-user-card">
-                <div class="u-avatar-badge">🐺</div>
                 <div class="user-details">
                     <div class="u-name-container">
                         <span class="u-name">{usuario_en_sesion}</span>
@@ -652,6 +651,7 @@ header_html = f"""
                     </div>
                     <span class="u-bal" style="color: {color_balance};">{etiqueta_balance}</span>
                 </div>
+                <div class="u-avatar-badge">🐺</div>
             </div>
         </div>
         <div class="header-bottom-row-logo">
@@ -1845,7 +1845,7 @@ if menu_principal_opcion == "Dupletas":
                                 st.rerun()
 
 # =========================================================================
-# 3. MÓDULO DE CUENTAS (ORGANIZADO: DATOS DE PAGO Y REPORTES ARRIBA, TICKETS ABAJO)
+# 3. MÓDULO DE CUENTAS (ORGANIZADO EXACTAMENTE COMO LO PEDISTE)
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
     st.markdown('<div id="reportar-pago-section"></div>', unsafe_allow_html=True)
@@ -1869,24 +1869,23 @@ elif menu_principal_opcion == "Cuentas":
 
     st.markdown("---")
 
-    # ==========================================
-    # BLOQUE 1: DATOS DE PAGO Y REPORTE DE PAGO
-    # ==========================================
+    # =========================================================================
+    # ORDEN SOLICITADO:
+    # 1. Datos para Pago Móvil (Fijos)
+    # 2. Reporte de Pago Móvil (Formulario)
+    # 3. Mis Reportes Envíados
+    # 4. Historial de Tickets (Remates ganados y Múltiples)
+    # =========================================================================
+
+    # 1 y 2: Datos de Pago Móvil y Formulario de Reporte
     with st.container(border=True):
-        st.markdown("📱 **Datos para Pago Móvil y Reporte de Pago Realizado**")
+        st.markdown("📱 **Gestión de Pagos y Datos de Pago Móvil**")
         p_movil = st.session_state.datos_pago_movil
         
         col_pm1, col_pm2 = st.columns(2, gap="medium")
         with col_pm1:
-            st.info(f"🏦 **Banco:** {p_movil['banco']}\n\n📱 **Teléfono:** {p_movil['telefono']}\n\n🆔 **Cédula/RIF:** {p_movil['cedula']}")
-            
-            # Mis reportes enviados (justo debajo de los datos bancarios)
-            mis_reportes = [r for r in st.session_state.reportes_pago if r['jugador'] == jugador_actual]
-            if mis_reportes:
-                st.markdown("📋 **Mis Reportes Enviados:**")
-                for rep in reversed(mis_reportes):
-                    st.markdown(f"🔹 *{rep['fecha']}* | **{formatear_bs(rep['monto'])}** | Ref: `{rep['referencia']}` | 📌 `{rep['estado']}`")
-
+            st.info(f"🏦 **Datos Bancarios (Pago Móvil):**\n\n- **Banco:** {p_movil['banco']}\n- **Teléfono:** {p_movil['telefono']}\n- **Cédula/RIF:** {p_movil['cedula']}")
+        
         with col_pm2:
             st.markdown("📝 **Reportar un Pago Realizado**")
             with st.form(key="form_reportar_pago_jugador"):
@@ -1910,11 +1909,19 @@ elif menu_principal_opcion == "Cuentas":
                     else:
                         st.error("⚠️ Ingrese un monto válido y la referencia.")
 
+    # 3: Mis Reportes Enviados
+    with st.container(border=True):
+        st.markdown("📋 **Mis Reportes Enviados**")
+        mis_reportes = [r for r in st.session_state.reportes_pago if r['jugador'] == jugador_actual]
+        if not mis_reportes:
+            st.info("ℹ️ No has enviado reportes de pago todavía.")
+        else:
+            for rep in reversed(mis_reportes):
+                st.markdown(f"🔹 *{rep['fecha']}* | **{formatear_bs(rep['monto'])}** | Banco: `{rep['banco']}` | Ref: `{rep['referencia']}` | 📌 `{rep['estado']}`")
+
     st.markdown("---")
 
-    # ==========================================
-    # BLOQUE 2: HISTORIAL DE TICKETS (ABAJO DE LOS REPORTES)
-    # ==========================================
+    # 4: Historial de Tickets (Abajo de mis reportes enviados)
     with st.container(border=True):
         st.markdown(f"### 🎟️ Historial de Tickets y Asignaciones de `{jugador_actual}`")
 
