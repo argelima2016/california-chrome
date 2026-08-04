@@ -216,7 +216,7 @@ components.html("""
                 doc.body.appendChild(tuercaBtn);
             }
         }
-        setInterval(sincronizacionEnVivo, 200);
+        setInterval(sincronizacionEnVivo, 1000);
     </script>
 """, height=0, width=0)
 
@@ -1003,9 +1003,9 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (1 SEGUNDO PARA ACTUALIZACIÓN EN VIVO)
+# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (10 SEGUNDOS PARA EVITAR TRABAS EN UI)
 # =========================================================================
-@st.fragment(run_every=1.0)
+@st.fragment(run_every=10.0)
 def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
 
@@ -1042,7 +1042,6 @@ def renderizar_tiempo_real_universal():
             carreras_modalidad_permitidas = st.session_state.carreras_por_modalidad.get(modo_actual_remate, [])
             
             if modo_actual_remate == "Ciegos":
-                # EXACTAMENTE 2 CARRERAS: 1V y 6V
                 if len(carreras_modalidad_permitidas) >= 2:
                     carreras_filtradas_visibles = [carreras_modalidad_permitidas[0], carreras_modalidad_permitidas[1]]
                 elif len(carreras_modalidad_permitidas) == 1:
@@ -1050,7 +1049,6 @@ def renderizar_tiempo_real_universal():
                 else:
                     carreras_filtradas_visibles = []
             else:
-                # ADELANTADOS Y EN VIVO: Solo las carreras que fueron asignadas en Zona Admin y estén activas/abiertas
                 carreras_filtradas_visibles = [
                     c for c in lista_carreras_disponibles 
                     if c in carreras_modalidad_permitidas and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
@@ -1367,7 +1365,7 @@ def renderizar_tiempo_real_universal():
                 with st.container(border=True):
                     if modo_actual_remate == "Ciegos":
                         st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
-                        monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
+                        monto_fijo_carrera = det_actuales.get('monto_fijo_ciego', 500.0)
 
                         caballos_disponibles_ciego = [
                             cab for cab, info in st.session_state.remates[carr_activa].items() 
