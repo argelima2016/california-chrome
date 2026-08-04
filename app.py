@@ -514,65 +514,43 @@ st.markdown("""
         width: 100%;
         gap: 8px;
     }
-    .header-profile-box {
-        display: flex;
-        flex-direction: column;
-        background: #080a0f;
-        border: 1px solid #21262d;
-        padding: 6px 12px;
-        border-radius: 8px;
-        gap: 2px;
-    }
-    .p-label {
-        color: #8b949e;
-        font-size: 10px;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-    .p-value {
-        color: #ff4757;
-        font-size: 13px;
-        font-weight: 900;
-        letter-spacing: 0.5px;
-    }
     .header-user-card {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         background: #080a0f;
         border: 1px solid #30363d;
-        padding: 5px 10px;
+        padding: 6px 12px;
         border-radius: 8px;
     }
     .user-details {
         display: flex;
         flex-direction: column;
-        text-align: right;
+        text-align: left;
     }
     .u-name-container {
         display: flex;
         align-items: center;
-        justify-content: flex-end;
         gap: 6px;
     }
     .u-name {
         color: #f0f6fc;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 800;
     }
     .u-bal {
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 700;
     }
     .u-avatar-badge {
-        width: 28px;
-        height: 28px;
+        width: 34px;
+        height: 34px;
         background: #1f6feb;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 14px;
+        font-size: 16px;
     }
     .header-bottom-row-logo {
         text-align: center;
@@ -649,26 +627,27 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR MODERNA (PERFIL JUGADOR IZQUIERDA Y ESTADO EN LÍNEA DERECHA) ---
+# --- CABECERA SUPERIOR MODERNA (BOTÓN REPORTE DE PAGO A LA IZQUIERDA Y FOTO/ESTADO A LA DERECHA) ---
 estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in lista_carreras_disponibles) and lista_carreras_disponibles else "abiertos"
 led_clase_css = "led-rojo" if estado_global_remate == "cerrados" else "led-verde"
 
 header_html = f"""
     <div class="header-container-modern">
         <div class="header-top-row">
-            <div class="header-profile-box">
-                <span class="p-label">👤 PERFIL JUGADOR</span>
-                <span class="p-value" style="color: {color_balance};">{usuario_en_sesion} &nbsp;|&nbsp; {etiqueta_balance}</span>
+            <div>
+                <a href="#reportar-pago-section" style="background: linear-gradient(135deg, #238636 0%, #2ea043 100%); color: #ffffff; padding: 10px 16px; border-radius: 8px; font-weight: 800; font-size: 13px; text-decoration: none; box-shadow: 0px 4px 12px rgba(46, 160, 67, 0.4); display: inline-flex; align-items: center; gap: 6px;">
+                    💳 Reportar Pago Móvil
+                </a>
             </div>
             <div class="header-user-card">
+                <div class="u-avatar-badge">🐺</div>
                 <div class="user-details">
                     <div class="u-name-container">
-                        <span class="u-name">ESTADO</span>
-                        <span class="led-estado {led_clase_css}" title="Estado de Remates"></span>
+                        <span class="u-name">{usuario_en_sesion}</span>
+                        <span class="led-estado {led_clase_css}" title="Remates En Línea"></span>
                     </div>
-                    <span class="u-bal" style="color: #00ffff;">EN LÍNEA</span>
+                    <span class="u-bal" style="color: {color_balance};">{etiqueta_balance}</span>
                 </div>
-                <div class="u-avatar-badge">🐺</div>
             </div>
         </div>
         <div class="header-bottom-row-logo">
@@ -1862,9 +1841,12 @@ if menu_principal_opcion == "Dupletas":
                                 st.rerun()
 
 # =========================================================================
-# 3. MÓDULO DE CUENTAS (INCLUYE OPCIÓN Y DATOS DE PAGO MÓVIL)
+# 3. MÓDULO DE CUENTAS (INCLUYE ANCLA PARA REPORTE DE PAGO MÓVIL)
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
+    # Ancla HTML para el scroll del botón superior
+    st.markdown('<div id="reportar-pago-section"></div>', unsafe_allow_html=True)
+    
     st.markdown("<div class='subasta-header'>📊 Mis Cuentas, Historial y Reporte de Pago Móvil</div>", unsafe_allow_html=True)
     jugador_actual = st.session_state.usuario_activo
     st.markdown(f"👤 **Jugador en Sesión:** `{jugador_actual}`")
@@ -2387,7 +2369,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     with tab5:
         st.markdown("### 📊 Saldos de Usuarios y Gestión de Pagos")
         
-        # --- NUEVA SECCIÓN DE CONFIGURACIÓN DE PAGO MÓVIL PARA EL ADMIN ---
         with st.container(border=True):
             st.markdown("⚙️ **Configurar Datos de Pago Móvil para los Jugadores**")
             p_adm = st.session_state.datos_pago_movil
