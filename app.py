@@ -200,7 +200,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -628,13 +628,21 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR MODERNA (IMAGEN + ESTADO A LA IZQUIERDA Y BOTÓN REPORTE A LA DERECHA) ---
+# --- CABECERA SUPERIOR MODERNA (IMAGEN + ESTADO A LA DERECHA Y BOTÓN REPORTE A LA IZQUIERDA) ---
 estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in lista_carreras_disponibles) and lista_carreras_disponibles else "abiertos"
 led_clase_css = "led-rojo" if estado_global_remate == "cerrados" else "led-verde"
+
+col_h_izq, col_h_der = st.columns([1, 1], gap="small")
+with col_h_izq:
+    if st.button("💳 Reportar Pago Móvil", key="btn_ir_reportar_pago_top", use_container_width=True, type="primary"):
+        st.session_state.menu_principal_opcion = "Cuentas"
+        guardar_estado_global()
+        st.rerun()
 
 header_html = f"""
     <div class="header-container-modern" style="margin-top: 8px;">
         <div class="header-top-row">
+            <div></div>
             <div class="header-user-card">
                 <div class="u-avatar-badge">🐺</div>
                 <div class="user-details">
@@ -644,11 +652,6 @@ header_html = f"""
                     </div>
                     <span class="u-bal" style="color: {color_balance};">{etiqueta_balance}</span>
                 </div>
-            </div>
-            <div>
-                <a href="#reportar-pago-section" style="background: linear-gradient(135deg, #238636 0%, #2ea043 100%); color: #ffffff; padding: 10px 16px; border-radius: 8px; font-weight: 800; font-size: 13px; text-decoration: none; box-shadow: 0px 4px 12px rgba(46, 160, 67, 0.4); display: inline-flex; align-items: center; gap: 6px;">
-                    💳 Reportar Pago Móvil
-                </a>
             </div>
         </div>
         <div class="header-bottom-row-logo">
@@ -1842,7 +1845,7 @@ if menu_principal_opcion == "Dupletas":
                                 st.rerun()
 
 # =========================================================================
-# 3. MÓDULO DE CUENTAS (INCLUYE DATOS DE PAGO Y HISTORIAL DE TICKET ABAJO)
+# 3. MÓDULO DE CUENTAS (ORGANIZADO: DATOS DE PAGO Y REPORTES ARRIBA, TICKETS ABAJO)
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
     st.markdown('<div id="reportar-pago-section"></div>', unsafe_allow_html=True)
@@ -1866,16 +1869,18 @@ elif menu_principal_opcion == "Cuentas":
 
     st.markdown("---")
 
-    # --- SECCIÓN SUPERIOR DE CUENTAS: DATOS DE PAGO MÓVIL Y REPORTE DE PAGO ---
+    # ==========================================
+    # BLOQUE 1: DATOS DE PAGO Y REPORTE DE PAGO
+    # ==========================================
     with st.container(border=True):
-        st.markdown("📱 **Datos para Pago Móvil y Reporte de Pago**")
+        st.markdown("📱 **Datos para Pago Móvil y Reporte de Pago Realizado**")
         p_movil = st.session_state.datos_pago_movil
         
         col_pm1, col_pm2 = st.columns(2, gap="medium")
         with col_pm1:
             st.info(f"🏦 **Banco:** {p_movil['banco']}\n\n📱 **Teléfono:** {p_movil['telefono']}\n\n🆔 **Cédula/RIF:** {p_movil['cedula']}")
             
-            # Mostrar mis reportes previos justo debajo de los datos bancarios
+            # Mis reportes enviados (justo debajo de los datos bancarios)
             mis_reportes = [r for r in st.session_state.reportes_pago if r['jugador'] == jugador_actual]
             if mis_reportes:
                 st.markdown("📋 **Mis Reportes Enviados:**")
@@ -1901,12 +1906,15 @@ elif menu_principal_opcion == "Cuentas":
                         })
                         guardar_estado_global()
                         st.success("✅ ¡Reporte de pago enviado con éxito!")
+                        st.rerun()
                     else:
                         st.error("⚠️ Ingrese un monto válido y la referencia.")
 
     st.markdown("---")
 
-    # --- SECCIÓN INFERIOR DE CUENTAS: HISTORIAL DE TICKETS (ABAJO DE MIS REPORTES ENVIADOS) ---
+    # ==========================================
+    # BLOQUE 2: HISTORIAL DE TICKETS (ABAJO DE LOS REPORTES)
+    # ==========================================
     with st.container(border=True):
         st.markdown(f"### 🎟️ Historial de Tickets y Asignaciones de `{jugador_actual}`")
 
