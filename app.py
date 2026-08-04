@@ -526,11 +526,12 @@ st.markdown("""
     .user-details {
         display: flex;
         flex-direction: column;
-        text-align: left;
+        text-align: right;
     }
     .u-name-container {
         display: flex;
         align-items: center;
+        justify-content: flex-end;
         gap: 6px;
     }
     .u-name {
@@ -627,7 +628,7 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR MODERNA (BOTÓN REPORTE DE PAGO A LA IZQUIERDA Y FOTO/ESTADO A LA DERECHA) ---
+# --- CABECERA SUPERIOR MODERNA (BOTÓN REPORTE PAGO IZQUIERDA Y FOTO + ESTADO DERECHA) ---
 estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in lista_carreras_disponibles) and lista_carreras_disponibles else "abiertos"
 led_clase_css = "led-rojo" if estado_global_remate == "cerrados" else "led-verde"
 
@@ -640,7 +641,6 @@ header_html = f"""
                 </a>
             </div>
             <div class="header-user-card">
-                <div class="u-avatar-badge">🐺</div>
                 <div class="user-details">
                     <div class="u-name-container">
                         <span class="u-name">{usuario_en_sesion}</span>
@@ -648,6 +648,7 @@ header_html = f"""
                     </div>
                     <span class="u-bal" style="color: {color_balance};">{etiqueta_balance}</span>
                 </div>
+                <div class="u-avatar-badge">🐺</div>
             </div>
         </div>
         <div class="header-bottom-row-logo">
