@@ -749,21 +749,13 @@ if not st.session_state.remates:
 
 lista_carreras_disponibles = list(st.session_state.remates.keys())
 
-# --- GARANTIZAR QUE TODAS LAS CARRERAS ESTÉN ACTIVAS POR DEFECTO ---
+# --- GARANTIZAR ESTADO INICIAL DE MODALIDADES SIN SOBRESCRIBIR ASIGNACIONES ADMIN ---
 if not st.session_state.carreras_activas_remate and lista_carreras_disponibles:
     st.session_state.carreras_activas_remate = list(lista_carreras_disponibles)
-else:
-    for c_disp in lista_carreras_disponibles:
-        if c_disp not in st.session_state.carreras_activas_remate:
-            st.session_state.carreras_activas_remate.append(c_disp)
 
 for mod in ["Adelantados", "Ciegos", "En Vivo"]:
-    if not st.session_state.carreras_por_modalidad.get(mod) and lista_carreras_disponibles:
-        st.session_state.carreras_por_modalidad[mod] = list(lista_carreras_disponibles)
-    else:
-        for c_disp in lista_carreras_disponibles:
-            if c_disp not in st.session_state.carreras_por_modalidad[mod]:
-                st.session_state.carreras_por_modalidad[mod].append(c_disp)
+    if mod not in st.session_state.carreras_por_modalidad:
+        st.session_state.carreras_por_modalidad[mod] = []
 
 if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_dupleta = list(lista_carreras_disponibles)
@@ -1038,20 +1030,17 @@ def renderizar_tiempo_real_universal():
         if not lista_carreras_disponibles:
             st.warning("⚠️ No hay carreras cargadas en el sistema.")
         else:
-            # --- FILTRADO DE CARRERAS SEGÚN LA MODALIDAD ---
-            carreras_modalidad_permitidas = st.session_state.carreras_por_modalidad.get(modo_actual_remate, [])
+            # --- FILTRADO ESTRICTO SEGÚN MODALIDAD ASIGNADA EN ADMIN ---
+            carreras_asignadas_admin = st.session_state.carreras_por_modalidad.get(modo_actual_remate, [])
             
             if modo_actual_remate == "Ciegos":
-                if len(carreras_modalidad_permitidas) >= 2:
-                    carreras_filtradas_visibles = [carreras_modalidad_permitidas[0], carreras_modalidad_permitidas[1]]
-                elif len(carreras_modalidad_permitidas) == 1:
-                    carreras_filtradas_visibles = [carreras_modalidad_permitidas[0]]
-                else:
-                    carreras_filtradas_visibles = []
+                # Remate Ciego: Toma exactamente hasta 2 carreras asignadas (1V y 6V)
+                carreras_filtradas_visibles = [c for c in carreras_asignadas_admin if c in lista_carreras_disponibles][:2]
             else:
+                # Adelantados y En Vivo: Únicamente las carreras asignadas independientemente y que estén activas
                 carreras_filtradas_visibles = [
                     c for c in lista_carreras_disponibles 
-                    if c in carreras_modalidad_permitidas and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
+                    if c in carreras_asignadas_admin and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
                 ]
             
             if not carreras_filtradas_visibles:
@@ -1365,7 +1354,7 @@ def renderizar_tiempo_real_universal():
                 with st.container(border=True):
                     if modo_actual_remate == "Ciegos":
                         st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
-                        monto_fijo_carrera = det_actuales.get('monto_fijo_ciego', 500.0)
+                        monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
 
                         caballos_disponibles_ciego = [
                             cab for cab, info in st.session_state.remates[carr_activa].items() 
