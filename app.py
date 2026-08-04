@@ -573,26 +573,31 @@ st.markdown("""
         object-fit: contain;
     }
     
-    .carrera-img-wrapper {
-        position: relative;
-        width: 100%;
+    /* --- BARRA DE HORA EN TIEMPO REAL SEGUNDO A SEGUNDO (ENCIMA DE LA TABLA) --- */
+    .reloj-barra-superior {
+        background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+        border: 1px solid #00ffff;
+        border-radius: 10px;
+        padding: 8px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 10px;
+        box-shadow: 0px 0px 12px rgba(0, 255, 255, 0.25);
     }
-    .reloj-flotante-encima {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background: rgba(8, 10, 15, 0.85);
-        border: 2px solid #00ffff;
-        border-radius: 8px;
-        padding: 6px 14px;
+    .reloj-titulo {
+        color: #f1e05a;
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .reloj-digital-txt {
         color: #00ffff;
-        font-size: 16px;
+        font-size: 17px;
         font-weight: 900;
         letter-spacing: 1px;
-        box-shadow: 0px 4px 15px rgba(0, 255, 255, 0.5);
-        z-index: 99;
-        backdrop-filter: blur(4px);
+        text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
     }
     
     @keyframes parpadeoLed {
@@ -1121,26 +1126,21 @@ def renderizar_tiempo_real_universal():
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
 
-                # --- IMAGEN DE CARRERA CON HORA EN TIEMPO REAL FLOTANTE (SEGUNDO A SEGUNDO) ---
+                # --- BARRA DE HORA EN TIEMPO REAL (SEGUNDO A SEGUNDO) UBICADA ENCIMA DE LA IMAGEN/TABLA ---
                 hora_actual_envivo = obtener_hora_venezuela_local().strftime('%I:%M:%S %p')
+                st.markdown(f"""
+                    <div class="reloj-barra-superior">
+                        <span class="reloj-titulo">🕒 HORA OFICIAL DE VENEZUELA</span>
+                        <span class="reloj-digital-txt">⚡ {hora_actual_envivo}</span>
+                    </div>
+                """, unsafe_allow_html=True)
+
                 if carr_activa in st.session_state.imagenes_carreras:
                     try:
                         img_url_val = st.session_state.imagenes_carreras[carr_activa]
-                        st.markdown(f"""
-                            <div class="carrera-img-wrapper">
-                                <div class="reloj-flotante-encima">⚡ {hora_actual_envivo}</div>
-                                <img src="{img_url_val}" style="width:100%; border-radius:12px; object-fit:cover;" />
-                            </div>
-                        """, unsafe_allow_html=True)
+                        st.image(img_url_val, caption=f"Imagen oficial - {carr_activa}", use_container_width=True)
                     except Exception:
                         pass
-                else:
-                    st.markdown(f"""
-                        <div class="carrera-img-wrapper" style="background:#161b22; height:220px; border-radius:12px; display:flex; align-items:center; justify-content:center; border:1px solid #30363d;">
-                            <div class="reloj-flotante-encima">⚡ {hora_actual_envivo}</div>
-                            <span style="color:#8b949e; font-weight:700; font-size:15px;">Sin imagen oficial - {carr_activa}</span>
-                        </div>
-                    """, unsafe_allow_html=True)
 
                 carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
                 estado_icono = "🔴" if carrera_cerrada else "🟢"
@@ -2440,7 +2440,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 url_live_video = st.session_state.get('url_video_en_vivo', '').strip()
 
 if url_live_video:
-    st.markdown("<br><hr style='border-color: #30363d;'>", unsafe_allow_html=True)
+    st.markdown("<br><hr style='border-color: #30363d;'>", unsafe_allow_html=Task())
     st.markdown("### 📺 TRANSMISIÓN EN VIVO")
     yt_match = re.search(r'(?:v=|\/embed\/|youtu\.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})', url_live_video)
     if yt_match:
