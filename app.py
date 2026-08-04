@@ -292,8 +292,6 @@ if not st.session_state.remates:
 lista_carreras_disponibles = list(st.session_state.remates.keys())
 
 ahora_dt = obtener_hora_venezuela_local()
-hora_texto = ahora_dt.strftime('%I:%M:%S %p')
-fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
 # --- ESTILOS CSS GENERALES Y LED EN LÍNEA ---
 st.markdown("""
@@ -511,24 +509,26 @@ st.markdown("""
         width: 100%;
         gap: 8px;
     }
-    .header-clock-box {
+    .header-profile-box {
         display: flex;
         flex-direction: column;
         background: #080a0f;
         border: 1px solid #21262d;
-        padding: 5px 10px;
+        padding: 6px 12px;
         border-radius: 8px;
+        gap: 2px;
     }
-    .h-time {
-        color: #00ffff;
-        font-size: 13px;
-        font-weight: 900;
-        letter-spacing: 0.5px;
-    }
-    .h-date {
+    .p-label {
         color: #8b949e;
         font-size: 10px;
         font-weight: 700;
+        text-transform: uppercase;
+    }
+    .p-value {
+        color: #ff4757;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
     }
     .header-user-card {
         display: flex;
@@ -630,7 +630,10 @@ if usuario_en_sesion not in st.session_state.cuentas:
     st.session_state.cuentas[usuario_en_sesion] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
 
 vals_sesion = st.session_state.cuentas[usuario_en_sesion]
-neto_usuario = vals_sesion['Pujas'] - vals_sesion['Abonos'] - vals_sesion['Premios']
+pujas_usu = vals_sesion['Pujas']
+premios_usu = vals_sesion['Premios']
+abonos_usu = vals_sesion['Abonos']
+neto_usuario = pujas_usu - abonos_usu - premios_usu
 
 if neto_usuario > 0:
     etiqueta_balance = f"Deuda: {formatear_bs(neto_usuario)}"
@@ -642,24 +645,24 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR MODERNA (LED DE ESTADO EN LÍNEA) ---
+# --- CABECERA SUPERIOR MODERNA (PERFIL DE JUGADOR Y DEUDA EN LUGAR DE HORA/FECHA) ---
 estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in lista_carreras_disponibles) and lista_carreras_disponibles else "abiertos"
 led_clase_css = "led-rojo" if estado_global_remate == "cerrados" else "led-verde"
 
 header_html = f"""
     <div class="header-container-modern">
         <div class="header-top-row">
-            <div class="header-clock-box">
-                <span class="h-time">⚡ {hora_texto}</span>
-                <span class="h-date">📅 {fecha_texto}</span>
+            <div class="header-profile-box">
+                <span class="p-label">👤 PERFIL JUGADOR</span>
+                <span class="p-value" style="color: {color_balance};">{usuario_en_sesion} &nbsp;|&nbsp; {etiqueta_balance}</span>
             </div>
             <div class="header-user-card">
                 <div class="user-details">
                     <div class="u-name-container">
-                        <span class="u-name">{usuario_en_sesion}</span>
+                        <span class="u-name">ESTADO</span>
                         <span class="led-estado {led_clase_css}" title="Estado de Remates"></span>
                     </div>
-                    <span class="u-bal" style="color: {color_balance};">{etiqueta_balance}</span>
+                    <span class="u-bal" style="color: #00ffff;">EN LÍNEA</span>
                 </div>
                 <div class="u-avatar-badge">🐺</div>
             </div>
@@ -980,7 +983,6 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 # --- BARRA LATERAL ---
 st.sidebar.header("barra lateral")
-ahora_dt = obtener_hora_venezuela_local()
 st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
 
 with st.sidebar.expander("👤 Usuario Activo y Selector", expanded=True):
