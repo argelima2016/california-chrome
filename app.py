@@ -573,31 +573,25 @@ st.markdown("""
         object-fit: contain;
     }
     
-    /* --- BARRA DE HORA EN TIEMPO REAL SEGUNDO A SEGUNDO (ENCIMA DE LA TABLA) --- */
-    .reloj-barra-superior {
+    /* --- RELOJ FLOTANTE DIGITAL EN TIEMPO REAL (SEGUNDO A SEGUNDO) --- */
+    .reloj-digital-container {
         background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
-        border: 1px solid #00ffff;
+        border: 1.5px solid #00ffff;
         border-radius: 10px;
-        padding: 8px 16px;
+        padding: 10px 18px;
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
         align-items: center;
-        margin-bottom: 10px;
-        box-shadow: 0px 0px 12px rgba(0, 255, 255, 0.25);
-    }
-    .reloj-titulo {
-        color: #f1e05a;
-        font-size: 13px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+        box-shadow: 0px 0px 15px rgba(0, 255, 255, 0.3);
     }
     .reloj-digital-txt {
         color: #00ffff;
-        font-size: 17px;
+        font-size: 20px;
         font-weight: 900;
-        letter-spacing: 1px;
-        text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
+        letter-spacing: 2px;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.9);
+        font-family: monospace;
     }
     
     @keyframes parpadeoLed {
@@ -1126,11 +1120,10 @@ def renderizar_tiempo_real_universal():
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
 
-                # --- BARRA DE HORA EN TIEMPO REAL (SEGUNDO A SEGUNDO) UBICADA ENCIMA DE LA IMAGEN/TABLA ---
+                # --- RELOJ DIGITAL EN TIEMPO REAL (SEGUNDO A SEGUNDO) ENCIMA DE LA TABLA ---
                 hora_actual_envivo = obtener_hora_venezuela_local().strftime('%I:%M:%S %p')
                 st.markdown(f"""
-                    <div class="reloj-barra-superior">
-                        <span class="reloj-titulo">🕒 HORA OFICIAL DE VENEZUELA</span>
+                    <div class="reloj-digital-container">
                         <span class="reloj-digital-txt">⚡ {hora_actual_envivo}</span>
                     </div>
                 """, unsafe_allow_html=True)
@@ -2440,7 +2433,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 url_live_video = st.session_state.get('url_video_en_vivo', '').strip()
 
 if url_live_video:
-    st.markdown("<br><hr style='border-color: #30363d;'>", unsafe_allow_html=Task())
+    st.markdown("<br><hr style='border-color: #30363d;'>", unsafe_allow_html=True)
     st.markdown("### 📺 TRANSMISIÓN EN VIVO")
     yt_match = re.search(r'(?:v=|\/embed\/|youtu\.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})', url_live_video)
     if yt_match:
