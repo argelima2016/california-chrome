@@ -265,6 +265,25 @@ if img_b64:
 else:
     logo_display = '<span style="color: #f1c40f; font-size: 38px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
 
+# --- INICIALIZAR REMATES Y LISTA DE CARRERAS DISPONIBLES PRIMERO ---
+if not st.session_state.remates:
+    for i in range(1, st.session_state.total_carreras_semana + 1):
+        carr_nombre = f"Carrera {i}"
+        st.session_state.banco_caballos_por_carrera[carr_nombre] = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
+        st.session_state.remates[carr_nombre] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
+        st.session_state.detalles_carreras[carr_nombre] = {
+            "condicion": "Condición estándar", 
+            "distancia": "1200 mts", 
+            "hora": "02:00 PM", 
+            "monto_fijo_ciego": 500.0, 
+            "incentivo_adelantados": 0.0,
+            "incentivo_ciegos": 0.0,
+            "incentivo_envivo": 0.0,
+            "hora_cierre_real": "No registrada"
+        }
+
+lista_carreras_disponibles = list(st.session_state.remates.keys())
+
 ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
@@ -554,7 +573,6 @@ st.markdown("""
         object-fit: contain;
     }
     
-    /* --- ESTILOS PARA RELOJ FLOTANTE ENCIMA DE LA IMAGEN DE CARRERA --- */
     .carrera-img-wrapper {
         position: relative;
         width: 100%;
@@ -577,7 +595,6 @@ st.markdown("""
         backdrop-filter: blur(4px);
     }
     
-    /* --- ESTILOS DE LED DE ESTADO --- */
     @keyframes parpadeoLed {
         0% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.4; transform: scale(0.9); }
@@ -619,11 +636,7 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-ahora_dt = obtener_hora_venezuela_local()
-hora_texto = ahora_dt.strftime('%I:%M:%S %p')
-fecha_texto = ahora_dt.strftime('%d/%m/%Y')
-
-# --- CABECERA SUPERIOR MODERNA (LED DE ESTADO EN LÍNEA AL LADO DEL NOMBRE DE USUARIO) ---
+# --- CABECERA SUPERIOR MODERNA (LED DE ESTADO EN LÍNEA) ---
 estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in lista_carreras_disponibles) and lista_carreras_disponibles else "abiertos"
 led_clase_css = "led-rojo" if estado_global_remate == "cerrados" else "led-verde"
 
@@ -788,24 +801,6 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
     </div>
     """
     return html
-
-if not st.session_state.remates:
-    for i in range(1, st.session_state.total_carreras_semana + 1):
-        carr_nombre = f"Carrera {i}"
-        st.session_state.banco_caballos_por_carrera[carr_nombre] = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
-        st.session_state.remates[carr_nombre] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
-        st.session_state.detalles_carreras[carr_nombre] = {
-            "condicion": "Condición estándar", 
-            "distancia": "1200 mts", 
-            "hora": "02:00 PM", 
-            "monto_fijo_ciego": 500.0, 
-            "incentivo_adelantados": 0.0,
-            "incentivo_ciegos": 0.0,
-            "incentivo_envivo": 0.0,
-            "hora_cierre_real": "No registrada"
-        }
-
-lista_carreras_disponibles = list(st.session_state.remates.keys())
 
 # --- GARANTIZAR ESTADO INICIAL DE MODALIDADES ---
 if not st.session_state.carreras_activas_remate and lista_carreras_disponibles:
@@ -1888,7 +1883,6 @@ elif menu_principal_opcion == "Cuentas":
     
     remates_ganados_por_carrera = {}
     for carr_k, remates_carr in st.session_state.remates.items():
-        # Validar si el remate de esta carrera ya está cerrado
         carrera_remate_cerrada = st.session_state.carreras_cerradas_remate.get(carr_k, False)
         
         if carrera_remate_cerrada:
