@@ -407,47 +407,32 @@ st.markdown("""
         line-height: 1.4;
         word-break: break-word;
     }
-    .incentivo-llamativo {
-        background: linear-gradient(135deg, #1f1c2c 0%, #923d41 100%);
-        border: 2px dashed #00ffff;
-        padding: 10px 16px;
-        border-radius: 12px;
+    
+    /* --- TARJETAS ÉPICAS DE POTE Y PREMIO --- */
+    .pote-premio-epic-card {
+        background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #415a77 100%);
+        border: 2px solid #00ffff;
+        border-radius: 14px;
+        padding: 14px;
         text-align: center;
         margin: 10px 0;
-        box-shadow: 0px 0px 15px rgba(0, 255, 255, 0.4);
+        box-shadow: 0px 0px 20px rgba(0, 255, 255, 0.4), inset 0 0 15px rgba(0, 255, 255, 0.2);
     }
-    .incentivo-llamativo-monto {
-        color: #ffffff;
-        font-size: 22px;
-        font-weight: 900;
-        letter-spacing: 0.5px;
-        text-shadow: 2px 2px 4px #000000;
-    }
-    
-    .ejemplar-activo-badge-epic {
-        background: linear-gradient(135deg, #1f4068 0%, #162447 100%);
-        border: 1.5px solid #00ffff;
-        border-radius: 8px;
-        padding: 6px 10px;
-        text-align: center;
-        margin: 6px 0;
-        box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-    }
-    .ejemplar-activo-label {
+    .pote-premio-label {
         color: #00ffff;
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        margin-bottom: 2px;
-    }
-    .ejemplar-activo-nombre {
-        color: #f1c40f;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 900;
-        letter-spacing: 0.5px;
+        letter-spacing: 2px;
         text-transform: uppercase;
-        text-shadow: 1px 1px 3px #000000;
+        margin-bottom: 4px;
+        text-shadow: 0 0 8px rgba(0,255,255,0.8);
+    }
+    .pote-premio-monto {
+        color: #f1c40f;
+        font-size: 26px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-shadow: 2px 2px 6px #000000, 0 0 15px rgba(241, 196, 15, 0.9);
     }
 
     @keyframes parpadeoGanador {
@@ -1074,8 +1059,15 @@ def renderizar_tiempo_real_universal():
                 tabla_html = generar_tabla_html_remate(st.session_state.remates_ciegos_genericos[carr_activa], [], [])
                 components.html(tabla_html, height=420, scrolling=True)
 
-                total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates_ciegos_genericos[carr_activa].items()])
-                st.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
+                total_pote_ciego = sum([info['monto'] for cab_n, info in st.session_state.remates_ciegos_genericos[carr_activa].items()])
+                
+                # --- POTE Y PREMIO LLAMATIVO PARA REMATE CIEGO ---
+                st.markdown(f"""
+                    <div class="pote-premio-epic-card">
+                        <div class="pote-premio-label">💰 POTE ACUMULADO ({carr_activa})</div>
+                        <div class="pote-premio-monto">{formatear_bs(total_pote_ciego)}</div>
+                    </div>
+                """, unsafe_allow_html=True)
 
                 with st.container(border=True):
                     st.markdown(f"🎲 **Panel Didáctico - Asignar Ejemplar ({carr_activa})**")
@@ -1236,17 +1228,19 @@ def renderizar_tiempo_real_universal():
                 incentivo_actual = float(detalles_carr.get('incentivo_adelantados', 0.0) if modo_actual_remate == "Adelantados" else detalles_carr.get('incentivo_envivo', 0.0))
                 premio_total_calculado = pote_neto_base + incentivo_actual
 
-                if incentivo_actual > 0:
-                    st.markdown(f"""
-                        <div class="incentivo-llamativo">
-                            <div style="font-size: 11px; font-weight: 800; color: #00ffff; text-transform: uppercase; margin-bottom: 2px;">PREMIO TOTAL</div>
-                            <div class="incentivo-llamativo-monto">🎁 {formatear_bs(premio_total_calculado)}</div>
+                # --- POTE Y PREMIO LLAMATIVO PARA REMATE GENERAL ---
+                st.markdown(f"""
+                    <div style="display: flex; gap: 10px; margin: 10px 0;">
+                        <div class="pote-premio-epic-card" style="flex: 1;">
+                            <div class="pote-premio-label">💰 POTE ({carr_activa})</div>
+                            <div class="pote-premio-monto">{formatear_bs(total_pote)}</div>
                         </div>
-                    """, unsafe_allow_html=True)
-
-                c_m1, c_m2 = st.columns(2)
-                c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
-                c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
+                        <div class="pote-premio-epic-card" style="flex: 1; border-color: #2ed573; box-shadow: 0px 0px 20px rgba(46,213,115,0.4);">
+                            <div class="pote-premio-label" style="color: #2ed573;">🎁 PREMIO ESTIMADO</div>
+                            <div class="pote-premio-monto" style="color: #2ed573;">{formatear_bs(premio_total_calculado)}</div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
 
                 if carr_activa in st.session_state.historial_ganadores:
                     info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
@@ -1446,16 +1440,21 @@ def renderizar_tiempo_real_universal():
 
         if sub_dup_actual == "Dupleta":
             pote_total = sum([t['monto'] for t in st.session_state.dupletas_tickets if t.get('estado') == 'Pendiente'])
-            st.metric("💰 Pote Acumulado Dupletas", formatear_bs(pote_total))
             carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
         elif sub_dup_actual == "Tripleta":
             pote_total = sum([t['monto'] for t in st.session_state.tripleta_tickets if t.get('estado') == 'Pendiente'])
-            st.metric("💰 Pote Acumulado Tripletas", formatear_bs(pote_total))
             carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
         else:
             pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
-            st.metric("💰 Pote Acumulado 6 En Linea", formatear_bs(pote_total))
             carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
+
+        # --- POTE LLAMATIVO PARA DUPLETAS / 6L ---
+        st.markdown(f"""
+            <div class="pote-premio-epic-card">
+                <div class="pote-premio-label">💰 POTE ACUMULADO {sub_dup_actual.upper()}</div>
+                <div class="pote-premio-monto">{formatear_bs(pote_total)}</div>
+            </div>
+        """, unsafe_allow_html=True)
 
         cards_html_slider = ""
         for carr_h in carreras_permitidas:
@@ -1685,10 +1684,7 @@ def renderizar_tiempo_real_universal():
 
                 if st.button("💾 Guardar Válidas del Remate Ciego", key="btn_save_mod_independientes", use_container_width=True, type="primary"):
                     if len(sel_ciego) == 2:
-                        carrera_1v_nueva = sel_ciego[0]
-                        carrera_6v_nueva = sel_ciego[1]
-                        
-                        # --- LÓGICA DE ASIGNACIÓN Y VALIDACIÓN (14 CABALLOS) ---
+                        # --- LÓGICA DE ASIGNACIÓN Y VALIDACIÓN (14 CABALLOS) PARA CADA VÁLIDA ---
                         for idx_ciego_gen, etiqueta_valida in enumerate(["1V", "6V"]):
                             carrera_real_asignada = sel_ciego[idx_ciego_gen]
                             banco_caballos_carr = st.session_state.banco_caballos_por_carrera.get(carrera_real_asignada, [])
@@ -1697,13 +1693,11 @@ def renderizar_tiempo_real_universal():
                             remates_actuales_genericos = st.session_state.remates_ciegos_genericos.get(etiqueta_valida, {})
                             
                             if cant_caballos_inscritos > 14:
-                                # Excedentes (>14) asignados automáticamente a CASA con monto 0.0
                                 for idx_ex, cab_ex in enumerate(banco_caballos_carr):
                                     if idx_ex >= 14:
                                         if cab_ex not in remates_actuales_genericos or remates_actuales_genericos[cab_ex]['jugador'] != "CASA":
                                             remates_actuales_genericos[cab_ex] = {"jugador": "CASA", "monto": 0.0}
                             elif cant_caballos_inscritos < 14:
-                                # Menos de 14: Anular de cuentas y quitar del comprador
                                 for cab_m, info_m in remates_actuales_genericos.items():
                                     match_num = re.match(r'^(\d+)', cab_m)
                                     if match_num:
