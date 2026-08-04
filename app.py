@@ -93,7 +93,8 @@ def cargar_estado_global(forzar_recarga=False):
         'detalles_carreras', 'carreras_activas_remate', 'carreras_por_modalidad',
         'dupleta_bloqueada', 'historial_jugadas', 'fechas_horas_inicio_remate_modalidad',
         'fechas_horas_cierre_remate_modalidad', 'fechas_horas_inicio_modalidad_multiple',
-        'fechas_horas_cierre_modalidad_multiple', 'dupletas_tickets', 'tripleta_tickets', 'polla_tickets'
+        'fechas_horas_cierre_modalidad_multiple', 'dupletas_tickets', 'tripleta_tickets', 'polla_tickets',
+        'estado_conteo_carrera_modalidad', 'tiempo_inicio_conteo_modalidad'
     ]
     
     if os.path.exists(DB_FILE):
@@ -130,7 +131,7 @@ def guardar_estado_global():
         'ejemplares_no_valido', 'detalles_carreras', 'historial_ganadores', 'carreras_cerradas_remate',
         'remates_cargados_en_cuentas', 'fechas_horas_inicio_remate_modalidad', 'fechas_horas_cierre_remate_modalidad',
         'fechas_horas_inicio_modalidad_multiple', 'fechas_horas_cierre_modalidad_multiple', 
-        'estado_conteo_carrera_modalidad', 'cuentas', 'historial_jugadas', 'ganancia_casa',
+        'estado_conteo_carrera_modalidad', 'tiempo_inicio_conteo_modalidad', 'cuentas', 'historial_jugadas', 'ganancia_casa',
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
@@ -951,6 +952,12 @@ def renderizar_contenido_en_tiempo_real():
     cargar_estado_global(forzar_recarga=True)
     ahora_dt = obtener_hora_venezuela_local()
     lista_carreras_locales = list(st.session_state.remates.keys())
+
+    # --- INICIALIZACIÓN SEGURA DE VARIABLES DE CONTEO ---
+    if 'estado_conteo_carrera_modalidad' not in st.session_state:
+        st.session_state.estado_conteo_carrera_modalidad = {}
+    if 'tiempo_inicio_conteo_modalidad' not in st.session_state:
+        st.session_state.tiempo_inicio_conteo_modalidad = {}
 
     # =========================================================================
     # 1. MÓDULO DE REMATES
