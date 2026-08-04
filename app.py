@@ -1039,8 +1039,10 @@ def renderizar_tiempo_real_universal():
             st.warning("⚠️ No hay carreras cargadas en el sistema.")
         else:
             # --- FILTRADO DE CARRERAS SEGÚN LA MODALIDAD ---
+            carreras_modalidad_permitidas = st.session_state.carreras_por_modalidad.get(modo_actual_remate, [])
+            
             if modo_actual_remate == "Ciegos":
-                carreras_modalidad_permitidas = st.session_state.carreras_por_modalidad.get("Ciegos", [])
+                # EXACTAMENTE 2 CARRERAS: 1V y 6V
                 if len(carreras_modalidad_permitidas) >= 2:
                     carreras_filtradas_visibles = [carreras_modalidad_permitidas[0], carreras_modalidad_permitidas[1]]
                 elif len(carreras_modalidad_permitidas) == 1:
@@ -1048,7 +1050,7 @@ def renderizar_tiempo_real_universal():
                 else:
                     carreras_filtradas_visibles = []
             else:
-                carreras_modalidad_permitidas = st.session_state.carreras_por_modalidad.get(modo_actual_remate, lista_carreras_disponibles)
+                # ADELANTADOS Y EN VIVO: Solo las carreras que fueron asignadas en Zona Admin y estén activas/abiertas
                 carreras_filtradas_visibles = [
                     c for c in lista_carreras_disponibles 
                     if c in carreras_modalidad_permitidas and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
@@ -1058,7 +1060,7 @@ def renderizar_tiempo_real_universal():
                 if modo_actual_remate == "Ciegos":
                     st.info("ℹ️ El Remate Ciego requiere exactamente dos carreras asignadas en la Zona Admin (1V y 6V).")
                 else:
-                    st.info(f"ℹ️ No hay carreras habilitadas para la modalidad **{modo_actual_remate}**.")
+                    st.info(f"ℹ️ No hay carreras asignadas o habilitadas para la modalidad **{modo_actual_remate}**. Configúralas en Zona Admin.")
             else:
                 if "carrera_remate_activa_seleccionada" not in st.session_state or st.session_state["carrera_remate_activa_seleccionada"] not in carreras_filtradas_visibles:
                     carr_activa = carreras_filtradas_visibles[0]
@@ -1979,7 +1981,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             def_envivo = [c for c in modalidades_dict.get("En Vivo", []) if c in carreras_existentes]
 
             sel_adel = st.multiselect("Carreras para ⏱️ Adelantados", options=carreras_existentes, default=def_adel, key="multiselect_carr_adelantados")
-            sel_ciego = st.multiselect("Carreras para 🙈 Ciegos (Exactamente 2 para 1V y 6V)", options=carreras_existentes, default=def_ciego, max_selections=2, key="multiselect_carr_ciegos")
+            sel_ciego = st.multiselect("Carreras para 🙈 Ciegos (Seleccione exactamente 2 para 1V y 6V)", options=carreras_existentes, default=def_ciego, key="multiselect_carr_ciegos")
             sel_envivo = st.multiselect("Carreras para ⚡ En Vivo", options=carreras_existentes, default=def_envivo, key="multiselect_carr_envivo")
 
             if st.button("💾 Guardar Modalidades Independientes", key="btn_save_mod_independientes", use_container_width=True, type="primary"):
@@ -2355,7 +2357,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if st.button("💾 Guardar Imagen", key=f"btn_save_img_{carr_img_sel}", use_container_width=True, type="primary"):
                     try:
                         bytes_imagen = imagen_subida.getvalue()
-                        b64_imagen = base64.b64encode(bytes_imagen).getvalue() if hasattr(base64.b64encode(bytes_imagen), 'getvalue') else base64.b64encode(bytes_imagen).decode('utf-8')
+                        b64_imagen = base64.b64encode(bytes_imagen).decode('utf-8')
                         st.session_state.imagenes_carreras[carr_img_sel] = f"data:image/jpeg;base64,{b64_imagen}"
                         guardar_estado_global()
                         st.toast("✅ ¡Imagen guardada de forma permanente!")
