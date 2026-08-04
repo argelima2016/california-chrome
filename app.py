@@ -187,7 +187,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -1038,15 +1038,27 @@ def renderizar_tiempo_real_universal():
         if not lista_carreras_disponibles:
             st.warning("⚠️ No hay carreras cargadas en el sistema.")
         else:
-            carreras_modalidad_permitidas = st.session_state.carreras_por_modalidad.get(modo_actual_remate, lista_carreras_disponibles)
-            
-            carreras_filtradas_visibles = [
-                c for c in lista_carreras_disponibles 
-                if c in carreras_modalidad_permitidas and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
-            ]
+            # --- FILTRADO DE CARRERAS SEGÚN LA MODALIDAD ---
+            if modo_actual_remate == "Ciegos":
+                carreras_modalidad_permitidas = st.session_state.carreras_por_modalidad.get("Ciegos", [])
+                if len(carreras_modalidad_permitidas) >= 2:
+                    carreras_filtradas_visibles = [carreras_modalidad_permitidas[0], carreras_modalidad_permitidas[1]]
+                elif len(carreras_modalidad_permitidas) == 1:
+                    carreras_filtradas_visibles = [carreras_modalidad_permitidas[0]]
+                else:
+                    carreras_filtradas_visibles = []
+            else:
+                carreras_modalidad_permitidas = st.session_state.carreras_por_modalidad.get(modo_actual_remate, lista_carreras_disponibles)
+                carreras_filtradas_visibles = [
+                    c for c in lista_carreras_disponibles 
+                    if c in carreras_modalidad_permitidas and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
+                ]
             
             if not carreras_filtradas_visibles:
-                st.info(f"ℹ️ No hay carreras habilitadas para la modalidad **{modo_actual_remate}**.")
+                if modo_actual_remate == "Ciegos":
+                    st.info("ℹ️ El Remate Ciego requiere exactamente dos carreras asignadas en la Zona Admin (1V y 6V).")
+                else:
+                    st.info(f"ℹ️ No hay carreras habilitadas para la modalidad **{modo_actual_remate}**.")
             else:
                 if "carrera_remate_activa_seleccionada" not in st.session_state or st.session_state["carrera_remate_activa_seleccionada"] not in carreras_filtradas_visibles:
                     carr_activa = carreras_filtradas_visibles[0]
@@ -1297,7 +1309,7 @@ def renderizar_tiempo_real_universal():
                         </div>
                     """, unsafe_allow_html=True)
 
-                # --- ELIMINAR OPCIÓN DE LIQUIDAR GANADOR EN CIEGOS Y EN VIVO (SOLO EN ADELANTADOS) ---
+                # --- LIQUIDAR GANADOR SOLO EN ADELANTADOS ---
                 if modo_actual_remate == "Adelantados":
                     with st.container(border=True):
                         st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Seleccionar y Liquidar Ganador - {carr_activa}</p>", unsafe_allow_html=True)
@@ -1313,12 +1325,7 @@ def renderizar_tiempo_real_universal():
                                     pote_carr_total = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_carr_activa])
                                     monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
                                     
-                                    if modo_actual_remate == "Adelantados":
-                                        incentivo_establecido = float(detalles_carr.get('incentivo_adelantados', 0.0))
-                                    elif modo_actual_remate == "Ciegos":
-                                        incentivo_establecido = float(detalles_carr.get('incentivo_ciegos', 0.0))
-                                    else:
-                                        incentivo_establecido = float(detalles_carr.get('incentivo_envivo', 0.0))
+                                    incentivo_establecido = float(detalles_carr.get('incentivo_adelantados', 0.0))
 
                                     premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_establecido
                                     
@@ -1972,7 +1979,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             def_envivo = [c for c in modalidades_dict.get("En Vivo", []) if c in carreras_existentes]
 
             sel_adel = st.multiselect("Carreras para ⏱️ Adelantados", options=carreras_existentes, default=def_adel, key="multiselect_carr_adelantados")
-            sel_ciego = st.multiselect("Carreras para 🙈 Ciegos", options=carreras_existentes, default=def_ciego, key="multiselect_carr_ciegos")
+            sel_ciego = st.multiselect("Carreras para 🙈 Ciegos (Exactamente 2 para 1V y 6V)", options=carreras_existentes, default=def_ciego, max_selections=2, key="multiselect_carr_ciegos")
             sel_envivo = st.multiselect("Carreras para ⚡ En Vivo", options=carreras_existentes, default=def_envivo, key="multiselect_carr_envivo")
 
             if st.button("💾 Guardar Modalidades Independientes", key="btn_save_mod_independientes", use_container_width=True, type="primary"):
@@ -2348,7 +2355,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if st.button("💾 Guardar Imagen", key=f"btn_save_img_{carr_img_sel}", use_container_width=True, type="primary"):
                     try:
                         bytes_imagen = imagen_subida.getvalue()
-                        b64_imagen = base64.b64encode(bytes_imagen).decode('utf-8')
+                        b64_imagen = base64.b64encode(bytes_imagen).getvalue() if hasattr(base64.b64encode(bytes_imagen), 'getvalue') else base64.b64encode(bytes_imagen).decode('utf-8')
                         st.session_state.imagenes_carreras[carr_img_sel] = f"data:image/jpeg;base64,{b64_imagen}"
                         guardar_estado_global()
                         st.toast("✅ ¡Imagen guardada de forma permanente!")
