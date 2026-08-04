@@ -70,7 +70,13 @@ def cargar_estado_global(forzar_recarga=False):
         'total_carreras_semana': 10,
         'url_video_en_vivo': "",
         'admin_tab_seleccionada': "✍️ Caballos",
-        'imagenes_carreras': {}
+        'imagenes_carreras': {},
+        'datos_pago_movil': {
+            'banco': 'Bancamiga (0172)',
+            'telefono': '0412-0000000',
+            'cedula': 'V-00.000.000'
+        },
+        'reportes_pago': []
     }
     
     if os.path.exists(DB_FILE):
@@ -110,7 +116,8 @@ def guardar_estado_global():
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
-        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'admin_tab_seleccionada'
+        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'admin_tab_seleccionada',
+        'datos_pago_movil', 'reportes_pago'
     ]
     data = {}
     for k in keys_to_save:
@@ -159,7 +166,6 @@ components.html("""
                 });
             });
 
-            // Reloj en tiempo real segundo a segundo con JS puro en navegador
             const relojElem = doc.getElementById('reloj-js-vivo');
             if (relojElem) {
                 const options = { timeZone: 'America/Caracas', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
@@ -290,10 +296,9 @@ if not st.session_state.remates:
         }
 
 lista_carreras_disponibles = list(st.session_state.remates.keys())
-
 ahora_dt = obtener_hora_venezuela_local()
 
-# --- ESTILOS CSS GENERALES Y LED EN LÍNEA ---
+# --- ESTILOS CSS GENERALES ---
 st.markdown("""
     <style>
     * {
@@ -580,7 +585,6 @@ st.markdown("""
         object-fit: contain;
     }
     
-    /* --- RELOJ DIGITAL EN TIEMPO REAL FLUIDO --- */
     .reloj-digital-container {
         background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
         border: 1.5px solid #00ffff;
@@ -645,7 +649,7 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR MODERNA (PERFIL DE JUGADOR Y DEUDA EN LUGAR DE HORA/FECHA) ---
+# --- CABECERA SUPERIOR MODERNA (PERFIL JUGADOR IZQUIERDA Y ESTADO EN LÍNEA DERECHA) ---
 estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in lista_carreras_disponibles) and lista_carreras_disponibles else "abiertos"
 led_clase_css = "led-rojo" if estado_global_remate == "cerrados" else "led-verde"
 
@@ -1858,10 +1862,10 @@ if menu_principal_opcion == "Dupletas":
                                 st.rerun()
 
 # =========================================================================
-# 3. MÓDULO DE CUENTAS (SOLO MUESTRA TICKETS DE REMATES GANADOS TRAS EL CIERRE)
+# 3. MÓDULO DE CUENTAS (INCLUYE OPCIÓN Y DATOS DE PAGO MÓVIL)
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
-    st.markdown("<div class='subasta-header'>📊 Mis Cuentas y Historial de Jugador in Formato Ticket</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subasta-header'>📊 Mis Cuentas, Historial y Reporte de Pago Móvil</div>", unsafe_allow_html=True)
     jugador_actual = st.session_state.usuario_activo
     st.markdown(f"👤 **Jugador en Sesión:** `{jugador_actual}`")
 
@@ -1879,81 +1883,117 @@ elif menu_principal_opcion == "Cuentas":
     col_cu4.metric("⚖️ Neto", formatear_bs(balance_neto))
 
     st.markdown("---")
-    st.markdown(f"### 🎟️ Historial de Tickets y Asignaciones de `{jugador_actual}`")
 
-    st.markdown("#### 🐎 Tickets de Remates Ganadores (Disponibles solo al Cierre de los Remates)")
-    
-    remates_ganados_por_carrera = {}
-    for carr_k, remates_carr in st.session_state.remates.items():
-        carrera_remate_cerrada = st.session_state.carreras_cerradas_remate.get(carr_k, False)
-        
-        if carrera_remate_cerrada:
-            for ej_k, info_rem in remates_carr.items():
-                if info_rem['jugador'] == jugador_actual and info_rem['monto'] > 0:
-                    retirados_c = st.session_state.ejemplares_retirados.get(carr_k, [])
-                    noval_c = st.session_state.get('ejemplares_no_valido', {}).get(carr_k, [])
-                    if ej_k not in retirados_c and ej_k not in noval_c:
-                        remates_ganados_por_carrera[carr_k] = {
-                            "ejemplar": ej_k,
-                            "monto": info_rem['monto']
-                        }
+    # --- SECCIÓN IZQUIERDA: DATOS DE PAGO MÓVIL Y REPORTE DE PAGO ---
+    # --- SECCIÓN DERECHA: HISTORIAL DE TICKETS Y GANADORES ---
+    col_izq, col_der = st.columns([1, 1], gap="medium")
 
-    if remates_ganados_por_carrera:
-        for carr_k, info_r in remates_ganados_por_carrera.items():
-            detalles_c = st.session_state.detalles_carreras.get(carr_k, {})
-            hora_cierre_real = detalles_c.get('hora_cierre_real', 'Cerrado')
+    with col_izq:
+        with st.container(border=True):
+            st.markdown("📱 **Datos para Pago Móvil**")
+            p_movil = st.session_state.datos_pago_movil
+            st.info(f"🏦 **Banco:** {p_movil['banco']}\n\n📱 **Teléfono:** {p_movil['telefono']}\n\n🆔 **Cédula/RIF:** {p_movil['cedula']}")
             
-            fecha_puja = "Jornada actual"
-            for h in reversed(st.session_state.historial_jugadas):
-                if h.get('carrera') == carr_k and h.get('jugador') == jugador_actual and h.get('detalle') == info_r['ejemplar']:
-                    fecha_puja = h.get('fecha', '')
-                    break
+            st.markdown("---")
+            st.markdown("📝 **Reportar un Pago Realizado**")
+            with st.form(key="form_reportar_pago_jugador"):
+                monto_rep = st.number_input("Monto Pagado (Bs.)", min_value=0.5, step=100.0)
+                banco_remitente = st.text_input("Banco Emisor (de donde envió)")
+                ref_pago = st.text_input("Últimos 4 dígitos o Referencia")
+                
+                if st.form_submit_button("📤 Enviar Reporte de Pago", use_container_width=True):
+                    if monto_rep > 0 and ref_pago:
+                        st.session_state.reportes_pago.append({
+                            "jugador": jugador_actual,
+                            "monto": monto_rep,
+                            "banco": banco_remitente,
+                            "referencia": ref_pago,
+                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M %p'),
+                            "estado": "Pendiente de Aprobación"
+                        })
+                        guardar_estado_global()
+                        st.success("✅ ¡Reporte de pago enviado a la administración con éxito!")
+                    else:
+                        st.error("⚠️ Ingrese un monto válido y la referencia del pago.")
 
-            ticket_html = f"""
-                <div class="ticket-jugador-card">
-                    <div class="ticket-header-row">
-                        <span>🏷️ TICKET REMATE (OFICIAL AL CIERRE)</span>
-                        <span>📅 {fecha_puja}</span>
-                    </div>
-                    <div class="ticket-body-row">🏁 <b>Carrera:</b> {carr_k}</div>
-                    <div class="ticket-body-row">🐎 <b>Ejemplar Asignado:</b> {info_r['ejemplar']}</div>
-                    <div class="ticket-body-row">🔒 <b>Hora de Cierre:</b> {hora_cierre_real}</div>
-                    <div class="ticket-body-row" style="color: #f1c40f; margin-top: 6px;">💰 <b>Monto Puja:</b> {formatear_bs(info_r['monto'])}</div>
-                </div>
-            """
-            st.markdown(ticket_html, unsafe_allow_html=True)
-    else:
-        st.info("ℹ️ Los tickets de remate se revelarán y mostrarán aquí únicamente cuando la administración cierre el remate de cada carrera.")
+            # Mostrar mis reportes previos
+            mis_reportes = [r for r in st.session_state.reportes_pago if r['jugador'] == jugador_actual]
+            if mis_reportes:
+                st.markdown("📋 **Mis Reportes Enviados:**")
+                for rep in reversed(mis_reportes):
+                    st.markdown(f"🔹 *{rep['fecha']}* | **{formatear_bs(rep['monto'])}** | Ref: `{rep['referencia']}` | 📌 `{rep['estado']}`")
 
-    st.markdown("---")
+    with col_der:
+        with st.container(border=True):
+            st.markdown(f"### 🎟️ Historial y Tickets de `{jugador_actual}`")
 
-    tickets_usuario_dupletas = [t for t in st.session_state.dupletas_tickets if t['jugador'] == jugador_actual]
-    tickets_usuario_tripletas = [t for t in st.session_state.tripleta_tickets if t['jugador'] == jugador_actual]
-    tickets_usuario_pollas = [t for t in st.session_state.polla_tickets if t['jugador'] == jugador_actual]
+            st.markdown("#### 🐎 Tickets de Remates Ganadores (Al Cierre)")
+            remates_ganados_por_carrera = {}
+            for carr_k, remates_carr in st.session_state.remates.items():
+                carrera_remate_cerrada = st.session_state.carreras_cerradas_remate.get(carr_k, False)
+                if carrera_remate_cerrada:
+                    for ej_k, info_rem in remates_carr.items():
+                        if info_rem['jugador'] == jugador_actual and info_rem['monto'] > 0:
+                            retirados_c = st.session_state.ejemplares_retirados.get(carr_k, [])
+                            noval_c = st.session_state.get('ejemplares_no_valido', {}).get(carr_k, [])
+                            if ej_k not in retirados_c and ej_k not in noval_c:
+                                remates_ganados_por_carrera[carr_k] = {
+                                    "ejemplar": ej_k,
+                                    "monto": info_rem['monto']
+                                }
 
-    todos_tickets_multiples = tickets_usuario_dupletas + tickets_usuario_tripletas + tickets_usuario_pollas
+            if remates_ganados_por_carrera:
+                for carr_k, info_r in remates_ganados_por_carrera.items():
+                    detalles_c = st.session_state.detalles_carreras.get(carr_k, {})
+                    hora_cierre_real = detalles_c.get('hora_cierre_real', 'Cerrado')
+                    
+                    fecha_puja = "Jornada actual"
+                    for h in reversed(st.session_state.historial_jugadas):
+                        if h.get('carrera') == carr_k and h.get('jugador') == jugador_actual and h.get('detalle') == info_r['ejemplar']:
+                            fecha_puja = h.get('fecha', '')
+                            break
 
-    if todos_tickets_multiples:
-        st.markdown("#### 🎟️ Tickets de Dupletas, Tripletas y 6 En Linea")
-        for t in reversed(todos_tickets_multiples):
-            detalles_legs = " ➔ ".join([f"**{l['carrera']}**: {l['ejemplar']}" for l in t['legs']])
-            estado_t = t.get('estado', 'Pendiente')
-            color_est = "#2ed573" if estado_t == 'Pendiente' else "#ff4757"
+                    ticket_html = f"""
+                        <div class="ticket-jugador-card">
+                            <div class="ticket-header-row">
+                                <span>🏷️ TICKET REMATE (OFICIAL)</span>
+                                <span>📅 {fecha_puja}</span>
+                            </div>
+                            <div class="ticket-body-row">🏁 <b>Carrera:</b> {carr_k}</div>
+                            <div class="ticket-body-row">🐎 <b>Ejemplar:</b> {info_r['ejemplar']}</div>
+                            <div class="ticket-body-row" style="color: #f1c40f; margin-top: 6px;">💰 <b>Monto:</b> {formatear_bs(info_r['monto'])}</div>
+                        </div>
+                    """
+                    st.markdown(ticket_html, unsafe_allow_html=True)
+            else:
+                st.info("ℹ️ Los tickets de remate se muestran aquí cuando se cierren las carreras.")
 
-            ticket_m_html = f"""
-                <div class="ticket-jugador-card" style="border-color: {color_est};">
-                    <div class="ticket-header-row">
-                        <span>🏷️ {t['id']}</span>
-                        <span style="color: {color_est};">📌 {estado_t}</span>
-                    </div>
-                    <div class="ticket-body-row">🛤️ <b>Selecciones:</b> {detalles_legs}</div>
-                    <div class="ticket-body-row" style="color: #f1c40f; margin-top: 6px;">💰 <b>Monto Ticket:</b> {formatear_bs(t['monto'])}</div>
-                    <div style="font-size: 10px; color: #8b949e; text-align: right; margin-top: 4px;">Emitido: {t['fecha']}</div>
-                </div>
-            """
-            st.markdown(ticket_m_html, unsafe_allow_html=True)
-    else:
-        st.info("ℹ️ No hay tickets de dupletas, tripletas o 6 en linea registrados para este usuario.")
+            st.markdown("---")
+            tickets_usuario_dupletas = [t for t in st.session_state.dupletas_tickets if t['jugador'] == jugador_actual]
+            tickets_usuario_tripletas = [t for t in st.session_state.tripleta_tickets if t['jugador'] == jugador_actual]
+            tickets_usuario_pollas = [t for t in st.session_state.polla_tickets if t['jugador'] == jugador_actual]
+            todos_tickets_multiples = tickets_usuario_dupletas + tickets_usuario_tripletas + tickets_usuario_pollas
+
+            if todos_tickets_multiples:
+                st.markdown("#### 🎟️ Tickets Múltiples")
+                for t in reversed(todos_tickets_multiples):
+                    detalles_legs = " ➔ ".join([f"**{l['carrera']}**: {l['ejemplar']}" for l in t['legs']])
+                    estado_t = t.get('estado', 'Pendiente')
+                    color_est = "#2ed573" if estado_t == 'Pendiente' else "#ff4757"
+
+                    ticket_m_html = f"""
+                        <div class="ticket-jugador-card" style="border-color: {color_est};">
+                            <div class="ticket-header-row">
+                                <span>🏷️ {t['id']}</span>
+                                <span style="color: {color_est};">📌 {estado_t}</span>
+                            </div>
+                            <div class="ticket-body-row">🛤️ <b>Selecciones:</b> {detalles_legs}</div>
+                            <div class="ticket-body-row" style="color: #f1c40f; margin-top: 6px;">💰 <b>Monto:</b> {formatear_bs(t['monto'])}</div>
+                        </div>
+                    """
+                    st.markdown(ticket_m_html, unsafe_allow_html=True)
+            else:
+                st.info("ℹ️ No hay tickets múltiples registrados.")
 
 # =========================================================================
 # 4. ZONA DE ADMINISTRADOR (CONFIGURACIÓN CON TABS NATIVAS)
@@ -2345,7 +2385,46 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.rerun()
 
     with tab5:
-        st.markdown("### 📊 Saldos de Usuarios")
+        st.markdown("### 📊 Saldos de Usuarios y Gestión de Pagos")
+        
+        # --- NUEVA SECCIÓN DE CONFIGURACIÓN DE PAGO MÓVIL PARA EL ADMIN ---
+        with st.container(border=True):
+            st.markdown("⚙️ **Configurar Datos de Pago Móvil para los Jugadores**")
+            p_adm = st.session_state.datos_pago_movil
+            n_banco = st.text_input("Banco", value=p_adm['banco'], key="adm_p_banco")
+            n_tlf = st.text_input("Teléfono", value=p_adm['telefono'], key="adm_p_tlf")
+            n_ci = st.text_input("Cédula / RIF", value=p_adm['cedula'], key="adm_p_ci")
+            if st.button("💾 Guardar Datos de Pago Móvil", key="btn_save_pagomovil_adm", type="primary"):
+                st.session_state.datos_pago_movil = {'banco': n_banco, 'telefono': n_tlf, 'cedula': n_ci}
+                guardar_estado_global()
+                st.toast("✅ ¡Datos de pago móvil actualizados!")
+                st.rerun()
+
+        st.markdown("---")
+        st.markdown("📬 **Reportes de Pago Recibidos de Jugadores**")
+        if not st.session_state.reportes_pago:
+            st.info("ℹ️ No hay reportes de pago pendientes.")
+        else:
+            for idx_rep, rep in enumerate(reversed(st.session_state.reportes_pago)):
+                with st.container(border=True):
+                    col_r1, col_r2, col_r3 = st.columns([3, 3, 2])
+                    col_r1.markdown(f"👤 **{rep['jugador']}** | 💰 **{formatear_bs(rep['monto'])}**")
+                    col_r2.markdown(f"🏦 Banco: `{rep['banco']}` | Ref: `{rep['referencia']}`\n📅 {rep['fecha']}")
+                    col_r3.markdown(f"📌 Estado: **{rep['estado']}**")
+                    
+                    if rep['estado'] == "Pendiente de Aprobación":
+                        if st.button(f"✅ Aprobar y Abonar", key=f"btn_aprobar_rep_{idx_rep}", type="primary"):
+                            jug_r = rep['jugador']
+                            mnt_r = rep['monto']
+                            if jug_r not in st.session_state.cuentas:
+                                st.session_state.cuentas[jug_r] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                            st.session_state.cuentas[jug_r]['Abonos'] += mnt_r
+                            rep['estado'] = "Aprobado (Abonado)"
+                            guardar_estado_global()
+                            st.success(f"✅ ¡Pago de {formatear_bs(mnt_r)} abonado a {jug_r}!")
+                            st.rerun()
+
+        st.markdown("---")
         usuarios_futuros = [u for u in st.session_state.lista_usuarios if u != "CASA"]
         if not usuarios_futuros:
             st.info("ℹ️ No hay usuarios registrados.")
@@ -2367,7 +2446,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         
         with col_op1:
             with st.container(border=True):
-                st.markdown("#### 💵 Registrar Abono (Pago)")
+                st.markdown("#### 💵 Registrar Abono Directo")
                 jugador_abonar = st.selectbox("Usuario", st.session_state.lista_usuarios, key="adm_abono_jugador")
                 monto_abono = st.number_input("Monto Abono (Bs.)", min_value=0.0, step=100.0, key="adm_abono_monto")
                 if st.button("➕ Aplicar Abono", key="adm_btn_aplicar_abono", use_container_width=True, type="primary"):
