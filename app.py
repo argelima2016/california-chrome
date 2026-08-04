@@ -628,7 +628,7 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR MODERNA (IMAGEN + ESTADO A LA DERECHA Y BOTÓN REPORTE A LA IZQUIERDA) ---
+# --- CABECERA SUPERIOR MODERNA (BOTÓN REPORTE IZQUIERDA Y PERFIL/ESTADO DERECHA) ---
 estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in lista_carreras_disponibles) and lista_carreras_disponibles else "abiertos"
 led_clase_css = "led-rojo" if estado_global_remate == "cerrados" else "led-verde"
 
@@ -1845,7 +1845,7 @@ if menu_principal_opcion == "Dupletas":
                                 st.rerun()
 
 # =========================================================================
-# 3. MÓDULO DE CUENTAS (ORGANIZADO EXACTAMENTE COMO LO PEDISTE)
+# 3. MÓDULO DE CUENTAS (ORDENADO EN VERTICAL: DATOS, REPORTE, MIS REPORTES, TICKETS)
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
     st.markdown('<div id="reportar-pago-section"></div>', unsafe_allow_html=True)
@@ -1870,48 +1870,48 @@ elif menu_principal_opcion == "Cuentas":
     st.markdown("---")
 
     # =========================================================================
-    # ORDEN SOLICITADO:
-    # 1. Datos para Pago Móvil (Fijos)
-    # 2. Reporte de Pago Móvil (Formulario)
-    # 3. Mis Reportes Envíados
-    # 4. Historial de Tickets (Remates ganados y Múltiples)
+    # SECCIÓN 1: DATOS PARA PAGO MÓVIL (FIJOS EN VERTICAL)
     # =========================================================================
-
-    # 1 y 2: Datos de Pago Móvil y Formulario de Reporte
     with st.container(border=True):
-        st.markdown("📱 **Gestión de Pagos y Datos de Pago Móvil**")
+        st.markdown("📱 **1. Datos para Pago Móvil**")
         p_movil = st.session_state.datos_pago_movil
-        
-        col_pm1, col_pm2 = st.columns(2, gap="medium")
-        with col_pm1:
-            st.info(f"🏦 **Datos Bancarios (Pago Móvil):**\n\n- **Banco:** {p_movil['banco']}\n- **Teléfono:** {p_movil['telefono']}\n- **Cédula/RIF:** {p_movil['cedula']}")
-        
-        with col_pm2:
-            st.markdown("📝 **Reportar un Pago Realizado**")
-            with st.form(key="form_reportar_pago_jugador"):
-                monto_rep = st.number_input("Monto Pagado (Bs.)", min_value=0.5, step=100.0)
-                banco_remitente = st.text_input("Banco Emisor (de donde envió)")
-                ref_pago = st.text_input("Últimos 4 dígitos o Referencia")
-                
-                if st.form_submit_button("📤 Enviar Reporte de Pago", use_container_width=True):
-                    if monto_rep > 0 and ref_pago:
-                        st.session_state.reportes_pago.append({
-                            "jugador": jugador_actual,
-                            "monto": monto_rep,
-                            "banco": banco_remitente,
-                            "referencia": ref_pago,
-                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M %p'),
-                            "estado": "Pendiente de Aprobación"
-                        })
-                        guardar_estado_global()
-                        st.success("✅ ¡Reporte de pago enviado con éxito!")
-                        st.rerun()
-                    else:
-                        st.error("⚠️ Ingrese un monto válido y la referencia.")
+        st.info(f"🏦 **Banco:** {p_movil['banco']}\n\n📱 **Teléfono:** {p_movil['telefono']}\n\n🆔 **Cédula/RIF:** {p_movil['cedula']}")
 
-    # 3: Mis Reportes Enviados
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # =========================================================================
+    # SECCIÓN 2: REPORTE DE PAGO MÓVIL (FORMULARIO)
+    # =========================================================================
     with st.container(border=True):
-        st.markdown("📋 **Mis Reportes Enviados**")
+        st.markdown("📝 **2. Reportar un Pago Realizado**")
+        with st.form(key="form_reportar_pago_jugador"):
+            monto_rep = st.number_input("Monto Pagado (Bs.)", min_value=0.5, step=100.0)
+            banco_remitente = st.text_input("Banco Emisor (de donde envió)")
+            ref_pago = st.text_input("Últimos 4 dígitos o Referencia")
+            
+            if st.form_submit_button("📤 Enviar Reporte de Pago", use_container_width=True):
+                if monto_rep > 0 and ref_pago:
+                    st.session_state.reportes_pago.append({
+                        "jugador": jugador_actual,
+                        "monto": monto_rep,
+                        "banco": banco_remitente,
+                        "referencia": ref_pago,
+                        "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M %p'),
+                        "estado": "Pendiente de Aprobación"
+                    })
+                    guardar_estado_global()
+                    st.success("✅ ¡Reporte de pago enviado con éxito!")
+                    st.rerun()
+                else:
+                    st.error("⚠️ Ingrese un monto válido y la referencia.")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # =========================================================================
+    # SECCIÓN 3: MIS REPORTES ENVIADOS
+    # =========================================================================
+    with st.container(border=True):
+        st.markdown("📋 **3. Mis Reportes Enviados**")
         mis_reportes = [r for r in st.session_state.reportes_pago if r['jugador'] == jugador_actual]
         if not mis_reportes:
             st.info("ℹ️ No has enviado reportes de pago todavía.")
@@ -1919,11 +1919,13 @@ elif menu_principal_opcion == "Cuentas":
             for rep in reversed(mis_reportes):
                 st.markdown(f"🔹 *{rep['fecha']}* | **{formatear_bs(rep['monto'])}** | Banco: `{rep['banco']}` | Ref: `{rep['referencia']}` | 📌 `{rep['estado']}`")
 
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    # 4: Historial de Tickets (Abajo de mis reportes enviados)
+    # =========================================================================
+    # SECCIÓN 4: HISTORIAL DE TICKETS (ABAJO DE TODO)
+    # =========================================================================
     with st.container(border=True):
-        st.markdown(f"### 🎟️ Historial de Tickets y Asignaciones de `{jugador_actual}`")
+        st.markdown(f"### 🎟️ 4. Historial de Tickets y Asignaciones de `{jugador_actual}`")
 
         st.markdown("#### 🐎 Tickets de Remates Ganadores (Al Cierre)")
         remates_ganados_por_carrera = {}
