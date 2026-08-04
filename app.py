@@ -134,7 +134,7 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN EN TIEMPO REAL Y CONTROL TOTAL ---
+# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN EN TIEMPO REAL Y RELOJ JS FLUIDO ---
 components.html("""
     <script>
         function sincronizacionEnVivo() {
@@ -158,6 +158,13 @@ components.html("""
                     }
                 });
             });
+
+            // Reloj en tiempo real segundo a segundo con JS puro en navegador
+            const relojElem = doc.getElementById('reloj-js-vivo');
+            if (relojElem) {
+                const options = { timeZone: 'America/Caracas', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+                relojElem.innerText = "⚡ " + new Intl.DateTimeFormat('en-US', options).format(new Date());
+            }
 
             let tuercaBtn = doc.getElementById('custom-tuerca-sidebar-btn');
             if (!tuercaBtn) {
@@ -573,7 +580,7 @@ st.markdown("""
         object-fit: contain;
     }
     
-    /* --- RELOJ FLOTANTE DIGITAL EN TIEMPO REAL (SEGUNDO A SEGUNDO) --- */
+    /* --- RELOJ DIGITAL EN TIEMPO REAL FLUIDO --- */
     .reloj-digital-container {
         background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
         border: 1.5px solid #00ffff;
@@ -1120,11 +1127,11 @@ def renderizar_tiempo_real_universal():
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
 
-                # --- RELOJ DIGITAL EN TIEMPO REAL (SEGUNDO A SEGUNDO) ENCIMA DE LA TABLA ---
+                # --- RELOJ DIGITAL EN TIEMPO REAL (SEGUNDO A SEGUNDO) CON ID PARA JS ---
                 hora_actual_envivo = obtener_hora_venezuela_local().strftime('%I:%M:%S %p')
                 st.markdown(f"""
                     <div class="reloj-digital-container">
-                        <span class="reloj-digital-txt">⚡ {hora_actual_envivo}</span>
+                        <span id="reloj-js-vivo" class="reloj-digital-txt">⚡ {hora_actual_envivo}</span>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -2424,7 +2431,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if st.button("🗑️ Eliminar Imagen", key=f"btn_del_img_{carr_img_sel}", use_container_width=True):
                     del st.session_state.imagenes_carreras[carr_img_sel]
                     guardar_estado_global()
-                    st.toast("🗑️ Imagen removida")
+                    st.toast("🗑️ Removida")
                     st.rerun()
 
 # =========================================================================
