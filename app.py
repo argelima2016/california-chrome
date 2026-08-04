@@ -408,31 +408,31 @@ st.markdown("""
         word-break: break-word;
     }
     
-    /* --- TARJETAS ÉPICAS DE POTE Y PREMIO --- */
-    .pote-premio-epic-card {
-        background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #415a77 100%);
-        border: 2px solid #00ffff;
+    /* --- TARJETA ÉPICA SOLO PARA EL PREMIO ESTIMADO --- */
+    .premio-epic-card {
+        background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #134e4a 100%);
+        border: 2px solid #2ed573;
         border-radius: 14px;
         padding: 14px;
         text-align: center;
         margin: 10px 0;
-        box-shadow: 0px 0px 20px rgba(0, 255, 255, 0.4), inset 0 0 15px rgba(0, 255, 255, 0.2);
+        box-shadow: 0px 0px 20px rgba(46,213,115,0.4), inset 0 0 15px rgba(46,213,115,0.2);
     }
-    .pote-premio-label {
-        color: #00ffff;
+    .premio-epic-label {
+        color: #2ed573;
         font-size: 12px;
         font-weight: 900;
         letter-spacing: 2px;
         text-transform: uppercase;
         margin-bottom: 4px;
-        text-shadow: 0 0 8px rgba(0,255,255,0.8);
+        text-shadow: 0 0 8px rgba(46,213,115,0.8);
     }
-    .pote-premio-monto {
-        color: #f1c40f;
+    .premio-epic-monto {
+        color: #2ed573;
         font-size: 26px;
         font-weight: 900;
         letter-spacing: 1px;
-        text-shadow: 2px 2px 6px #000000, 0 0 15px rgba(241, 196, 15, 0.9);
+        text-shadow: 2px 2px 6px #000000, 0 0 15px rgba(46, 213, 115, 0.9);
     }
 
     @keyframes parpadeoGanador {
@@ -1061,11 +1061,14 @@ def renderizar_tiempo_real_universal():
 
                 total_pote_ciego = sum([info['monto'] for cab_n, info in st.session_state.remates_ciegos_genericos[carr_activa].items()])
                 
-                # --- POTE Y PREMIO LLAMATIVO PARA REMATE CIEGO ---
+                # --- CÁLCULO DE PREMIO ESTIMADO PARA REMATE CIEGO ---
+                monto_casa_ciego = total_pote_ciego * (porcentaje_casa / 100)
+                premio_est_ciego = total_pote_ciego - monto_casa_ciego
+
                 st.markdown(f"""
-                    <div class="pote-premio-epic-card">
-                        <div class="pote-premio-label">💰 POTE ACUMULADO ({carr_activa})</div>
-                        <div class="pote-premio-monto">{formatear_bs(total_pote_ciego)}</div>
+                    <div class="premio-epic-card">
+                        <div class="premio-epic-label">🎁 PREMIO ESTIMADO ({carr_activa})</div>
+                        <div class="premio-epic-monto">{formatear_bs(premio_est_ciego)}</div>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -1228,19 +1231,17 @@ def renderizar_tiempo_real_universal():
                 incentivo_actual = float(detalles_carr.get('incentivo_adelantados', 0.0) if modo_actual_remate == "Adelantados" else detalles_carr.get('incentivo_envivo', 0.0))
                 premio_total_calculado = pote_neto_base + incentivo_actual
 
-                # --- POTE Y PREMIO LLAMATIVO PARA REMATE GENERAL ---
+                # --- SOLO EL PREMIO ES LLAMATIVO EN REMATE GENERAL (POTE Y INCENTIVO SE MANTIENEN NORMALES) ---
                 st.markdown(f"""
-                    <div style="display: flex; gap: 10px; margin: 10px 0;">
-                        <div class="pote-premio-epic-card" style="flex: 1;">
-                            <div class="pote-premio-label">💰 POTE ({carr_activa})</div>
-                            <div class="pote-premio-monto">{formatear_bs(total_pote)}</div>
-                        </div>
-                        <div class="pote-premio-epic-card" style="flex: 1; border-color: #2ed573; box-shadow: 0px 0px 20px rgba(46,213,115,0.4);">
-                            <div class="pote-premio-label" style="color: #2ed573;">🎁 PREMIO ESTIMADO</div>
-                            <div class="pote-premio-monto" style="color: #2ed573;">{formatear_bs(premio_total_calculado)}</div>
-                        </div>
+                    <div class="premio-epic-card">
+                        <div class="premio-epic-label">🎁 PREMIO ESTIMADO ({carr_activa})</div>
+                        <div class="premio-epic-monto">{formatear_bs(premio_total_calculado)}</div>
                     </div>
                 """, unsafe_allow_html=True)
+
+                c_m1, c_m2 = st.columns(2)
+                c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
+                c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
 
                 if carr_activa in st.session_state.historial_ganadores:
                     info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
@@ -1450,9 +1451,9 @@ def renderizar_tiempo_real_universal():
 
         # --- POTE LLAMATIVO PARA DUPLETAS / 6L ---
         st.markdown(f"""
-            <div class="pote-premio-epic-card">
-                <div class="pote-premio-label">💰 POTE ACUMULADO {sub_dup_actual.upper()}</div>
-                <div class="pote-premio-monto">{formatear_bs(pote_total)}</div>
+            <div class="premio-epic-card">
+                <div class="premio-epic-label">💰 POTE ACUMULADO {sub_dup_actual.upper()}</div>
+                <div class="premio-epic-monto">{formatear_bs(pote_total)}</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -1684,7 +1685,6 @@ def renderizar_tiempo_real_universal():
 
                 if st.button("💾 Guardar Válidas del Remate Ciego", key="btn_save_mod_independientes", use_container_width=True, type="primary"):
                     if len(sel_ciego) == 2:
-                        # --- LÓGICA DE ASIGNACIÓN Y VALIDACIÓN (14 CABALLOS) PARA CADA VÁLIDA ---
                         for idx_ciego_gen, etiqueta_valida in enumerate(["1V", "6V"]):
                             carrera_real_asignada = sel_ciego[idx_ciego_gen]
                             banco_caballos_carr = st.session_state.banco_caballos_por_carrera.get(carrera_real_asignada, [])
