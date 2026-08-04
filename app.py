@@ -269,7 +269,7 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- ESTILOS CSS GENERALES Y GRID DE PUJAS DE 3 COLUMNAS COMPACTO ---
+# --- ESTILOS CSS GENERALES Y LED EN LÍNEA ---
 st.markdown("""
     <style>
     * {
@@ -518,6 +518,12 @@ st.markdown("""
         flex-direction: column;
         text-align: right;
     }
+    .u-name-container {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+    }
     .u-name {
         color: #f0f6fc;
         font-size: 12px;
@@ -547,6 +553,52 @@ st.markdown("""
         width: auto;
         object-fit: contain;
     }
+    
+    /* --- ESTILOS PARA RELOJ FLOTANTE ENCIMA DE LA IMAGEN DE CARRERA --- */
+    .carrera-img-wrapper {
+        position: relative;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .reloj-flotante-encima {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: rgba(8, 10, 15, 0.85);
+        border: 2px solid #00ffff;
+        border-radius: 8px;
+        padding: 6px 14px;
+        color: #00ffff;
+        font-size: 16px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        box-shadow: 0px 4px 15px rgba(0, 255, 255, 0.5);
+        z-index: 99;
+        backdrop-filter: blur(4px);
+    }
+    
+    /* --- ESTILOS DE LED DE ESTADO --- */
+    @keyframes parpadeoLed {
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(0.9); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+    .led-estado {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 8px currentColor;
+    }
+    .led-verde {
+        background-color: #2ed573;
+        color: #2ed573;
+        animation: parpadeoLed 1.5s infinite ease-in-out;
+    }
+    .led-rojo {
+        background-color: #ff4757;
+        color: #ff4757;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -571,7 +623,10 @@ ahora_dt = obtener_hora_venezuela_local()
 hora_texto = ahora_dt.strftime('%I:%M:%S %p')
 fecha_texto = ahora_dt.strftime('%d/%m/%Y')
 
-# --- CABECERA SUPERIOR MODERNA CON LOGO MÁS GRANDE ---
+# --- CABECERA SUPERIOR MODERNA (LED DE ESTADO EN LÍNEA AL LADO DEL NOMBRE DE USUARIO) ---
+estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in lista_carreras_disponibles) and lista_carreras_disponibles else "abiertos"
+led_clase_css = "led-rojo" if estado_global_remate == "cerrados" else "led-verde"
+
 header_html = f"""
     <div class="header-container-modern">
         <div class="header-top-row">
@@ -581,7 +636,10 @@ header_html = f"""
             </div>
             <div class="header-user-card">
                 <div class="user-details">
-                    <span class="u-name">{usuario_en_sesion}</span>
+                    <div class="u-name-container">
+                        <span class="u-name">{usuario_en_sesion}</span>
+                        <span class="led-estado {led_clase_css}" title="Estado de Remates"></span>
+                    </div>
                     <span class="u-bal" style="color: {color_balance};">{etiqueta_balance}</span>
                 </div>
                 <div class="u-avatar-badge">🐺</div>
@@ -749,7 +807,7 @@ if not st.session_state.remates:
 
 lista_carreras_disponibles = list(st.session_state.remates.keys())
 
-# --- GARANTIZAR ESTADO INICIAL DE MODALIDADES SIN SOBRESCRIBIR ASIGNACIONES ADMIN ---
+# --- GARANTIZAR ESTADO INICIAL DE MODALIDADES ---
 if not st.session_state.carreras_activas_remate and lista_carreras_disponibles:
     st.session_state.carreras_activas_remate = list(lista_carreras_disponibles)
 
@@ -995,7 +1053,7 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (10 SEGUNDOS PARA EVITAR TRABAS EN UI)
+# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (10 SEGUNDOS PARA ESTABILIDAD)
 # =========================================================================
 @st.fragment(run_every=10.0)
 def renderizar_tiempo_real_universal():
@@ -1034,10 +1092,8 @@ def renderizar_tiempo_real_universal():
             carreras_asignadas_admin = st.session_state.carreras_por_modalidad.get(modo_actual_remate, [])
             
             if modo_actual_remate == "Ciegos":
-                # Remate Ciego: Toma exactamente hasta 2 carreras asignadas (1V y 6V)
                 carreras_filtradas_visibles = [c for c in carreras_asignadas_admin if c in lista_carreras_disponibles][:2]
             else:
-                # Adelantados y En Vivo: Únicamente las carreras asignadas independientemente y que estén activas
                 carreras_filtradas_visibles = [
                     c for c in lista_carreras_disponibles 
                     if c in carreras_asignadas_admin and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
@@ -1070,11 +1126,26 @@ def renderizar_tiempo_real_universal():
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
 
+                # --- IMAGEN DE CARRERA CON HORA EN TIEMPO REAL FLOTANTE (SEGUNDO A SEGUNDO) ---
+                hora_actual_envivo = obtener_hora_venezuela_local().strftime('%I:%M:%S %p')
                 if carr_activa in st.session_state.imagenes_carreras:
                     try:
-                        st.image(st.session_state.imagenes_carreras[carr_activa], caption=f"Imagen oficial - {carr_activa}", use_container_width=True)
+                        img_url_val = st.session_state.imagenes_carreras[carr_activa]
+                        st.markdown(f"""
+                            <div class="carrera-img-wrapper">
+                                <div class="reloj-flotante-encima">⚡ {hora_actual_envivo}</div>
+                                <img src="{img_url_val}" style="width:100%; border-radius:12px; object-fit:cover;" />
+                            </div>
+                        """, unsafe_allow_html=True)
                     except Exception:
                         pass
+                else:
+                    st.markdown(f"""
+                        <div class="carrera-img-wrapper" style="background:#161b22; height:220px; border-radius:12px; display:flex; align-items:center; justify-content:center; border:1px solid #30363d;">
+                            <div class="reloj-flotante-encima">⚡ {hora_actual_envivo}</div>
+                            <span style="color:#8b949e; font-weight:700; font-size:15px;">Sin imagen oficial - {carr_activa}</span>
+                        </div>
+                    """, unsafe_allow_html=True)
 
                 carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
                 estado_icono = "🔴" if carrera_cerrada else "🟢"
@@ -1790,7 +1861,7 @@ if menu_principal_opcion == "Dupletas":
                                 st.rerun()
 
 # =========================================================================
-# 3. MÓDULO DE CUENTAS
+# 3. MÓDULO DE CUENTAS (SOLO MUESTRA TICKETS DE REMATES GANADOS TRAS EL CIERRE)
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
     st.markdown("<div class='subasta-header'>📊 Mis Cuentas y Historial de Jugador in Formato Ticket</div>", unsafe_allow_html=True)
@@ -1813,24 +1884,28 @@ elif menu_principal_opcion == "Cuentas":
     st.markdown("---")
     st.markdown(f"### 🎟️ Historial de Tickets y Asignaciones de `{jugador_actual}`")
 
-    st.markdown("#### 🐎 Tickets de Remates (Última puja ganada por carrera)")
+    st.markdown("#### 🐎 Tickets de Remates Ganadores (Disponibles solo al Cierre de los Remates)")
     
     remates_ganados_por_carrera = {}
     for carr_k, remates_carr in st.session_state.remates.items():
-        for ej_k, info_rem in remates_carr.items():
-            if info_rem['jugador'] == jugador_actual and info_rem['monto'] > 0:
-                retirados_c = st.session_state.ejemplares_retirados.get(carr_k, [])
-                noval_c = st.session_state.get('ejemplares_no_valido', {}).get(carr_k, [])
-                if ej_k not in retirados_c and ej_k not in noval_c:
-                    remates_ganados_por_carrera[carr_k] = {
-                        "ejemplar": ej_k,
-                        "monto": info_rem['monto']
-                    }
+        # Validar si el remate de esta carrera ya está cerrado
+        carrera_remate_cerrada = st.session_state.carreras_cerradas_remate.get(carr_k, False)
+        
+        if carrera_remate_cerrada:
+            for ej_k, info_rem in remates_carr.items():
+                if info_rem['jugador'] == jugador_actual and info_rem['monto'] > 0:
+                    retirados_c = st.session_state.ejemplares_retirados.get(carr_k, [])
+                    noval_c = st.session_state.get('ejemplares_no_valido', {}).get(carr_k, [])
+                    if ej_k not in retirados_c and ej_k not in noval_c:
+                        remates_ganados_por_carrera[carr_k] = {
+                            "ejemplar": ej_k,
+                            "monto": info_rem['monto']
+                        }
 
     if remates_ganados_por_carrera:
         for carr_k, info_r in remates_ganados_por_carrera.items():
             detalles_c = st.session_state.detalles_carreras.get(carr_k, {})
-            hora_cierre_real = detalles_c.get('hora_cierre_real', 'No cerrado todavía')
+            hora_cierre_real = detalles_c.get('hora_cierre_real', 'Cerrado')
             
             fecha_puja = "Jornada actual"
             for h in reversed(st.session_state.historial_jugadas):
@@ -1841,18 +1916,18 @@ elif menu_principal_opcion == "Cuentas":
             ticket_html = f"""
                 <div class="ticket-jugador-card">
                     <div class="ticket-header-row">
-                        <span>🏷️ TICKET REMATE (GANADOR)</span>
+                        <span>🏷️ TICKET REMATE (OFICIAL AL CIERRE)</span>
                         <span>📅 {fecha_puja}</span>
                     </div>
                     <div class="ticket-body-row">🏁 <b>Carrera:</b> {carr_k}</div>
-                    <div class="ticket-body-row">🐎 <b>Último Ejemplar Asignado:</b> {info_r['ejemplar']}</div>
-                    <div class="ticket-body-row">🔒 <b>Hora de Cierre Carrera:</b> {hora_cierre_real}</div>
-                    <div class="ticket-body-row" style="color: #f1c40f; margin-top: 6px;">💰 <b>Monto Ganador:</b> {formatear_bs(info_r['monto'])}</div>
+                    <div class="ticket-body-row">🐎 <b>Ejemplar Asignado:</b> {info_r['ejemplar']}</div>
+                    <div class="ticket-body-row">🔒 <b>Hora de Cierre:</b> {hora_cierre_real}</div>
+                    <div class="ticket-body-row" style="color: #f1c40f; margin-top: 6px;">💰 <b>Monto Puja:</b> {formatear_bs(info_r['monto'])}</div>
                 </div>
             """
             st.markdown(ticket_html, unsafe_allow_html=True)
     else:
-        st.info("ℹ️ No tienes remates ganados activos registrados en esta jornada.")
+        st.info("ℹ️ Los tickets de remate se revelarán y mostrarán aquí únicamente cuando la administración cierre el remate de cada carrera.")
 
     st.markdown("---")
 
