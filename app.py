@@ -77,6 +77,17 @@ def cargar_estado_global(forzar_recarga=False):
         try:
             with open(DB_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
+                
+                # Deserializar fechas guardadas como string en JSON de vuelta a datetime de forma segura
+                for dict_key in ['fechas_horas_inicio_remate_modalidad', 'fechas_horas_cierre_remate_modalidad', 'fechas_horas_inicio_modalidad_multiple', 'fechas_horas_cierre_modalidad_multiple']:
+                    if dict_key in data and isinstance(data[dict_key], dict):
+                        for sub_k, sub_v in data[dict_key].items():
+                            if isinstance(sub_v, str):
+                                try:
+                                    data[dict_key][sub_k] = datetime.fromisoformat(sub_v)
+                                except Exception:
+                                    pass
+
                 for k, v in default_state.items():
                     if k not in st.session_state or forzar_recarga:
                         st.session_state[k] = data.get(k, v)
@@ -106,7 +117,17 @@ def guardar_estado_global():
     for k in keys_to_save:
         if k in st.session_state:
             val = st.session_state[k]
-            data[k] = val
+            # Convertir objetos datetime a formato ISO string para almacenamiento seguro en JSON
+            if isinstance(val, dict):
+                val_copy = {}
+                for dk, dv in val.items():
+                    if isinstance(dv, datetime):
+                        val_copy[dk] = dv.isoformat()
+                    else:
+                        val_copy[dk] = dv
+                data[k] = val_copy
+            else:
+                data[k] = val
     try:
         with open(DB_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
@@ -1177,6 +1198,19 @@ def renderizar_tiempo_real_universal():
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
                 estado_conteo = st.session_state.estado_conteo_carrera_modalidad.get(clave_mod_carr, "INACTIVO")
 
+                # Asegurar conversión segura si se recuperó como texto plano de JSON
+                if isinstance(dt_inicio, str):
+                    try:
+                        dt_inicio = datetime.fromisoformat(dt_inicio)
+                    except Exception:
+                        dt_inicio = None
+
+                if isinstance(dt_limite, str):
+                    try:
+                        dt_limite = datetime.fromisoformat(dt_limite)
+                    except Exception:
+                        dt_limite = None
+
                 if dt_inicio and carrera_cerrada:
                     if ahora_dt >= dt_inicio:
                         st.session_state.carreras_cerradas_remate[carr_activa] = False
@@ -1392,7 +1426,6 @@ def renderizar_tiempo_real_universal():
                                         info_remate_cab = st.session_state.remates[carr_activa].get(cab_item, {})
                                         propietario = info_remate_cab.get('jugador', 'Sin Postor')
                                         
-                                        # Determinar color inmediato reactivo
                                         if propietario == "Sin Postor" or propietario == "CASA" or info_remate_cab.get('monto', 0.0) == 0:
                                             color_estilo = "background-color: #e2e8f0 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important;"
                                         elif propietario == st.session_state.usuario_activo:
@@ -1479,6 +1512,13 @@ if menu_principal_opcion == "Dupletas":
     clave_mod_mult = sub_dup_actual
     dt_inicio_m = st.session_state.fechas_horas_inicio_modalidad_multiple.get(clave_mod_mult)
     dt_cierre_m = st.session_state.fechas_horas_cierre_modalidad_multiple.get(clave_mod_mult)
+
+    if isinstance(dt_inicio_m, str):
+        try: dt_inicio_m = datetime.fromisoformat(dt_inicio_m)
+        except Exception: dt_inicio_m = None
+    if isinstance(dt_cierre_m, str):
+        try: dt_cierre_m = datetime.fromisoformat(dt_cierre_m)
+        except Exception: dt_cierre_m = None
 
     bloqueo_por_horario = False
     if dt_inicio_m and ahora_dt < dt_inicio_m:
@@ -1717,7 +1757,7 @@ if menu_principal_opcion == "Dupletas":
                                     ret_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
                                     noval_carr = st.session_state.get('ejemplares_no_valido', {}).get(carr_l, [])
                                     excl_carr = set(ret_carr) | set(noval_carr)
-                                    disponibles_l = [c for c in list(st.session_state.remates.get(carr_l, {}).keys()) if c not in excluidos_carr_t]
+                                    disponibles_l = [c for c in list(st.session_state.remates.get(carr_l, {}).keys()) if c not in excl_carr]
                                     
                                     idx_def = 0
                                     if ej_actual in disponibles_l:
