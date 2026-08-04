@@ -200,7 +200,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -526,11 +526,12 @@ st.markdown("""
     .user-details {
         display: flex;
         flex-direction: column;
-        text-align: left;
+        text-align: right;
     }
     .u-name-container {
         display: flex;
         align-items: center;
+        justify-content: flex-end;
         gap: 6px;
     }
     .u-name {
