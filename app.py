@@ -389,7 +389,6 @@ st.markdown("""
         word-break: break-word;
     }
     
-    /* --- TARJETA ÉPICA SOLO PARA EL PREMIO ESTIMADO --- */
     .premio-epic-card {
         background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #134e4a 100%);
         border: 2px solid #2ed573;
@@ -729,7 +728,7 @@ if not st.session_state.carreras_habilitadas_tripleta and lista_carreras_disponi
 if not st.session_state.carreras_habilitadas_polla and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_polla = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL (FUERA DEL FRAGMENTO PARA NAVEGACIÓN INSTANTÁNEA) ---
+# --- MENÚ PRINCIPAL HORIZONTAL (NAVEGACIÓN INSTANTÁNEA FUERA DEL FRAGMENTO) ---
 st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
 col_menu1, col_menu2, col_menu3, col_menu4 = st.columns(4, gap="small")
 
@@ -945,20 +944,13 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (1 SEGUNDO SEGURO)
+# BLOQUE FRAGMENTADO UNIVERSAL EXCLUSIVO PARA RENDERIZAR CONTENIDO ACTIVO
 # =========================================================================
 @st.fragment(run_every=1.0)
-def renderizar_tiempo_real_universal():
+def renderizar_contenido_en_tiempo_real():
     cargar_estado_global(forzar_recarga=True)
-
     ahora_dt = obtener_hora_venezuela_local()
-
     lista_carreras_locales = list(st.session_state.remates.keys())
-    if not lista_carreras_locales:
-        for i in range(1, st.session_state.total_carreras_semana + 1):
-            c_n = f"Carrera {i}"
-            st.session_state.remates[c_n] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 15)}
-        lista_carreras_locales = list(st.session_state.remates.keys())
 
     # =========================================================================
     # 1. MÓDULO DE REMATES
@@ -2025,7 +2017,7 @@ def renderizar_tiempo_real_universal():
                         st.toast("🗑️ Imagen removida")
                         st.rerun()
 
-renderizar_tiempo_real_universal()
+renderizar_contenido_en_tiempo_real()
 
 # =========================================================================
 # TRANSMISIÓN EN VIVO
