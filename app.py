@@ -632,14 +632,17 @@ else:
 estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in lista_carreras_disponibles) and lista_carreras_disponibles else "abiertos"
 led_clase_css = "led-rojo" if estado_global_remate == "cerrados" else "led-verde"
 
+col_h_izq, col_h_der = st.columns([1, 1], gap="small")
+with col_h_izq:
+    if st.button("💳 Reportar Pago Móvil", key="btn_ir_reportar_pago_top", use_container_width=True, type="primary"):
+        st.session_state.menu_principal_opcion = "Cuentas"
+        guardar_estado_global()
+        st.rerun()
+
 header_html = f"""
-    <div class="header-container-modern">
+    <div class="header-container-modern" style="margin-top: 8px;">
         <div class="header-top-row">
-            <div>
-                <a href="#reportar-pago-section" style="background: linear-gradient(135deg, #238636 0%, #2ea043 100%); color: #ffffff; padding: 10px 16px; border-radius: 8px; font-weight: 800; font-size: 13px; text-decoration: none; box-shadow: 0px 4px 12px rgba(46, 160, 67, 0.4); display: inline-flex; align-items: center; gap: 6px;">
-                    💳 Reportar Pago Móvil
-                </a>
-            </div>
+            <div></div>
             <div class="header-user-card">
                 <div class="user-details">
                     <div class="u-name-container">
@@ -1845,7 +1848,6 @@ if menu_principal_opcion == "Dupletas":
 # 3. MÓDULO DE CUENTAS (INCLUYE ANCLA PARA REPORTE DE PAGO MÓVIL)
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
-    # Ancla HTML para el scroll del botón superior
     st.markdown('<div id="reportar-pago-section"></div>', unsafe_allow_html=True)
     
     st.markdown("<div class='subasta-header'>📊 Mis Cuentas, Historial y Reporte de Pago Móvil</div>", unsafe_allow_html=True)
@@ -1867,8 +1869,6 @@ elif menu_principal_opcion == "Cuentas":
 
     st.markdown("---")
 
-    # --- SECCIÓN IZQUIERDA: DATOS DE PAGO MÓVIL Y REPORTE DE PAGO ---
-    # --- SECCIÓN DERECHA: HISTORIAL DE TICKETS Y GANADORES ---
     col_izq, col_der = st.columns([1, 1], gap="medium")
 
     with col_izq:
@@ -1899,7 +1899,6 @@ elif menu_principal_opcion == "Cuentas":
                     else:
                         st.error("⚠️ Ingrese un monto válido y la referencia del pago.")
 
-            # Mostrar mis reportes previos
             mis_reportes = [r for r in st.session_state.reportes_pago if r['jugador'] == jugador_actual]
             if mis_reportes:
                 st.markdown("📋 **Mis Reportes Enviados:**")
