@@ -78,7 +78,6 @@ def cargar_estado_global(forzar_recarga=False):
             with open(DB_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 
-                # Deserializar fechas guardadas como string en JSON de vuelta a datetime de forma segura
                 for dict_key in ['fechas_horas_inicio_remate_modalidad', 'fechas_horas_cierre_remate_modalidad', 'fechas_horas_inicio_modalidad_multiple', 'fechas_horas_cierre_modalidad_multiple']:
                     if dict_key in data and isinstance(data[dict_key], dict):
                         for sub_k, sub_v in data[dict_key].items():
@@ -117,7 +116,6 @@ def guardar_estado_global():
     for k in keys_to_save:
         if k in st.session_state:
             val = st.session_state[k]
-            # Convertir objetos datetime a formato ISO string para almacenamiento seguro en JSON
             if isinstance(val, dict):
                 val_copy = {}
                 for dk, dv in val.items():
@@ -189,7 +187,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -336,7 +334,6 @@ st.markdown("""
         width: 55px !important;
     }
     
-    /* --- ELIMINAR ESPACIOS VERTICALES ENTRE FILAS DE BOTONES DE PUJA (3 COLUMNAS) --- */
     div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"]:has(button) {
         gap: 4px !important;
         margin-top: -18px !important;
@@ -807,7 +804,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BANNER MARQUESINA DINÁMICO (LENTO 150s Y NUNCA PAUSA) ---
+# --- BANNER MARQUESINA DINÁMICO ---
 elementos_carrusel_info = []
 
 remates_abiertos = [c for c in lista_carreras_disponibles if not st.session_state.carreras_cerradas_remate.get(c, False)]
@@ -1198,7 +1195,6 @@ def renderizar_tiempo_real_universal():
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
                 estado_conteo = st.session_state.estado_conteo_carrera_modalidad.get(clave_mod_carr, "INACTIVO")
 
-                # Asegurar conversión segura si se recuperó como texto plano de JSON
                 if isinstance(dt_inicio, str):
                     try:
                         dt_inicio = datetime.fromisoformat(dt_inicio)
@@ -1255,7 +1251,7 @@ def renderizar_tiempo_real_universal():
                 altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
                 components.html(tabla_html, height=altura_dinamica, scrolling=True)
                 
-                # --- POTE, PREMIO E INCENTIVO LLAMATIVO DEBAJO DE LA TABLA DE REMATE ---
+                # --- POTE, PREMIO E INCENTIVO LLAMATIVO ---
                 retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
                 no_validos_carr_activa = st.session_state.ejemplares_no_valido.get(carr_activa, [])
                 excluidos_carr_activa = set(retirados_carr_activa) | set(no_validos_carr_activa)
@@ -1285,7 +1281,7 @@ def renderizar_tiempo_real_universal():
                 c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
                 c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
 
-                # --- ANUNCIO ÉPICO Y LLAMATIVO DEL GANADOR CON NOMBRE Y NÚMERO ---
+                # --- ANUNCIO ÉPICO Y LLAMATIVO DEL GANADOR ---
                 if carr_activa in st.session_state.historial_ganadores:
                     info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
                     ganador_nombre = info_ganador_prev.get('Ganador', 'N/A')
@@ -1301,42 +1297,44 @@ def renderizar_tiempo_real_universal():
                         </div>
                     """, unsafe_allow_html=True)
 
-                with st.container(border=True):
-                    st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Seleccionar y Liquidar Ganador - {carr_activa}</p>", unsafe_allow_html=True)
-                    if carr_activa not in st.session_state.historial_ganadores:
-                        caballos_lista_ganador = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
-                        if not caballos_lista_ganador:
-                            caballos_lista_ganador = list(st.session_state.remates[carr_activa].keys())
-                        col_g1, col_g2 = st.columns([3, 2], gap="small")
-                        with col_g1:
-                            caballo_ganador_elegido = st.selectbox("Ejemplar Ganador", caballos_lista_ganador, key=f"rem_sel_ganador_{carr_activa}", label_visibility="collapsed")
-                        with col_g2:
-                            if st.button("🏆 Liquidar Ganador", key=f"rem_btn_liquidar_{carr_activa}", use_container_width=True, type="primary"):
-                                pote_carr_total = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_carr_activa])
-                                monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
-                                
-                                if modo_actual_remate == "Adelantados":
-                                    incentivo_establecido = float(detalles_carr.get('incentivo_adelantados', 0.0))
-                                elif modo_actual_remate == "Ciegos":
-                                    incentivo_establecido = float(detalles_carr.get('incentivo_ciegos', 0.0))
-                                else:
-                                    incentivo_establecido = float(detalles_carr.get('incentivo_envivo', 0.0))
+                # --- ELIMINAR OPCIÓN DE LIQUIDAR GANADOR EN CIEGOS Y EN VIVO (SOLO EN ADELANTADOS) ---
+                if modo_actual_remate == "Adelantados":
+                    with st.container(border=True):
+                        st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Seleccionar y Liquidar Ganador - {carr_activa}</p>", unsafe_allow_html=True)
+                        if carr_activa not in st.session_state.historial_ganadores:
+                            caballos_lista_ganador = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
+                            if not caballos_lista_ganador:
+                                caballos_lista_ganador = list(st.session_state.remates[carr_activa].keys())
+                            col_g1, col_g2 = st.columns([3, 2], gap="small")
+                            with col_g1:
+                                caballo_ganador_elegido = st.selectbox("Ejemplar Ganador", caballos_lista_ganador, key=f"rem_sel_ganador_{carr_activa}", label_visibility="collapsed")
+                            with col_g2:
+                                if st.button("🏆 Liquidar Ganador", key=f"rem_btn_liquidar_{carr_activa}", use_container_width=True, type="primary"):
+                                    pote_carr_total = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_carr_activa])
+                                    monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
+                                    
+                                    if modo_actual_remate == "Adelantados":
+                                        incentivo_establecido = float(detalles_carr.get('incentivo_adelantados', 0.0))
+                                    elif modo_actual_remate == "Ciegos":
+                                        incentivo_establecido = float(detalles_carr.get('incentivo_ciegos', 0.0))
+                                    else:
+                                        incentivo_establecido = float(detalles_carr.get('incentivo_envivo', 0.0))
 
-                                premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_establecido
-                                
-                                info_g = st.session_state.remates[carr_activa][caballo_ganador_elegido]
-                                if info_g['jugador'] != "Sin Postor":
-                                    if info_g['jugador'] not in st.session_state.cuentas:
-                                        st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                                    st.session_state.cuentas[info_g['jugador']]['Premios'] += premio_final_liq
-                                st.session_state.ganancia_casa += monto_casa_calc
-                                st.session_state.historial_ganadores[carr_activa] = {
-                                    "Ganador": info_g['jugador'], 
-                                    "Premio": formatear_bs(premio_final_liq),
-                                    "Caballo": caballo_ganador_elegido
-                                }
-                                guardar_estado_global()
-                                st.rerun()
+                                    premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_establecido
+                                    
+                                    info_g = st.session_state.remates[carr_activa][caballo_ganador_elegido]
+                                    if info_g['jugador'] != "Sin Postor":
+                                        if info_g['jugador'] not in st.session_state.cuentas:
+                                            st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                        st.session_state.cuentas[info_g['jugador']]['Premios'] += premio_final_liq
+                                    st.session_state.ganancia_casa += monto_casa_calc
+                                    st.session_state.historial_ganadores[carr_activa] = {
+                                        "Ganador": info_g['jugador'], 
+                                        "Premio": formatear_bs(premio_final_liq),
+                                        "Caballo": caballo_ganador_elegido
+                                    }
+                                    guardar_estado_global()
+                                    st.rerun()
 
                 with st.expander(f"📜 Historial de Pujas - {carr_activa} ({modo_actual_remate})", expanded=False):
                     historial_carrera_actual = [
@@ -1412,7 +1410,7 @@ def renderizar_tiempo_real_universal():
                             st.markdown(f"🔹 **1. Seleccionar Ejemplar (Disponibles: {len(lista_caballos_activos)}):**")
                             
                             cantidad_ejemplares = len(lista_caballos_activos)
-                            cols_ejemplares = 3  # <--- ESTRICTAMENTE 3 COLUMNAS POR FILA
+                            cols_ejemplares = 3
                             num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
                             
                             idx_cab = 0
@@ -1508,7 +1506,6 @@ if menu_principal_opcion == "Dupletas":
 
     st.markdown(f"<div class='subasta-header'>🎟️ Armado Visual de {sub_dup_actual}</div>", unsafe_allow_html=True)
     
-    # --- VERIFICACIÓN DE HORARIOS Y BLOQUEO AUTOMÁTICO DE MULTIPLES ---
     clave_mod_mult = sub_dup_actual
     dt_inicio_m = st.session_state.fechas_horas_inicio_modalidad_multiple.get(clave_mod_mult)
     dt_cierre_m = st.session_state.fechas_horas_cierre_modalidad_multiple.get(clave_mod_mult)
@@ -2039,7 +2036,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Detalles e incentivos guardados!")
                 st.rerun()
 
-        # --- CONFIGURACIÓN DE INICIO Y CIERRE INDEPENDIENTE POR MODALIDAD CON HORA MANUAL 12H ---
         st.markdown("---")
         with st.container(border=True):
             st.markdown(f"⏰ **Control de Horarios Individuales por Modalidad ({carr_banco_sel})**")
@@ -2113,7 +2109,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.toast("✅ ¡Agregado!")
                     st.rerun()
 
-        # --- GESTIÓN DE EJEMPLARES "NO VALE" EN EL BANCO DE CABALLOS ---
         st.markdown("---")
         st.markdown("#### ⚠️ Gestionar Ejemplares 'NO VALE'")
         if 'ejemplares_no_valido' not in st.session_state:
@@ -2197,7 +2192,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Guardado!")
                 st.rerun()
 
-        # --- CONFIGURACIÓN DE HORARIOS INDEPENDIENTES PARA MULTIPLES (Dupleta, Tripleta, 6 En Linea) ---
         st.markdown("---")
         with st.container(border=True):
             st.markdown("⏰ **Control de Horarios Independientes por Modalidad (Dupleta / Tripleta / 6 En Linea)**")
