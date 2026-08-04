@@ -158,7 +158,7 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- SCRIPT JS ESTABLE PARA OCULTAR ELEMENTOS NATIVOS Y EVITAR OSCURECIMIENTO ---
+# --- SCRIPT JS ESTABLE PARA OCULTAR ELEMENTOS NATIVOS ---
 components.html("""
     <script>
         function limpiarInterfazStreamlit() {
@@ -209,7 +209,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -729,7 +729,7 @@ if not st.session_state.carreras_habilitadas_tripleta and lista_carreras_disponi
 if not st.session_state.carreras_habilitadas_polla and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_polla = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL ---
+# --- MENÚ PRINCIPAL HORIZONTAL (FUERA DEL FRAGMENTO PARA NAVEGACIÓN INSTANTÁNEA) ---
 st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
 col_menu1, col_menu2, col_menu3, col_menu4 = st.columns(4, gap="small")
 
@@ -964,7 +964,6 @@ def renderizar_tiempo_real_universal():
     # 1. MÓDULO DE REMATES
     # =========================================================================
     if st.session_state.menu_principal_opcion == "Remates":
-        st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
         col_so1, col_so2, col_so3 = st.columns(3, gap="small")
         with col_so1:
             if st.button("⏱️ Adelantados", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
@@ -981,7 +980,6 @@ def renderizar_tiempo_real_universal():
                 st.session_state.sub_remate_opcion = "En Vivo"
                 guardar_estado_global()
                 st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
         modo_actual_remate = st.session_state.sub_remate_opcion
@@ -1366,7 +1364,6 @@ def renderizar_tiempo_real_universal():
     # 2. MÓDULO DE DUPLETA Y 6 EN LINEA
     # =========================================================================
     elif st.session_state.menu_principal_opcion == "Dupletas":
-        st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
         col_d1, col_d2, col_d3 = st.columns(3, gap="small")
         with col_d1:
             if st.button("🎟️ Dupleta", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
@@ -1383,7 +1380,6 @@ def renderizar_tiempo_real_universal():
                 st.session_state.sub_dupleta_opcion = "6 En Linea"
                 guardar_estado_global()
                 st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
         sub_dup_actual = st.session_state.sub_dupleta_opcion
@@ -1428,7 +1424,6 @@ def renderizar_tiempo_real_universal():
             pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
             carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
 
-        # --- POTE ACUMULADO NORMAL PARA DUPLETAS / 6L ---
         st.metric(f"💰 Pote Acumulado {sub_dup_actual}", formatear_bs(pote_total))
 
         cards_html_slider = ""
