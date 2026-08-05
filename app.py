@@ -144,7 +144,6 @@ cargar_estado_global()
 # --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ, ALERTAS SONORAS Y BOTÓN FLOTANTE ---
 components.html("""
     <script>
-        // --- GENERADOR DE ALERTAS SONORAS (WEB AUDIO API) ---
         function reproducirSonidoAlerta(tipo) {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -155,7 +154,6 @@ components.html("""
                 gainNode.connect(audioCtx.destination);
                 
                 if (tipo === 'cierre') {
-                    // Tono de advertencia corto y agudo para cuenta regresiva
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(880, audioCtx.currentTime);
                     gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
@@ -163,7 +161,6 @@ components.html("""
                     osc.start();
                     osc.stop(audioCtx.currentTime + 0.3);
                 } else if (tipo === 'exito') {
-                    // Doble tono alegre para confirmaciones de pujas y tickets
                     osc.type = 'triangle';
                     osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
                     osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15);
@@ -978,8 +975,8 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }, 400);
-                }, 8000);
+                    }}, 400);
+                }}, 8000);
             }}
         }})();
     </script>
@@ -1299,7 +1296,6 @@ def renderizar_tiempo_real_universal():
                             st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = ahora_dt
                             guardar_estado_global()
                             
-                            # Alerta sonora de cierre inminente (10 segundos)
                             components.html("<script>window.parent.reproducirSonidoAlerta('cierre');</script>", height=0, width=0)
                             st.rerun()
                         elif diferencia_segundos <= 0:
@@ -1462,7 +1458,6 @@ def renderizar_tiempo_real_universal():
                                             st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
                                             guardar_estado_global()
                                             
-                                            # Alerta sonora de éxito
                                             components.html("<script>window.parent.reproducirSonidoAlerta('exito');</script>", height=0, width=0)
                                             st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
                                             st.rerun()
@@ -1544,7 +1539,6 @@ def renderizar_tiempo_real_universal():
                                             st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = obtener_hora_venezuela_local()
                                         guardar_estado_global()
                                         
-                                        # Alerta sonora de éxito
                                         components.html("<script>window.parent.reproducirSonidoAlerta('exito');</script>", height=0, width=0)
                                         st.success("✅ ¡Puja registrada correctamente!")
                                         st.rerun()
@@ -1761,7 +1755,6 @@ if menu_principal_opcion == "Dupletas":
                             
                             guardar_estado_global()
                             
-                            # Alerta sonora de éxito
                             components.html("<script>window.parent.reproducirSonidoAlerta('exito');</script>", height=0, width=0)
                             st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito (Estado: PENDIENTE)!")
                             st.rerun()
