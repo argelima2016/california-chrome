@@ -882,7 +882,7 @@ if carreras_ciegos:
 
 carreras_envivo = [c for c in st.session_state.carreras_por_modalidad.get("En Vivo", []) if c in lista_carreras_disponibles]
 if carreras_envivo:
-    elementos_carrusel_info.append("⚡ EN VIVO: " + " | ".join(carreras_envivo))
+    elementos_carrusel_info.append("📡 EN VIVO: " + " | ".join(carreras_envivo))
 
 carreras_dupleta = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
 if carreras_dupleta:
