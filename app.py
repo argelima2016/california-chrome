@@ -1076,6 +1076,31 @@ def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
 
     if st.session_state.menu_principal_opcion == "Remates":
+        st.markdown(
+            """
+        <style>
+            @keyframes parpadeoLed {
+                0% { opacity: 1; transform: scale(1); }
+                50% { opacity: 0.3; transform: scale(0.85); }
+                100% { opacity: 1; transform: scale(1); }
+            }
+            .led-rojo-btn {
+                width: 9px;
+                height: 9px;
+                background-color: #ff4757;
+                color: #ff4757;
+                border-radius: 50%;
+                display: inline-block;
+                box-shadow: 0 0 8px #ff4757;
+                animation: parpadeoLed 1.2s infinite ease-in-out;
+                margin-right: 6px;
+                vertical-align: middle;
+            }
+        </style>
+        """,
+            unsafe_allow_html=True,
+        )
+
         st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
         col_so1, col_so2, col_so3 = st.columns(3, gap="small")
         with col_so1:
@@ -1089,7 +1114,8 @@ def renderizar_tiempo_real_universal():
                 guardar_estado_global()
                 st.rerun()
         with col_so3:
-            if st.button("⚡ En Vivo", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
+            label_envivo = '<span class="led-rojo-btn"></span>⚡ En Vivo'
+            if st.button(label_envivo, key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
                 st.session_state.sub_remate_opcion = "En Vivo"
                 guardar_estado_global()
                 st.rerun()
