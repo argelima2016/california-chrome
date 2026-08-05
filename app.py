@@ -869,74 +869,75 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BANNER MARQUESINA DINÁMICO ---
+# --- BANNER MARQUESINA DINÁMICO (EXCLUSIVO PARA ADELANTADOS, CIEGOS, EN VIVO, DUPLETA Y TRIPLETA) ---
 elementos_carrusel_info = []
 
-remates_abiertos = [c for c in lista_carreras_disponibles if not st.session_state.carreras_cerradas_remate.get(c, False)]
-if remates_abiertos:
-    texto_remates = "🟢 REMATES ABIERTOS: " + " | ".join(remates_abiertos)
-    elementos_carrusel_info.append(texto_remates)
-else:
-    elementos_carrusel_info.append("🔴 TODOS LOS REMATES CERRADOS")
+carreras_adelantados = [c for c in st.session_state.carreras_por_modalidad.get("Adelantados", []) if c in lista_carreras_disponibles]
+if carreras_adelantados:
+    elementos_carrusel_info.append("⏱️ ADELANTADOS: " + " | ".join(carreras_adelantados))
 
-dupletas_hab = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
-if dupletas_hab:
-    texto_dupletas = "🎟️ DUPLETAS DISPONIBLES EN: " + " - ".join(dupletas_hab)
-    elementos_carrusel_info.append(texto_dupletas)
+carreras_ciegos = [c for c in st.session_state.carreras_por_modalidad.get("Ciegos", []) if c in lista_carreras_disponibles]
+if carreras_ciegos:
+    elementos_carrusel_info.append("🙈 CIEGOS: " + " | ".join(carreras_ciegos))
 
-if st.session_state.historial_ganadores:
-    for carr_g, info_g in st.session_state.historial_ganadores.items():
-        ganador_jugador = info_g.get('Ganador', 'N/A')
-        ejemplar_ganador_nombre = info_g.get('Caballo', 'N/A')
-        texto_ganador = "🏆 " + carr_g.upper() + " GANADOR: " + ganador_jugador + " (" + ejemplar_ganador_nombre + ")"
-        elementos_carrusel_info.append(texto_ganador)
-else:
-    elementos_carrusel_info.append("⏳ ESPERANDO PRIMEROS RESULTADOS DE GANADORES...")
+carreras_envivo = [c for c in st.session_state.carreras_por_modalidad.get("En Vivo", []) if c in lista_carreras_disponibles]
+if carreras_envivo:
+    elementos_carrusel_info.append("⚡ EN VIVO: " + " | ".join(carreras_envivo))
 
-if elementos_carrusel_info:
-    texto_unido_marquesina = " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ".join(elementos_carrusel_info)
-    html_banner_marquesina = f"""
-    <style>
-        .marquee-container {{
-            width: 100%;
-            background: transparent;
-            border: none;
-            box-shadow: none;
-            padding: 8px 0;
-            margin-bottom: 12px;
-            overflow: hidden;
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
+carreras_dupleta = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
+if carreras_dupleta:
+    elementos_carrusel_info.append("🎟️ DUPLETA: " + " | ".join(carreras_dupleta))
+
+carreras_tripleta = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
+if carreras_tripleta:
+    elementos_carrusel_info.append("🎟️ TRIPLETA: " + " | ".join(carreras_tripleta))
+
+if not elementos_carrusel_info:
+    elementos_carrusel_info.append("⏳ CONFIGURA LAS CARRERAS ASIGNADAS EN LA ZONA ADMIN")
+
+texto_unido_marquesina = " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ".join(elementos_carrusel_info)
+html_banner_marquesina = f"""
+<style>
+    .marquee-container {{
+        width: 100%;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 8px 0;
+        margin-bottom: 12px;
+        overflow: hidden;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+    }}
+    .marquee-text {{
+        display: inline-block;
+        white-space: nowrap;
+        animation: scrollRight 150s linear infinite !important;
+        animation-play-state: running !important;
+        font-family: 'Arial Black', Gadget, sans-serif;
+        font-size: 15px;
+        font-weight: 900;
+        color: #00ffff;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        text-shadow: 0px 0px 10px rgba(0, 255, 255, 0.9), 2px 2px 2px #000000;
+        padding-right: 100%;
+    }}
+    @keyframes scrollRight {{
+        0% {{
+            transform: translateX(-100%);
         }}
-        .marquee-text {{
-            display: inline-block;
-            white-space: nowrap;
-            animation: scrollRight 150s linear infinite !important;
-            animation-play-state: running !important;
-            font-family: 'Arial Black', Gadget, sans-serif;
-            font-size: 15px;
-            font-weight: 900;
-            color: #00ffff;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            text-shadow: 0px 0px 10px rgba(0, 255, 255, 0.9), 2px 2px 2px #000000;
-            padding-right: 100%;
+        100% {{
+            transform: translateX(100%);
         }}
-        @keyframes scrollRight {{
-            0% {{
-                transform: translateX(-100%);
-            }}
-            100% {{
-                transform: translateX(100%);
-            }}
-        }}
-    </style>
-    <div class="marquee-container">
-        <div class="marquee-text">{texto_unido_marquesina}</div>
-    </div>
-    """
-    components.html(html_banner_marquesina, height=42)
+    }}
+</style>
+<div class="marquee-container">
+    <div class="marquee-text">{texto_unido_marquesina}</div>
+</div>
+"""
+components.html(html_banner_marquesina, height=42)
 
 # --- CARRUSEL AUTOMÁTICO DE IMÁGENES ---
 ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
