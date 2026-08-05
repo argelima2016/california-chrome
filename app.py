@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 from pypdf import PdfReader
 
 # Configuración de pantalla completa
-st.set_page_config(page_title="Wolf Ready to Run", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="California Chrome", layout="wide", page_icon="🐺")
 
 # --- HORA LOCAL DE VENEZUELA ---
 def obtener_hora_venezuela_local():
@@ -141,9 +141,43 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN EN TIEMPO REAL Y RELOJ JS FLUIDO ---
+# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ, ALERTAS SONORAS Y BOTÓN FLOTANTE ---
 components.html("""
     <script>
+        // --- GENERADOR DE ALERTAS SONORAS (WEB AUDIO API) ---
+        function reproducirSonidoAlerta(tipo) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                if (tipo === 'cierre') {
+                    // Tono de advertencia corto y agudo para cuenta regresiva
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } else if (tipo === 'exito') {
+                    // Doble tono alegre para confirmaciones de pujas y tickets
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15);
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
+                }
+            } catch (e) {
+                console.log("Audio restringido por políticas del navegador.");
+            }
+        }
+        window.reproducirSonidoAlerta = reproducirSonidoAlerta;
+
         function sincronizacionEnVivo() {
             const doc = window.parent.document;
             const selectors = [
@@ -182,7 +216,7 @@ components.html("""
                 tuercaBtn.style.position = 'fixed';
                 tuercaBtn.style.top = '10px';
                 tuercaBtn.style.right = '15px';
-                tuercaBtn.style.zIndex = '999999';
+                tuercaBtn.style.zIndex = '99999';
                 tuercaBtn.style.background = '#161b22';
                 tuercaBtn.style.border = '1px solid #30363d';
                 tuercaBtn.style.borderRadius = '8px';
@@ -194,7 +228,6 @@ components.html("""
                 tuercaBtn.style.alignItems = 'center';
                 tuercaBtn.style.justifyContent = 'center';
                 tuercaBtn.style.boxShadow = '0px 4px 12px rgba(0,0,0,0.5)';
-                tuercaBtn.style.transition = 'transform 0.2s ease, background 0.2s ease';
 
                 tuercaBtn.onclick = function() {
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
@@ -210,7 +243,6 @@ components.html("""
                             sidebar.style.display = 'block';
                             sidebar.style.minWidth = '360px';
                             sidebar.style.width = '360px';
-                            sidebar.style.position = 'relative';
                         } else {
                             sidebar.setAttribute('aria-expanded', 'false');
                             sidebar.style.transform = 'translateX(-100%)';
@@ -219,13 +251,8 @@ components.html("""
                             sidebar.style.minWidth = '0px';
                             sidebar.style.width = '0px';
                         }
-                    } else {
-                        const collapseBtn = doc.querySelector('[data-testid="stSidebarCollapseButton"] button') || 
-                                            doc.querySelector('[data-testid="collapsedControl"] button');
-                        if (collapseBtn) collapseBtn.click();
                     }
                 };
-
                 doc.body.appendChild(tuercaBtn);
             }
         }
@@ -628,7 +655,7 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR MODERNA (BOTÓN REPORTE IZQUIERDA Y PERFIL/ESTADO DERECHA) ---
+# --- CABECERA SUPERIOR MODERNA ---
 estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in lista_carreras_disponibles) and lista_carreras_disponibles else "abiertos"
 led_clase_css = "led-rojo" if estado_global_remate == "cerrados" else "led-verde"
 
@@ -951,8 +978,8 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }}, 400);
-                }}, 8000);
+                    }, 400);
+                }, 8000);
             }}
         }})();
     </script>
@@ -1043,15 +1070,12 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (10 SEGUNDOS PARA ESTABILIDAD)
+# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL
 # =========================================================================
 @st.fragment(run_every=10.0)
 def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
 
-    # =========================================================================
-    # 1. MÓDULO DE REMATES (DENTRO DEL FRAGMENTO PARA ACTUALIZACIÓN EN VIVO)
-    # =========================================================================
     if st.session_state.menu_principal_opcion == "Remates":
         st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
         col_so1, col_so2, col_so3 = st.columns(3, gap="small")
@@ -1078,7 +1102,6 @@ def renderizar_tiempo_real_universal():
         if not lista_carreras_disponibles:
             st.warning("⚠️ No hay carreras cargadas en el sistema.")
         else:
-            # --- FILTRADO ESTRICTO SEGÚN MODALIDAD ASIGNADA EN ADMIN ---
             carreras_asignadas_admin = st.session_state.carreras_por_modalidad.get(modo_actual_remate, [])
             
             if modo_actual_remate == "Ciegos":
@@ -1116,7 +1139,6 @@ def renderizar_tiempo_real_universal():
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
 
-                # --- RELOJ DIGITAL EN TIEMPO REAL (SEGUNDO A SEGUNDO) CON ID PARA JS ---
                 hora_actual_envivo = obtener_hora_venezuela_local().strftime('%I:%M:%S %p')
                 st.markdown(f"""
                     <div class="reloj-digital-container">
@@ -1245,23 +1267,18 @@ def renderizar_tiempo_real_universal():
                         st.toast("✅ ¡Ejemplares retirados actualizados y tickets ajustados!")
                         st.rerun()
 
-                # --- VERIFICACIÓN DE INICIO Y CIERRE AUTOMÁTICO POR MODALIDAD ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
                 estado_conteo = st.session_state.estado_conteo_carrera_modalidad.get(clave_mod_carr, "INACTIVO")
 
                 if isinstance(dt_inicio, str):
-                    try:
-                        dt_inicio = datetime.fromisoformat(dt_inicio)
-                    except Exception:
-                        dt_inicio = None
+                    try: dt_inicio = datetime.fromisoformat(dt_inicio)
+                    except Exception: dt_inicio = None
 
                 if isinstance(dt_limite, str):
-                    try:
-                        dt_limite = datetime.fromisoformat(dt_limite)
-                    except Exception:
-                        dt_limite = None
+                    try: dt_limite = datetime.fromisoformat(dt_limite)
+                    except Exception: dt_limite = None
 
                 if dt_inicio and carrera_cerrada:
                     if ahora_dt >= dt_inicio:
@@ -1281,6 +1298,9 @@ def renderizar_tiempo_real_universal():
                             st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CONTEO_10S"
                             st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = ahora_dt
                             guardar_estado_global()
+                            
+                            # Alerta sonora de cierre inminente (10 segundos)
+                            components.html("<script>window.parent.reproducirSonidoAlerta('cierre');</script>", height=0, width=0)
                             st.rerun()
                         elif diferencia_segundos <= 0:
                             st.session_state.carreras_cerradas_remate[carr_activa] = True
@@ -1307,7 +1327,6 @@ def renderizar_tiempo_real_universal():
                 altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
                 components.html(tabla_html, height=altura_dinamica, scrolling=True)
                 
-                # --- POTE, PREMIO E INCENTIVO LLAMATIVO ---
                 retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
                 no_validos_carr_activa = st.session_state.ejemplares_no_valido.get(carr_activa, [])
                 excluidos_carr_activa = set(retirados_carr_activa) | set(no_validos_carr_activa)
@@ -1337,7 +1356,6 @@ def renderizar_tiempo_real_universal():
                 c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
                 c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
 
-                # --- ANUNCIO ÉPICO Y LLAMATIVO DEL GANADOR ---
                 if carr_activa in st.session_state.historial_ganadores:
                     info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
                     ganador_nombre = info_ganador_prev.get('Ganador', 'N/A')
@@ -1353,7 +1371,6 @@ def renderizar_tiempo_real_universal():
                         </div>
                     """, unsafe_allow_html=True)
 
-                # --- LIQUIDAR GANADOR SOLO EN ADELANTADOS ---
                 if modo_actual_remate == "Adelantados":
                     with st.container(border=True):
                         st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Seleccionar y Liquidar Ganador - {carr_activa}</p>", unsafe_allow_html=True)
@@ -1370,7 +1387,6 @@ def renderizar_tiempo_real_universal():
                                     monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
                                     
                                     incentivo_establecido = float(detalles_carr.get('incentivo_adelantados', 0.0))
-
                                     premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_establecido
                                     
                                     info_g = st.session_state.remates[carr_activa][caballo_ganador_elegido]
@@ -1445,6 +1461,9 @@ def renderizar_tiempo_real_universal():
                                                 st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
                                             st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
                                             guardar_estado_global()
+                                            
+                                            # Alerta sonora de éxito
+                                            components.html("<script>window.parent.reproducirSonidoAlerta('exito');</script>", height=0, width=0)
                                             st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
                                             st.rerun()
                     else:
@@ -1524,6 +1543,9 @@ def renderizar_tiempo_real_universal():
                                         if estado_conteo == "CONTEO_10S":
                                             st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = obtener_hora_venezuela_local()
                                         guardar_estado_global()
+                                        
+                                        # Alerta sonora de éxito
+                                        components.html("<script>window.parent.reproducirSonidoAlerta('exito');</script>", height=0, width=0)
                                         st.success("✅ ¡Puja registrada correctamente!")
                                         st.rerun()
 
@@ -1738,6 +1760,9 @@ if menu_principal_opcion == "Dupletas":
                             st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_unico_seccion
                             
                             guardar_estado_global()
+                            
+                            # Alerta sonora de éxito
+                            components.html("<script>window.parent.reproducirSonidoAlerta('exito');</script>", height=0, width=0)
                             st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito (Estado: PENDIENTE)!")
                             st.rerun()
 
@@ -1764,7 +1789,7 @@ if menu_principal_opcion == "Dupletas":
                 st.caption(f"Emitido: {t['fecha']}")
 
                 if sub_dup_actual != "6 En Linea":
-                    retirado_en_ticket = False
+                    retirado_in_ticket = False
                     carrera_afectada = None
                     for leg in t['legs']:
                         carr_l = leg['carrera']
@@ -1772,11 +1797,11 @@ if menu_principal_opcion == "Dupletas":
                         retirados_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
                         noval_carr = st.session_state.get('ejemplares_no_valido', {}).get(carr_l, [])
                         if ej_l in retirados_carr or ej_l in noval_carr:
-                            retirado_en_ticket = True
+                            retirado_in_ticket = True
                             carrera_afectada = carr_l
                             break
 
-                    if retirado_en_ticket:
+                    if retirado_in_ticket:
                         if t.get('estado') == 'Pendiente':
                             t['estado'] = 'Nulo (Retirado/No Valido)'
                             jug_t = t['jugador']
@@ -1793,7 +1818,7 @@ if menu_principal_opcion == "Dupletas":
                             })
                             guardar_estado_global()
 
-                        st.error(f"❌ El ticket **{t['id']}** está **NULO** y su monto ha sido restado porque el ejemplar de la **{carrera_afectada}** fue retirado o marcado como no válido. Seleccione un nuevo ejemplar para reactivarlo:")
+                        st.error(f"❌ El ticket **{t['id']}** está **NULO** y su monto ha sido restado porque el ejemplar de la **{carrera_afectada}** fue retirado o marcado como no válido:")
                         
                         with st.form(key=f"form_modificar_ticket_{t['id']}_{idx_t}"):
                             nuevas_legs = []
@@ -1845,7 +1870,7 @@ if menu_principal_opcion == "Dupletas":
                                 st.rerun()
 
 # =========================================================================
-# 3. MÓDULO DE CUENTAS (ORDENADO EN VERTICAL: DATOS, REPORTE, MIS REPORTES, TICKETS)
+# 3. MÓDULO DE CUENTAS
 # =========================================================================
 elif menu_principal_opcion == "Cuentas":
     st.markdown('<div id="reportar-pago-section"></div>', unsafe_allow_html=True)
@@ -1869,9 +1894,6 @@ elif menu_principal_opcion == "Cuentas":
 
     st.markdown("---")
 
-    # =========================================================================
-    # SECCIÓN 1: DATOS PARA PAGO MÓVIL (FIJOS EN VERTICAL)
-    # =========================================================================
     with st.container(border=True):
         st.markdown("📱 **1. Datos para Pago Móvil**")
         p_movil = st.session_state.datos_pago_movil
@@ -1879,9 +1901,6 @@ elif menu_principal_opcion == "Cuentas":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # =========================================================================
-    # SECCIÓN 2: REPORTE DE PAGO MÓVIL (FORMULARIO)
-    # =========================================================================
     with st.container(border=True):
         st.markdown("📝 **2. Reportar un Pago Realizado**")
         with st.form(key="form_reportar_pago_jugador"):
@@ -1907,9 +1926,6 @@ elif menu_principal_opcion == "Cuentas":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # =========================================================================
-    # SECCIÓN 3: MIS REPORTES ENVIADOS
-    # =========================================================================
     with st.container(border=True):
         st.markdown("📋 **3. Mis Reportes Enviados**")
         mis_reportes = [r for r in st.session_state.reportes_pago if r['jugador'] == jugador_actual]
@@ -1921,9 +1937,6 @@ elif menu_principal_opcion == "Cuentas":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # =========================================================================
-    # SECCIÓN 4: HISTORIAL DE TICKETS (ABAJO DE TODO)
-    # =========================================================================
     with st.container(border=True):
         st.markdown(f"### 🎟️ 4. Historial de Tickets y Asignaciones de `{jugador_actual}`")
 
@@ -1945,7 +1958,6 @@ elif menu_principal_opcion == "Cuentas":
         if remates_ganados_por_carrera:
             for carr_k, info_r in remates_ganados_por_carrera.items():
                 detalles_c = st.session_state.detalles_carreras.get(carr_k, {})
-                hora_cierre_real = detalles_c.get('hora_cierre_real', 'Cerrado')
                 
                 fecha_puja = "Jornada actual"
                 for h in reversed(st.session_state.historial_jugadas):
@@ -1996,7 +2008,7 @@ elif menu_principal_opcion == "Cuentas":
             st.info("ℹ️ No hay tickets múltiples registrados.")
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR (CONFIGURACIÓN CON TABS NATIVAS)
+# 4. ZONA DE ADMINISTRADOR
 # =========================================================================
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Panel de Configuración y Administración</div>", unsafe_allow_html=True)
