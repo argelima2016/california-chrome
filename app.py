@@ -1076,8 +1076,7 @@ def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
 
     if st.session_state.menu_principal_opcion == "Remates":
-        st.markdown(
-            """
+        st.markdown("""
         <style>
             @keyframes parpadeoLed {
                 0% { opacity: 1; transform: scale(1); }
@@ -1097,9 +1096,7 @@ def renderizar_tiempo_real_universal():
                 vertical-align: middle;
             }
         </style>
-        """,
-            unsafe_allow_html=True,
-        )
+        """, unsafe_allow_html=True)
 
         st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
         col_so1, col_so2, col_so3 = st.columns(3, gap="small")
