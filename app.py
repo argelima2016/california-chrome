@@ -628,7 +628,6 @@ st.markdown("""
     .led-rojo {
         background-color: #ff4757;
         color: #ff4757;
-        animation: parpadeoLed 1.2s infinite ease-in-out;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -870,7 +869,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BANNER MARQUESINA DINÁMICO (EXCLUSIVO PARA ADELANTADOS, CIEGOS, EN VIVO CON LED ROJO, DUPLETA Y TRIPLETA) ---
+# --- BANNER MARQUESINA DINÁMICO (EXCLUSIVO PARA ADELANTADOS, CIEGOS, EN VIVO CON PUNTO ROJO, DUPLETA Y TRIPLETA) ---
 elementos_carrusel_info = []
 
 carreras_adelantados = [c for c in st.session_state.carreras_por_modalidad.get("Adelantados", []) if c in lista_carreras_disponibles]
@@ -883,7 +882,7 @@ if carreras_ciegos:
 
 carreras_envivo = [c for c in st.session_state.carreras_por_modalidad.get("En Vivo", []) if c in lista_carreras_disponibles]
 if carreras_envivo:
-    elementos_carrusel_info.append('<span class="led-estado led-rojo" style="width:12px; height:12px; margin-right:4px; vertical-align:middle;"></span> EN VIVO: ' + " | ".join(carreras_envivo))
+    elementos_carrusel_info.append("🔴 EN VIVO: " + " | ".join(carreras_envivo))
 
 carreras_dupleta = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
 if carreras_dupleta:
@@ -1076,28 +1075,6 @@ def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
 
     if st.session_state.menu_principal_opcion == "Remates":
-        st.markdown("""
-        <style>
-            @keyframes parpadeoLed {
-                0% { opacity: 1; transform: scale(1); }
-                50% { opacity: 0.3; transform: scale(0.85); }
-                100% { opacity: 1; transform: scale(1); }
-            }
-            .led-rojo-btn {
-                width: 9px;
-                height: 9px;
-                background-color: #ff4757;
-                color: #ff4757;
-                border-radius: 50%;
-                display: inline-block;
-                box-shadow: 0 0 8px #ff4757;
-                animation: parpadeoLed 1.2s infinite ease-in-out;
-                margin-right: 6px;
-                vertical-align: middle;
-            }
-        </style>
-        """, unsafe_allow_html=True)
-
         st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
         col_so1, col_so2, col_so3 = st.columns(3, gap="small")
         with col_so1:
@@ -1111,8 +1088,7 @@ def renderizar_tiempo_real_universal():
                 guardar_estado_global()
                 st.rerun()
         with col_so3:
-            label_envivo = '<span class="led-rojo-btn"></span>⚡ En Vivo'
-            if st.button(label_envivo, key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
+            if st.button("🔴 ⚡ En Vivo", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
                 st.session_state.sub_remate_opcion = "En Vivo"
                 guardar_estado_global()
                 st.rerun()
@@ -2110,7 +2086,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
             sel_adel = st.multiselect("Carreras para ⏱️ Adelantados", options=carreras_existentes, default=def_adel, key="multiselect_carr_adelantados")
             sel_ciego = st.multiselect("Carreras para 🙈 Ciegos (Seleccione exactamente 2 para 1V y 6V)", options=carreras_existentes, default=def_ciego, key="multiselect_carr_ciegos")
-            sel_envivo = st.multiselect("Carreras para ⚡ En Vivo", options=carreras_existentes, default=def_envivo, key="multiselect_carr_envivo")
+            sel_envivo = st.multiselect("Carreras para 🔴 ⚡ En Vivo", options=carreras_existentes, default=def_envivo, key="multiselect_carr_envivo")
 
             if st.button("💾 Guardar Modalidades Independientes", key="btn_save_mod_independientes", use_container_width=True, type="primary"):
                 st.session_state.carreras_por_modalidad["Adelantados"] = sel_adel
