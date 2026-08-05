@@ -54,6 +54,7 @@ def cargar_estado_global(forzar_recarga=False):
         'fechas_horas_cierre_modalidad_multiple': {},
         'estado_conteo_carrera_modalidad': {},
         'tiempo_inicio_conteo_modalidad': {},
+        'alertas_reproducidas': {}, # Nuevo diccionario para evitar spam de sonidos
         'cuentas': {"CASA": {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}},
         'historial_jugadas': [],
         'ganancia_casa': 0.0,
@@ -112,7 +113,7 @@ def guardar_estado_global():
         'ejemplares_no_valido', 'detalles_carreras', 'historial_ganadores', 'carreras_cerradas_remate',
         'remates_cargados_en_cuentas', 'fechas_horas_inicio_remate_modalidad', 'fechas_horas_cierre_remate_modalidad',
         'fechas_horas_inicio_modalidad_multiple', 'fechas_horas_cierre_modalidad_multiple', 
-        'estado_conteo_carrera_modalidad', 'cuentas', 'historial_jugadas', 'ganancia_casa',
+        'estado_conteo_carrera_modalidad', 'alertas_reproducidas', 'cuentas', 'historial_jugadas', 'ganancia_casa',
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
@@ -174,6 +175,29 @@ components.html("""
             }
         }
         window.reproducirSonidoAlerta = reproducirSonidoAlerta;
+
+        function reproducirSonidoTiempo() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(660, audioCtx.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } catch (e) {
+                console.log("Audio restringido.");
+            }
+        }
+        window.reproducirSonidoTiempo = reproducirSonidoTiempo;
 
         function sincronizacionEnVivo() {
             const doc = window.parent.document;
@@ -414,16 +438,23 @@ st.markdown("""
         border-bottom: 2px solid #f1e05a;
         padding-bottom: 3px;
     }
+    @keyframes latidoEmergencia {
+        0% { transform: scale(1); box-shadow: 0 0 10px #ff4757; }
+        50% { transform: scale(1.05); box-shadow: 0 0 30px #ff4757; }
+        100% { transform: scale(1); box-shadow: 0 0 10px #ff4757; }
+    }
     .timer-box {
         background-color: #161b22;
-        border: 1px solid #ff4757;
-        padding: 6px;
-        border-radius: 6px;
+        border: 2px solid #ff4757;
+        padding: 12px;
+        border-radius: 8px;
         text-align: center;
-        font-size: clamp(12px, 3vw, 15px);
-        font-weight: bold;
+        font-size: clamp(18px, 4vw, 24px);
+        font-weight: 900;
         color: #ff4757;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
+        animation: latidoEmergencia 1s infinite;
+        text-shadow: 0px 0px 10px rgba(255, 71, 87, 0.8);
     }
     .carrera-condicion-card {
         background-color: #161b22;
@@ -693,7 +724,7 @@ def obtener_abreviatura_carrera(nombre_carrera, modo_actual=""):
                 return "1V"
             elif nombre_carrera == carreras_ciegas[1]:
                 return "6V"
-     
+        
     match = re.search(r'\d+', nombre_carrera)
     if match:
         return f"C{match.group(0)}"
@@ -869,7 +900,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BANNER MARQUESINA DINÁMICO (EXCLUSIVO PARA ADELANTADOS, CIEGOS, EN VIVO CON PUNTO ROJO, DUPLETA Y TRIPLETA) ---
+# --- BANNER MARQUESINA DINÁMICO ---
 elementos_carrusel_info = []
 
 carreras_adelantados = [c for c in st.session_state.carreras_por_modalidad.get("Adelantados", []) if c in lista_carreras_disponibles]
@@ -1289,14 +1320,30 @@ def renderizar_tiempo_real_universal():
                 if dt_limite:
                     st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:8px; border:1px solid #30363d; font-size:12px;'>⏰ Cierre Estricto ({modo_actual_remate}): <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
 
+                # --- SISTEMA DE ALERTAS TEMPRANAS Y CONTEO REGRESIVO ---
                 if dt_limite and not carrera_cerrada:
                     diferencia_segundos = (dt_limite - ahora_dt).total_seconds()
+                    
+                    if diferencia_segundos > 0:
+                        min_rest = int(diferencia_segundos / 60)
+                        seg_rest = int(diferencia_segundos % 60)
+                        
+                        alertas_target = [60, 30, 20, 10, 5, 4, 3, 2, 1]
+                        if min_rest in alertas_target and seg_rest <= 10:
+                            clave_alerta = f"{clave_mod_carr}_{min_rest}m"
+                            if clave_alerta not in st.session_state.get('alertas_reproducidas', {}):
+                                if 'alertas_reproducidas' not in st.session_state: st.session_state.alertas_reproducidas = {}
+                                st.session_state.alertas_reproducidas[clave_alerta] = True
+                                
+                                txt_tiempo = "1 hora" if min_rest == 60 else f"{min_rest} minutos"
+                                st.toast(f"⏳ ¡ATENCIÓN! Faltan {txt_tiempo} para el cierre de {carr_activa} ({modo_actual_remate})", icon="🚨")
+                                components.html("<script>window.parent.reproducirSonidoTiempo();</script>", height=0, width=0)
+
                     if estado_conteo == "INACTIVO":
                         if 0 < diferencia_segundos <= 10:
                             st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CONTEO_10S"
                             st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = ahora_dt
                             guardar_estado_global()
-                            
                             components.html("<script>window.parent.reproducirSonidoAlerta('cierre');</script>", height=0, width=0)
                             st.rerun()
                         elif diferencia_segundos <= 0:
@@ -1308,7 +1355,8 @@ def renderizar_tiempo_real_universal():
                     elif estado_conteo == "CONTEO_10S":
                         tiempo_inicio = st.session_state.tiempo_inicio_conteo_modalidad.get(clave_mod_carr, ahora_dt)
                         transcurridos = (ahora_dt - tiempo_inicio).total_seconds()
-                        if transcurridos >= 12:
+                        
+                        if transcurridos >= 10:
                             st.session_state.carreras_cerradas_remate[carr_activa] = True
                             st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
                             st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
@@ -1317,7 +1365,7 @@ def renderizar_tiempo_real_universal():
                         else:
                             restantes_10s = max(0, 10 - int(transcurridos))
                             if restantes_10s > 0:
-                                st.markdown(f"<div class='timer-box'>⚠️ CIERRE EN: <b>{restantes_10s}s</b> ({carr_activa} - {modo_actual_remate})</div>", unsafe_allow_html=True)
+                                st.markdown(f"<div class='timer-box'>⚠️ CIERRE INMINENTE: <b>{restantes_10s}s</b><br><span style='font-size:12px; font-weight:normal;'>(Nuevas pujas reinician el contador)</span></div>", unsafe_allow_html=True)
 
                 tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
                 cantidad_filas = len(st.session_state.remates[carr_activa])
@@ -1419,130 +1467,142 @@ def renderizar_tiempo_real_universal():
                             })
                         st.dataframe(pd.DataFrame(datos_h_carr), use_container_width=True, hide_index=True)
 
+                # --- BLOQUEO ESTRICTO POR HORARIO ---
+                fuera_de_horario = False
+                if dt_inicio and ahora_dt < dt_inicio:
+                    fuera_de_horario = True
+                    st.error("⏳ **REMATES CERRADOS:** Aún no es la hora de apertura para esta modalidad.")
+                elif (dt_limite and ahora_dt >= dt_limite) or carrera_cerrada:
+                    fuera_de_horario = True
+                    st.error("🔒 **REMATES FINALIZADOS:** El tiempo límite de esta modalidad ha culminado.")
+
                 with st.container(border=True):
-                    if modo_actual_remate == "Ciegos":
-                        st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
-                        monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
+                    if fuera_de_horario:
+                        st.warning("🚫 Las acciones de puja están deshabilitadas fuera del horario establecido.")
+                    else:
+                        if modo_actual_remate == "Ciegos":
+                            st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
+                            monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
 
-                        caballos_disponibles_ciego = [
-                            cab for cab, info in st.session_state.remates[carr_activa].items() 
-                            if (info['jugador'] == "Sin Postor" or info['monto'] <= 0) and cab not in excluidos_carr_activa
-                        ]
+                            caballos_disponibles_ciego = [
+                                cab for cab, info in st.session_state.remates[carr_activa].items() 
+                                if (info['jugador'] == "Sin Postor" or info['monto'] <= 0) and cab not in excluidos_carr_activa
+                            ]
 
-                        if not caballos_disponibles_ciego:
-                            st.warning("⚠️ Todos los ejemplares disponibles de esta carrera ya han sido adquiridos.")
+                            if not caballos_disponibles_ciego:
+                                st.warning("⚠️ Todos los ejemplares disponibles de esta carrera ya han sido adquiridos.")
+                            else:
+                                st.markdown("🎲 **Panel Didáctico (Elige un número para asignar):**")
+                                cols_ciego_grid = st.columns(min(3, len(caballos_disponibles_ciego)), gap="small")
+                                for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
+                                    c_idx = idx_cb % len(cols_ciego_grid)
+                                    num_cb_parte = cb_disp.split(" - ")[0]
+                                    with cols_ciego_grid[c_idx]:
+                                        if carrera_cerrada:
+                                            st.button(f"🔒#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, disabled=True)
+                                        else:
+                                            if st.button(f"#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, type="primary"):
+                                                st.session_state.remates[carr_activa][cb_disp] = {
+                                                    "jugador": st.session_state.usuario_activo, 
+                                                    "monto": monto_fijo_carrera
+                                                }
+                                                st.session_state.historial_jugadas.append({
+                                                    "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                                    "jugador": st.session_state.usuario_activo,
+                                                    "tipo": f"Remate Ciego ({modo_actual_remate})",
+                                                    "carrera": carr_activa,
+                                                    "detalle": cb_disp,
+                                                    "monto": monto_fijo_carrera
+                                                })
+                                                if st.session_state.usuario_activo not in st.session_state.cuentas:
+                                                    st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                                st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
+                                                guardar_estado_global()
+                                                
+                                                components.html("<script>window.parent.reproducirSonidoAlerta('exito');</script>", height=0, width=0)
+                                                st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
+                                                st.rerun()
                         else:
-                            st.markdown("🎲 **Panel Didáctico (Elige un número para asignar):**")
-                            cols_ciego_grid = st.columns(min(3, len(caballos_disponibles_ciego)), gap="small")
-                            for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
-                                c_idx = idx_cb % len(cols_ciego_grid)
-                                num_cb_parte = cb_disp.split(" - ")[0]
-                                with cols_ciego_grid[c_idx]:
-                                    if carrera_cerrada:
-                                        st.button(f"🔒#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, disabled=True)
-                                    else:
-                                        if st.button(f"#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, type="primary"):
-                                            st.session_state.remates[carr_activa][cb_disp] = {
-                                                "jugador": st.session_state.usuario_activo, 
-                                                "monto": monto_fijo_carrera
-                                            }
+                            st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
+                            lista_caballos_activos = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
+                            
+                            if not lista_caballos_activos:
+                                st.warning("No hay ejemplares disponibles para pujar.")
+                            else:
+                                k_sel_cab = f"rem_caballo_activo_click_{carr_activa}"
+                                if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
+                                    st.session_state[k_sel_cab] = lista_caballos_activos[0]
+                                    
+                                st.markdown(f"🔹 **1. Seleccionar Ejemplar (Disponibles: {len(lista_caballos_activos)}):**")
+                                
+                                cantidad_ejemplares = len(lista_caballos_activos)
+                                cols_ejemplares = 3
+                                num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
+                                
+                                idx_cab = 0
+                                for f in range(num_filas):
+                                    cols_fila = st.columns(cols_ejemplares, gap="small")
+                                    for c in range(cols_ejemplares):
+                                        if idx_cab < cantidad_ejemplares:
+                                            cab_item = lista_caballos_activos[idx_cab]
+                                            num_parte = cab_item.split(" - ")[0]
+                                            
+                                            info_remate_cab = st.session_state.remates[carr_activa].get(cab_item, {})
+                                            propietario = info_remate_cab.get('jugador', 'Sin Postor')
+                                            
+                                            if propietario == "Sin Postor" or propietario == "CASA" or info_remate_cab.get('monto', 0.0) == 0:
+                                                color_estilo = "background-color: #e2e8f0 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important;"
+                                            elif propietario == st.session_state.usuario_activo:
+                                                color_estilo = "background-color: #22c55e !important; color: #ffffff !important; border: 1px solid #16a34a !important;"
+                                            else:
+                                                color_estilo = "background-color: #ef4444 !important; color: #ffffff !important; border: 1px solid #dc2626 !important;"
+
+                                            with cols_fila[c]:
+                                                st.markdown(f"""
+                                                    <style>
+                                                    div[data-testid="stVerticalBlock"] button[key="rem_btn_cab_{carr_activa}_{idx_cab}"] {{
+                                                        {color_estilo}
+                                                    }}
+                                                    </style>
+                                                """, unsafe_allow_html=True)
+
+                                                if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{idx_cab}", use_container_width=True):
+                                                    st.session_state[k_sel_cab] = cab_item
+                                                    st.rerun()
+
+                                            idx_cab += 1
+                                
+                                caballo_seleccionado = st.session_state[k_sel_cab]
+                                propietario_actual_sel = st.session_state.remates[carr_activa][caballo_seleccionado].get('jugador', 'Sin Postor')
+                                st.info(f"Ejemplar activo: **{caballo_seleccionado}** (Poseedor actual: **{propietario_actual_sel}**)")
+
+                                puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
+                                opciones_escala = obtener_siguientes_montos(puja_actual)
+                                monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{carr_activa}_{caballo_seleccionado}")
+                                
+                                if carrera_cerrada:
+                                    st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary", disabled=True)
+                                else:
+                                    if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary"):
+                                        if monto_puja <= puja_actual:
+                                            st.error("El monto debe ser mayor a la puja actual.")
+                                        else:
+                                            st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
                                             st.session_state.historial_jugadas.append({
                                                 "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
                                                 "jugador": st.session_state.usuario_activo,
-                                                "tipo": f"Remate Ciego ({modo_actual_remate})",
+                                                "tipo": f"Remate ({modo_actual_remate})",
                                                 "carrera": carr_activa,
-                                                "detalle": cb_disp,
-                                                "monto": monto_fijo_carrera
+                                                "detalle": caballo_seleccionado,
+                                                "monto": monto_puja
                                             })
-                                            if st.session_state.usuario_activo not in st.session_state.cuentas:
-                                                st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                                            st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
+                                            if estado_conteo == "CONTEO_10S":
+                                                st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = obtener_hora_venezuela_local()
                                             guardar_estado_global()
                                             
                                             components.html("<script>window.parent.reproducirSonidoAlerta('exito');</script>", height=0, width=0)
-                                            st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
+                                            st.success("✅ ¡Puja registrada correctamente!")
                                             st.rerun()
-                    else:
-                        st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
-                        lista_caballos_activos = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
-                        
-                        if not lista_caballos_activos:
-                            st.warning("No hay ejemplares disponibles para pujar.")
-                        else:
-                            k_sel_cab = f"rem_caballo_activo_click_{carr_activa}"
-                            if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
-                                st.session_state[k_sel_cab] = lista_caballos_activos[0]
-                                
-                            st.markdown(f"🔹 **1. Seleccionar Ejemplar (Disponibles: {len(lista_caballos_activos)}):**")
-                            
-                            cantidad_ejemplares = len(lista_caballos_activos)
-                            cols_ejemplares = 3
-                            num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
-                            
-                            idx_cab = 0
-                            for f in range(num_filas):
-                                cols_fila = st.columns(cols_ejemplares, gap="small")
-                                for c in range(cols_ejemplares):
-                                    if idx_cab < cantidad_ejemplares:
-                                        cab_item = lista_caballos_activos[idx_cab]
-                                        num_parte = cab_item.split(" - ")[0]
-                                        
-                                        info_remate_cab = st.session_state.remates[carr_activa].get(cab_item, {})
-                                        propietario = info_remate_cab.get('jugador', 'Sin Postor')
-                                        
-                                        if propietario == "Sin Postor" or propietario == "CASA" or info_remate_cab.get('monto', 0.0) == 0:
-                                            color_estilo = "background-color: #e2e8f0 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important;"
-                                        elif propietario == st.session_state.usuario_activo:
-                                            color_estilo = "background-color: #22c55e !important; color: #ffffff !important; border: 1px solid #16a34a !important;"
-                                        else:
-                                            color_estilo = "background-color: #ef4444 !important; color: #ffffff !important; border: 1px solid #dc2626 !important;"
-
-                                        with cols_fila[c]:
-                                            st.markdown(f"""
-                                                <style>
-                                                div[data-testid="stVerticalBlock"] button[key="rem_btn_cab_{carr_activa}_{idx_cab}"] {{
-                                                    {color_estilo}
-                                                }}
-                                                </style>
-                                            """, unsafe_allow_html=True)
-
-                                            if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{idx_cab}", use_container_width=True):
-                                                st.session_state[k_sel_cab] = cab_item
-                                                st.rerun()
-
-                                        idx_cab += 1
-                            
-                            caballo_seleccionado = st.session_state[k_sel_cab]
-                            propietario_actual_sel = st.session_state.remates[carr_activa][caballo_seleccionado].get('jugador', 'Sin Postor')
-                            st.info(f"Ejemplar activo: **{caballo_seleccionado}** (Poseedor actual: **{propietario_actual_sel}**)")
-
-                            puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
-                            opciones_escala = obtener_siguientes_montos(puja_actual)
-                            monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{carr_activa}_{caballo_seleccionado}")
-                            
-                            if carrera_cerrada:
-                                st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary", disabled=True)
-                            else:
-                                if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary"):
-                                    if monto_puja <= puja_actual:
-                                        st.error("El monto debe ser mayor a la puja actual.")
-                                    else:
-                                        st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
-                                        st.session_state.historial_jugadas.append({
-                                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                            "jugador": st.session_state.usuario_activo,
-                                            "tipo": f"Remate ({modo_actual_remate})",
-                                            "carrera": carr_activa,
-                                            "detalle": caballo_seleccionado,
-                                            "monto": monto_puja
-                                        })
-                                        if estado_conteo == "CONTEO_10S":
-                                            st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = obtener_hora_venezuela_local()
-                                        guardar_estado_global()
-                                        
-                                        components.html("<script>window.parent.reproducirSonidoAlerta('exito');</script>", height=0, width=0)
-                                        st.success("✅ ¡Puja registrada correctamente!")
-                                        st.rerun()
 
 renderizar_tiempo_real_universal()
 
@@ -1889,17 +1949,37 @@ elif menu_principal_opcion == "Cuentas":
     st.markdown("---")
 
     with st.container(border=True):
-        st.markdown("📱 **1. Datos para Pago Móvil**")
+        st.markdown("📱 **1. Datos para Pago Móvil (Haz clic en el ícono para copiar)**")
         p_movil = st.session_state.datos_pago_movil
-        st.info(f"🏦 **Banco:** {p_movil['banco']}\n\n📱 **Teléfono:** {p_movil['telefono']}\n\n🆔 **Cédula/RIF:** {p_movil['cedula']}")
+        
+        c_p1, c_p2, c_p3 = st.columns(3)
+        with c_p1:
+            st.caption("🏦 Banco:")
+            st.code(p_movil['banco'])
+        with c_p2:
+            st.caption("📱 Teléfono:")
+            st.code(p_movil['telefono'])
+        with c_p3:
+            st.caption("🆔 Cédula/RIF:")
+            st.code(p_movil['cedula'])
 
     st.markdown("<br>", unsafe_allow_html=True)
+
+    # LISTA OFICIAL DE BANCOS VENEZOLANOS
+    BANCOS_VENEZUELA = [
+        "0102 - Banco de Venezuela", "0104 - Venezolano de Crédito", "0105 - Mercantil",
+        "0108 - Provincial", "0114 - Bancaribe", "0115 - Exterior", "0128 - Banco Caroní",
+        "0134 - Banesco", "0137 - Sofitasa", "0138 - Banco Plaza", "0151 - BFC Banco Fondo Común",
+        "0156 - 100% Banco", "0157 - Del Sur", "0163 - Banco del Tesoro",
+        "0169 - Mi Banco", "0171 - Banco Activo", "0172 - Bancamiga", "0174 - Banplus",
+        "0175 - Bicentenario", "0177 - Banfanb", "0191 - BNC Nacional de Crédito"
+    ]
 
     with st.container(border=True):
         st.markdown("📝 **2. Reportar un Pago Realizado**")
         with st.form(key="form_reportar_pago_jugador"):
             monto_rep = st.number_input("Monto Pagado (Bs.)", min_value=0.5, step=100.0)
-            banco_remitente = st.text_input("Banco Emisor (de donde envió)")
+            banco_remitente = st.selectbox("Banco Emisor (de donde envió)", BANCOS_VENEZUELA)
             ref_pago = st.text_input("Últimos 4 dígitos o Referencia")
             
             if st.form_submit_button("📤 Enviar Reporte de Pago", use_container_width=True):
