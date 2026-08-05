@@ -628,6 +628,7 @@ st.markdown("""
     .led-rojo {
         background-color: #ff4757;
         color: #ff4757;
+        animation: parpadeoLed 1.2s infinite ease-in-out;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -869,7 +870,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BANNER MARQUESINA DINÁMICO (EXCLUSIVO PARA ADELANTADOS, CIEGOS, EN VIVO, DUPLETA Y TRIPLETA) ---
+# --- BANNER MARQUESINA DINÁMICO (EXCLUSIVO PARA ADELANTADOS, CIEGOS, EN VIVO CON LED ROJO, DUPLETA Y TRIPLETA) ---
 elementos_carrusel_info = []
 
 carreras_adelantados = [c for c in st.session_state.carreras_por_modalidad.get("Adelantados", []) if c in lista_carreras_disponibles]
@@ -882,7 +883,7 @@ if carreras_ciegos:
 
 carreras_envivo = [c for c in st.session_state.carreras_por_modalidad.get("En Vivo", []) if c in lista_carreras_disponibles]
 if carreras_envivo:
-    elementos_carrusel_info.append("📡 EN VIVO: " + " | ".join(carreras_envivo))
+    elementos_carrusel_info.append('<span class="led-estado led-rojo" style="width:12px; height:12px; margin-right:4px; vertical-align:middle;"></span> EN VIVO: ' + " | ".join(carreras_envivo))
 
 carreras_dupleta = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
 if carreras_dupleta:
