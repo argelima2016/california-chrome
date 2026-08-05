@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 from pypdf import PdfReader
 
 # Configuración de pantalla completa
-st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="California Chrome", layout="wide", page_icon="🐺")
 
 # --- HORA LOCAL DE VENEZUELA ---
 def obtener_hora_venezuela_local():
@@ -200,7 +200,7 @@ components.html("""
             const relojElem = doc.getElementById('reloj-js-vivo');
             if (relojElem) {
                 const options = { timeZone: 'America/Caracas', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-                relojElem.innerText = "⚡ " + new Intl.DateTimeFormat('en-US', options).format(new Date());
+                relojElem.innerText = new Intl.DateTimeFormat('en-US', options).format(new Date());
             }
 
             let tuercaBtn = doc.getElementById('custom-tuerca-sidebar-btn');
@@ -874,11 +874,11 @@ elementos_carrusel_info = []
 
 carreras_adelantados = [c for c in st.session_state.carreras_por_modalidad.get("Adelantados", []) if c in lista_carreras_disponibles]
 if carreras_adelantados:
-    elementos_carrusel_info.append("⏱️ ADELANTADOS: " + " | ".join(carreras_adelantados))
+    elementos_carrusel_info.append("ADELANTADOS: " + " | ".join(carreras_adelantados))
 
 carreras_ciegos = [c for c in st.session_state.carreras_por_modalidad.get("Ciegos", []) if c in lista_carreras_disponibles]
 if carreras_ciegos:
-    elementos_carrusel_info.append("🙈 CIEGOS: " + " | ".join(carreras_ciegos))
+    elementos_carrusel_info.append("CIEGOS: " + " | ".join(carreras_ciegos))
 
 carreras_envivo = [c for c in st.session_state.carreras_por_modalidad.get("En Vivo", []) if c in lista_carreras_disponibles]
 if carreras_envivo:
@@ -886,11 +886,11 @@ if carreras_envivo:
 
 carreras_dupleta = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
 if carreras_dupleta:
-    elementos_carrusel_info.append("🎟️ DUPLETA: " + " | ".join(carreras_dupleta))
+    elementos_carrusel_info.append("DUPLETA: " + " | ".join(carreras_dupleta))
 
 carreras_tripleta = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
 if carreras_tripleta:
-    elementos_carrusel_info.append("🎟️ TRIPLETA: " + " | ".join(carreras_tripleta))
+    elementos_carrusel_info.append("TRIPLETA: " + " | ".join(carreras_tripleta))
 
 if not elementos_carrusel_info:
     elementos_carrusel_info.append("⏳ CONFIGURA LAS CARRERAS ASIGNADAS EN LA ZONA ADMIN")
@@ -1078,17 +1078,17 @@ def renderizar_tiempo_real_universal():
         st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
         col_so1, col_so2, col_so3 = st.columns(3, gap="small")
         with col_so1:
-            if st.button("⏱️ Adelantados", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
+            if st.button("Adelantados", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
                 st.session_state.sub_remate_opcion = "Adelantados"
                 guardar_estado_global()
                 st.rerun()
         with col_so2:
-            if st.button("🙈 Ciegos", key="sub_rem_ciegos", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Ciegos" else "secondary"):
+            if st.button("Ciegos", key="sub_rem_ciegos", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Ciegos" else "secondary"):
                 st.session_state.sub_remate_opcion = "Ciegos"
                 guardar_estado_global()
                 st.rerun()
         with col_so3:
-            if st.button("🔴 ⚡ En Vivo", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
+            if st.button("🔴 En Vivo", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
                 st.session_state.sub_remate_opcion = "En Vivo"
                 guardar_estado_global()
                 st.rerun()
@@ -1140,7 +1140,7 @@ def renderizar_tiempo_real_universal():
                 hora_actual_envivo = obtener_hora_venezuela_local().strftime('%I:%M:%S %p')
                 st.markdown(f"""
                     <div class="reloj-digital-container">
-                        <span id="reloj-js-vivo" class="reloj-digital-txt">⚡ {hora_actual_envivo}</span>
+                        <span id="reloj-js-vivo" class="reloj-digital-txt">{hora_actual_envivo}</span>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -2084,9 +2084,9 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             def_ciego = [c for c in modalidades_dict.get("Ciegos", []) if c in carreras_existentes]
             def_envivo = [c for c in modalidades_dict.get("En Vivo", []) if c in carreras_existentes]
 
-            sel_adel = st.multiselect("Carreras para ⏱️ Adelantados", options=carreras_existentes, default=def_adel, key="multiselect_carr_adelantados")
-            sel_ciego = st.multiselect("Carreras para 🙈 Ciegos (Seleccione exactamente 2 para 1V y 6V)", options=carreras_existentes, default=def_ciego, key="multiselect_carr_ciegos")
-            sel_envivo = st.multiselect("Carreras para 🔴 ⚡ En Vivo", options=carreras_existentes, default=def_envivo, key="multiselect_carr_envivo")
+            sel_adel = st.multiselect("Carreras para Adelantados", options=carreras_existentes, default=def_adel, key="multiselect_carr_adelantados")
+            sel_ciego = st.multiselect("Carreras para Ciegos (Seleccione exactamente 2 para 1V y 6V)", options=carreras_existentes, default=def_ciego, key="multiselect_carr_ciegos")
+            sel_envivo = st.multiselect("Carreras para 🔴 En Vivo", options=carreras_existentes, default=def_envivo, key="multiselect_carr_envivo")
 
             if st.button("💾 Guardar Modalidades Independientes", key="btn_save_mod_independientes", use_container_width=True, type="primary"):
                 st.session_state.carreras_por_modalidad["Adelantados"] = sel_adel
