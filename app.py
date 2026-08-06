@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 from pypdf import PdfReader
 
 # Configuración de pantalla completa
-st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
 
 # --- HORA LOCAL DE VENEZUELA UNIFICADA (SIN DESFASE ENTRE PC Y TELÉFONO) ---
 def obtener_hora_venezuela_local():
@@ -2098,11 +2098,21 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             )
             if st.button("💾 Actualizar Carreras", key="btn_actualizar_cant_carreras", use_container_width=True, type="primary"):
                 st.session_state.total_carreras_semana = nueva_cantidad_carreras
-                for i in range(1, nueva_cantidad_carreras + 1):
-                    c_n = f"Carrera {i}"
+                
+                # Generar lista oficial de carreras actuales
+                carreras_generadas = [f"Carrera {i}" for i in range(1, nueva_cantidad_carreras + 1)]
+                
+                for c_n in carreras_generadas:
+                    # 1. Banco de caballos predeterminado si no existe
                     if c_n not in st.session_state.banco_caballos_por_carrera:
                         st.session_state.banco_caballos_por_carrera[c_n] = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
+                    
+                    # 2. Estructura de remates predeterminada
+                    if c_n not in st.session_state.remates:
                         st.session_state.remates[c_n] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
+                    
+                    # 3. Detalles e incentivos por carrera
+                    if c_n not in st.session_state.detalles_carreras:
                         st.session_state.detalles_carreras[c_n] = {
                             "condicion": "Condición estándar", 
                             "distancia": "1200 mts", 
@@ -2113,8 +2123,29 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                             "incentivo_envivo": 0.0,
                             "hora_cierre_real": "No registrada"
                         }
+                    
+                    # 4. Estados iniciales de control
+                    if c_n not in st.session_state.carreras_cerradas_remate:
+                        st.session_state.carreras_cerradas_remate[c_n] = False
+                    if c_n not in st.session_state.remates_cargados_en_cuentas:
+                        st.session_state.remates_cargados_en_cuentas[c_n] = False
+                    if c_n not in st.session_state.ejemplares_retirados:
+                        st.session_state.ejemplares_retirados[c_n] = []
+                    if 'ejemplares_no_valido' in st.session_state and c_n not in st.session_state.ejemplares_no_valido:
+                        st.session_state.ejemplares_no_valido[c_n] = []
+
+                # 5. Sincronizar automáticamente con las carreras activas generales y múltiples
+                st.session_state.carreras_activas_remate = list(carreras_generadas)
+                st.session_state.carreras_habilitadas_dupleta = list(carreras_generadas)
+                st.session_state.carreras_habilitadas_tripleta = list(carreras_generadas)
+                st.session_state.carreras_habilitadas_polla = list(carreras_generadas)
+                
+                # Asignación por defecto a Adelantados si están vacías
+                if not st.session_state.carreras_por_modalidad.get("Adelantados"):
+                    st.session_state.carreras_por_modalidad["Adelantados"] = list(carreras_generadas)
+
                 guardar_estado_global()
-                st.toast(f"✅ ¡Jornada ajustada a {nueva_cantidad_carreras} carreras!")
+                st.toast(f"✅ ¡Jornada ajustada a {nueva_cantidad_carreras} carreras con éxito!")
                 st.rerun()
 
         st.markdown("---")
