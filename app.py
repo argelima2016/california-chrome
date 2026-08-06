@@ -444,26 +444,26 @@ st.markdown("""
         padding-bottom: 3px;
     }
     @keyframes latidoEmergencia {
-        0% { transform: scale(1); box-shadow: 0 0 10px #ff4757; }
-        50% { transform: scale(1.05); box-shadow: 0 0 30px #ff4757; }
-        100% { transform: scale(1); box-shadow: 0 0 10px #ff4757; }
+        0% { transform: scale(1); box-shadow: 0 0 15px #ff4757; }
+        50% { transform: scale(1.06); box-shadow: 0 0 35px #ff4757, inset 0 0 20px #ff4757; }
+        100% { transform: scale(1); box-shadow: 0 0 15px #ff4757; }
     }
-    .timer-flotante-fijo {
+    .timer-flotante-gigante {
         position: sticky;
         top: 0px;
         z-index: 99999;
-        background-color: #161b22;
-        border: 2px solid #ff4757;
-        padding: 10px;
-        border-radius: 8px;
+        background: linear-gradient(135deg, #2c0b0e 0%, #161b22 100%);
+        border: 4px solid #ff4757;
+        padding: 16px;
+        border-radius: 12px;
         text-align: center;
-        font-size: clamp(18px, 4vw, 24px);
+        font-size: clamp(22px, 5vw, 32px);
         font-weight: 900;
         color: #ff4757;
-        margin-bottom: 12px;
-        animation: latidoEmergencia 1s infinite;
-        text-shadow: 0px 0px 10px rgba(255, 71, 87, 0.8);
-        box-shadow: 0px 4px 15px rgba(0,0,0,0.8);
+        margin-bottom: 14px;
+        animation: latidoEmergencia 0.8s infinite;
+        text-shadow: 0px 0px 15px rgba(255, 71, 87, 0.9);
+        box-shadow: 0px 6px 25px rgba(255, 71, 87, 0.5);
     }
     .carrera-condicion-card {
         background-color: #161b22;
@@ -1224,7 +1224,7 @@ def renderizar_tiempo_real_universal():
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- ⏱️ CONTADOR FLOTANTE FIJO CON DESCUENTO EN VIVO (10, 9, 8...) ---
+                # --- ⏱️ CONTADOR FLOTANTE GIGANTE CON DESCUENTO EN VIVO Y STICKY ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
@@ -1293,23 +1293,23 @@ def renderizar_tiempo_real_universal():
                         else:
                             restantes_10s = max(0, 10 - int(transcurridos))
                             if restantes_10s > 0:
-                                # 💡 SCRIPT JS EN VIVO QUE DESCUENTA 10, 9, 8... CADA SEGUNDO SIN RECARGAR LA PÁGINA
-                                html_conteo_vivo = f"""
-                                <div id="caja-conteo-vivo" class="timer-flotante-fijo">
-                                    ⚠️ CIERRE INMINENTE: <b id="numero-regresivo">{restantes_10s}</b><br>
-                                    <span style='font-size:12px; font-weight:normal;'>(Nuevas pujas reinician el contador)</span>
+                                # 💡 BANNER GIGANTE Y MUY VISTOSO CON CONTEO EN VIVO 10, 9, 8...
+                                html_conteo_gigante = f"""
+                                <div id="caja-conteo-gigante" class="timer-flotante-gigante">
+                                    ⚠️ ¡CIERRE INMINENTE! <span id="num-vivo-regresivo" style="color: #ffff00; font-size: 38px;">{restantes_10s}</span> SEG<br>
+                                    <span style='font-size:12px; font-weight:normal; color: #a5d6ff;'>(Nuevas pujas reinician el contador)</span>
                                 </div>
                                 <script>
                                     (function() {{
                                         let restante = {restantes_10s};
-                                        const elem = document.getElementById("numero-regresivo");
-                                        const caja = document.getElementById("caja-conteo-vivo");
+                                        const elem = document.getElementById("num-vivo-regresivo");
+                                        const caja = document.getElementById("caja-conteo-gigante");
                                         
-                                        if (window.intervaloConteoInminente) {{
-                                            clearInterval(window.intervaloConteoInminente);
+                                        if (window.intervaloGigante) {{
+                                            clearInterval(window.intervaloGigante);
                                         }}
                                         
-                                        window.intervaloConteoInminente = setInterval(function() {{
+                                        window.intervaloGigante = setInterval(function() {{
                                             restante--;
                                             if (restante > 0) {{
                                                 if (elem) elem.innerText = restante;
@@ -1320,16 +1320,16 @@ def renderizar_tiempo_real_universal():
                                                     caja.style.color = "#f1c40f";
                                                     caja.innerHTML = "🔒 CERRADO EL REMATE, ¡SUERTE! 🐎";
                                                 }}
-                                                clearInterval(window.intervaloConteoInminente);
+                                                clearInterval(window.intervaloGigante);
                                             }}
                                         }}, 1000);
                                     }})();
                                 </script>
                                 """
-                                components.html(html_conteo_vivo, height=85)
+                                components.html(html_conteo_gigante, height=105)
 
                 if carrera_cerrada:
-                    st.markdown("<div class='timer-flotante-fijo' style='border-color: #f1c40f; color: #f1c40f;'>🔒 CERRADO EL REMATE, ¡SUERTE! 🐎</div>", unsafe_allow_html=True)
+                    st.markdown("<div class='timer-flotante-gigante' style='border-color: #f1c40f; color: #f1c40f;'>🔒 CERRADO EL REMATE, ¡SUERTE! 🐎</div>", unsafe_allow_html=True)
 
                 if carr_activa not in st.session_state.ejemplares_retirados:
                     st.session_state.ejemplares_retirados[carr_activa] = []
