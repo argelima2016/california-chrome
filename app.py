@@ -12,9 +12,23 @@ from bs4 import BeautifulSoup
 from datetime import datetime, time as dtime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pypdf import PdfReader
+from supabase import create_client, Client
 
 # Configuración de pantalla completa optimizada para celulares
 st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
+
+# --- CREDENCIALES DE SUPABASE ---
+SUPABASE_URL = "https://qssnhvwdgxzwzkfusstf.supabase.co"
+SUPABASE_KEY = "sb_publishable_C4EDNCtB6i6yL84HDxw6tw_V5YGVmTQ"
+
+@st.cache_resource
+def init_supabase():
+    try:
+        return create_client(SUPABASE_URL, SUPABASE_KEY)
+    except Exception:
+        return None
+
+supabase: Client = init_supabase()
 
 # --- HORA LOCAL DE VENEZUELA UNIFICADA (SIN DESFASE ENTRE PC Y TELÉFONO) ---
 def obtener_hora_venezuela_local():
@@ -30,8 +44,8 @@ def formatear_bs(monto):
     numero_formateado = f"{monto:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return f"Bs. {numero_formateado}"
 
-# --- SISTEMA DE PERSISTENCIA GLOBAL (JSON) PARA SINCRONIZAR A TODOS LOS USUARIOS ---
-DB_FILE = "state_db.json"
+# --- SISTEMA DE PERSISTENCIA GLOBAL EN SUPABASE ---
+DB_ROW_ID = 1
 
 def cargar_estado_global(forzar_recarga=False):
     default_state = {
@@ -78,15 +92,21 @@ def cargar_estado_global(forzar_recarga=False):
             'cedula': 'V-00.000.000'
         },
         'reportes_pago': [],
-        'ultima_puja_usuario': {},  # Diccionario para controlar los 15 segundos de reversión por usuario/carrera
-        'resultados_oficiales_polla': {} # { "Carrera 1": {"1ro": "1 - Ejemplar 1", "2do": "2 - Ejemplar 2", "3ro": "3 - Ejemplar 3"} }
+        'ultima_puja_usuario': {},
+        'resultados_oficiales_polla': {}
     }
     
-    if os.path.exists(DB_FILE):
+    data = None
+    if supabase:
         try:
-            with open(DB_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                
+            response = supabase.table("app_state").select("data").eq("id", DB_ROW_ID).execute()
+            if response.data and len(response.data) > 0:
+                data = response.data[0].get("data")
+        except Exception:
+            data = None
+
+    if data:
+        try:
             for dict_key in ['fechas_horas_inicio_remate_modalidad', 'fechas_horas_cierre_remate_modalidad', 'fechas_horas_inicio_modalidad_multiple', 'fechas_horas_cierre_modalidad_multiple']:
                 if dict_key in data and isinstance(data[dict_key], dict):
                     for sub_k, sub_v in data[dict_key].items():
@@ -136,11 +156,12 @@ def guardar_estado_global():
                 data[k] = val_copy
             else:
                 data[k] = val
-    try:
-        with open(DB_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
-    except Exception:
-        pass
+                
+    if supabase:
+        try:
+            supabase.table("app_state").upsert({"id": DB_ROW_ID, "data": data}).execute()
+        except Exception as e:
+            print("Error al guardar en Supabase: ", e)
 
 cargar_estado_global()
 
@@ -1089,8 +1110,7 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
     for key in list(st.session_state.keys()):
         if key not in ['banco_caballos_por_carrera', 'lista_usuarios']:
             del st.session_state[key]
-    if os.path.exists(DB_FILE):
-        os.remove(DB_FILE)
+    guardar_estado_global()
     st.toast("🚨 Jornada reiniciada.")
     st.rerun()
 
@@ -1282,7 +1302,6 @@ def renderizar_tiempo_real_universal():
                         else:
                             restantes_10s = max(0, 10 - int(transcurridos))
                             if restantes_10s > 0:
-                                # 💡 COMPONENTE HTML ULTRA-COMPACTO Y LLAMATIVO PARA MÓVILES
                                 html_anuncio_movil = f"""
                                 <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #2b0909 0%, #161b22 100%); border: 3px solid #ff4757; border-radius: 8px; padding: 6px 10px; text-align: center; box-shadow: 0px 4px 15px rgba(255, 71, 87, 0.6); margin-bottom: 8px;">
                                     <div style="color: #ff4757; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase;">⚠️ CIERRE INMINENTE ⚠️</div>
@@ -1468,7 +1487,6 @@ def renderizar_tiempo_real_universal():
                                                     "monto": monto_fijo_carrera
                                                 }
                                                 
-                                                # Registrar última puja para los 15 segundos de reversión
                                                 st.session_state.ultima_puja_usuario = {
                                                     "usuario": st.session_state.usuario_activo,
                                                     "carrera": carr_activa,
@@ -1515,15 +1533,12 @@ def renderizar_tiempo_real_universal():
                                             mnt_u = ultima['monto']
                                             jug_u = ultima['usuario']
                                             
-                                            # Devolver al estado anterior (Sin Postor y monto 0)
                                             if carr_u in st.session_state.remates and cab_u in st.session_state.remates[carr_u]:
                                                 st.session_state.remates[carr_u][cab_u] = {"jugador": "Sin Postor", "monto": 0.0}
                                             
-                                            # Restar del saldo de cuentas
                                             if jug_u in st.session_state.cuentas:
                                                 st.session_state.cuentas[jug_u]['Pujas'] = max(0.0, st.session_state.cuentas[jug_u]['Pujas'] - mnt_u)
                                             
-                                            # Registrar en historial
                                             st.session_state.historial_jugadas.append({
                                                 "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
                                                 "jugador": jug_u,
@@ -1533,7 +1548,6 @@ def renderizar_tiempo_real_universal():
                                                 "monto": -mnt_u
                                             })
                                             
-                                            # Limpiar registro de reversión
                                             st.session_state.ultima_puja_usuario = {}
                                             guardar_estado_global()
                                             st.toast("↩️ ¡Puja revertida con éxito!")
@@ -1605,7 +1619,6 @@ def renderizar_tiempo_real_universal():
                                         else:
                                             st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
                                             
-                                            # Registrar última puja para los 15 segundos de reversión
                                             st.session_state.ultima_puja_usuario = {
                                                 "usuario": st.session_state.usuario_activo,
                                                 "carrera": carr_activa,
@@ -1772,7 +1785,6 @@ if menu_principal_opcion == "Dupletas":
                     key=f"ticket_cab_{sub_dup_actual}_{paso}"
                 )
                 
-                # REGLA DE CORRIMIENTO AUTOMÁTICO PARA RETIRADOS EN LA POLLA (6 EN LÍNEA)
                 if sub_dup_actual == "6 En Linea" and cab_leg in excluidos_carr_t and todos_caballos_carr:
                     idx_ret = todos_caballos_carr.index(cab_leg) if cab_leg in todos_caballos_carr else 0
                     siguiente_cab = None
@@ -1849,7 +1861,6 @@ if menu_principal_opcion == "Dupletas":
                             st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito (Estado: PENDIENTE)! No hay reintegro de saldos ni anulación.")
                             st.rerun()
 
-    # --- SECCIÓN ESPECIAL PARA LA POLLA (6 EN LÍNEA): RESULTADOS Y TABLA DE POSICIONES (PUNTUACIÓN 5-3-1 Y JACKPOT) ---
     if sub_dup_actual == "6 En Linea":
         st.markdown("---")
         st.markdown("### 🏆 Panel de Resultados y Tabla de Posiciones (Reglas de Polla)")
@@ -1878,10 +1889,9 @@ if menu_principal_opcion == "Dupletas":
                 st.success(f"✅ Resultados oficiales de **{carr_res_sel}** guardados correctamente.")
                 st.rerun()
 
-        # --- CÁLCULO DE PUNTUACIONES DE LOS TICKETS DE LA POLLA ---
         st.markdown("#### 📊 Tabla de Posiciones y Puntuación en Vivo")
         
-        tabla_puntuaciones = {} # { ticket_id: { "jugador": str, "puntos": int, "detalle": str } }
+        tabla_puntuaciones = {} 
         resultados_oficiales = st.session_state.get('resultados_oficiales_polla', {})
         
         for t in st.session_state.polla_tickets:
@@ -1895,9 +1905,6 @@ if menu_principal_opcion == "Dupletas":
                 if carr_l in resultados_oficiales:
                     res_c = resultados_oficiales[carr_l]
                     
-                    # Manejo de empates y reglas de puntuación específicas
-                    # 1er lugar = 5 puntos
-                    # Si hay empate en 1ro, ambos 5 ptos y no se otorga al 3ro (manejado lógicamente por posición)
                     if res_c.get("1ro") != "Sin Asignar" and ej_apostado in res_c.get("1ro"):
                         puntos_ticket += 5
                         detalle_puntos.append(f"{carr_l}: 1° (+5)")
@@ -1922,13 +1929,8 @@ if menu_principal_opcion == "Dupletas":
             df_posiciones.index = df_posiciones.index + 1
             st.dataframe(df_posiciones, use_container_width=True)
 
-            # --- VERIFICACIÓN DE JACKPOT DE 30 PUNTOS Y PREMIOS (1°, 2° y 3° lugar) ---
-            max_puntos_posible = len(carreras_permitidas) * 5 # 30 puntos si son 6 carreras
-            
-            jackpot_activo = False
             for t_id, info_p in tabla_puntuaciones.items():
                 if info_p['puntos'] >= 30:
-                    jackpot_activo = True
                     st.markdown(f"""
                         <div style="background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%); border: 3px solid #ffffff; border-radius: 10px; padding: 12px; text-align: center; color: #000000; font-weight: 900; margin-top: 10px; box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);">
                             🎰 ¡JACKPOT DE 30 PUNTOS ALCANZADO! 🎰<br>
@@ -2084,7 +2086,6 @@ elif menu_principal_opcion == "Cuentas":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # LISTA OFICIAL DE BANCOS VENEZOLANOS
     BANCOS_VENEZUELA = [
         "0102 - Banco de Venezuela", "0104 - Venezolano de Crédito", "0105 - Mercantil",
         "0108 - Provincial", "0114 - Bancaribe", "0115 - Exterior", "0128 - Banco Caroní",
