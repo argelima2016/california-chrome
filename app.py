@@ -18,8 +18,8 @@ from supabase import create_client, Client
 st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
 
 # --- CREDENCIALES DE SUPABASE ---
-SUPABASE_URL = "TU_SUPABASE_URL_AQUÍ"
-SUPABASE_KEY = "TU_SUPABASE_ANON_KEY_AQUÍ"
+SUPABASE_URL = "https://qssnhvwdgxzwzkfusstf.supabase.co"
+SUPABASE_KEY = "sb_publishable_C4EDNCtB6i6yL84HDxw6tw_V5YGVmTQ"
 
 @st.cache_resource
 def init_supabase():
@@ -46,13 +46,27 @@ def enviar_notificacion_telegram_pago(reporte_idx, jugador, monto, banco, refere
         f"💰 **Monto:** {formatear_bs(monto)}\n"
         f"🏦 **Banco:** {banco}\n"
         f"📌 **Ref:** {referencia}\n\n"
-        f"Entra a la Zona Admin de CALIFORNIA CHROME para aprobarlo."
+        f"Elige una opción para gestionar este pago:"
     )
     
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
         "text": mensaje,
-        "parse_mode": "Markdown"
+        "parse_mode": "Markdown",
+        "reply_markup": {
+            "inline_keyboard": [
+                [
+                    {
+                        "text": "✅ APROBAR", 
+                        "callback_data": f"aprobar_{reporte_idx}"
+                    },
+                    {
+                        "text": "❌ RECHAZAR", 
+                        "callback_data": f"rechazar_{reporte_idx}"
+                    }
+                ]
+            ]
+        }
     }
     
     try:
@@ -2144,7 +2158,6 @@ elif menu_principal_opcion == "Cuentas":
                     }
                     st.session_state.reportes_pago.append(nuevo_reporte)
                     
-                    # Enviar notificación a Telegram
                     idx_nuevo = len(st.session_state.reportes_pago) - 1
                     enviar_notificacion_telegram_pago(idx_nuevo, jugador_actual, monto_rep, banco_remitente, ref_pago)
                     
