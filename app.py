@@ -85,7 +85,7 @@ def formatear_bs(monto):
     numero_formateado = f"{monto:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return f"Bs. {numero_formateado}"
 
-# --- SISTEMA DE PERSISTENCIA Y SINCRONIZACIÓN EN TIEMPO REAL CON SUPABASE ---
+# --- SISTEMA DE PERSISTENCIA Y SINCRONIZACIÓN EN TIEMPO REAL CON SUPABASE (PROTEGIDO) ---
 DB_ROW_ID = 1
 
 def cargar_estado_global(forzar_recarga=False):
@@ -147,7 +147,7 @@ def cargar_estado_global(forzar_recarga=False):
             print("Error cargando de Supabase:", e)
             data = None
 
-    if data and isinstance(data, dict):
+    if data and isinstance(data, dict) and len(data.keys()) > 0:
         try:
             for dict_key in ['fechas_horas_inicio_remate_modalidad', 'fechas_horas_cierre_remate_modalidad', 'fechas_horas_inicio_modalidad_multiple', 'fechas_horas_cierre_modalidad_multiple']:
                 if dict_key in data and isinstance(data[dict_key], dict):
@@ -169,6 +169,7 @@ def cargar_estado_global(forzar_recarga=False):
         for k, v in default_state.items():
             if k not in st.session_state:
                 st.session_state[k] = v
+        guardar_estado_global()
 
 def guardar_estado_global():
     keys_to_save = [
