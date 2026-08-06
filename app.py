@@ -30,7 +30,7 @@ def init_supabase():
 
 supabase: Client = init_supabase()
 
-# --- CREDENCIALES Y CONFIGURACIÓN DE TELEGRAM (OPCIÓN 2: ENLACE DIRECTO) ---
+# --- CREDENCIALES Y CONFIGURACIÓN DE TELEGRAM ---
 TELEGRAM_BOT_TOKEN = "8969428136:AAFRhNzoAFB8TVAXUp2hnjffzw1gFPCyyrY"
 TELEGRAM_CHAT_ID = "1111059746"
 URL_DE_TU_APP = "https://tu-app.streamlit.app"  # Cambia esto por tu enlace real desplegado
