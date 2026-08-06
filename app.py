@@ -142,9 +142,26 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ, ALERTAS MÓVILES (VIBRACIÓN + SONIDO) Y HORA UNIFICADA ---
+# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ, ALERTAS MÓVILES (VIBRACIÓN + SONIDO DESBLOQUEADO) Y HORA UNIFICADA ---
 components.html("""
     <script>
+        let audioCtxGlobal = null;
+
+        function inicializarAudio() {
+            if (!audioCtxGlobal) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtxGlobal = new AudioContext();
+                }
+            }
+            if (audioCtxGlobal && audioCtxGlobal.state === 'suspended') {
+                audioCtxGlobal.resume();
+            }
+        }
+
+        window.addEventListener('click', inicializarAudio, { once: true });
+        window.addEventListener('touchstart', inicializarAudio, { once: true });
+
         function reproducirAlertaMovilYCalle(tipo) {
             if ("vibrate" in navigator) {
                 if (tipo === 'cierre') {
@@ -155,35 +172,34 @@ components.html("""
             }
 
             try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                const osc = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
+                inicializarAudio();
+                if (!audioCtxGlobal) return;
+
+                const osc = audioCtxGlobal.createOscillator();
+                const gainNode = audioCtxGlobal.createGain();
                 
                 osc.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
+                gainNode.connect(audioCtxGlobal.destination);
                 
                 if (tipo === 'cierre' || tipo === 'tiempo') {
                     osc.type = 'square';
-                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15);
-                    gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+                    osc.frequency.setValueAtTime(587.33, audioCtxGlobal.currentTime);
+                    osc.frequency.setValueAtTime(880, audioCtxGlobal.currentTime + 0.15);
+                    gainNode.gain.setValueAtTime(0.5, audioCtxGlobal.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtxGlobal.currentTime + 0.5);
                     osc.start();
-                    osc.stop(audioCtx.currentTime + 0.5);
+                    osc.stop(audioCtxGlobal.currentTime + 0.5);
                 } else if (tipo === 'exito') {
                     osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
-                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15);
-                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+                    osc.frequency.setValueAtTime(523.25, audioCtxGlobal.currentTime);
+                    osc.frequency.setValueAtTime(659.25, audioCtxGlobal.currentTime + 0.15);
+                    gainNode.gain.setValueAtTime(0.4, audioCtxGlobal.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtxGlobal.currentTime + 0.4);
                     osc.start();
-                    osc.stop(audioCtx.currentTime + 0.4);
+                    osc.stop(audioCtxGlobal.currentTime + 0.4);
                 }
             } catch (e) {
-                console.log("Audio restringido por el navegador móvil.");
+                console.log("Audio no disponible: ", e);
             }
         }
         window.reproducirAlertaMovilYCalle = reproducirAlertaMovilYCalle;
@@ -1137,7 +1153,7 @@ def renderizar_tiempo_real_universal():
             
             if not carreras_filtradas_visibles:
                 if modo_actual_remate == "Ciegos":
-                    st.info("ℹ️ El Remate Ciego requiere exactamente dos carreras asignadas en la Zona Admin (1V y 6V).")
+                    st.info("ℹ️ El Remate Ciego requiere exactamente deux carreras asignadas en la Zona Admin (1V y 6V).")
                 else:
                     st.info(f"ℹ️ No hay carreras asignadas o habilitadas para la modalidad **{modo_actual_remate}**. Configúralas en Zona Admin.")
             else:
@@ -1208,7 +1224,7 @@ def renderizar_tiempo_real_universal():
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- ⏱️ CONTADOR FLOTANTE FIJO (DESCUENTA DE 10 A 1 Y MUESTRA CERRADO EL REMATE SUERTE) ---
+                # --- ⏱️ CONTADOR FLOTANTE FIJO (DESCUENTA 10 A 1 Y MUESTRA CERRADO EL REMATE) ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
@@ -1277,7 +1293,6 @@ def renderizar_tiempo_real_universal():
                         else:
                             restantes_10s = max(0, 10 - int(transcurridos))
                             if restantes_10s > 0:
-                                # 💡 CONTADOR FLOTANTE FIJO (DESCUENTA 10, 9, 8... Y SE QUEDA FIJO ARRIBA)
                                 st.markdown(f"<div class='timer-flotante-fijo'>⚠️ CIERRE INMINENTE: <b>{restantes_10s}</b><br><span style='font-size:12px; font-weight:normal;'>(Nuevas pujas reinician el contador)</span></div>", unsafe_allow_html=True)
 
                 if carrera_cerrada:
