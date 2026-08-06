@@ -30,9 +30,10 @@ def init_supabase():
 
 supabase: Client = init_supabase()
 
-# --- CREDENCIALES OFICIALES DE TELEGRAM ---
+# --- CREDENCIALES Y CONFIGURACIÓN DE TELEGRAM (OPCIÓN 2: ENLACE DIRECTO) ---
 TELEGRAM_BOT_TOKEN = "8969428136:AAFRhNzoAFB8TVAXUp2hnjffzw1gFPCyyrY"
 TELEGRAM_CHAT_ID = "1111059746"
+URL_DE_TU_APP = "https://tu-app.streamlit.app"  # Cambia esto por tu enlace real desplegado
 
 def enviar_notificacion_telegram_pago(reporte_idx, jugador, monto, banco, referencia):
     if not TELEGRAM_BOT_TOKEN:
@@ -46,7 +47,7 @@ def enviar_notificacion_telegram_pago(reporte_idx, jugador, monto, banco, refere
         f"💰 **Monto:** {formatear_bs(monto)}\n"
         f"🏦 **Banco:** {banco}\n"
         f"📌 **Ref:** {referencia}\n\n"
-        f"Elige una opción para gestionar este pago:"
+        f"Haz clic abajo para ir directo a la Zona Admin:"
     )
     
     payload = {
@@ -57,12 +58,8 @@ def enviar_notificacion_telegram_pago(reporte_idx, jugador, monto, banco, refere
             "inline_keyboard": [
                 [
                     {
-                        "text": "✅ APROBAR", 
-                        "callback_data": f"aprobar_{reporte_idx}"
-                    },
-                    {
-                        "text": "❌ RECHAZAR", 
-                        "callback_data": f"rechazar_{reporte_idx}"
+                        "text": "🔗 ABRIR PANEL DE PAGOS EN LA APP", 
+                        "url": URL_DE_TU_APP
                     }
                 ]
             ]
