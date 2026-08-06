@@ -18,8 +18,8 @@ from supabase import create_client, Client
 st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
 
 # --- CREDENCIALES DE SUPABASE ---
-SUPABASE_URL = "https://qssnhvwdgxzwzkfusstf.supabase.co"
-SUPABASE_KEY = "sb_publishable_C4EDNCtB6i6yL84HDxw6tw_V5YGVmTQ"
+SUPABASE_URL = "TU_SUPABASE_URL_AQUÍ"
+SUPABASE_KEY = "TU_SUPABASE_ANON_KEY_AQUÍ"
 
 @st.cache_resource
 def init_supabase():
@@ -29,6 +29,36 @@ def init_supabase():
         return None
 
 supabase: Client = init_supabase()
+
+# --- CREDENCIALES OFICIALES DE TELEGRAM ---
+TELEGRAM_BOT_TOKEN = "8969428136:AAFRhNzoAFB8TVAXUp2hnjffzw1gFPCyyrY"
+TELEGRAM_CHAT_ID = "1111059746"
+
+def enviar_notificacion_telegram_pago(reporte_idx, jugador, monto, banco, referencia):
+    if not TELEGRAM_BOT_TOKEN:
+        return
+    
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    
+    mensaje = (
+        f"💳 **¡NUEVO PAGO REPORTADO!** 💳\n\n"
+        f"👤 **Jugador:** {jugador}\n"
+        f"💰 **Monto:** {formatear_bs(monto)}\n"
+        f"🏦 **Banco:** {banco}\n"
+        f"📌 **Ref:** {referencia}\n\n"
+        f"Entra a la Zona Admin de CALIFORNIA CHROME para aprobarlo."
+    )
+    
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": mensaje,
+        "parse_mode": "Markdown"
+    }
+    
+    try:
+        requests.post(url, json=payload)
+    except Exception as e:
+        print("Error enviando Telegram:", e)
 
 # --- HORA LOCAL DE VENEZUELA UNIFICADA (SIN DESFASE ENTRE PC Y TELÉFONO) ---
 def obtener_hora_venezuela_local():
@@ -2104,16 +2134,22 @@ elif menu_principal_opcion == "Cuentas":
             
             if st.form_submit_button("📤 Enviar Reporte de Pago", use_container_width=True):
                 if monto_rep > 0 and ref_pago:
-                    st.session_state.reportes_pago.append({
+                    nuevo_reporte = {
                         "jugador": jugador_actual,
                         "monto": monto_rep,
                         "banco": banco_remitente,
                         "referencia": ref_pago,
                         "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M %p'),
                         "estado": "Pendiente de Aprobación"
-                    })
+                    }
+                    st.session_state.reportes_pago.append(nuevo_reporte)
+                    
+                    # Enviar notificación a Telegram
+                    idx_nuevo = len(st.session_state.reportes_pago) - 1
+                    enviar_notificacion_telegram_pago(idx_nuevo, jugador_actual, monto_rep, banco_remitente, ref_pago)
+                    
                     guardar_estado_global()
-                    st.success("✅ ¡Reporte de pago enviado con éxito!")
+                    st.success("✅ ¡Reporte de pago enviado con éxito! Notificación enviada a Telegram.")
                     st.rerun()
                 else:
                     st.error("⚠️ Ingrese un monto válido y la referencia.")
