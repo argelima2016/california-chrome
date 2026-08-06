@@ -444,7 +444,6 @@ st.markdown("""
         padding-bottom: 3px;
     }
     
-    /* 🚨 ESTILO DE ALTA VISIBILIDAD GARANTIZADA MEDIANTE HTML/CSS NATIVO FUERA DE STREAMLIT ST */
     .carrera-condicion-card {
         background-color: #161b22;
         border: 1px solid #30363d;
@@ -1204,7 +1203,7 @@ def renderizar_tiempo_real_universal():
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- ⏱️ CONTROL DE HORARIOS Y CONTEO EN VIVO BLINDADO (HTML PURO) ---
+                # --- ⏱️ CONTROL DE HORARIOS Y CONTEO EN VIVO (UN POQUITO MÁS PEQUEÑO Y COMPACTO) ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
@@ -1273,12 +1272,12 @@ def renderizar_tiempo_real_universal():
                         else:
                             restantes_10s = max(0, 10 - int(transcurridos))
                             if restantes_10s > 0:
-                                # 💡 COMPONENTE HTML PURO INDEPENDIENTE CON RELLENO VISIBLE Y GARANTIZADO
-                                html_anuncio_destacado = f"""
-                                <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #2b0909 0%, #161b22 100%); border: 4px solid #ff4757; border-radius: 14px; padding: 16px; text-align: center; box-shadow: 0px 8px 30px rgba(255, 71, 87, 0.7); margin-bottom: 14px;">
-                                    <div style="color: #ff4757; font-size: 15px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px;">🚨 ¡ATENCIÓN! CIERRE INMINENTE DE REMATE 🚨</div>
-                                    <div id="cuenta-atras-vivo" style="color: #00ffff; font-size: 52px; font-weight: 900; font-family: monospace; letter-spacing: 3px; text-shadow: 0 0 20px rgba(0, 255, 255, 0.9);">{restantes_10s}</div>
-                                    <div style="color: #f1c40f; font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;">SEGUNDOS RESTANTES (Nuevas pujas reinician el conteo)</div>
+                                # 💡 COMPONENTE HTML COMPACTO, ELEGANTE Y VISIBLE EN VIVO
+                                html_anuncio_compacto = f"""
+                                <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #2b0909 0%, #161b22 100%); border: 3px solid #ff4757; border-radius: 10px; padding: 10px 14px; text-align: center; box-shadow: 0px 6px 20px rgba(255, 71, 87, 0.6); margin-bottom: 12px;">
+                                    <div style="color: #ff4757; font-size: 13px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 2px;">⚠️ ¡CIERRE INMINENTE DE REMATE! ⚠️</div>
+                                    <div id="cuenta-atras-vivo" style="color: #00ffff; font-size: 38px; font-weight: 900; font-family: monospace; letter-spacing: 2px; text-shadow: 0 0 15px rgba(0, 255, 255, 0.9);">{restantes_10s}</div>
+                                    <div style="color: #f1c40f; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 2px;">SEGUNDOS RESTANTES (Nuevas pujas reinician el conteo)</div>
                                 </div>
                                 <script>
                                     (function() {{
@@ -1295,7 +1294,7 @@ def renderizar_tiempo_real_universal():
                                                 if (digito) {{
                                                     digito.parentElement.style.borderColor = "#f1c40f";
                                                     digito.parentElement.style.background = "linear-gradient(135deg, #3d3100 0%, #161b22 100%)";
-                                                    digito.parentElement.innerHTML = "<div style='color: #f1c40f; font-size: 22px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 15px #f1c40f; padding: 10px;'>🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>";
+                                                    digito.parentElement.innerHTML = "<div style='color: #f1c40f; font-size: 18px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 10px #f1c40f; padding: 6px;'>🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>";
                                                 }}
                                                 clearInterval(window.intervaloRelojVivo);
                                             }}
@@ -1303,14 +1302,14 @@ def renderizar_tiempo_real_universal():
                                     }})();
                                 </script>
                                 """
-                                components.html(html_anuncio_destacado, height=140)
+                                components.html(html_anuncio_compacto, height=105)
 
                 if carrera_cerrada:
                     components.html("""
-                        <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #3d3100 0%, #161b22 100%); border: 4px solid #f1c40f; border-radius: 14px; padding: 16px; text-align: center; box-shadow: 0px 8px 30px rgba(241, 196, 15, 0.5); margin-bottom: 14px;">
-                            <div style="color: #f1c40f; font-size: 22px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 15px #f1c40f; padding: 10px;">🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>
+                        <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #3d3100 0%, #161b22 100%); border: 3px solid #f1c40f; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0px 6px 20px rgba(241, 196, 15, 0.4); margin-bottom: 12px;">
+                            <div style="color: #f1c40f; font-size: 18px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 10px #f1c40f;">🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>
                         </div>
-                    """, height=85)
+                    """, height=70)
 
                 if carr_activa not in st.session_state.ejemplares_retirados:
                     st.session_state.ejemplares_retirados[carr_activa] = []
