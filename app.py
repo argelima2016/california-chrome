@@ -16,15 +16,15 @@ from pypdf import PdfReader
 # Configuración de pantalla completa
 st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺")
 
-# --- HORA LOCAL DE VENEZUELA ---
+# --- HORA LOCAL DE VENEZUELA UNIFICADA (SIN DESFASE ENTRE PC Y TELÉFONO) ---
 def obtener_hora_venezuela_local():
     try:
         zona_venezuela = ZoneInfo("America/Caracas")
         return datetime.now(zona_venezuela).replace(tzinfo=None)
     except Exception:
         pass
-    tz_venezuela = timezone(timedelta(hours=-4))
-    return datetime.now(tz_venezuela).replace(tzinfo=None)
+    utc_ahora = datetime.now(timezone.utc)
+    return (utc_ahora - timedelta(hours=4)).replace(tzinfo=None)
 
 def formatear_bs(monto):
     numero_formateado = f"{monto:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
@@ -54,7 +54,7 @@ def cargar_estado_global(forzar_recarga=False):
         'fechas_horas_cierre_modalidad_multiple': {},
         'estado_conteo_carrera_modalidad': {},
         'tiempo_inicio_conteo_modalidad': {},
-        'alertas_reproducidas': {}, # Nuevo diccionario para evitar spam de sonidos
+        'alertas_reproducidas': {},
         'cuentas': {"CASA": {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}},
         'historial_jugadas': [],
         'ganancia_casa': 0.0,
@@ -142,25 +142,37 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ, ALERTAS SONORAS Y BOTÓN FLOTANTE ---
+# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ, ALERTAS MÓVILES (VIBRACIÓN + SONIDO) Y HORA UNIFICADA ---
 components.html("""
     <script>
-        function reproducirSonidoAlerta(tipo) {
+        function reproducirAlertaMovilYCalle(tipo) {
+            if ("vibrate" in navigator) {
+                if (tipo === 'cierre') {
+                    navigator.vibrate([200, 100, 200, 100, 400]);
+                } else {
+                    navigator.vibrate(300);
+                }
+            }
+
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
                 const osc = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
                 
                 osc.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
                 
-                if (tipo === 'cierre') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+                if (tipo === 'cierre' || tipo === 'tiempo') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15);
+                    gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
                     osc.start();
-                    osc.stop(audioCtx.currentTime + 0.3);
+                    osc.stop(audioCtx.currentTime + 0.5);
                 } else if (tipo === 'exito') {
                     osc.type = 'triangle';
                     osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
@@ -171,33 +183,10 @@ components.html("""
                     osc.stop(audioCtx.currentTime + 0.4);
                 }
             } catch (e) {
-                console.log("Audio restringido por políticas del navegador.");
+                console.log("Audio restringido por el navegador móvil.");
             }
         }
-        window.reproducirSonidoAlerta = reproducirSonidoAlerta;
-
-        function reproducirSonidoTiempo() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                
-                osc.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-                osc.frequency.setValueAtTime(660, audioCtx.currentTime + 0.2);
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
-                
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.5);
-            } catch (e) {
-                console.log("Audio restringido.");
-            }
-        }
-        window.reproducirSonidoTiempo = reproducirSonidoTiempo;
+        window.reproducirAlertaMovilYCalle = reproducirAlertaMovilYCalle;
 
         function sincronizacionEnVivo() {
             const doc = window.parent.document;
@@ -1104,6 +1093,7 @@ menu_principal_opcion = st.session_state.menu_principal_opcion
 @st.fragment(run_every=10.0)
 def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
+    ahora_dt_frag = obtener_hora_venezuela_local()
 
     if st.session_state.menu_principal_opcion == "Remates":
         st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
@@ -1168,7 +1158,7 @@ def renderizar_tiempo_real_universal():
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
 
-                hora_actual_envivo = obtener_hora_venezuela_local().strftime('%I:%M:%S %p')
+                hora_actual_envivo = ahora_dt_frag.strftime('%I:%M:%S %p')
                 st.markdown(f"""
                     <div class="reloj-digital-container">
                         <span id="reloj-js-vivo" class="reloj-digital-txt">{hora_actual_envivo}</span>
@@ -1246,7 +1236,7 @@ def renderizar_tiempo_real_universal():
                                 if comprador in st.session_state.cuentas:
                                     st.session_state.cuentas[comprador]['Pujas'] = max(0.0, st.session_state.cuentas[comprador]['Pujas'] - monto_ej)
                                     st.session_state.historial_jugadas.append({
-                                        "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                        "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
                                         "jugador": comprador,
                                         "tipo": "Retirado (Descuento)",
                                         "carrera": carr_activa,
@@ -1283,7 +1273,7 @@ def renderizar_tiempo_real_universal():
                                         if jug_t in st.session_state.cuentas:
                                             st.session_state.cuentas[jug_t]['Pujas'] = max(0.0, st.session_state.cuentas[jug_t]['Pujas'] - monto_t)
                                         st.session_state.historial_jugadas.append({
-                                            "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                            "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
                                             "jugador": jug_t,
                                             "tipo": "Ticket Anulado (Retiro)",
                                             "carrera": carr_activa,
@@ -1310,7 +1300,7 @@ def renderizar_tiempo_real_universal():
                     except Exception: dt_limite = None
 
                 if dt_inicio and carrera_cerrada:
-                    if ahora_dt >= dt_inicio:
+                    if ahora_dt_frag >= dt_inicio:
                         st.session_state.carreras_cerradas_remate[carr_activa] = False
                         guardar_estado_global()
                         carrera_cerrada = False
@@ -1322,7 +1312,7 @@ def renderizar_tiempo_real_universal():
 
                 # --- SISTEMA DE ALERTAS TEMPRANAS Y CONTEO REGRESIVO ---
                 if dt_limite and not carrera_cerrada:
-                    diferencia_segundos = (dt_limite - ahora_dt).total_seconds()
+                    diferencia_segundos = (dt_limite - ahora_dt_frag).total_seconds()
                     
                     if diferencia_segundos > 0:
                         min_rest = int(diferencia_segundos / 60)
@@ -1337,29 +1327,29 @@ def renderizar_tiempo_real_universal():
                                 
                                 txt_tiempo = "1 hora" if min_rest == 60 else f"{min_rest} minutos"
                                 st.toast(f"⏳ ¡ATENCIÓN! Faltan {txt_tiempo} para el cierre de {carr_activa} ({modo_actual_remate})", icon="🚨")
-                                components.html("<script>window.parent.reproducirSonidoTiempo();</script>", height=0, width=0)
+                                components.html("<script>window.parent.reproducirAlertaMovilYCalle('tiempo');</script>", height=0, width=0)
 
                     if estado_conteo == "INACTIVO":
                         if 0 < diferencia_segundos <= 10:
                             st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CONTEO_10S"
-                            st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = ahora_dt
+                            st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = ahora_dt_frag
                             guardar_estado_global()
-                            components.html("<script>window.parent.reproducirSonidoAlerta('cierre');</script>", height=0, width=0)
+                            components.html("<script>window.parent.reproducirAlertaMovilYCalle('cierre');</script>", height=0, width=0)
                             st.rerun()
                         elif diferencia_segundos <= 0:
                             st.session_state.carreras_cerradas_remate[carr_activa] = True
                             st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
-                            st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
+                            st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt_frag.strftime('%I:%M:%S %p')
                             guardar_estado_global()
                             st.rerun()
                     elif estado_conteo == "CONTEO_10S":
-                        tiempo_inicio = st.session_state.tiempo_inicio_conteo_modalidad.get(clave_mod_carr, ahora_dt)
-                        transcurridos = (ahora_dt - tiempo_inicio).total_seconds()
+                        tiempo_inicio = st.session_state.tiempo_inicio_conteo_modalidad.get(clave_mod_carr, ahora_dt_frag)
+                        transcurridos = (ahora_dt_frag - tiempo_inicio).total_seconds()
                         
                         if transcurridos >= 10:
                             st.session_state.carreras_cerradas_remate[carr_activa] = True
                             st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
-                            st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
+                            st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt_frag.strftime('%I:%M:%S %p')
                             guardar_estado_global()
                             st.rerun()
                         else:
@@ -1469,10 +1459,10 @@ def renderizar_tiempo_real_universal():
 
                 # --- BLOQUEO ESTRICTO POR HORARIO ---
                 fuera_de_horario = False
-                if dt_inicio and ahora_dt < dt_inicio:
+                if dt_inicio and ahora_dt_frag < dt_inicio:
                     fuera_de_horario = True
                     st.error("⏳ **REMATES CERRADOS:** Aún no es la hora de apertura para esta modalidad.")
-                elif (dt_limite and ahora_dt >= dt_limite) or carrera_cerrada:
+                elif (dt_limite and ahora_dt_frag >= dt_limite) or carrera_cerrada:
                     fuera_de_horario = True
                     st.error("🔒 **REMATES FINALIZADOS:** El tiempo límite de esta modalidad ha culminado.")
 
@@ -1507,7 +1497,7 @@ def renderizar_tiempo_real_universal():
                                                     "monto": monto_fijo_carrera
                                                 }
                                                 st.session_state.historial_jugadas.append({
-                                                    "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                                    "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
                                                     "jugador": st.session_state.usuario_activo,
                                                     "tipo": f"Remate Ciego ({modo_actual_remate})",
                                                     "carrera": carr_activa,
@@ -1519,7 +1509,7 @@ def renderizar_tiempo_real_universal():
                                                 st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
                                                 guardar_estado_global()
                                                 
-                                                components.html("<script>window.parent.reproducirSonidoAlerta('exito');</script>", height=0, width=0)
+                                                components.html("<script>window.parent.reproducirAlertaMovilYCalle('exito');</script>", height=0, width=0)
                                                 st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
                                                 st.rerun()
                         else:
@@ -1589,7 +1579,7 @@ def renderizar_tiempo_real_universal():
                                         else:
                                             st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
                                             st.session_state.historial_jugadas.append({
-                                                "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                                "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
                                                 "jugador": st.session_state.usuario_activo,
                                                 "tipo": f"Remate ({modo_actual_remate})",
                                                 "carrera": carr_activa,
@@ -1600,7 +1590,7 @@ def renderizar_tiempo_real_universal():
                                                 st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = obtener_hora_venezuela_local()
                                             guardar_estado_global()
                                             
-                                            components.html("<script>window.parent.reproducirSonidoAlerta('exito');</script>", height=0, width=0)
+                                            components.html("<script>window.parent.reproducirAlertaMovilYCalle('exito');</script>", height=0, width=0)
                                             st.success("✅ ¡Puja registrada correctamente!")
                                             st.rerun()
 
@@ -1816,7 +1806,7 @@ if menu_principal_opcion == "Dupletas":
                             
                             guardar_estado_global()
                             
-                            components.html("<script>window.parent.reproducirSonidoAlerta('exito');</script>", height=0, width=0)
+                            components.html("<script>window.parent.reproducirAlertaMovilYCalle('exito');</script>", height=0, width=0)
                             st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito (Estado: PENDIENTE)!")
                             st.rerun()
 
