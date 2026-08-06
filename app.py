@@ -432,10 +432,13 @@ st.markdown("""
         50% { transform: scale(1.05); box-shadow: 0 0 30px #ff4757; }
         100% { transform: scale(1); box-shadow: 0 0 10px #ff4757; }
     }
-    .timer-box {
+    .timer-flotante-fijo {
+        position: sticky;
+        top: 0px;
+        z-index: 99999;
         background-color: #161b22;
         border: 2px solid #ff4757;
-        padding: 12px;
+        padding: 10px;
         border-radius: 8px;
         text-align: center;
         font-size: clamp(18px, 4vw, 24px);
@@ -444,6 +447,7 @@ st.markdown("""
         margin-bottom: 12px;
         animation: latidoEmergencia 1s infinite;
         text-shadow: 0px 0px 10px rgba(255, 71, 87, 0.8);
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.8);
     }
     .carrera-condicion-card {
         background-color: #161b22;
@@ -1090,7 +1094,7 @@ menu_principal_opcion = st.session_state.menu_principal_opcion
 # =========================================================================
 # BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL
 # =========================================================================
-@st.fragment(run_every=10.0)
+@st.fragment(run_every=1.0)
 def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
     ahora_dt_frag = obtener_hora_venezuela_local()
@@ -1204,88 +1208,7 @@ def renderizar_tiempo_real_universal():
                     </div>
                 """, unsafe_allow_html=True)
 
-                if carr_activa not in st.session_state.ejemplares_retirados:
-                    st.session_state.ejemplares_retirados[carr_activa] = []
-                if 'ejemplares_no_valido' not in st.session_state:
-                    st.session_state.ejemplares_no_valido = {}
-                if carr_activa not in st.session_state.ejemplares_no_valido:
-                    st.session_state.ejemplares_no_valido[carr_activa] = []
-                
-                lista_todos_caballos_carr = list(st.session_state.remates[carr_activa].keys())
-                retirados_actuales_carr = [c for c in st.session_state.ejemplares_retirados[carr_activa] if c in lista_todos_caballos_carr]
-                no_validos_actuales_carr = [c for c in st.session_state.ejemplares_no_valido[carr_activa] if c in lista_todos_caballos_carr]
-
-                with st.expander("🚫 Gestionar Ejemplares Retirados", expanded=False):
-                    nuevos_retirados = st.multiselect(
-                        "Selecciona los ejemplares retirados en esta carrera:",
-                        options=lista_todos_caballos_carr,
-                        default=retirados_actuales_carr,
-                        key=f"multiselect_retirados_{carr_activa}"
-                    )
-                    if st.button("💾 Actualizar Retirados", key=f"btn_save_retirados_{carr_activa}", use_container_width=True, type="primary"):
-                        retirados_anteriores = set(retirados_actuales_carr)
-                        retirados_nuevos_set = set(nuevos_retirados)
-                        recien_retirados = retirados_nuevos_set - retirados_anteriores
-
-                        for cab_ret in recien_retirados:
-                            info_cab = st.session_state.remates[carr_activa].get(cab_ret, {})
-                            comprador = info_cab.get('jugador', 'Sin Postor')
-                            monto_ej = info_cab.get('monto', 0.0)
-
-                            if comprador != "Sin Postor" and monto_ej > 0:
-                                if comprador in st.session_state.cuentas:
-                                    st.session_state.cuentas[comprador]['Pujas'] = max(0.0, st.session_state.cuentas[comprador]['Pujas'] - monto_ej)
-                                    st.session_state.historial_jugadas.append({
-                                        "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                        "jugador": comprador,
-                                        "tipo": "Retirado (Descuento)",
-                                        "carrera": carr_activa,
-                                        "detalle": f"Ejemplar retirado: {cab_ret}",
-                                        "monto": -monto_ej
-                                    })
-
-                        for t_polla in st.session_state.polla_tickets:
-                            for leg in t_polla['legs']:
-                                base_ej_p = leg['ejemplar'].split(" (")[0]
-                                if leg['carrera'] == carr_activa and base_ej_p in nuevos_retirados:
-                                    idx_ret = lista_todos_caballos_carr.index(base_ej_p)
-                                    siguiente_cab = None
-                                    for siguiente_c in lista_todos_caballos_carr[idx_ret + 1:] + lista_todos_caballos_carr[:idx_ret]:
-                                        if siguiente_c not in nuevos_retirados and siguiente_c not in no_validos_actuales_carr:
-                                            siguiente_cab = siguiente_c
-                                            break
-                                    if siguiente_cab:
-                                        leg['ejemplar'] = f"{siguiente_cab} (Sustituto por retiro)"
-
-                        for lista_tkts in [st.session_state.dupletas_tickets, st.session_state.tripleta_tickets]:
-                            for t_dup in lista_tkts:
-                                if t_dup.get('estado', 'Pendiente') == 'Pendiente':
-                                    afect = False
-                                    for leg in t_dup['legs']:
-                                        base_ej_t = leg['ejemplar'].split(" (")[0]
-                                        if leg['carrera'] == carr_activa and base_ej_t in nuevos_retirados:
-                                            afect = True
-                                            break
-                                    if afect:
-                                        t_dup['estado'] = 'Nulo (Retirado)'
-                                        jug_t = t_dup['jugador']
-                                        monto_t = t_dup['monto']
-                                        if jug_t in st.session_state.cuentas:
-                                            st.session_state.cuentas[jug_t]['Pujas'] = max(0.0, st.session_state.cuentas[jug_t]['Pujas'] - monto_t)
-                                        st.session_state.historial_jugadas.append({
-                                            "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                            "jugador": jug_t,
-                                            "tipo": "Ticket Anulado (Retiro)",
-                                            "carrera": carr_activa,
-                                            "detalle": f"Ticket {t_dup['id']} anulado por retiro",
-                                            "monto": -monto_t
-                                        })
-
-                        st.session_state.ejemplares_retirados[carr_activa] = nuevos_retirados
-                        guardar_estado_global()
-                        st.toast("✅ ¡Ejemplares retirados actualizados y tickets ajustados!")
-                        st.rerun()
-
+                # --- ⏱️ CONTADOR FLOTANTE FIJO (VISIBLE EN TODO MOMENTO AL BAJAR A PUJAR) ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
@@ -1310,7 +1233,6 @@ def renderizar_tiempo_real_universal():
                 if dt_limite:
                     st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:8px; border:1px solid #30363d; font-size:12px;'>⏰ Cierre Estricto ({modo_actual_remate}): <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
 
-                # --- SISTEMA DE ALERTAS TEMPRANAS Y CONTEO REGRESIVO ---
                 if dt_limite and not carrera_cerrada:
                     diferencia_segundos = (dt_limite - ahora_dt_frag).total_seconds()
                     
@@ -1355,7 +1277,15 @@ def renderizar_tiempo_real_universal():
                         else:
                             restantes_10s = max(0, 10 - int(transcurridos))
                             if restantes_10s > 0:
-                                st.markdown(f"<div class='timer-box'>⚠️ CIERRE INMINENTE: <b>{restantes_10s}s</b><br><span style='font-size:12px; font-weight:normal;'>(Nuevas pujas reinician el contador)</span></div>", unsafe_allow_html=True)
+                                # 💡 CONTADOR FLOTANTE FIJO SUPERIOR (SE MANTIENE EN PANTALLA AL BAJAR)
+                                st.markdown(f"<div class='timer-flotante-fijo'>⚠️ CIERRE INMINENTE: <b>{restantes_10s}s</b><br><span style='font-size:12px; font-weight:normal;'>(Nuevas pujas reinician el contador)</span></div>", unsafe_allow_html=True)
+
+                if carr_activa not in st.session_state.ejemplares_retirados:
+                    st.session_state.ejemplares_retirados[carr_activa] = []
+                if 'ejemplares_no_valido' not in st.session_state:
+                    st.session_state.ejemplares_no_valido = {}
+                if carr_activa not in st.session_state.ejemplares_no_valido:
+                    st.session_state.ejemplares_no_valido[carr_activa] = []
 
                 tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
                 cantidad_filas = len(st.session_state.remates[carr_activa])
@@ -2596,6 +2526,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             st.markdown("📸 **Imagen de la Carrera**")
             imagen_subida = st.file_uploader("Subir imagen (PNG, JPG)", type=["png", "jpg", "jpeg"], key=f"file_img_{carr_img_sel}")
             
+            _ = imagen_subida
             if imagen_subida is not None:
                 if st.button("💾 Guardar Imagen", key=f"btn_save_img_{carr_img_sel}", use_container_width=True, type="primary"):
                     try:
