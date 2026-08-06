@@ -77,7 +77,8 @@ def cargar_estado_global(forzar_recarga=False):
             'telefono': '0412-0000000',
             'cedula': 'V-00.000.000'
         },
-        'reportes_pago': []
+        'reportes_pago': [],
+        'ultima_puja_usuario': {}  # Diccionario para controlar los 15 segundos de reversión por usuario/carrera
     }
     
     if os.path.exists(DB_FILE):
@@ -118,7 +119,7 @@ def guardar_estado_global():
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
         'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'admin_tab_seleccionada',
-        'datos_pago_movil', 'reportes_pago'
+        'datos_pago_movil', 'reportes_pago', 'ultima_puja_usuario'
     ]
     data = {}
     for k in keys_to_save:
@@ -1211,7 +1212,7 @@ def renderizar_tiempo_real_universal():
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- ⏱️ CONTROL DE HORARIOS Y CONTEO EN VIVO (MODELO COMPACTO Y LLAMATIVO PARA MÓVILES) ---
+                # --- ⏱️ CONTROL DE HORARIOS Y CONTEO EN VIVO ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
@@ -1280,12 +1281,12 @@ def renderizar_tiempo_real_universal():
                         else:
                             restantes_10s = max(0, 10 - int(transcurridos))
                             if restantes_10s > 0:
-                                # 💡 COMPONENTE HTML OPTIMIZADO PARA MOVILES (MÁS COMPACTO Y LLAMATIVO)
+                                # 💡 COMPONENTE HTML ULTRA-COMPACTO Y LLAMATIVO PARA MÓVILES
                                 html_anuncio_movil = f"""
-                                <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #2b0909 0%, #161b22 100%); border: 3px solid #ff4757; border-radius: 8px; padding: 8px 12px; text-align: center; box-shadow: 0px 4px 15px rgba(255, 71, 87, 0.6); margin-bottom: 10px;">
-                                    <div style="color: #ff4757; font-size: 11px; font-weight: 900; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 1px;">⚠️ CIERRE INMINENTE ⚠️</div>
-                                    <div id="cuenta-atras-vivo" style="color: #00ffff; font-size: 32px; font-weight: 900; font-family: monospace; letter-spacing: 2px; text-shadow: 0 0 12px rgba(0, 255, 255, 0.9);">{restantes_10s}</div>
-                                    <div style="color: #f1c40f; font-size: 10px; font-weight: 700; text-transform: uppercase;">SEGUNDOS (Nuevas pujas reinician)</div>
+                                <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #2b0909 0%, #161b22 100%); border: 3px solid #ff4757; border-radius: 8px; padding: 6px 10px; text-align: center; box-shadow: 0px 4px 15px rgba(255, 71, 87, 0.6); margin-bottom: 8px;">
+                                    <div style="color: #ff4757; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase;">⚠️ CIERRE INMINENTE ⚠️</div>
+                                    <div id="cuenta-atras-vivo" style="color: #00ffff; font-size: 28px; font-weight: 900; font-family: monospace; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0, 255, 255, 0.9);">{restantes_10s}</div>
+                                    <div style="color: #f1c40f; font-size: 9px; font-weight: 700; text-transform: uppercase;">SEGUNDOS (Nuevas pujas reinician)</div>
                                 </div>
                                 <script>
                                     (function() {{
@@ -1302,7 +1303,7 @@ def renderizar_tiempo_real_universal():
                                                 if (digito) {{
                                                     digito.parentElement.style.borderColor = "#f1c40f";
                                                     digito.parentElement.style.background = "linear-gradient(135deg, #3d3100 0%, #161b22 100%)";
-                                                    digito.parentElement.innerHTML = "<div style='color: #f1c40f; font-size: 15px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 8px #f1c40f; padding: 5px;'>🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>";
+                                                    digito.parentElement.innerHTML = "<div style='color: #f1c40f; font-size: 14px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 6px #f1c40f; padding: 4px;'>🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>";
                                                 }}
                                                 clearInterval(window.intervaloRelojVivo);
                                             }}
@@ -1310,14 +1311,14 @@ def renderizar_tiempo_real_universal():
                                     }})();
                                 </script>
                                 """
-                                components.html(html_anuncio_movil, height=85)
+                                components.html(html_anuncio_movil, height=75)
 
                 if carrera_cerrada:
                     components.html("""
-                        <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #3d3100 0%, #161b22 100%); border: 3px solid #f1c40f; border-radius: 8px; padding: 10px; text-align: center; box-shadow: 0px 4px 15px rgba(241, 196, 15, 0.4); margin-bottom: 10px;">
+                        <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #3d3100 0%, #161b22 100%); border: 3px solid #f1c40f; border-radius: 8px; padding: 8px; text-align: center; box-shadow: 0px 4px 15px rgba(241, 196, 15, 0.4); margin-bottom: 8px;">
                             <div style="color: #f1c40f; font-size: 15px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 8px #f1c40f;">🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>
                         </div>
-                    """, height=55)
+                    """, height=48)
 
                 if carr_activa not in st.session_state.ejemplares_retirados:
                     st.session_state.ejemplares_retirados[carr_activa] = []
@@ -1465,6 +1466,16 @@ def renderizar_tiempo_real_universal():
                                                     "jugador": st.session_state.usuario_activo, 
                                                     "monto": monto_fijo_carrera
                                                 }
+                                                
+                                                # Registrar última puja para los 15 segundos de reversión
+                                                st.session_state.ultima_puja_usuario = {
+                                                    "usuario": st.session_state.usuario_activo,
+                                                    "carrera": carr_activa,
+                                                    "caballo": cb_disp,
+                                                    "monto": monto_fijo_carrera,
+                                                    "tiempo": time.time()
+                                                }
+
                                                 st.session_state.historial_jugadas.append({
                                                     "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
                                                     "jugador": st.session_state.usuario_activo,
@@ -1482,6 +1493,51 @@ def renderizar_tiempo_real_universal():
                                                 st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
                                                 st.rerun()
                         else:
+                            # --- 🔄 OPCIÓN DE REVERSIÓN DE PUJA (15 SEGUNDOS) ---
+                            if st.session_state.ultima_puja_usuario:
+                                ultima = st.session_state.ultima_puja_usuario
+                                transcurrido_rev = time.time() - ultima['tiempo']
+                                if ultima['usuario'] == st.session_state.usuario_activo and transcurrido_rev <= 15:
+                                    tiempo_restante_rev = max(0, 15 - int(transcurrido_rev))
+                                    with st.container(border=True):
+                                        st.markdown(f"""
+                                            <div style="background: linear-gradient(135deg, #1b3a4b 0%, #0d1117 100%); border: 2px dashed #00d2d3; border-radius: 8px; padding: 10px; text-align: center; margin-bottom: 8px;">
+                                                <div style="color: #00d2d3; font-size: 11px; font-weight: 800; text-transform: uppercase;">🔄 ¿TE EQUIVOCASTE DE EJEMPLAR?</div>
+                                                <div style="color: #ffffff; font-size: 12px; font-weight: 700; margin: 3px 0;">Última puja: <b>{ultima['caballo']}</b> ({formatear_bs(ultima['monto'])}) en <b>{ultima['carrera']}</b></div>
+                                                <div style="color: #ff4757; font-size: 12px; font-weight: 900;">Tienes {tiempo_restante_rev}s para revertirla</div>
+                                            </div>
+                                        """, unsafe_allow_html=True)
+                                        
+                                        if st.button("↩️ Revertir / Deshacer Puja Actual", key="btn_revertir_puja_15s", use_container_width=True, type="secondary"):
+                                            carr_u = ultima['carrera']
+                                            cab_u = ultima['caballo']
+                                            mnt_u = ultima['monto']
+                                            jug_u = ultima['usuario']
+                                            
+                                            # Devolver al estado anterior (Sin Postor y monto 0)
+                                            if carr_u in st.session_state.remates and cab_u in st.session_state.remates[carr_u]:
+                                                st.session_state.remates[carr_u][cab_u] = {"jugador": "Sin Postor", "monto": 0.0}
+                                            
+                                            # Restar del saldo de cuentas
+                                            if jug_u in st.session_state.cuentas:
+                                                st.session_state.cuentas[jug_u]['Pujas'] = max(0.0, st.session_state.cuentas[jug_u]['Pujas'] - mnt_u)
+                                            
+                                            # Registrar en historial
+                                            st.session_state.historial_jugadas.append({
+                                                "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                                "jugador": jug_u,
+                                                "tipo": "Puja Revertida (15s)",
+                                                "carrera": carr_u,
+                                                "detalle": f"Puja deshecha: {cab_u}",
+                                                "monto": -mnt_u
+                                            })
+                                            
+                                            # Limpiar registro de reversión
+                                            st.session_state.ultima_puja_usuario = {}
+                                            guardar_estado_global()
+                                            st.toast("↩️ ¡Puja revertida con éxito!")
+                                            st.rerun()
+
                             st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
                             lista_caballos_activos = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
                             
@@ -1547,6 +1603,16 @@ def renderizar_tiempo_real_universal():
                                             st.error("El monto debe ser mayor a la puja actual.")
                                         else:
                                             st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
+                                            
+                                            # Registrar última puja para los 15 segundos de reversión
+                                            st.session_state.ultima_puja_usuario = {
+                                                "usuario": st.session_state.usuario_activo,
+                                                "carrera": carr_activa,
+                                                "caballo": caballo_seleccionado,
+                                                "monto": monto_puja,
+                                                "tiempo": time.time()
+                                            }
+
                                             st.session_state.historial_jugadas.append({
                                                 "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
                                                 "jugador": st.session_state.usuario_activo,
@@ -2553,7 +2619,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                         "monto": monto_retiro
                     })
                     
-                    guardar_estado_global()
+                    guardar_estado_general()
                     st.toast(f"✅ Retiro de {formatear_bs(monto_retiro)} deducido a {jugador_retirar}")
                     st.rerun()
 
