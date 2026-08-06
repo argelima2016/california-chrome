@@ -444,53 +444,7 @@ st.markdown("""
         padding-bottom: 3px;
     }
     
-    /* 🚀 ESTILO DE ALTA IMPACTO VISUAL: CINTILLO LASER / LED DE CIERRE */
-    @keyframes neonPulse {
-        0% { transform: scale(1); box-shadow: 0 0 15px #ff0055, inset 0 0 15px #ff0055; border-color: #ff0055; }
-        50% { transform: scale(1.02); box-shadow: 0 0 45px #00ffff, inset 0 0 25px #00ffff; border-color: #00ffff; }
-        100% { transform: scale(1); box-shadow: 0 0 15px #ff0055, inset 0 0 15px #ff0055; border-color: #ff0055; }
-    }
-    .alerta-neon-container {
-        position: sticky;
-        top: 0px;
-        z-index: 99999;
-        background: linear-gradient(135deg, #120404 0%, #080a0f 50%, #041014 100%);
-        border: 4px solid #ff0055;
-        border-radius: 16px;
-        padding: 16px 20px;
-        text-align: center;
-        margin-bottom: 14px;
-        animation: neonPulse 0.8s infinite ease-in-out;
-        box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.9);
-    }
-    .alerta-neon-titulo {
-        color: #ff4757;
-        font-size: 15px;
-        font-weight: 900;
-        letter-spacing: 3px;
-        text-transform: uppercase;
-        margin-bottom: 4px;
-        text-shadow: 0 0 10px rgba(255, 71, 87, 0.9);
-    }
-    .alerta-neon-reloj {
-        color: #00ffff;
-        font-size: clamp(40px, 9vw, 62px);
-        font-weight: 900;
-        font-family: 'Arial Black', Gadget, sans-serif;
-        letter-spacing: 4px;
-        text-shadow: 0 0 20px rgba(0, 255, 255, 1), 3px 3px 6px #000000;
-        line-height: 1;
-        margin: 6px 0;
-    }
-    .alerta-neon-aviso {
-        color: #f1c40f;
-        font-size: 12px;
-        font-weight: 800;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        text-shadow: 1px 1px 3px #000000;
-    }
-
+    /* 🚨 ESTILO DE ALTA VISIBILIDAD GARANTIZADA MEDIANTE HTML/CSS NATIVO FUERA DE STREAMLIT ST */
     .carrera-condicion-card {
         background-color: #161b22;
         border: 1px solid #30363d;
@@ -1250,7 +1204,7 @@ def renderizar_tiempo_real_universal():
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- ⏱️ ANUNCIO NEON DE CIERRE INMINENTE EN VIVO (STICKY / FIJO ARRIBA) ---
+                # --- ⏱️ CONTROL DE HORARIOS Y CONTEO EN VIVO BLINDADO (HTML PURO) ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
@@ -1319,48 +1273,44 @@ def renderizar_tiempo_real_universal():
                         else:
                             restantes_10s = max(0, 10 - int(transcurridos))
                             if restantes_10s > 0:
-                                # 💡 CINTILLO NEON VIVO FLOTANTE
-                                html_neon_vivo = f"""
-                                <div id="neon-box-id" class="alerta-neon-container">
-                                    <div class="alerta-neon-titulo">🚨 ¡ATENCIÓN! CIERRE INMINENTE DE REMATE 🚨</div>
-                                    <div class="alerta-neon-reloj" id="neon-num-vivo">{restantes_10s}</div>
-                                    <div class="alerta-neon-aviso">⚠️ Cierra en vivo • Nuevas pujas reinician el conteo</div>
+                                # 💡 COMPONENTE HTML PURO INDEPENDIENTE CON RELLENO VISIBLE Y GARANTIZADO
+                                html_anuncio_destacado = f"""
+                                <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #2b0909 0%, #161b22 100%); border: 4px solid #ff4757; border-radius: 14px; padding: 16px; text-align: center; box-shadow: 0px 8px 30px rgba(255, 71, 87, 0.7); margin-bottom: 14px;">
+                                    <div style="color: #ff4757; font-size: 15px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px;">🚨 ¡ATENCIÓN! CIERRE INMINENTE DE REMATE 🚨</div>
+                                    <div id="cuenta-atras-vivo" style="color: #00ffff; font-size: 52px; font-weight: 900; font-family: monospace; letter-spacing: 3px; text-shadow: 0 0 20px rgba(0, 255, 255, 0.9);">{restantes_10s}</div>
+                                    <div style="color: #f1c40f; font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;">SEGUNDOS RESTANTES (Nuevas pujas reinician el conteo)</div>
                                 </div>
                                 <script>
                                     (function() {{
-                                        let cuenta = {restantes_10s};
-                                        const digito = document.getElementById("neon-num-vivo");
-                                        const contenedor = document.getElementById("neon-box-id");
-                                        
-                                        if (window.neonIntervalId) {{
-                                            clearInterval(window.neonIntervalId);
+                                        let segs = {restantes_10s};
+                                        const digito = document.getElementById("cuenta-atras-vivo");
+                                        if (window.intervaloRelojVivo) {{
+                                            clearInterval(window.intervaloRelojVivo);
                                         }}
-                                        
-                                        window.neonIntervalId = setInterval(function() {{
-                                            cuenta--;
-                                            if (cuenta > 0) {{
-                                                if (digito) digito.innerText = cuenta;
+                                        window.intervaloRelojVivo = setInterval(function() {{
+                                            segs--;
+                                            if (segs > 0) {{
+                                                if (digito) digito.innerText = segs;
                                             }} else {{
-                                                if (digito) digito.innerText = "0";
-                                                if (contenedor) {{
-                                                    contenedor.style.borderColor = "#f1c40f";
-                                                    contenedor.style.background = "linear-gradient(135deg, #3d3100 0%, #080a0f 100%)";
-                                                    contenedor.innerHTML = "<div style='color: #f1c40f; font-size: 22px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 15px #f1c40f; padding: 10px;'>🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>";
+                                                if (digito) {{
+                                                    digito.parentElement.style.borderColor = "#f1c40f";
+                                                    digito.parentElement.style.background = "linear-gradient(135deg, #3d3100 0%, #161b22 100%)";
+                                                    digito.parentElement.innerHTML = "<div style='color: #f1c40f; font-size: 22px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 15px #f1c40f; padding: 10px;'>🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>";
                                                 }}
-                                                clearInterval(window.neonIntervalId);
+                                                clearInterval(window.intervaloRelojVivo);
                                             }}
                                         }}, 1000);
                                     }})();
                                 </script>
                                 """
-                                components.html(html_neon_vivo, height=135)
+                                components.html(html_anuncio_destacado, height=140)
 
                 if carrera_cerrada:
-                    st.markdown("""
-                        <div class="alerta-neon-container" style="border-color: #f1c40f; background: linear-gradient(135deg, #3d3100 0%, #080a0f 100%);">
+                    components.html("""
+                        <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #3d3100 0%, #161b22 100%); border: 4px solid #f1c40f; border-radius: 14px; padding: 16px; text-align: center; box-shadow: 0px 8px 30px rgba(241, 196, 15, 0.5); margin-bottom: 14px;">
                             <div style="color: #f1c40f; font-size: 22px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 15px #f1c40f; padding: 10px;">🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>
                         </div>
-                    """, unsafe_allow_html=True)
+                    """, height=85)
 
                 if carr_activa not in st.session_state.ejemplares_retirados:
                     st.session_state.ejemplares_retirados[carr_activa] = []
