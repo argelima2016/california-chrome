@@ -13,7 +13,7 @@ from datetime import datetime, time as dtime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pypdf import PdfReader
 
-# Configuración de pantalla completa
+# Configuración de pantalla completa optimizada para celulares
 st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
 
 # --- HORA LOCAL DE VENEZUELA UNIFICADA (SIN DESFASE ENTRE PC Y TELÉFONO) ---
@@ -142,7 +142,7 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ, ALERTAS MÓVILES (VIBRACIÓN + SONIDO DESBLOQUEADO) Y HORA UNIFICADA ---
+# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ, ALERTAS MÓVILES Y RESPONSIVIDAD MÓVIL ---
 components.html("""
     <script>
         let audioCtxGlobal = null;
@@ -237,18 +237,18 @@ components.html("""
                 tuercaBtn = doc.createElement('button');
                 tuercaBtn.id = 'custom-tuerca-sidebar-btn';
                 tuercaBtn.innerHTML = '⚙️';
-                tuercaBtn.title = 'Abrir / Cerrar Barra Lateral';
+                tuercaBtn.title = 'Abrir / Cerrar Menú';
                 
                 tuercaBtn.style.position = 'fixed';
-                tuercaBtn.style.top = '10px';
-                tuercaBtn.style.right = '15px';
+                tuercaBtn.style.top = '8px';
+                tuercaBtn.style.right = '10px';
                 tuercaBtn.style.zIndex = '99999';
                 tuercaBtn.style.background = '#161b22';
                 tuercaBtn.style.border = '1px solid #30363d';
                 tuercaBtn.style.borderRadius = '8px';
-                tuercaBtn.style.fontSize = '20px';
-                tuercaBtn.style.width = '42px';
-                tuercaBtn.style.height = '42px';
+                tuercaBtn.style.fontSize = '18px';
+                tuercaBtn.style.width = '38px';
+                tuercaBtn.style.height = '38px';
                 tuercaBtn.style.cursor = 'pointer';
                 tuercaBtn.style.display = 'flex';
                 tuercaBtn.style.alignItems = 'center';
@@ -259,7 +259,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -267,8 +267,8 @@ components.html("""
                             sidebar.style.transform = 'none';
                             sidebar.style.visibility = 'visible';
                             sidebar.style.display = 'block';
-                            sidebar.style.minWidth = '360px';
-                            sidebar.style.width = '360px';
+                            sidebar.style.minWidth = '290px';
+                            sidebar.style.width = '290px';
                         } else {
                             sidebar.setAttribute('aria-expanded', 'false');
                             sidebar.style.transform = 'translateX(-100%)';
@@ -329,7 +329,7 @@ img_b64 = get_image_base64(nombres_archivos)
 if img_b64:
     logo_display = f'<img src="data:image/png;base64,{img_b64}" class="header-logo-img" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 38px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 28px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
 
 # --- INICIALIZAR REMATES Y LISTA DE CARRERAS DISPONIBLES PRIMERO ---
 if not st.session_state.remates:
@@ -351,7 +351,7 @@ if not st.session_state.remates:
 lista_carreras_disponibles = list(st.session_state.remates.keys())
 ahora_dt = obtener_hora_venezuela_local()
 
-# --- ESTILOS CSS GENERALES ---
+# --- ESTILOS CSS GENERALES OPTIMIZADOS PARA TELÉFONOS MÓVILES ---
 st.markdown("""
     <style>
     * {
@@ -362,14 +362,22 @@ st.markdown("""
         color: #f0f6fc;
         overflow-x: hidden !important;
     }
-    [data-testid="stSidebar"] {
-        min-width: 360px !important;
-        max-width: 360px !important;
+    @media (max-width: 768px) {
+        [data-testid="stSidebar"] {
+            min-width: 280px !important;
+            max-width: 280px !important;
+        }
+        [data-testid="stSidebar"] > div:first-child {
+            width: 280px !important;
+            padding-left: 0.8rem !important;
+            padding-right: 0.8rem !important;
+        }
     }
-    [data-testid="stSidebar"] > div:first-child {
-        width: 360px !important;
-        padding-left: 1.2rem !important;
-        padding-right: 1.2rem !important;
+    @media (min-width: 769px) {
+        [data-testid="stSidebar"] {
+            min-width: 340px !important;
+            max-width: 340px !important;
+        }
     }
     [data-testid="stToolbar"] {
         display: none !important;
@@ -385,10 +393,10 @@ st.markdown("""
         display: none !important;
     }
     .block-container {
-        padding-top: 0.4rem !important;
-        padding-bottom: 2rem !important;
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
+        padding-top: 0.2rem !important;
+        padding-bottom: 1.5rem !important;
+        padding-left: 0.3rem !important;
+        padding-right: 0.3rem !important;
         max-width: 100% !important;
         margin: 0 auto !important;
         overflow-x: hidden !important;
@@ -401,152 +409,152 @@ st.markdown("""
         overflow-y: hidden !important;
         -webkit-overflow-scrolling: touch !important;
         width: 100% !important;
-        gap: 6px !important;
-        padding-bottom: 6px !important;
+        gap: 4px !important;
+        padding-bottom: 4px !important;
         scrollbar-width: thin;
     }
     div[data-testid="stHorizontalBlock"] > div {
         flex: 0 0 auto !important;
         width: auto !important;
-        min-width: 110px !important;
+        min-width: 90px !important;
         max-width: none !important;
     }
     .carreras-scroll-container div[data-testid="stHorizontalBlock"] > div {
-        min-width: 55px !important;
-        width: 55px !important;
+        min-width: 48px !important;
+        width: 48px !important;
     }
     
     div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"]:has(button) {
-        gap: 4px !important;
-        margin-top: -18px !important;
-        margin-bottom: -18px !important;
+        gap: 3px !important;
+        margin-top: -12px !important;
+        margin-bottom: -12px !important;
     }
     div[data-testid="column"]:has(button) {
-        padding: 0px 2px !important;
+        padding: 0px 1px !important;
     }
 
     .stButton button {
         border-radius: 6px !important;
         font-weight: 700 !important;
-        padding: 0.2rem 0.4rem !important;
-        min-height: 38px !important;
-        font-size: 12px !important;
+        padding: 0.2rem 0.3rem !important;
+        min-height: 36px !important;
+        font-size: 11px !important;
         letter-spacing: 0.2px;
         white-space: nowrap !important;
         width: 100% !important;
     }
     .subasta-header {
-        font-size: clamp(14px, 3.5vw, 18px);
+        font-size: clamp(13px, 3.2vw, 16px);
         font-weight: 800;
         color: #f1e05a;
         margin-bottom: 4px;
         border-bottom: 2px solid #f1e05a;
-        padding-bottom: 3px;
+        padding-bottom: 2px;
     }
     
     .carrera-condicion-card {
         background-color: #161b22;
         border: 1px solid #30363d;
-        padding: 8px 12px;
+        padding: 8px 10px;
         border-radius: 6px;
-        font-size: 12px;
+        font-size: 11px;
         color: #f0f6fc;
-        margin-bottom: 10px;
-        line-height: 1.4;
+        margin-bottom: 8px;
+        line-height: 1.3;
         word-break: break-word;
     }
     .incentivo-llamativo {
         background: linear-gradient(135deg, #1f1c2c 0%, #923d41 100%);
         border: 2px dashed #00ffff;
-        padding: 10px 16px;
-        border-radius: 12px;
+        padding: 8px 12px;
+        border-radius: 10px;
         text-align: center;
-        margin: 10px 0;
-        box-shadow: 0px 0px 15px rgba(0, 255, 255, 0.4);
+        margin: 8px 0;
+        box-shadow: 0px 0px 12px rgba(0, 255, 255, 0.3);
     }
     .incentivo-llamativo-monto {
         color: #ffffff;
-        font-size: 22px;
+        font-size: 18px;
         font-weight: 900;
         letter-spacing: 0.5px;
         text-shadow: 2px 2px 4px #000000;
     }
     
     @keyframes parpadeoGanador {
-        0% { transform: scale(1); box-shadow: 0 0 15px #f1c40f, inset 0 0 15px #f1c40f; }
-        50% { transform: scale(1.02); box-shadow: 0 0 35px #00ffff, inset 0 0 25px #00ffff; }
-        100% { transform: scale(1); box-shadow: 0 0 15px #f1c40f, inset 0 0 15px #f1c40f; }
+        0% { transform: scale(1); box-shadow: 0 0 12px #f1c40f, inset 0 0 12px #f1c40f; }
+        50% { transform: scale(1.02); box-shadow: 0 0 25px #00ffff, inset 0 0 18px #00ffff; }
+        100% { transform: scale(1); box-shadow: 0 0 12px #f1c40f, inset 0 0 12px #f1c40f; }
     }
     .ganador-banner-epic {
         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-        border: 3px solid #f1c40f;
-        border-radius: 14px;
-        padding: 16px;
+        border: 2px solid #f1c40f;
+        border-radius: 12px;
+        padding: 12px;
         text-align: center;
-        margin: 12px 0;
+        margin: 10px 0;
         animation: parpadeoGanador 2s infinite ease-in-out;
     }
     .ganador-titulo-epic {
         color: #00ffff;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 900;
-        letter-spacing: 2px;
+        letter-spacing: 1.5px;
         text-transform: uppercase;
-        margin-bottom: 6px;
-        text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
+        margin-bottom: 4px;
+        text-shadow: 0 0 6px rgba(0, 255, 255, 0.8);
     }
     .ganador-nombre-epic {
         color: #f1c40f;
-        font-size: 24px;
+        font-size: 20px;
         font-weight: 900;
-        letter-spacing: 1px;
+        letter-spacing: 0.8px;
         text-transform: uppercase;
-        margin-bottom: 4px;
-        text-shadow: 2px 2px 6px #000000, 0 0 12px rgba(241, 196, 15, 0.9);
+        margin-bottom: 3px;
+        text-shadow: 2px 2px 5px #000000, 0 0 10px rgba(241, 196, 15, 0.8);
     }
     .ganador-premio-epic {
         color: #2ed573;
-        font-size: 18px;
+        font-size: 15px;
         font-weight: 900;
-        text-shadow: 1px 1px 4px #000000;
+        text-shadow: 1px 1px 3px #000000;
     }
 
     .ticket-jugador-card {
         background: #0d1117;
         border: 2px solid #30363d;
-        border-radius: 10px;
-        padding: 12px 16px;
-        margin-bottom: 10px;
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.5);
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        box-shadow: 0px 3px 10px rgba(0,0,0,0.5);
     }
     .ticket-header-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
         border-bottom: 1px dashed #30363d;
-        padding-bottom: 6px;
-        margin-bottom: 8px;
-        font-size: 12px;
+        padding-bottom: 4px;
+        margin-bottom: 6px;
+        font-size: 11px;
         font-weight: 800;
         color: #f1c40f;
     }
     .ticket-body-row {
-        font-size: 13px;
+        font-size: 12px;
         color: #f0f6fc;
-        margin-bottom: 4px;
+        margin-bottom: 3px;
         font-weight: 600;
     }
     
     .header-container-modern {
         background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
         border: 1px solid #30363d;
-        border-radius: 12px;
-        padding: 14px 18px;
-        margin-bottom: 10px;
-        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6);
+        border-radius: 10px;
+        padding: 10px 14px;
+        margin-bottom: 8px;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.5);
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 10px;
         width: 100%;
         box-sizing: border-box;
     }
@@ -555,16 +563,16 @@ st.markdown("""
         justify-content: space-between;
         align-items: center;
         width: 100%;
-        gap: 8px;
+        gap: 6px;
     }
     .header-user-card {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         background: #080a0f;
         border: 1px solid #30363d;
-        padding: 6px 12px;
-        border-radius: 8px;
+        padding: 4px 10px;
+        border-radius: 6px;
     }
     .user-details {
         display: flex;
@@ -575,55 +583,55 @@ st.markdown("""
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 6px;
+        gap: 4px;
     }
     .u-name {
         color: #f0f6fc;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 800;
     }
     .u-bal {
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 700;
     }
     .u-avatar-badge {
-        width: 34px;
-        height: 34px;
+        width: 30px;
+        height: 30px;
         background: #1f6feb;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 16px;
+        font-size: 14px;
     }
     .header-bottom-row-logo {
         text-align: center;
         border-top: 1px solid #21262d;
-        padding-top: 12px;
+        padding-top: 8px;
     }
     .header-logo-img {
-        max-height: 120px;
+        max-height: 95px;
         width: auto;
         object-fit: contain;
     }
     
     .reloj-digital-container {
         background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
-        border: 1.5px solid #00ffff;
-        border-radius: 10px;
-        padding: 10px 18px;
+        border: 1.2px solid #00ffff;
+        border-radius: 8px;
+        padding: 6px 14px;
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-bottom: 12px;
-        box-shadow: 0px 0px 15px rgba(0, 255, 255, 0.3);
+        margin-bottom: 10px;
+        box-shadow: 0px 0px 12px rgba(0, 255, 255, 0.25);
     }
     .reloj-digital-txt {
         color: #00ffff;
-        font-size: 20px;
+        font-size: 16px;
         font-weight: 900;
-        letter-spacing: 2px;
-        text-shadow: 0 0 10px rgba(0, 255, 255, 0.9);
+        letter-spacing: 1.5px;
+        text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
         font-family: monospace;
     }
     
@@ -633,11 +641,11 @@ st.markdown("""
         100% { opacity: 1; transform: scale(1); }
     }
     .led-estado {
-        width: 10px;
-        height: 10px;
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
         display: inline-block;
-        box-shadow: 0 0 8px currentColor;
+        box-shadow: 0 0 6px currentColor;
     }
     .led-verde {
         background-color: #2ed573;
@@ -683,7 +691,7 @@ with col_h_izq:
         st.rerun()
 
 header_html = f"""
-    <div class="header-container-modern" style="margin-top: 8px;">
+    <div class="header-container-modern" style="margin-top: 4px;">
         <div class="header-top-row">
             <div></div>
             <div class="header-user-card">
@@ -727,27 +735,27 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
             font-family: sans-serif;
             background-color: #ffffff;
             color: #000000;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             table-layout: fixed;
         }
         .tabla-referencia th {
             border-top: 2px solid #dfc729;
             border-bottom: 2px solid #dfc729;
-            padding: 6px 4px;
+            padding: 5px 3px;
             text-align: left;
             font-weight: 800;
             background-color: #ffffff;
             color: #000000;
-            font-size: 11px;
+            font-size: 10px;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         .tabla-referencia td {
             border-bottom: 1px solid #dfc729;
-            padding: 6px 4px;
+            padding: 5px 3px;
             background-color: #fbfbfb;
             color: #111111;
-            font-size: 11px;
+            font-size: 10px;
             vertical-align: middle;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -757,10 +765,10 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 10px;
             border-radius: 2px;
             box-sizing: border-box;
         }
@@ -783,7 +791,7 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
             font-style: italic;
         }
     </style>
-    <div style="background-color: #ffffff; padding: 3px; border-radius: 6px; overflow-x: auto; width: 100%;">
+    <div style="background-color: #ffffff; padding: 2px; border-radius: 6px; overflow-x: auto; width: 100%;">
         <table class="tabla-referencia">
             <thead>
                 <tr>
@@ -829,7 +837,7 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
         html += f"""
                 <tr class="{clase_fila}">
                     <td><span class="badge-numero {badge_class}">{num}</span></td>
-                    <td style="font-weight: 800; font-size: 12px;" title="{nombre_solo.upper()}{etiqueta_estado}">{nombre_solo.upper()}{etiqueta_estado}</td>
+                    <td style="font-weight: 800; font-size: 11px;" title="{nombre_solo.upper()}{etiqueta_estado}">{nombre_solo.upper()}{etiqueta_estado}</td>
                     <td title="{info['jugador']}">{info['jugador']}</td>
                     <td style="font-weight: bold; color: { '#990000' if es_retirado else ('#856404' if es_novale else '#000000') };">{formatear_bs(info['monto'])}</td>
                 </tr>
@@ -886,7 +894,7 @@ with col_menu4:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
 # --- BANNER MARQUESINA DINÁMICO ---
 elementos_carrusel_info = []
@@ -922,8 +930,8 @@ html_banner_marquesina = f"""
         background: transparent;
         border: none;
         box-shadow: none;
-        padding: 8px 0;
-        margin-bottom: 12px;
+        padding: 6px 0;
+        margin-bottom: 8px;
         overflow: hidden;
         box-sizing: border-box;
         display: flex;
@@ -935,12 +943,12 @@ html_banner_marquesina = f"""
         animation: scrollRight 150s linear infinite !important;
         animation-play-state: running !important;
         font-family: 'Arial Black', Gadget, sans-serif;
-        font-size: 15px;
+        font-size: 13px;
         font-weight: 900;
         color: #00ffff;
         text-transform: uppercase;
-        letter-spacing: 1.5px;
-        text-shadow: 0px 0px 10px rgba(0, 255, 255, 0.9), 2px 2px 2px #000000;
+        letter-spacing: 1.2px;
+        text-shadow: 0px 0px 8px rgba(0, 255, 255, 0.9), 2px 2px 2px #000000;
         padding-right: 100%;
     }}
     @keyframes scrollRight {{
@@ -956,7 +964,7 @@ html_banner_marquesina = f"""
     <div class="marquee-text">{texto_unido_marquesina}</div>
 </div>
 """
-components.html(html_banner_marquesina, height=42)
+components.html(html_banner_marquesina, height=36)
 
 # --- CARRUSEL AUTOMÁTICO DE IMÁGENES ---
 ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
@@ -977,7 +985,7 @@ if lista_b64_banners:
     html_slider = f"""
     <style>
         body {{ margin: 0; padding: 0; background-color: #080a0f; overflow: hidden; }}
-        .banner-slider-container {{ width: 100vw; height: 240px; margin: 0; padding: 0; overflow: hidden; position: relative; background-color: #080a0f; }}
+        .banner-slider-container {{ width: 100vw; height: 180px; margin: 0; padding: 0; overflow: hidden; position: relative; background-color: #080a0f; }}
         .banner-slide-img {{ width: 100%; height: 100%; object-fit: cover; transition: opacity 1.2s ease-in-out; display: block; }}
     </style>
     <div class="banner-slider-container">
@@ -1001,12 +1009,12 @@ if lista_b64_banners:
         }})();
     </script>
     """
-    components.html(html_slider, height=245)
+    components.html(html_slider, height=185)
 else:
     st.markdown("""
-        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); padding: 15px; text-align: center; margin-bottom: 10px; border-radius: 6px;">
-            <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px; font-size: 16px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
-            <p style="color: #8b949e; font-size: 11px; margin: 4px 0 0 0;">¡La pasión del hipismo venezolano en vivo!</p>
+        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); padding: 12px; text-align: center; margin-bottom: 8px; border-radius: 6px;">
+            <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px; font-size: 14px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
+            <p style="color: #8b949e; font-size: 10px; margin: 3px 0 0 0;">¡La pasión del hipismo venezolano en vivo!</p>
         </div>
     """, unsafe_allow_html=True)
 
@@ -1114,7 +1122,7 @@ def renderizar_tiempo_real_universal():
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-        st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+        st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
         modo_actual_remate = st.session_state.sub_remate_opcion
 
         if not lista_carreras_disponibles:
@@ -1175,10 +1183,10 @@ def renderizar_tiempo_real_universal():
                 estado_icono = "🔴" if carrera_cerrada else "🟢"
                 
                 st.markdown(f"""
-                    <div style="font-size: 14px; font-weight: 800; color: #f0f6fc; display: flex; align-items: center; gap: 6px; margin-top: 8px; margin-bottom: 8px;">
+                    <div style="font-size: 13px; font-weight: 800; color: #f0f6fc; display: flex; align-items: center; gap: 6px; margin-top: 6px; margin-bottom: 6px;">
                         <span>{estado_icono}</span>
                         <span>{carr_activa}</span>
-                        <span style="font-size: 11px; font-weight: 600; color: #8b949e; background: #161b22; padding: 1px 6px; border-radius: 4px; border: 1px solid #30363d;">{modo_actual_remate}</span>
+                        <span style="font-size: 10px; font-weight: 600; color: #8b949e; background: #161b22; padding: 1px 5px; border-radius: 4px; border: 1px solid #30363d;">{modo_actual_remate}</span>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -1203,7 +1211,7 @@ def renderizar_tiempo_real_universal():
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- ⏱️ CONTROL DE HORARIOS Y CONTEO EN VIVO (UN POQUITO MÁS PEQUEÑO Y COMPACTO) ---
+                # --- ⏱️ CONTROL DE HORARIOS Y CONTEO EN VIVO (MODELO COMPACTO Y LLAMATIVO PARA MÓVILES) ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
@@ -1224,9 +1232,9 @@ def renderizar_tiempo_real_universal():
                         carrera_cerrada = False
 
                 if dt_inicio:
-                    st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:4px; border:1px solid #30363d; font-size:12px;'>🟢 Inicio Remate ({modo_actual_remate}): <b>{dt_inicio.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:3px; border:1px solid #30363d; font-size:11px;'>🟢 Inicio Remate ({modo_actual_remate}): <b>{dt_inicio.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
                 if dt_limite:
-                    st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:8px; border:1px solid #30363d; font-size:12px;'>⏰ Cierre Estricto ({modo_actual_remate}): <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:6px; border:1px solid #30363d; font-size:11px;'>⏰ Cierre Estricto ({modo_actual_remate}): <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
 
                 if dt_limite and not carrera_cerrada:
                     diferencia_segundos = (dt_limite - ahora_dt_frag).total_seconds()
@@ -1272,12 +1280,12 @@ def renderizar_tiempo_real_universal():
                         else:
                             restantes_10s = max(0, 10 - int(transcurridos))
                             if restantes_10s > 0:
-                                # 💡 COMPONENTE HTML COMPACTO, ELEGANTE Y VISIBLE EN VIVO
-                                html_anuncio_compacto = f"""
-                                <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #2b0909 0%, #161b22 100%); border: 3px solid #ff4757; border-radius: 10px; padding: 10px 14px; text-align: center; box-shadow: 0px 6px 20px rgba(255, 71, 87, 0.6); margin-bottom: 12px;">
-                                    <div style="color: #ff4757; font-size: 13px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 2px;">⚠️ ¡CIERRE INMINENTE DE REMATE! ⚠️</div>
-                                    <div id="cuenta-atras-vivo" style="color: #00ffff; font-size: 38px; font-weight: 900; font-family: monospace; letter-spacing: 2px; text-shadow: 0 0 15px rgba(0, 255, 255, 0.9);">{restantes_10s}</div>
-                                    <div style="color: #f1c40f; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 2px;">SEGUNDOS RESTANTES (Nuevas pujas reinician el conteo)</div>
+                                # 💡 COMPONENTE HTML OPTIMIZADO PARA MOVILES (MÁS COMPACTO Y LLAMATIVO)
+                                html_anuncio_movil = f"""
+                                <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #2b0909 0%, #161b22 100%); border: 3px solid #ff4757; border-radius: 8px; padding: 8px 12px; text-align: center; box-shadow: 0px 4px 15px rgba(255, 71, 87, 0.6); margin-bottom: 10px;">
+                                    <div style="color: #ff4757; font-size: 11px; font-weight: 900; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 1px;">⚠️ CIERRE INMINENTE ⚠️</div>
+                                    <div id="cuenta-atras-vivo" style="color: #00ffff; font-size: 32px; font-weight: 900; font-family: monospace; letter-spacing: 2px; text-shadow: 0 0 12px rgba(0, 255, 255, 0.9);">{restantes_10s}</div>
+                                    <div style="color: #f1c40f; font-size: 10px; font-weight: 700; text-transform: uppercase;">SEGUNDOS (Nuevas pujas reinician)</div>
                                 </div>
                                 <script>
                                     (function() {{
@@ -1294,7 +1302,7 @@ def renderizar_tiempo_real_universal():
                                                 if (digito) {{
                                                     digito.parentElement.style.borderColor = "#f1c40f";
                                                     digito.parentElement.style.background = "linear-gradient(135deg, #3d3100 0%, #161b22 100%)";
-                                                    digito.parentElement.innerHTML = "<div style='color: #f1c40f; font-size: 18px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 10px #f1c40f; padding: 6px;'>🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>";
+                                                    digito.parentElement.innerHTML = "<div style='color: #f1c40f; font-size: 15px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 8px #f1c40f; padding: 5px;'>🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>";
                                                 }}
                                                 clearInterval(window.intervaloRelojVivo);
                                             }}
@@ -1302,14 +1310,14 @@ def renderizar_tiempo_real_universal():
                                     }})();
                                 </script>
                                 """
-                                components.html(html_anuncio_compacto, height=105)
+                                components.html(html_anuncio_movil, height=85)
 
                 if carrera_cerrada:
                     components.html("""
-                        <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #3d3100 0%, #161b22 100%); border: 3px solid #f1c40f; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0px 6px 20px rgba(241, 196, 15, 0.4); margin-bottom: 12px;">
-                            <div style="color: #f1c40f; font-size: 18px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 10px #f1c40f;">🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>
+                        <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #3d3100 0%, #161b22 100%); border: 3px solid #f1c40f; border-radius: 8px; padding: 10px; text-align: center; box-shadow: 0px 4px 15px rgba(241, 196, 15, 0.4); margin-bottom: 10px;">
+                            <div style="color: #f1c40f; font-size: 15px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 8px #f1c40f;">🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>
                         </div>
-                    """, height=70)
+                    """, height=55)
 
                 if carr_activa not in st.session_state.ejemplares_retirados:
                     st.session_state.ejemplares_retirados[carr_activa] = []
@@ -1320,7 +1328,7 @@ def renderizar_tiempo_real_universal():
 
                 tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
                 cantidad_filas = len(st.session_state.remates[carr_activa])
-                altura_dinamica = min(max(140, (cantidad_filas * 35) + 50), 420)
+                altura_dinamica = min(max(130, (cantidad_filas * 32) + 45), 380)
                 components.html(tabla_html, height=altura_dinamica, scrolling=True)
                 
                 retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
@@ -1343,7 +1351,7 @@ def renderizar_tiempo_real_universal():
                 if incentivo_actual > 0:
                     st.markdown(f"""
                         <div class="incentivo-llamativo">
-                            <div style="font-size: 11px; font-weight: 800; color: #00ffff; text-transform: uppercase; margin-bottom: 2px;">PREMIO TOTAL</div>
+                            <div style="font-size: 10px; font-weight: 800; color: #00ffff; text-transform: uppercase; margin-bottom: 2px;">PREMIO TOTAL</div>
                             <div class="incentivo-llamativo-monto">🎁 {formatear_bs(premio_total_calculado)}</div>
                         </div>
                     """, unsafe_allow_html=True)
@@ -1362,7 +1370,7 @@ def renderizar_tiempo_real_universal():
                         <div class="ganador-banner-epic">
                             <div class="ganador-titulo-epic">🏆 ¡RESULTADO OFICIAL - {carr_activa.upper()}! 🏆</div>
                             <div class="ganador-nombre-epic">🎉 {ganador_nombre} 🎉</div>
-                            <div style="color: #00ffff; font-size: 16px; font-weight: 900; margin-bottom: 4px; text-shadow: 0 0 8px rgba(0,255,255,0.7);">🐎 EJEMPLAR: {caballo_ganador_str.upper()}</div>
+                            <div style="color: #00ffff; font-size: 14px; font-weight: 900; margin-bottom: 3px; text-shadow: 0 0 6px rgba(0,255,255,0.7);">🐎 EJEMPLAR: {caballo_ganador_str.upper()}</div>
                             <div class="ganador-premio-epic">💰 Premio Liquidado: {premio_ganado}</div>
                         </div>
                     """, unsafe_allow_html=True)
@@ -1580,7 +1588,7 @@ if menu_principal_opcion == "Dupletas":
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
     sub_dup_actual = st.session_state.sub_dupleta_opcion
 
     st.markdown(f"<div class='subasta-header'>🎟️ Armado Visual de {sub_dup_actual}</div>", unsafe_allow_html=True)
@@ -1605,9 +1613,9 @@ if menu_principal_opcion == "Dupletas":
         st.error(f"🔒 **CERRADO ESTRICTO:** El horario de emisión finalizó el {dt_cierre_m.strftime('%d/%m/%Y a las %I:%M %p')}.")
 
     if dt_inicio_m:
-        st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:4px; border:1px solid #30363d; font-size:12px;'>🟢 Apertura ({sub_dup_actual}): <b>{dt_inicio_m.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:3px; border:1px solid #30363d; font-size:11px;'>🟢 Apertura ({sub_dup_actual}): <b>{dt_inicio_m.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
     if dt_cierre_m:
-        st.markdown(f"<div style='background:#161b22; padding:6px; border-radius:6px; margin-bottom:8px; border:1px solid #30363d; font-size:12px;'>⏰ Cierre Estricto ({sub_dup_actual}): <b>{dt_cierre_m.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:6px; border:1px solid #30363d; font-size:11px;'>⏰ Cierre Estricto ({sub_dup_actual}): <b>{dt_cierre_m.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
 
     if st.session_state.dupleta_bloqueada or bloqueo_por_horario:
         st.error("🔒 **BLOQUEADO:** Emisión cerrada temporalmente.")
@@ -1636,25 +1644,25 @@ if menu_principal_opcion == "Dupletas":
         
         img_src_html = ""
         if carr_h in st.session_state.imagenes_carreras:
-            img_src_html = f'<img src="{st.session_state.imagenes_carreras[carr_h]}" style="width:100%; height:320px; object-fit:cover; border-radius:10px; margin-bottom:12px;" />'
+            img_src_html = f'<img src="{st.session_state.imagenes_carreras[carr_h]}" style="width:100%; height:260px; object-fit:cover; border-radius:8px; margin-bottom:10px;" />'
         else:
-            img_src_html = f'<div style="width:100%; height:320px; background:#161b22; border:1px dashed #30363d; display:flex; align-items:center; justify-content:center; border-radius:10px; margin-bottom:12px; color:#8b949e; font-size:14px; font-weight:700;">{carr_h}</div>'
+            img_src_html = f'<div style="width:100%; height:260px; background:#161b22; border:1px dashed #30363d; display:flex; align-items:center; justify-content:center; border-radius:8px; margin-bottom:10px; color:#8b949e; font-size:13px; font-weight:700;">{carr_h}</div>'
 
         cards_html_slider += f"""
-            <div style="flex: 0 0 240px; background: #0d1117; border: 1px solid #30363d; border-radius: 14px; padding: 14px; text-align: left; box-shadow: 0px 6px 18px rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="flex: 0 0 210px; background: #0d1117; border: 1px solid #30363d; border-radius: 12px; padding: 12px; text-align: left; box-shadow: 0px 5px 15px rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
                     {img_src_html}
-                    <div style="color: #f1c40f; font-size: 16px; font-weight: 900; margin-bottom: 6px;">{carr_h}</div>
-                    <div style="color: #8b949e; font-size: 11px; line-height: 1.4; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">{cond_h}</div>
+                    <div style="color: #f1c40f; font-size: 14px; font-weight: 900; margin-bottom: 5px;">{carr_h}</div>
+                    <div style="color: #8b949e; font-size: 10px; line-height: 1.3; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">{cond_h}</div>
                 </div>
-                <div style="color: #ffffff; font-size: 11px; font-weight: 700; margin-top: 12px; border-top: 1px solid #21262d; padding-top: 8px;">📏 {dist_h} &nbsp;|&nbsp; ⏰ {hora_h}</div>
+                <div style="color: #ffffff; font-size: 10px; font-weight: 700; margin-top: 10px; border-top: 1px solid #21262d; padding-top: 6px;">📏 {dist_h} &nbsp;|&nbsp; ⏰ {hora_h}</div>
             </div>
         """
 
     if cards_html_slider:
         st.markdown("🖼️ **Carrusel de Carreras Disponibles (Tarjetas Verticales Amplias):**")
         st.markdown(f"""
-            <div style="display: flex; overflow-x: auto; gap: 14px; padding-bottom: 14px; margin-bottom: 16px; scrollbar-width: thin;">
+            <div style="display: flex; overflow-x: auto; gap: 12px; padding-bottom: 12px; margin-bottom: 14px; scrollbar-width: thin;">
                 {cards_html_slider}
             </div>
         """, unsafe_allow_html=True)
