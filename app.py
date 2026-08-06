@@ -78,7 +78,7 @@ def cargar_estado_global(forzar_recarga=False):
             'cedula': 'V-00.000.000'
         },
         'reportes_pago': [],
-        'ultima_puja_usuario': {}
+        'ultima_puja_usuario': {}  # Diccionario para controlar los 15 segundos de reversión por usuario/carrera
     }
     
     if os.path.exists(DB_FILE):
@@ -1281,10 +1281,10 @@ def renderizar_tiempo_real_universal():
                         else:
                             restantes_10s = max(0, 10 - int(transcurridos))
                             if restantes_10s > 0:
-                                # 💡 COMPONENTE HTML CON MENSAJE DE CIERRE EXACTO Y LIMPIO
+                                # 💡 COMPONENTE HTML ULTRA-COMPACTO Y LLAMATIVO PARA MÓVILES
                                 html_anuncio_movil = f"""
                                 <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #2b0909 0%, #161b22 100%); border: 3px solid #ff4757; border-radius: 8px; padding: 6px 10px; text-align: center; box-shadow: 0px 4px 15px rgba(255, 71, 87, 0.6); margin-bottom: 8px;">
-                                    <div style="color: #ff4757; font-size: 11px; font-weight: 900; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 1px;">⚠️ CIERRE INMINENTE ⚠️</div>
+                                    <div style="color: #ff4757; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase;">⚠️ CIERRE INMINENTE ⚠️</div>
                                     <div id="cuenta-atras-vivo" style="color: #00ffff; font-size: 28px; font-weight: 900; font-family: monospace; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0, 255, 255, 0.9);">{restantes_10s}</div>
                                     <div style="color: #f1c40f; font-size: 9px; font-weight: 700; text-transform: uppercase;">SEGUNDOS (Nuevas pujas reinician)</div>
                                 </div>
@@ -1303,7 +1303,7 @@ def renderizar_tiempo_real_universal():
                                                 if (digito) {{
                                                     digito.parentElement.style.borderColor = "#f1c40f";
                                                     digito.parentElement.style.background = "linear-gradient(135deg, #3d3100 0%, #161b22 100%)";
-                                                    digito.parentElement.innerHTML = "<div style='color: #f1c40f; font-size: 14px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 6px #f1c40f; padding: 4px;'>REMATE CERRADA SUERTE</div>";
+                                                    digito.parentElement.innerHTML = "<div style='color: #f1c40f; font-size: 14px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 6px #f1c40f; padding: 4px;'>🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>";
                                                 }}
                                                 clearInterval(window.intervaloRelojVivo);
                                             }}
@@ -1316,7 +1316,7 @@ def renderizar_tiempo_real_universal():
                 if carrera_cerrada:
                     components.html("""
                         <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #3d3100 0%, #161b22 100%); border: 3px solid #f1c40f; border-radius: 8px; padding: 8px; text-align: center; box-shadow: 0px 4px 15px rgba(241, 196, 15, 0.4); margin-bottom: 8px;">
-                            <div style="color: #f1c40f; font-size: 14px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 6px #f1c40f;">REMATE CERRADA SUERTE</div>
+                            <div style="color: #f1c40f; font-size: 15px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 8px #f1c40f;">🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>
                         </div>
                     """, height=48)
 
@@ -1514,12 +1514,15 @@ def renderizar_tiempo_real_universal():
                                             mnt_u = ultima['monto']
                                             jug_u = ultima['usuario']
                                             
+                                            # Devolver al estado anterior (Sin Postor y monto 0)
                                             if carr_u in st.session_state.remates and cab_u in st.session_state.remates[carr_u]:
                                                 st.session_state.remates[carr_u][cab_u] = {"jugador": "Sin Postor", "monto": 0.0}
                                             
+                                            # Restar del saldo de cuentas
                                             if jug_u in st.session_state.cuentas:
                                                 st.session_state.cuentas[jug_u]['Pujas'] = max(0.0, st.session_state.cuentas[jug_u]['Pujas'] - mnt_u)
                                             
+                                            # Registrar en historial
                                             st.session_state.historial_jugadas.append({
                                                 "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
                                                 "jugador": jug_u,
@@ -1529,6 +1532,7 @@ def renderizar_tiempo_real_universal():
                                                 "monto": -mnt_u
                                             })
                                             
+                                            # Limpiar registro de reversión
                                             st.session_state.ultima_puja_usuario = {}
                                             guardar_estado_global()
                                             st.toast("↩️ ¡Puja revertida con éxito!")
@@ -2615,7 +2619,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                         "monto": monto_retiro
                     })
                     
-                    guardar_estado_global()
+                    guardar_estado_general()
                     st.toast(f"✅ Retiro de {formatear_bs(monto_retiro)} deducido a {jugador_retirar}")
                     st.rerun()
 
