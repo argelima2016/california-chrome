@@ -443,28 +443,52 @@ st.markdown("""
         border-bottom: 2px solid #f1e05a;
         padding-bottom: 3px;
     }
-    @keyframes latidoEmergencia {
-        0% { transform: scale(1); box-shadow: 0 0 15px #ff4757; }
-        50% { transform: scale(1.06); box-shadow: 0 0 35px #ff4757, inset 0 0 20px #ff4757; }
-        100% { transform: scale(1); box-shadow: 0 0 15px #ff4757; }
+    
+    /* 🚨 NUEVO MODELO DE ANUNCIO DE CIERRE: ESTILO MARQUESINA / LED DE ALTA VISIBILIDAD */
+    @keyframes pulsoAlertaPro {
+        0% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 71, 87, 0.6); }
+        50% { transform: scale(1.02); box-shadow: 0 0 45px rgba(255, 71, 87, 0.95); }
+        100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 71, 87, 0.6); }
     }
-    .timer-flotante-gigante {
+    .alerta-cierre-pro {
         position: sticky;
         top: 0px;
         z-index: 99999;
-        background: linear-gradient(135deg, #2c0b0e 0%, #161b22 100%);
-        border: 4px solid #ff4757;
-        padding: 16px;
+        background: linear-gradient(135deg, #2b0909 0%, #12161f 50%, #0d1117 100%);
+        border: 3px solid #ff4757;
         border-radius: 12px;
+        padding: 14px 18px;
         text-align: center;
-        font-size: clamp(22px, 5vw, 32px);
-        font-weight: 900;
-        color: #ff4757;
         margin-bottom: 14px;
-        animation: latidoEmergencia 0.8s infinite;
-        text-shadow: 0px 0px 15px rgba(255, 71, 87, 0.9);
-        box-shadow: 0px 6px 25px rgba(255, 71, 87, 0.5);
+        animation: pulsoAlertaPro 0.9s infinite ease-in-out;
+        box-shadow: 0px 6px 25px rgba(0,0,0,0.85);
     }
+    .alerta-cierre-titulo {
+        color: #ff4757;
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        text-shadow: 0 0 8px rgba(255, 71, 87, 0.8);
+    }
+    .alerta-cierre-contador {
+        color: #00ffff;
+        font-size: clamp(34px, 7vw, 48px);
+        font-weight: 900;
+        letter-spacing: 3px;
+        font-family: 'Arial Black', Gadget, sans-serif;
+        text-shadow: 0 0 15px rgba(0, 255, 255, 0.9), 2px 2px 4px #000000;
+        line-height: 1.1;
+    }
+    .alerta-cierre-sub {
+        color: #a5d6ff;
+        font-size: 11px;
+        font-weight: 700;
+        margin-top: 4px;
+        letter-spacing: 0.5px;
+    }
+    
     .carrera-condicion-card {
         background-color: #161b22;
         border: 1px solid #30363d;
@@ -1224,7 +1248,7 @@ def renderizar_tiempo_real_universal():
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- ⏱️ CONTADOR FLOTANTE GIGANTE CON DESCUENTO EN VIVO Y STICKY ---
+                # --- ⏱️ NUEVO MODELO DE ANUNCIO DE CIERRE: MUY VISTOSO Y CON DESCUENTO EN VIVO ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
@@ -1293,43 +1317,48 @@ def renderizar_tiempo_real_universal():
                         else:
                             restantes_10s = max(0, 10 - int(transcurridos))
                             if restantes_10s > 0:
-                                # 💡 BANNER GIGANTE Y MUY VISTOSO CON CONTEO EN VIVO 10, 9, 8...
-                                html_conteo_gigante = f"""
-                                <div id="caja-conteo-gigante" class="timer-flotante-gigante">
-                                    ⚠️ ¡CIERRE INMINENTE! <span id="num-vivo-regresivo" style="color: #ffff00; font-size: 38px;">{restantes_10s}</span> SEG<br>
-                                    <span style='font-size:12px; font-weight:normal; color: #a5d6ff;'>(Nuevas pujas reinician el contador)</span>
+                                # 💡 BANNER DE ALTA VISIBILIDAD CON SCRIPT JS EN VIVO QUE DESCUENTA 10, 9, 8...
+                                html_anuncio_pro = f"""
+                                <div id="alerta-cierre-pro-box" class="alerta-cierre-pro">
+                                    <div class="alerta-cierre-titulo">⚠️ ¡ATENCIÓN! CIERRE INMINENTE DE REMATE ⚠️</div>
+                                    <div class="alerta-cierre-contador" id="contador-regresivo-pro">{restantes_10s}</div>
+                                    <div class="alerta-cierre-sub">SEGUNDOS RESTANTES (Nuevas pujas reinician el conteo)</div>
                                 </div>
                                 <script>
                                     (function() {{
-                                        let restante = {restantes_10s};
-                                        const elem = document.getElementById("num-vivo-regresivo");
-                                        const caja = document.getElementById("caja-conteo-gigante");
+                                        let segundos = {restantes_10s};
+                                        const numElem = document.getElementById("contador-regresivo-pro");
+                                        const cajaBox = document.getElementById("alerta-cierre-pro-box");
                                         
-                                        if (window.intervaloGigante) {{
-                                            clearInterval(window.intervaloGigante);
+                                        if (window.timerProId) {{
+                                            clearInterval(window.timerProId);
                                         }}
                                         
-                                        window.intervaloGigante = setInterval(function() {{
-                                            restante--;
-                                            if (restante > 0) {{
-                                                if (elem) elem.innerText = restante;
+                                        window.timerProId = setInterval(function() {{
+                                            segundos--;
+                                            if (segundos > 0) {{
+                                                if (numElem) numElem.innerText = segundos;
                                             }} else {{
-                                                if (elem) elem.innerText = "0";
-                                                if (caja) {{
-                                                    caja.style.borderColor = "#f1c40f";
-                                                    caja.style.color = "#f1c40f";
-                                                    caja.innerHTML = "🔒 CERRADO EL REMATE, ¡SUERTE! 🐎";
+                                                if (numElem) numElem.innerText = "0";
+                                                if (cajaBox) {{
+                                                    cajaBox.style.borderColor = "#f1c40f";
+                                                    cajaBox.style.background = "linear-gradient(135deg, #3d3100 0%, #161b22 100%)";
+                                                    cajaBox.innerHTML = "<div style='color: #f1c40f; font-size: 20px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 10px #f1c40f;'>🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>";
                                                 }}
-                                                clearInterval(window.intervaloGigante);
+                                                clearInterval(window.timerProId);
                                             }}
                                         }}, 1000);
                                     }})();
                                 </script>
                                 """
-                                components.html(html_conteo_gigante, height=105)
+                                components.html(html_anuncio_pro, height=115)
 
                 if carrera_cerrada:
-                    st.markdown("<div class='timer-flotante-gigante' style='border-color: #f1c40f; color: #f1c40f;'>🔒 CERRADO EL REMATE, ¡SUERTE! 🐎</div>", unsafe_allow_html=True)
+                    st.markdown("""
+                        <div class="alerta-cierre-pro" style="border-color: #f1c40f; background: linear-gradient(135deg, #3d3100 0%, #161b22 100%);">
+                            <div style='color: #f1c40f; font-size: 20px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 10px #f1c40f;'>🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>
+                        </div>
+                    """, unsafe_allow_html=True)
 
                 if carr_activa not in st.session_state.ejemplares_retirados:
                     st.session_state.ejemplares_retirados[carr_activa] = []
