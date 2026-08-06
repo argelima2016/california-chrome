@@ -1208,7 +1208,7 @@ def renderizar_tiempo_real_universal():
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- ⏱️ CONTADOR FLOTANTE FIJO (VISIBLE EN TODO MOMENTO AL BAJAR A PUJAR) ---
+                # --- ⏱️ CONTADOR FLOTANTE FIJO (DESCUENTA DE 10 A 1 Y MUESTRA CERRADO EL REMATE SUERTE) ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
@@ -1277,8 +1277,11 @@ def renderizar_tiempo_real_universal():
                         else:
                             restantes_10s = max(0, 10 - int(transcurridos))
                             if restantes_10s > 0:
-                                # 💡 CONTADOR FLOTANTE FIJO SUPERIOR (SE MANTIENE EN PANTALLA AL BAJAR)
-                                st.markdown(f"<div class='timer-flotante-fijo'>⚠️ CIERRE INMINENTE: <b>{restantes_10s}s</b><br><span style='font-size:12px; font-weight:normal;'>(Nuevas pujas reinician el contador)</span></div>", unsafe_allow_html=True)
+                                # 💡 CONTADOR FLOTANTE FIJO (DESCUENTA 10, 9, 8... Y SE QUEDA FIJO ARRIBA)
+                                st.markdown(f"<div class='timer-flotante-fijo'>⚠️ CIERRE INMINENTE: <b>{restantes_10s}</b><br><span style='font-size:12px; font-weight:normal;'>(Nuevas pujas reinician el contador)</span></div>", unsafe_allow_html=True)
+
+                if carrera_cerrada:
+                    st.markdown("<div class='timer-flotante-fijo' style='border-color: #f1c40f; color: #f1c40f;'>🔒 CERRADO EL REMATE, ¡SUERTE! 🐎</div>", unsafe_allow_html=True)
 
                 if carr_activa not in st.session_state.ejemplares_retirados:
                     st.session_state.ejemplares_retirados[carr_activa] = []
