@@ -481,7 +481,6 @@ if not st.session_state.carreras_habilitadas_polla and lista_carreras_disponible
     st.session_state.carreras_habilitadas_polla = list(lista_carreras_disponibles)
 
 # --- MENÚ PRINCIPAL HORIZONTAL ---
-st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
 col_menu1, col_menu2, col_menu3, col_menu4 = st.columns(4, gap="small")
 with col_menu1:
     if st.button("REMATES", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
@@ -503,7 +502,7 @@ with col_menu4:
         st.session_state.menu_principal_opcion = "🔒 Zona Admin"
         guardar_estado_global()
         st.rerun()
-st.markdown('</div>', unsafe_allow_html=True)
+
 st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
 # --- BANNER MARQUESINA ---
@@ -607,7 +606,6 @@ def renderizar_tiempo_real_universal():
     ahora_dt_frag = obtener_hora_venezuela_local()
 
     if st.session_state.menu_principal_opcion == "Remates":
-        st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
         col_so1, col_so2, col_so3 = st.columns(3, gap="small")
         with col_so1:
             if st.button("Adelantados", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
@@ -624,7 +622,6 @@ def renderizar_tiempo_real_universal():
                 st.session_state.sub_remate_opcion = "En Vivo"
                 guardar_estado_global()
                 st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
         modo_actual_remate = st.session_state.sub_remate_opcion
@@ -638,7 +635,6 @@ def renderizar_tiempo_real_universal():
             carreras_filtradas_visibles = []
             for c in carreras_asignadas_admin:
                 if c not in lista_carreras_disponibles: continue
-                # Verificamos que esta carrera NO esté asignada en otra modalidad diferente
                 asignada_en_otra = False
                 for otra_mod, lista_otra in st.session_state.carreras_por_modalidad.items():
                     if otra_mod != modo_actual_remate and c in lista_otra:
@@ -654,7 +650,7 @@ def renderizar_tiempo_real_universal():
                 if modo_actual_remate == "Ciegos":
                     st.info("ℹ️ El Remate Ciego requiere exactamente dos carreras exclusivas asignadas en la Zona Admin.")
                 else:
-                    st.info(f"ℹ️ No hay carreras exclusivas asignadas para la modalidad **{modo_actual_remate}**. Configúralas en Zona Admin (evitando solapamientos con otras modalidades).")
+                    st.info(f"ℹ️ No hay carreras exclusivas asignadas para la modalidad **{modo_actual_remate}**. Configúralas en Zona Admin.")
             else:
                 if "carrera_remate_activa_seleccionada" not in st.session_state or st.session_state["carrera_remate_activa_seleccionada"] not in carreras_filtradas_visibles:
                     carr_activa = carreras_filtradas_visibles[0]
@@ -663,7 +659,6 @@ def renderizar_tiempo_real_universal():
                     carr_activa = st.session_state["carrera_remate_activa_seleccionada"]
 
                 st.markdown("🔹 **Seleccionar Carrera:**")
-                st.markdown('<div class="carreras-scroll-container">', unsafe_allow_html=True)
                 cols_carreras = st.columns(len(carreras_filtradas_visibles), gap="small")
                 for idx, c_nombre in enumerate(carreras_filtradas_visibles):
                     abreviatura = obtener_abreviatura_carrera(c_nombre, modo_actual=modo_actual_remate)
@@ -673,7 +668,6 @@ def renderizar_tiempo_real_universal():
                             st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
                             guardar_estado_global()
                             st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
 
                 hora_actual_envivo = ahora_dt_frag.strftime('%I:%M:%S %p')
@@ -964,7 +958,6 @@ renderizar_tiempo_real_universal()
 # 2. MÓDULO DE DUPLETA Y 6 EN LINEA
 # =========================================================================
 if menu_principal_opcion == "Dupletas":
-    st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
     col_d1, col_d2, col_d3 = st.columns(3, gap="small")
     with col_d1:
         if st.button("🎟️ Dupleta", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
@@ -981,9 +974,8 @@ if menu_principal_opcion == "Dupletas":
             st.session_state.sub_dupleta_opcion = "6 En Linea"
             guardar_estado_global()
             st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+
     st.markdown("<hr style='margin: 0.3rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
-    
     sub_dup_actual = st.session_state.sub_dupleta_opcion
     st.markdown(f"<div class='subasta-header'>🎟️ Armado Visual de {sub_dup_actual}</div>", unsafe_allow_html=True)
     
@@ -1059,7 +1051,6 @@ elif menu_principal_opcion == "Cuentas":
             - 🆔 **Cédula/RIF:** `{p_movil['cedula']}`
         """)
         
-        # Botón único que copia todo a la vez mediante JS
         btn_copiar_html = f"""
             <button onclick="copiarPagoMovilUnico('{p_movil['banco']}', '{p_movil['telefono']}', '{p_movil['cedula']}')" style="background-color: #1f6feb; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 8px;">
                 📋 Copiar Datos de Pago Móvil (Todo en 1 Toque)
