@@ -51,7 +51,7 @@ def cargar_estado_global(forzar_recarga=False):
         'fechas_horas_inicio_remate_modalidad': {},
         'fechas_horas_cierre_remate_modalidad': {},
         'fechas_horas_inicio_modalidad_multiple': {},
-        'fechas_horas_cierre_modalidad_multiple': {},
+        'fechas_horas_cierre_modalidad_multiple': {}, 
         'estado_conteo_carrera_modalidad': {},
         'tiempo_inicio_conteo_modalidad': {},
         'alertas_reproducidas': {},
@@ -78,7 +78,8 @@ def cargar_estado_global(forzar_recarga=False):
             'cedula': 'V-00.000.000'
         },
         'reportes_pago': [],
-        'ultima_puja_usuario': {}  # Diccionario para controlar los 15 segundos de reversión por usuario/carrera
+        'ultima_puja_usuario': {},  # Diccionario para controlar los 15 segundos de reversión por usuario/carrera
+        'resultados_oficiales_polla': {} # { "Carrera 1": {"1ro": "1 - Ejemplar 1", "2do": "2 - Ejemplar 2", "3ro": "3 - Ejemplar 3"} }
     }
     
     if os.path.exists(DB_FILE):
@@ -86,18 +87,18 @@ def cargar_estado_global(forzar_recarga=False):
             with open(DB_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 
-                for dict_key in ['fechas_horas_inicio_remate_modalidad', 'fechas_horas_cierre_remate_modalidad', 'fechas_horas_inicio_modalidad_multiple', 'fechas_horas_cierre_modalidad_multiple']:
-                    if dict_key in data and isinstance(data[dict_key], dict):
-                        for sub_k, sub_v in data[dict_key].items():
-                            if isinstance(sub_v, str):
-                                try:
-                                    data[dict_key][sub_k] = datetime.fromisoformat(sub_v)
-                                except Exception:
-                                    pass
+            for dict_key in ['fechas_horas_inicio_remate_modalidad', 'fechas_horas_cierre_remate_modalidad', 'fechas_horas_inicio_modalidad_multiple', 'fechas_horas_cierre_modalidad_multiple']:
+                if dict_key in data and isinstance(data[dict_key], dict):
+                    for sub_k, sub_v in data[dict_key].items():
+                        if isinstance(sub_v, str):
+                            try:
+                                data[dict_key][sub_k] = datetime.fromisoformat(sub_v)
+                            except Exception:
+                                pass
 
-                for k, v in default_state.items():
-                    if k not in st.session_state or forzar_recarga:
-                        st.session_state[k] = data.get(k, v)
+            for k, v in default_state.items():
+                if k not in st.session_state or forzar_recarga:
+                    st.session_state[k] = data.get(k, v)
         except Exception:
             for k, v in default_state.items():
                 if k not in st.session_state:
@@ -119,7 +120,7 @@ def guardar_estado_global():
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
         'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'admin_tab_seleccionada',
-        'datos_pago_movil', 'reportes_pago', 'ultima_puja_usuario'
+        'datos_pago_movil', 'reportes_pago', 'ultima_puja_usuario', 'resultados_oficiales_polla'
     ]
     data = {}
     for k in keys_to_save:
@@ -260,7 +261,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -1632,7 +1633,7 @@ def renderizar_tiempo_real_universal():
 renderizar_tiempo_real_universal()
 
 # =========================================================================
-# 2. MÓDULO DE DUPLETA Y 6 EN LINEA
+# 2. MÓDULO DE DUPLETA Y 6 EN LINEA (INCLUYENDO REGLAS DE POLLA)
 # =========================================================================
 if menu_principal_opcion == "Dupletas":
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
@@ -1648,7 +1649,7 @@ if menu_principal_opcion == "Dupletas":
             guardar_estado_global()
             st.rerun()
     with col_d3:
-        if st.button("🏇 6 En Linea", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "6 En Linea" else "secondary"):
+        if st.button("🏇 6 En Linea (Polla)", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "6 En Linea" else "secondary"):
             st.session_state.sub_dupleta_opcion = "6 En Linea"
             guardar_estado_global()
             st.rerun()
@@ -1676,7 +1677,7 @@ if menu_principal_opcion == "Dupletas":
         st.warning(f"⏳ **AÚN NO ABRE:** Esta modalidad abre el {dt_inicio_m.strftime('%d/%m/%Y a las %I:%M %p')}.")
     elif dt_cierre_m and ahora_dt > dt_cierre_m:
         bloqueo_por_horario = True
-        st.error(f"🔒 **CERRADO ESTRICTO:** El horario de emisión finalizó el {dt_cierre_m.strftime('%d/%m/%Y a las %I:%M %p')}.")
+        st.error(f"🔒 **CERRADO ESTRICTO (Hora Tope):** El horario de emisión finalizó el {dt_cierre_m.strftime('%d/%m/%Y a las %I:%M %p')}.")
 
     if dt_inicio_m:
         st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:3px; border:1px solid #30363d; font-size:11px;'>🟢 Apertura ({sub_dup_actual}): <b>{dt_inicio_m.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
@@ -1684,7 +1685,7 @@ if menu_principal_opcion == "Dupletas":
         st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:6px; border:1px solid #30363d; font-size:11px;'>⏰ Cierre Estricto ({sub_dup_actual}): <b>{dt_cierre_m.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
 
     if st.session_state.dupleta_bloqueada or bloqueo_por_horario:
-        st.error("🔒 **BLOQUEADO:** Emisión cerrada temporalmente.")
+        st.error("🔒 **BLOQUEADO:** Emisión cerrada temporalmente (Hora tope vencida o bloqueo de administrador).")
 
     monto_unico_seccion = st.session_state.config_montos_especiales.get(sub_dup_actual, 500.0)
 
@@ -1698,7 +1699,7 @@ if menu_principal_opcion == "Dupletas":
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
     else:
         pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
-        st.metric("💰 Pote Acumulado 6 En Linea", formatear_bs(pote_total))
+        st.metric("💰 Pote Acumulado 6 En Linea (Polla)", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
 
     cards_html_slider = ""
@@ -1735,6 +1736,8 @@ if menu_principal_opcion == "Dupletas":
 
     with st.container(border=True):
         st.markdown(f"👤 **Jugador Activo:** `{st.session_state.usuario_activo}` &nbsp;|&nbsp; 💵 **Costo Ticket:** `{formatear_bs(monto_unico_seccion)}`")
+        if sub_dup_actual == "6 En Linea":
+            st.markdown("<p style='color: #00ffff; font-size: 11px; font-weight: 700;'>ℹ️ <b>Regla de Polla:</b> No se admiten llaves, cada ejemplar juega por separado. En caso de retiro, se aplicará el corrimiento automático al siguiente ejemplar activo.</p>", unsafe_allow_html=True)
         st.markdown("---")
 
         if not carreras_permitidas:
@@ -1769,16 +1772,17 @@ if menu_principal_opcion == "Dupletas":
                     key=f"ticket_cab_{sub_dup_actual}_{paso}"
                 )
                 
-                if sub_dup_actual == "6 En Linea" and cab_leg in excluidos_carr_t:
-                    idx_ret = todos_caballos_carr.index(cab_leg)
+                # REGLA DE CORRIMIENTO AUTOMÁTICO PARA RETIRADOS EN LA POLLA (6 EN LÍNEA)
+                if sub_dup_actual == "6 En Linea" and cab_leg in excluidos_carr_t and todos_caballos_carr:
+                    idx_ret = todos_caballos_carr.index(cab_leg) if cab_leg in todos_caballos_carr else 0
                     siguiente_cab = None
                     for siguiente_c in todos_caballos_carr[idx_ret + 1:] + todos_caballos_carr[:idx_ret]:
                         if siguiente_c not in excluidos_carr_t:
                             siguiente_cab = siguiente_c
                             break
                     if siguiente_cab:
-                        cab_leg = f"{siguiente_cab} (Sustituto por retiro/invalidez)"
-                        st.info(f"🔄 **6 En Linea:** El ejemplar seleccionado no era válido. Se asignó automáticamente el siguiente disponible: **{cab_leg}**")
+                        cab_leg = siguiente_cab
+                        st.info(f"🔄 **Corrimiento automático Polla:** El ejemplar seleccionado en `{carr_leg}` está retirado/no válido. Se corrió automáticamente al siguiente activo: **{cab_leg}**")
 
                 if carr_leg in carreras_usadas:
                     valido_legs = False
@@ -1811,7 +1815,7 @@ if menu_principal_opcion == "Dupletas":
                         if duplicado:
                             st.error("❌ **BLOQUEADO:** Ya existe un ticket con esta misma combinación.")
                         else:
-                            prefijo_id = "DUP" if sub_dup_actual == "Dupleta" else ("TRIP" if sub_dup_actual == "Tripleta" else "6L")
+                            prefijo_id = "DUP" if sub_dup_actual == "Dupleta" else ("TRIP" if sub_dup_actual == "Tripleta" else "POLLA")
                             ticket_id = f"{prefijo_id}-{len(lista_tickets_activo) + 1:04d}"
                             
                             nuevo_ticket_dict = {
@@ -1842,8 +1846,98 @@ if menu_principal_opcion == "Dupletas":
                             guardar_estado_global()
                             
                             components.html("<script>window.parent.reproducirAlertaMovilYCalle('exito');</script>", height=0, width=0)
-                            st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito (Estado: PENDIENTE)!")
+                            st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito (Estado: PENDIENTE)! No hay reintegro de saldos ni anulación.")
                             st.rerun()
+
+    # --- SECCIÓN ESPECIAL PARA LA POLLA (6 EN LÍNEA): RESULTADOS Y TABLA DE POSICIONES (PUNTUACIÓN 5-3-1 Y JACKPOT) ---
+    if sub_dup_actual == "6 En Linea":
+        st.markdown("---")
+        st.markdown("### 🏆 Panel de Resultados y Tabla de Posiciones (Reglas de Polla)")
+        
+        with st.container(border=True):
+            st.markdown("🎯 **Cargar Resultados Oficiales por Carrera (Puntuación: 1° = 5 Ptos | 2° = 3 Ptos | 3° = 1 Pto)**")
+            carr_res_sel = st.selectbox("Seleccionar Carrera", carreras_permitidas, key="sel_carrera_resultado_polla")
+            
+            banco_caballos_carr = st.session_state.banco_caballos_por_carrera.get(carr_res_sel, [])
+            
+            col_res1, col_res2, col_res3 = st.columns(3)
+            with col_res1:
+                res_1ro = st.selectbox("1er Lugar (5 Ptos)", options=["Sin Asignar"] + banco_caballos_carr, key=f"res_1ro_{carr_res_sel}")
+            with col_res2:
+                res_2do = st.selectbox("2do Lugar (3 Ptos)", options=["Sin Asignar"] + banco_caballos_carr, key=f"res_2do_{carr_res_sel}")
+            with col_res3:
+                res_3ro = st.selectbox("3er Lugar (1 Pto)", options=["Sin Asignar"] + banco_caballos_carr, key=f"res_3ro_{carr_res_sel}")
+
+            if st.button("💾 Guardar Resultados Oficiales Carrera", key=f"btn_guardar_res_{carr_res_sel}", type="primary"):
+                if 'resultados_oficiales_polla' not in st.session_state:
+                    st.session_state.resultados_oficiales_polla = {}
+                st.session_state.resultados_oficiales_polla[carr_res_sel] = {
+                    "1ro": res_1ro, "2do": res_2do, "3ro": res_3ro
+                }
+                guardar_estado_global()
+                st.success(f"✅ Resultados oficiales de **{carr_res_sel}** guardados correctamente.")
+                st.rerun()
+
+        # --- CÁLCULO DE PUNTUACIONES DE LOS TICKETS DE LA POLLA ---
+        st.markdown("#### 📊 Tabla de Posiciones y Puntuación en Vivo")
+        
+        tabla_puntuaciones = {} # { ticket_id: { "jugador": str, "puntos": int, "detalle": str } }
+        resultados_oficiales = st.session_state.get('resultados_oficiales_polla', {})
+        
+        for t in st.session_state.polla_tickets:
+            puntos_ticket = 0
+            detalle_puntos = []
+            
+            for leg in t['legs']:
+                carr_l = leg['carrera']
+                ej_apostado = leg['ejemplar'].split(" (")[0]
+                
+                if carr_l in resultados_oficiales:
+                    res_c = resultados_oficiales[carr_l]
+                    
+                    # Manejo de empates y reglas de puntuación específicas
+                    # 1er lugar = 5 puntos
+                    # Si hay empate en 1ro, ambos 5 ptos y no se otorga al 3ro (manejado lógicamente por posición)
+                    if res_c.get("1ro") != "Sin Asignar" and ej_apostado in res_c.get("1ro"):
+                        puntos_ticket += 5
+                        detalle_puntos.append(f"{carr_l}: 1° (+5)")
+                    elif res_c.get("2do") != "Sin Asignar" and ej_apostado in res_c.get("2do"):
+                        puntos_ticket += 3
+                        detalle_puntos.append(f"{carr_l}: 2° (+3)")
+                    elif res_c.get("3ro") != "Sin Asignar" and ej_apostado in res_c.get("3ro"):
+                        puntos_ticket += 1
+                        detalle_puntos.append(f"{carr_l}: 3° (+1)")
+            
+            tabla_puntuaciones[t['id']] = {
+                "ticket": t['id'],
+                "jugador": t['jugador'],
+                "puntos": puntos_ticket,
+                "monto": t['monto'],
+                "detalle": " | ".join(detalle_puntos) if detalle_puntos else "Sin puntos aún"
+            }
+
+        if tabla_puntuaciones:
+            df_posiciones = pd.DataFrame(list(tabla_puntuaciones.values()))
+            df_posiciones = df_posiciones.sort_values(by="puntos", ascending=False).reset_index(drop=True)
+            df_posiciones.index = df_posiciones.index + 1
+            st.dataframe(df_posiciones, use_container_width=True)
+
+            # --- VERIFICACIÓN DE JACKPOT DE 30 PUNTOS Y PREMIOS (1°, 2° y 3° lugar) ---
+            max_puntos_posible = len(carreras_permitidas) * 5 # 30 puntos si son 6 carreras
+            
+            jackpot_activo = False
+            for t_id, info_p in tabla_puntuaciones.items():
+                if info_p['puntos'] >= 30:
+                    jackpot_activo = True
+                    st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%); border: 3px solid #ffffff; border-radius: 10px; padding: 12px; text-align: center; color: #000000; font-weight: 900; margin-top: 10px; box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);">
+                            🎰 ¡JACKPOT DE 30 PUNTOS ALCANZADO! 🎰<br>
+                            El ticket <b>{t_id}</b> de <b>{info_p['jugador']}</b> acumuló la puntuación perfecta de 30 puntos. ¡Se le suma el monto acumulado al premio!
+                        </div>
+                    """, unsafe_allow_html=True)
+                    break
+        else:
+            st.info("ℹ️ No hay tickets registrados en la Polla para calcular posiciones.")
 
     st.markdown("---")
     st.markdown(f"### 📋 Historial de Tickets ({sub_dup_actual})")
@@ -2134,19 +2228,15 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             if st.button("💾 Actualizar Carreras", key="btn_actualizar_cant_carreras", use_container_width=True, type="primary"):
                 st.session_state.total_carreras_semana = nueva_cantidad_carreras
                 
-                # Generar lista oficial de carreras actuales
                 carreras_generadas = [f"Carrera {i}" for i in range(1, nueva_cantidad_carreras + 1)]
                 
                 for c_n in carreras_generadas:
-                    # 1. Banco de caballos predeterminado si no existe
                     if c_n not in st.session_state.banco_caballos_por_carrera:
                         st.session_state.banco_caballos_por_carrera[c_n] = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
                     
-                    # 2. Estructura de remates predeterminada
                     if c_n not in st.session_state.remates:
                         st.session_state.remates[c_n] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
                     
-                    # 3. Detalles e incentivos por carrera
                     if c_n not in st.session_state.detalles_carreras:
                         st.session_state.detalles_carreras[c_n] = {
                             "condicion": "Condición estándar", 
@@ -2159,7 +2249,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                             "hora_cierre_real": "No registrada"
                         }
                     
-                    # 4. Estados iniciales de control
                     if c_n not in st.session_state.carreras_cerradas_remate:
                         st.session_state.carreras_cerradas_remate[c_n] = False
                     if c_n not in st.session_state.remates_cargados_en_cuentas:
@@ -2169,13 +2258,11 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     if 'ejemplares_no_valido' in st.session_state and c_n not in st.session_state.ejemplares_no_valido:
                         st.session_state.ejemplares_no_valido[c_n] = []
 
-                # 5. Sincronizar automáticamente con las carreras activas generales y múltiples
                 st.session_state.carreras_activas_remate = list(carreras_generadas)
                 st.session_state.carreras_habilitadas_dupleta = list(carreras_generadas)
                 st.session_state.carreras_habilitadas_tripleta = list(carreras_generadas)
                 st.session_state.carreras_habilitadas_polla = list(carreras_generadas)
                 
-                # Asignación por defecto a Adelantados si están vacías
                 if not st.session_state.carreras_por_modalidad.get("Adelantados"):
                     st.session_state.carreras_por_modalidad["Adelantados"] = list(carreras_generadas)
 
@@ -2443,7 +2530,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
         st.markdown("---")
         with st.container(border=True):
-            st.markdown("⏰ **Control de Horarios Independientes por Modalidad (Dupleta / Tripleta / 6 En Linea)**")
+            st.markdown("⏰ **Control de Horarios (Hora Tope) por Modalidad (Dupleta / Tripleta / 6 En Linea)**")
             mod_mult_sel = st.selectbox("Seleccionar Modalidad Múltiple", ["Dupleta", "Tripleta", "6 En Linea"], key="sel_mod_multiple_horarios")
             
             col_hm1, col_hm2 = st.columns(2)
@@ -2460,7 +2547,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     ampm_ini_m = st.selectbox("AM/PM", ["AM", "PM"], index=1, key=f"him_ap_{mod_mult_sel}")
 
             with col_hm2:
-                st.markdown(f"**⏰ Cierre Estricto ({mod_mult_sel})**")
+                st.markdown(f"**⏰ Cierre Estricto (Hora Tope) ({mod_mult_sel})**")
                 f_cier_m = st.date_input("Fecha Cierre Múltiple", value=ahora_dt.date(), key=f"f_cier_m_{mod_mult_sel}")
                 
                 c_hmc1, c_hmc2, c_hmc3 = st.columns(3)
@@ -2479,7 +2566,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if ampm_cier_m == "AM" and h_cier_m_val == 12: h_cm_24 = 0
 
                 dt_im_final = datetime.combine(f_ini_m, dtime(h_im_24, m_ini_m_val))
-                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cier_m_val))
+                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cm_24))
 
                 st.session_state.fechas_horas_inicio_modalidad_multiple[mod_mult_sel] = dt_im_final
                 st.session_state.fechas_horas_cierre_modalidad_multiple[mod_mult_sel] = dt_cm_final
@@ -2619,7 +2706,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                         "monto": monto_retiro
                     })
                     
-                    guardar_estado_general()
+                    guardar_estado_global()
                     st.toast(f"✅ Retiro de {formatear_bs(monto_retiro)} deducido a {jugador_retirar}")
                     st.rerun()
 
