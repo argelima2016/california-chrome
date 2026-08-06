@@ -1153,7 +1153,7 @@ def renderizar_tiempo_real_universal():
             
             if not carreras_filtradas_visibles:
                 if modo_actual_remate == "Ciegos":
-                    st.info("ℹ️ El Remate Ciego requiere exactamente deux carreras asignadas en la Zona Admin (1V y 6V).")
+                    st.info("ℹ️ El Remate Ciego requiere exactamente dos carreras asignadas en la Zona Admin (1V y 6V).")
                 else:
                     st.info(f"ℹ️ No hay carreras asignadas o habilitadas para la modalidad **{modo_actual_remate}**. Configúralas en Zona Admin.")
             else:
@@ -1224,7 +1224,7 @@ def renderizar_tiempo_real_universal():
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- ⏱️ CONTADOR FLOTANTE FIJO (DESCUENTA 10 A 1 Y MUESTRA CERRADO EL REMATE) ---
+                # --- ⏱️ CONTADOR FLOTANTE FIJO CON DESCUENTO EN VIVO (10, 9, 8...) ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
@@ -1293,7 +1293,40 @@ def renderizar_tiempo_real_universal():
                         else:
                             restantes_10s = max(0, 10 - int(transcurridos))
                             if restantes_10s > 0:
-                                st.markdown(f"<div class='timer-flotante-fijo'>⚠️ CIERRE INMINENTE: <b>{restantes_10s}</b><br><span style='font-size:12px; font-weight:normal;'>(Nuevas pujas reinician el contador)</span></div>", unsafe_allow_html=True)
+                                # 💡 SCRIPT JS EN VIVO QUE DESCUENTA 10, 9, 8... CADA SEGUNDO SIN RECARGAR LA PÁGINA
+                                html_conteo_vivo = f"""
+                                <div id="caja-conteo-vivo" class="timer-flotante-fijo">
+                                    ⚠️ CIERRE INMINENTE: <b id="numero-regresivo">{restantes_10s}</b><br>
+                                    <span style='font-size:12px; font-weight:normal;'>(Nuevas pujas reinician el contador)</span>
+                                </div>
+                                <script>
+                                    (function() {{
+                                        let restante = {restantes_10s};
+                                        const elem = document.getElementById("numero-regresivo");
+                                        const caja = document.getElementById("caja-conteo-vivo");
+                                        
+                                        if (window.intervaloConteoInminente) {{
+                                            clearInterval(window.intervaloConteoInminente);
+                                        }}
+                                        
+                                        window.intervaloConteoInminente = setInterval(function() {{
+                                            restante--;
+                                            if (restante > 0) {{
+                                                if (elem) elem.innerText = restante;
+                                            }} else {{
+                                                if (elem) elem.innerText = "0";
+                                                if (caja) {{
+                                                    caja.style.borderColor = "#f1c40f";
+                                                    caja.style.color = "#f1c40f";
+                                                    caja.innerHTML = "🔒 CERRADO EL REMATE, ¡SUERTE! 🐎";
+                                                }}
+                                                clearInterval(window.intervaloConteoInminente);
+                                            }}
+                                        }}, 1000);
+                                    }})();
+                                </script>
+                                """
+                                components.html(html_conteo_vivo, height=85)
 
                 if carrera_cerrada:
                     st.markdown("<div class='timer-flotante-fijo' style='border-color: #f1c40f; color: #f1c40f;'>🔒 CERRADO EL REMATE, ¡SUERTE! 🐎</div>", unsafe_allow_html=True)
