@@ -139,7 +139,6 @@ def cargar_estado_global(forzar_recarga=False):
             'cedula': 'V-00.000.000'
         },
         'reportes_pago': [],
-        'ultima_puja_usuario': {},
         'resultados_oficiales_polla': {},
         '_local_timestamp': 0.0
     }
@@ -193,7 +192,7 @@ def guardar_estado_global():
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
         'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'admin_tab_seleccionada',
-        'datos_pago_movil', 'reportes_pago', 'ultima_puja_usuario', 'resultados_oficiales_polla'
+        'datos_pago_movil', 'reportes_pago', 'resultados_oficiales_polla'
     ]
     data = {}
     for k in keys_to_save:
@@ -561,21 +560,49 @@ st.markdown("""
         line-height: 1.3;
         word-break: break-word;
     }
+    
+    /* TARJETAS LLAMATIVAS Y ÉPICAS PARA PREMIOS Y POTES */
     .incentivo-llamativo {
         background: linear-gradient(135deg, #1f1c2c 0%, #923d41 100%);
         border: 2px dashed #00ffff;
-        padding: 8px 12px;
-        border-radius: 10px;
+        padding: 12px 16px;
+        border-radius: 12px;
         text-align: center;
-        margin: 8px 0;
-        box-shadow: 0px 0px 12px rgba(0, 255, 255, 0.3);
+        margin: 10px 0;
+        box-shadow: 0px 0px 18px rgba(0, 255, 255, 0.4);
     }
     .incentivo-llamativo-monto {
         color: #ffffff;
-        font-size: 18px;
+        font-size: 22px;
         font-weight: 900;
+        letter-spacing: 0.8px;
+        text-shadow: 2px 2px 6px #000000, 0 0 12px rgba(0, 255, 255, 0.8);
+    }
+
+    .pote-cyber-card {
+        background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
+        border: 2px solid #f1c40f;
+        border-radius: 12px;
+        padding: 12px 16px;
+        text-align: center;
+        margin: 10px 0;
+        box-shadow: 0px 0px 18px rgba(241, 196, 15, 0.4);
+    }
+    .pote-cyber-title {
+        color: #00ffff;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        text-shadow: 0 0 6px rgba(0, 255, 255, 0.6);
+    }
+    .pote-cyber-value {
+        color: #f1c40f;
+        font-size: 24px;
+        font-weight: 900;
+        text-shadow: 2px 2px 5px #000000, 0 0 12px rgba(241, 196, 15, 0.8);
         letter-spacing: 0.5px;
-        text-shadow: 2px 2px 4px #000000;
     }
     
     @keyframes parpadeoGanador {
@@ -781,7 +808,6 @@ else:
 estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in lista_carreras_disponibles) and lista_carreras_disponibles else "abiertos"
 led_clase_css = "led-rojo" if estado_global_remate == "cerrados" else "led-verde"
 
-# Estado visual de Supabase en la barra lateral
 if supabase:
     st.sidebar.success("🟢 Base de datos sincronizada")
 else:
@@ -1464,17 +1490,21 @@ def renderizar_tiempo_real_universal():
 
                 premio_total_calculado = pote_neto_base + incentivo_actual
 
+                # --- DISEÑO LLAMATIVO Y ÉPICO PARA EL POTE Y PREMIO TOTAL EN REMATES ---
+                st.markdown(f"""
+                    <div class="pote-cyber-card">
+                        <div class="pote-cyber-title">💰 POTE ACUMULADO ({carr_activa})</div>
+                        <div class="pote-cyber-value">{formatear_bs(total_pote)}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+
                 if incentivo_actual > 0:
                     st.markdown(f"""
                         <div class="incentivo-llamativo">
-                            <div style="font-size: 10px; font-weight: 800; color: #00ffff; text-transform: uppercase; margin-bottom: 2px;">PREMIO TOTAL</div>
-                            <div class="incentivo-llamativo-monto">🎁 {formatear_bs(premio_total_calculado)}</div>
+                            <div style="font-size: 11px; font-weight: 900; color: #00ffff; text-transform: uppercase; margin-bottom: 3px; letter-spacing: 1px;">🎁 PREMIO TOTAL (INCLUYE INCENTIVO)</div>
+                            <div class="incentivo-llamativo-monto">{formatear_bs(premio_total_calculado)}</div>
                         </div>
                     """, unsafe_allow_html=True)
-
-                c_m1, c_m2 = st.columns(2)
-                c_m1.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
-                c_m2.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
 
                 if carr_activa in st.session_state.historial_ganadores:
                     info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
@@ -1581,14 +1611,6 @@ def renderizar_tiempo_real_universal():
                                                     "jugador": st.session_state.usuario_activo, 
                                                     "monto": monto_fijo_carrera
                                                 }
-                                                
-                                                st.session_state.ultima_puja_usuario = {
-                                                    "usuario": st.session_state.usuario_activo,
-                                                    "carrera": carr_activa,
-                                                    "caballo": cb_disp,
-                                                    "monto": monto_fijo_carrera,
-                                                    "tiempo": time.time()
-                                                }
 
                                                 st.session_state.historial_jugadas.append({
                                                     "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
@@ -1607,47 +1629,6 @@ def renderizar_tiempo_real_universal():
                                                 st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
                                                 st.rerun()
                         else:
-                            # --- 🔄 OPCIÓN DE REVERSIÓN DE PUJA (15 SEGUNDOS) ---
-                            if st.session_state.ultima_puja_usuario:
-                                ultima = st.session_state.ultima_puja_usuario
-                                transcurrido_rev = time.time() - ultima['tiempo']
-                                if ultima['usuario'] == st.session_state.usuario_activo and transcurrido_rev <= 15:
-                                    tiempo_restante_rev = max(0, 15 - int(transcurrido_rev))
-                                    with st.container(border=True):
-                                        st.markdown(f"""
-                                            <div style="background: linear-gradient(135deg, #1b3a4b 0%, #0d1117 100%); border: 2px dashed #00d2d3; border-radius: 8px; padding: 10px; text-align: center; margin-bottom: 8px;">
-                                                <div style="color: #00d2d3; font-size: 11px; font-weight: 800; text-transform: uppercase;">🔄 ¿TE EQUIVOCASTE DE EJEMPLAR?</div>
-                                                <div style="color: #ffffff; font-size: 12px; font-weight: 700; margin: 3px 0;">Última puja: <b>{ultima['caballo']}</b> ({formatear_bs(ultima['monto'])}) en <b>{ultima['carrera']}</b></div>
-                                                <div style="color: #ff4757; font-size: 12px; font-weight: 900;">Tienes {tiempo_restante_rev}s para revertirla</div>
-                                            </div>
-                                        """, unsafe_allow_html=True)
-                                        
-                                        if st.button("↩️ Revertir / Deshacer Puja Actual", key="btn_revertir_puja_15s", use_container_width=True, type="secondary"):
-                                            carr_u = ultima['carrera']
-                                            cab_u = ultima['caballo']
-                                            mnt_u = ultima['monto']
-                                            jug_u = ultima['usuario']
-                                            
-                                            if carr_u in st.session_state.remates and cab_u in st.session_state.remates[carr_u]:
-                                                st.session_state.remates[carr_u][cab_u] = {"jugador": "Sin Postor", "monto": 0.0}
-                                            
-                                            if jug_u in st.session_state.cuentas:
-                                                st.session_state.cuentas[jug_u]['Pujas'] = max(0.0, st.session_state.cuentas[jug_u]['Pujas'] - mnt_u)
-                                            
-                                            st.session_state.historial_jugadas.append({
-                                                "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
-                                                "jugador": jug_u,
-                                                "tipo": "Puja Revertida (15s)",
-                                                "carrera": carr_u,
-                                                "detalle": f"Puja deshecha: {cab_u}",
-                                                "monto": -mnt_u
-                                            })
-                                            
-                                            st.session_state.ultima_puja_usuario = {}
-                                            guardar_estado_global()
-                                            st.toast("↩️ ¡Puja revertida con éxito!")
-                                            st.rerun()
-
                             st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
                             lista_caballos_activos = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
                             
@@ -1713,14 +1694,6 @@ def renderizar_tiempo_real_universal():
                                             st.error("El monto debe ser mayor a la puja actual.")
                                         else:
                                             st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
-                                            
-                                            st.session_state.ultima_puja_usuario = {
-                                                "usuario": st.session_state.usuario_activo,
-                                                "carrera": carr_activa,
-                                                "caballo": caballo_seleccionado,
-                                                "monto": monto_puja,
-                                                "tiempo": time.time()
-                                            }
 
                                             st.session_state.historial_jugadas.append({
                                                 "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
@@ -1799,16 +1772,21 @@ if menu_principal_opcion == "Dupletas":
 
     if sub_dup_actual == "Dupleta":
         pote_total = sum([t['monto'] for t in st.session_state.dupletas_tickets if t.get('estado') == 'Pendiente'])
-        st.metric("💰 Pote Acumulado Dupletas", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
     elif sub_dup_actual == "Tripleta":
         pote_total = sum([t['monto'] for t in st.session_state.tripleta_tickets if t.get('estado') == 'Pendiente'])
-        st.metric("💰 Pote Acumulado Tripletas", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
     else:
         pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
-        st.metric("💰 Pote Acumulado 6 En Linea (Polla)", formatear_bs(pote_total))
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
+
+    # --- DISEÑO LLAMATIVO Y ÉPICO PARA EL POTE DE DUPLETAS/TRIPLETAS/POLLA ---
+    st.markdown(f"""
+        <div class="pote-cyber-card">
+            <div class="pote-cyber-title">💰 POTE ACUMULADO DE {sub_dup_actual.upper()}</div>
+            <div class="pote-cyber-value">{formatear_bs(pote_total)}</div>
+        </div>
+    """, unsafe_allow_html=True)
 
     cards_html_slider = ""
     for carr_h in carreras_permitidas:
