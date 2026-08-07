@@ -1506,7 +1506,7 @@ def renderizar_tiempo_real_universal():
                         </div>
                     """, unsafe_allow_html=True)
 
-                # --- TABLA DE REMATES ---
+                # --- TABLA DE REMALES ---
                 tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], retirados_carr_activa, no_validos_carr_activa)
                 cantidad_filas = len(st.session_state.remates[carr_activa])
                 altura_dinamica = min(max(130, (cantidad_filas * 32) + 45), 380)
@@ -1536,7 +1536,7 @@ def renderizar_tiempo_real_universal():
                         </div>
                     """, unsafe_allow_html=True)
 
-                # --- 2. ABAJO DEL PREMIO: INCENTIVO (IZQUIERDA) Y POTE (DERECHA) ---
+                # --- 2. INCENTIVO (IZQUIERDA) Y POTE (DERECHA) ---
                 col_m1, col_m2 = st.columns(2, gap="small")
                 with col_m1:
                     st.markdown(f"""
@@ -2191,19 +2191,23 @@ elif menu_principal_opcion == "Cuentas":
     st.markdown("---")
 
     with st.container(border=True):
-        st.markdown("📱 **1. Datos para Pago Móvil (Haz clic en el ícono para copiar)**")
+        st.markdown("📱 **1. Datos para Pago Móvil (Copia todos los datos con un clic)**")
         p_movil = st.session_state.datos_pago_movil
         
-        c_p1, c_p2, c_p3 = st.columns(3)
-        with c_p1:
-            st.caption("🏦 Banco:")
-            st.code(p_movil['banco'])
-        with c_p2:
-            st.caption("📱 Teléfono:")
-            st.code(p_movil['telefono'])
-        with c_p3:
-            st.caption("🆔 Cédula/RIF:")
-            st.code(p_movil['cedula'])
+        texto_copiar_pm = f"Banco: {p_movil['banco']}\\nTeléfono: {p_movil['telefono']}\\nCédula/RIF: {p_movil['cedula']}"
+        
+        # Tarjeta vertical y botón de copiado general con JS
+        html_pago_movil_vertical = f"""
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; font-family: sans-serif; color: #f0f6fc; margin-bottom: 10px;">
+            <div style="margin-bottom: 8px; font-size: 13px;">🏦 <b>Banco:</b> {p_movil['banco']}</div>
+            <div style="margin-bottom: 8px; font-size: 13px;">📱 <b>Teléfono:</b> {p_movil['telefono']}</div>
+            <div style="font-size: 13px;">🆔 <b>Cédula/RIF:</b> {p_movil['cedula']}</div>
+        </div>
+        <button onclick="navigator.clipboard.writeText(`Banco: {p_movil['banco']}\\nTeléfono: {p_movil['telefono']}\\nCédula/RIF: {p_movil['cedula']}`); alert('¡Datos de Pago Móvil copiados al portapapeles!');" style="width: 100%; background: linear-gradient(135deg, #238636 0%, #2ea043 100%); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0px 3px 10px rgba(35, 134, 54, 0.4);">
+            📋 Copiar Todos los Datos de Pago Móvil
+        </button>
+        """
+        components.html(html_pago_movil_vertical, height=130)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
