@@ -1491,22 +1491,26 @@ def renderizar_tiempo_real_universal():
                 if carr_activa not in st.session_state.ejemplares_no_valido:
                     st.session_state.ejemplares_no_valido[carr_activa] = []
 
-                # --- 📌 AVISO DE RETIROS Y NO VALIDOS ARRIBA DE LA TABLA ---
+                # --- ⚙️ GESTIÓN DE RETIROS Y NO VÁLIDOS (JUSTO ENCIMA DE LA TABLA) ---
+                with st.expander(f"⚙️ Gestionar Retiros / No Válidos - {carr_activa}", expanded=False):
+                    banco_carr_rem = st.session_state.banco_caballos_por_carrera.get(carr_activa, [])
+                    ret_act = st.session_state.ejemplares_retirados.get(carr_activa, [])
+                    noval_act = st.session_state.ejemplares_no_valido.get(carr_activa, [])
+                    
+                    n_ret = st.multiselect("Ejemplares Retirados", options=banco_carr_rem, default=[c for c in ret_act if c in banco_carr_rem], key=f"quick_ret_{carr_activa}")
+                    n_noval = st.multiselect("Ejemplares No Valen", options=banco_carr_rem, default=[c for c in noval_act if c in banco_carr_rem], key=f"quick_noval_{carr_activa}")
+                    
+                    if st.button("💾 Guardar Cambios en Ejemplares", key=f"btn_quick_gestion_{carr_activa}", use_container_width=True, type="primary"):
+                        st.session_state.ejemplares_retirados[carr_activa] = n_ret
+                        st.session_state.ejemplares_no_valido[carr_activa] = n_noval
+                        guardar_estado_global()
+                        st.toast("✅ ¡Estado de ejemplares actualizado!")
+                        st.rerun()
+
+                # --- TABLA DE REMATES ---
                 retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
                 no_validos_carr_activa = st.session_state.ejemplares_no_valido.get(carr_activa, [])
                 
-                if retirados_carr_activa or no_validos_carr_activa:
-                    retirados_txt = ", ".join(retirados_carr_activa) if retirados_carr_activa else "Ninguno"
-                    noval_txt = ", ".join(no_validos_carr_activa) if no_validos_carr_activa else "Ninguno"
-                    st.markdown(f"""
-                        <div style="background: linear-gradient(135deg, #3d0d0d 0%, #161b22 100%); border: 1.5px solid #ff4757; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 11px;">
-                            <div style="color: #ff4757; font-weight: 900; text-transform: uppercase; margin-bottom: 2px;">⚠️ ESTADO DE EJEMPLARES ({carr_activa})</div>
-                            <div style="color: #f0f6fc;">🔴 <b>Retirados:</b> {retirados_txt}</div>
-                            <div style="color: #f1c40f;">🟡 <b>No Valen:</b> {noval_txt}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-
-                # --- TABLA DE REMALES ---
                 tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], retirados_carr_activa, no_validos_carr_activa)
                 cantidad_filas = len(st.session_state.remates[carr_activa])
                 altura_dinamica = min(max(130, (cantidad_filas * 32) + 45), 380)
@@ -2191,23 +2195,21 @@ elif menu_principal_opcion == "Cuentas":
     st.markdown("---")
 
     with st.container(border=True):
-        st.markdown("📱 **1. Datos para Pago Móvil (Copia todos los datos con un clic)**")
+        st.markdown("📱 **1. Datos para Pago Móvil**")
         p_movil = st.session_state.datos_pago_movil
         
-        texto_copiar_pm = f"Banco: {p_movil['banco']}\\nTeléfono: {p_movil['telefono']}\\nCédula/RIF: {p_movil['cedula']}"
-        
-        # Tarjeta vertical y botón de copiado general con JS
+        # Tarjeta vertical minimalista para datos de pago móvil y botón de copia con un clic
         html_pago_movil_vertical = f"""
-        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; font-family: sans-serif; color: #f0f6fc; margin-bottom: 10px;">
-            <div style="margin-bottom: 8px; font-size: 13px;">🏦 <b>Banco:</b> {p_movil['banco']}</div>
-            <div style="margin-bottom: 8px; font-size: 13px;">📱 <b>Teléfono:</b> {p_movil['telefono']}</div>
-            <div style="font-size: 13px;">🆔 <b>Cédula/RIF:</b> {p_movil['cedula']}</div>
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 10px 12px; font-family: sans-serif; color: #f0f6fc; margin-bottom: 8px; font-size: 12px;">
+            <div style="margin-bottom: 6px;">🏦 <b>Banco:</b> {p_movil['banco']}</div>
+            <div style="margin-bottom: 6px;">📱 <b>Teléfono:</b> {p_movil['telefono']}</div>
+            <div>🆔 <b>Cédula/RIF:</b> {p_movil['cedula']}</div>
         </div>
-        <button onclick="navigator.clipboard.writeText(`Banco: {p_movil['banco']}\\nTeléfono: {p_movil['telefono']}\\nCédula/RIF: {p_movil['cedula']}`); alert('¡Datos de Pago Móvil copiados al portapapeles!');" style="width: 100%; background: linear-gradient(135deg, #238636 0%, #2ea043 100%); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0px 3px 10px rgba(35, 134, 54, 0.4);">
-            📋 Copiar Todos los Datos de Pago Móvil
+        <button onclick="navigator.clipboard.writeText(`Banco: {p_movil['banco']}\\nTeléfono: {p_movil['telefono']}\\nCédula/RIF: {p_movil['cedula']}`); alert('¡Datos de Pago Móvil copiados!');" style="width: 100%; background: #21262d; color: #00ffff; border: 1px solid #30363d; padding: 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px;">
+            📋 Copiar Datos de Pago Móvil
         </button>
         """
-        components.html(html_pago_movil_vertical, height=130)
+        components.html(html_pago_movil_vertical, height=105)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
