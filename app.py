@@ -134,7 +134,8 @@ def cargar_estado_global(forzar_recarga=False):
         },
         'reportes_pago': [],
         'ultima_puja_usuario': {},
-        'resultados_oficiales_polla': {}
+        'resultados_oficiales_polla': {},
+        '_local_timestamp': 0.0
     }
     
     data = None
@@ -161,6 +162,9 @@ def cargar_estado_global(forzar_recarga=False):
             for k, v in default_state.items():
                 if k not in st.session_state or forzar_recarga:
                     st.session_state[k] = data.get(k, v)
+            
+            if "_timestamp" in data:
+                st.session_state["_local_timestamp"] = data.get("_timestamp", 0.0)
         except Exception:
             for k, v in default_state.items():
                 if k not in st.session_state:
@@ -200,6 +204,10 @@ def guardar_estado_global():
             else:
                 data[k] = val
                 
+    current_ts = time.time()
+    data["_timestamp"] = current_ts
+    st.session_state["_local_timestamp"] = current_ts
+
     if supabase:
         try:
             supabase.table("app_state").upsert({"id": DB_ROW_ID, "data": data}).execute()
@@ -207,6 +215,24 @@ def guardar_estado_global():
             print("Error al guardar en Supabase: ", e)
 
 cargar_estado_global()
+
+# --- VIGILANTE GLOBAL DE SINCRONIZACIÓN (ACTUALIZA LOS TELÉFONOS EN TIEMPO REAL) ---
+@st.fragment(run_every=2.0)
+def vigilante_sincronizacion_global():
+    if supabase:
+        try:
+            response = supabase.table("app_state").select("data").eq("id", DB_ROW_ID).execute()
+            if response.data and len(response.data) > 0:
+                remote_data = response.data[0].get("data", {})
+                remote_ts = remote_data.get("_timestamp", 0.0)
+                local_ts = st.session_state.get("_local_timestamp", 0.0)
+                if remote_ts > local_ts:
+                    st.session_state["_local_timestamp"] = remote_ts
+                    st.rerun()
+        except Exception:
+            pass
+
+vigilante_sincronizacion_global()
 
 # --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ, ALERTAS MÓVILES Y RESPONSIVIDAD MÓVIL ---
 components.html("""
