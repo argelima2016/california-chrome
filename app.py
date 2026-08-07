@@ -531,15 +531,33 @@ st.markdown("""
     }
 
     .stButton button {
-        border-radius: 6px !important;
-        font-weight: 700 !important;
-        padding: 0.2rem 0.3rem !important;
-        min-height: 36px !important;
-        font-size: 11px !important;
-        letter-spacing: 0.2px;
+        border-radius: 8px !important;
+        font-weight: 800 !important;
+        padding: 0.4rem 0.6rem !important;
+        min-height: 42px !important;
+        font-size: 12px !important;
+        letter-spacing: 0.3px;
         white-space: nowrap !important;
         width: 100% !important;
     }
+    
+    /* BOTÓN DE PUJA ÉPICO Y LLAMATIVO */
+    div.stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #f1c40f 0%, #d4ac0d 100%) !important;
+        color: #080a0f !important;
+        font-size: 15px !important;
+        font-weight: 900 !important;
+        border: 2px solid #ffffff !important;
+        box-shadow: 0px 4px 18px rgba(241, 196, 15, 0.6) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        transition: all 0.2s ease-in-out;
+    }
+    div.stButton > button[kind="primary"]:hover {
+        transform: scale(1.02);
+        box-shadow: 0px 6px 22px rgba(241, 196, 15, 0.9) !important;
+    }
+
     .subasta-header {
         font-size: clamp(13px, 3.2vw, 16px);
         font-weight: 800;
@@ -583,26 +601,25 @@ st.markdown("""
         background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
         border: 2px solid #f1c40f;
         border-radius: 12px;
-        padding: 12px 16px;
+        padding: 10px 14px;
         text-align: center;
-        margin: 10px 0;
-        box-shadow: 0px 0px 18px rgba(241, 196, 15, 0.4);
+        margin: 6px 0;
+        box-shadow: 0px 0px 15px rgba(241, 196, 15, 0.3);
     }
     .pote-cyber-title {
         color: #00ffff;
         font-size: 11px;
         font-weight: 900;
-        letter-spacing: 1.5px;
+        letter-spacing: 1px;
         text-transform: uppercase;
-        margin-bottom: 4px;
+        margin-bottom: 3px;
         text-shadow: 0 0 6px rgba(0, 255, 255, 0.6);
     }
     .pote-cyber-value {
         color: #f1c40f;
-        font-size: 22px;
+        font-size: 18px;
         font-weight: 900;
-        text-shadow: 2px 2px 5px #000000, 0 0 12px rgba(241, 196, 15, 0.8);
-        letter-spacing: 0.5px;
+        text-shadow: 2px 2px 5px #000000, 0 0 10px rgba(241, 196, 15, 0.8);
     }
     
     @keyframes parpadeoGanador {
@@ -1490,7 +1507,7 @@ def renderizar_tiempo_real_universal():
 
                 premio_total_calculado = pote_neto_base + incentivo_actual
 
-                # --- 1. PREMIO LLAMATIVO (ARRIBA) ---
+                # --- 1. PREMIO TOTAL LLAMATIVO (ARRIBA) ---
                 if incentivo_actual > 0 or premio_total_calculado > 0:
                     st.markdown(f"""
                         <div class="incentivo-llamativo">
@@ -1499,20 +1516,20 @@ def renderizar_tiempo_real_universal():
                         </div>
                     """, unsafe_allow_html=True)
 
-                # --- 2. ABAJO DEL PREMIO LLAMATIVO: INCENTIVO (IZQUIERDA) Y POTE (DERECHA) ---
+                # --- 2. ABAJO DEL PREMIO: INCENTIVO (IZQUIERDA) Y POTE (DERECHA) ---
                 col_m1, col_m2 = st.columns(2, gap="small")
                 with col_m1:
                     st.markdown(f"""
-                        <div class="pote-cyber-card" style="margin: 0;">
+                        <div class="pote-cyber-card">
                             <div class="pote-cyber-title" style="color: #2ed573;">🎁 INCENTIVO</div>
-                            <div class="pote-cyber-value" style="color: #2ed573; font-size: 18px;">{formatear_bs(incentivo_actual)}</div>
+                            <div class="pote-cyber-value" style="color: #2ed573;">{formatear_bs(incentivo_actual)}</div>
                         </div>
                     """, unsafe_allow_html=True)
                 with col_m2:
                     st.markdown(f"""
-                        <div class="pote-cyber-card" style="margin: 0;">
+                        <div class="pote-cyber-card">
                             <div class="pote-cyber-title">💰 POTE ({carr_activa})</div>
-                            <div class="pote-cyber-value" style="font-size: 18px;">{formatear_bs(total_pote)}</div>
+                            <div class="pote-cyber-value">{formatear_bs(total_pote)}</div>
                         </div>
                     """, unsafe_allow_html=True)
 
@@ -1697,9 +1714,10 @@ def renderizar_tiempo_real_universal():
                                 monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{carr_activa}_{caballo_seleccionado}")
                                 
                                 if carrera_cerrada:
-                                    st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary", disabled=True)
+                                    st.button(f"🔒 CERRADO - NO DISPONIBLE", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary", disabled=True)
                                 else:
-                                    if st.button(f"🔨 Confirmar Puja ({carr_activa})", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary"):
+                                    st.markdown("<div style='margin-top: 6px;'></div>", unsafe_allow_html=True)
+                                    if st.button(f"🔨 ¡CONFIRMAR PUJA DE {formatear_bs(monto_puja)}!", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary"):
                                         if monto_puja <= puja_actual:
                                             st.error("El monto debe ser mayor a la puja actual.")
                                         else:
