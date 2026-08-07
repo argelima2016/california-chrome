@@ -15,7 +15,7 @@ from pypdf import PdfReader
 from supabase import create_client, Client
 
 # Configuración de pantalla completa optimizada para celulares
-st.set_page_config(page_title="CALIFORNIA CHROME", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺")
 
 # --- CREDENCIALES DE SUPABASE ---
 SUPABASE_URL = "https://qssnhvwdgxzwzkfusstf.supabase.co"
