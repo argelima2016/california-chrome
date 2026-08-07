@@ -599,7 +599,7 @@ st.markdown("""
     }
     .pote-cyber-value {
         color: #f1c40f;
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 900;
         text-shadow: 2px 2px 5px #000000, 0 0 12px rgba(241, 196, 15, 0.8);
         letter-spacing: 0.5px;
@@ -1490,8 +1490,8 @@ def renderizar_tiempo_real_universal():
 
                 premio_total_calculado = pote_neto_base + incentivo_actual
 
-                # --- 1. PRIMERO: PREMIO LLAMATIVO (ARRIBA) ---
-                if incentivo_actual > 0:
+                # --- 1. PREMIO LLAMATIVO (ARRIBA) ---
+                if incentivo_actual > 0 or premio_total_calculado > 0:
                     st.markdown(f"""
                         <div class="incentivo-llamativo">
                             <div style="font-size: 11px; font-weight: 900; color: #00ffff; text-transform: uppercase; margin-bottom: 3px; letter-spacing: 1px;">🎁 PREMIO TOTAL (INCLUYE INCENTIVO)</div>
@@ -1499,12 +1499,22 @@ def renderizar_tiempo_real_universal():
                         </div>
                     """, unsafe_allow_html=True)
 
-                # --- 2. SEGUNDO: INCENTIVO (IZQUIERDA) Y POTE (DERECHA) ABAJO DEL PREMIO LLAMATIVO ---
-                c_m1, c_m2 = st.columns(2)
-                with c_m1:
-                    st.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
-                with c_m2:
-                    st.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
+                # --- 2. ABAJO DEL PREMIO LLAMATIVO: INCENTIVO (IZQUIERDA) Y POTE (DERECHA) ---
+                col_m1, col_m2 = st.columns(2, gap="small")
+                with col_m1:
+                    st.markdown(f"""
+                        <div class="pote-cyber-card" style="margin: 0;">
+                            <div class="pote-cyber-title" style="color: #2ed573;">🎁 INCENTIVO</div>
+                            <div class="pote-cyber-value" style="color: #2ed573; font-size: 18px;">{formatear_bs(incentivo_actual)}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                with col_m2:
+                    st.markdown(f"""
+                        <div class="pote-cyber-card" style="margin: 0;">
+                            <div class="pote-cyber-title">💰 POTE ({carr_activa})</div>
+                            <div class="pote-cyber-value" style="font-size: 18px;">{formatear_bs(total_pote)}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
 
                 if carr_activa in st.session_state.historial_ganadores:
                     info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
