@@ -356,7 +356,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -2198,18 +2198,18 @@ elif menu_principal_opcion == "Cuentas":
         st.markdown("📱 **1. Datos para Pago Móvil**")
         p_movil = st.session_state.datos_pago_movil
         
-        # Tarjeta vertical minimalista para datos de pago móvil y botón de copia con un clic
+        # Copia de datos minimalista con el texto exacto pedido
         html_pago_movil_vertical = f"""
-        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 10px 12px; font-family: sans-serif; color: #f0f6fc; margin-bottom: 8px; font-size: 12px;">
-            <div style="margin-bottom: 6px;">🏦 <b>Banco:</b> {p_movil['banco']}</div>
-            <div style="margin-bottom: 6px;">📱 <b>Teléfono:</b> {p_movil['telefono']}</div>
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 8px 10px; font-family: sans-serif; color: #f0f6fc; margin-bottom: 6px; font-size: 11px;">
+            <div style="margin-bottom: 4px;">🏦 <b>Banco:</b> {p_movil['banco']}</div>
+            <div style="margin-bottom: 4px;">📱 <b>Teléfono:</b> {p_movil['telefono']}</div>
             <div>🆔 <b>Cédula/RIF:</b> {p_movil['cedula']}</div>
         </div>
-        <button onclick="navigator.clipboard.writeText(`Banco: {p_movil['banco']}\\nTeléfono: {p_movil['telefono']}\\nCédula/RIF: {p_movil['cedula']}`); alert('¡Datos de Pago Móvil copiados!');" style="width: 100%; background: #21262d; color: #00ffff; border: 1px solid #30363d; padding: 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px;">
-            📋 Copiar Datos de Pago Móvil
+        <button onclick="navigator.clipboard.writeText(`Banco: {p_movil['banco']}\\nTeléfono: {p_movil['telefono']}\\nCédula/RIF: {p_movil['cedula']}`); alert('¡Datos copiados!');" style="width: 100%; background: #21262d; color: #00ffff; border: 1px solid #30363d; padding: 6px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 11px;">
+            📋 COPIAR DATOS
         </button>
         """
-        components.html(html_pago_movil_vertical, height=105)
+        components.html(html_pago_movil_vertical, height=85)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
