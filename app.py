@@ -25,7 +25,6 @@ SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "sb_publishable_C4EDNCtB6i6yL84HDx
 def init_supabase():
     try:
         client = create_client(SUPABASE_URL, SUPABASE_KEY)
-        # Prueba rápida de conexión
         client.table("app_state").select("id").eq("id", 1).execute()
         return client
     except Exception as e:
@@ -33,6 +32,9 @@ def init_supabase():
         return None
 
 supabase: Client = init_supabase()
+
+if not supabase:
+    st.error("⚠️ **ADVERTENCIA CRÍTICA:** No hay conexión con Supabase. Los datos entre la PC y los teléfonos no se sincronizarán. Verifica tus Secrets en Streamlit Cloud o la creación de la tabla `app_state` en Supabase.")
 
 # --- CREDENCIALES Y CONFIGURACIÓN DE TELEGRAM ---
 TELEGRAM_BOT_TOKEN = st.secrets.get("TELEGRAM_BOT_TOKEN", "8969428136:AAFRhNzoAFB8TVAXUp2hnjffzw1gFPCyyrY")
@@ -220,7 +222,7 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- VIGILANTE GLOBAL DE SINCRONIZACIÓN (ACTUALIZA LOS TELÉFONOS EN TIEMPO REAL) ---
+# --- VIGILANTE GLOBAL DE SINCRONIZACIÓN (ACTUALIZA LOS TELÉFONOS EN TIEMPO REAL EN CUALQUIER PESTAÑA) ---
 @st.fragment(run_every=2.0)
 def vigilante_sincronizacion_global():
     if supabase:
