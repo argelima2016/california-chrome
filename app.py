@@ -579,36 +579,41 @@ st.markdown("""
         word-break: break-word;
     }
     
-    /* TARJETAS LLAMATIVAS Y ÉPICAS PARA PREMIOS Y POTES */
+    /* TARJETAS LLAMATIVAS Y ÉPICAS PARA PREMIOS Y POTES (FLEXIBLE PARA PANTALLAS MÓVILES) */
     .incentivo-llamativo {
         background: linear-gradient(135deg, #1f1c2c 0%, #923d41 100%);
         border: 2px dashed #00ffff;
-        padding: 12px 16px;
+        padding: 12px 14px;
         border-radius: 12px;
         text-align: center;
-        margin: 10px 0;
+        margin: 8px 0;
         box-shadow: 0px 0px 18px rgba(0, 255, 255, 0.4);
+        width: 100%;
+        box-sizing: border-box;
     }
     .incentivo-llamativo-monto {
         color: #ffffff;
-        font-size: 22px;
+        font-size: clamp(18px, 5vw, 24px);
         font-weight: 900;
         letter-spacing: 0.8px;
         text-shadow: 2px 2px 6px #000000, 0 0 12px rgba(0, 255, 255, 0.8);
+        word-break: break-word;
     }
 
     .pote-cyber-card {
         background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
         border: 2px solid #f1c40f;
-        border-radius: 12px;
-        padding: 10px 14px;
+        border-radius: 10px;
+        padding: 10px 12px;
         text-align: center;
-        margin: 6px 0;
+        margin: 4px 0;
         box-shadow: 0px 0px 15px rgba(241, 196, 15, 0.3);
+        width: 100%;
+        box-sizing: border-box;
     }
     .pote-cyber-title {
         color: #00ffff;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 900;
         letter-spacing: 1px;
         text-transform: uppercase;
@@ -617,9 +622,10 @@ st.markdown("""
     }
     .pote-cyber-value {
         color: #f1c40f;
-        font-size: 18px;
+        font-size: clamp(15px, 4vw, 20px);
         font-weight: 900;
         text-shadow: 2px 2px 5px #000000, 0 0 10px rgba(241, 196, 15, 0.8);
+        word-break: break-word;
     }
     
     @keyframes parpadeoGanador {
@@ -1485,13 +1491,27 @@ def renderizar_tiempo_real_universal():
                 if carr_activa not in st.session_state.ejemplares_no_valido:
                     st.session_state.ejemplares_no_valido[carr_activa] = []
 
-                tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], st.session_state.ejemplares_retirados.get(carr_activa, []), st.session_state.ejemplares_no_valido.get(carr_activa, []))
+                # --- 📌 AVISO DE RETIROS Y NO VALIDOS ARRIBA DE LA TABLA ---
+                retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
+                no_validos_carr_activa = st.session_state.ejemplares_no_valido.get(carr_activa, [])
+                
+                if retirados_carr_activa or no_validos_carr_activa:
+                    retirados_txt = ", ".join(retirados_carr_activa) if retirados_carr_activa else "Ninguno"
+                    noval_txt = ", ".join(no_validos_carr_activa) if no_validos_carr_activa else "Ninguno"
+                    st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, #3d0d0d 0%, #161b22 100%); border: 1.5px solid #ff4757; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 11px;">
+                            <div style="color: #ff4757; font-weight: 900; text-transform: uppercase; margin-bottom: 2px;">⚠️ ESTADO DE EJEMPLARES ({carr_activa})</div>
+                            <div style="color: #f0f6fc;">🔴 <b>Retirados:</b> {retirados_txt}</div>
+                            <div style="color: #f1c40f;">🟡 <b>No Valen:</b> {noval_txt}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                # --- TABLA DE REMATES ---
+                tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], retirados_carr_activa, no_validos_carr_activa)
                 cantidad_filas = len(st.session_state.remates[carr_activa])
                 altura_dinamica = min(max(130, (cantidad_filas * 32) + 45), 380)
                 components.html(tabla_html, height=altura_dinamica, scrolling=True)
                 
-                retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
-                no_validos_carr_activa = st.session_state.ejemplares_no_valido.get(carr_activa, [])
                 excluidos_carr_activa = set(retirados_carr_activa) | set(no_validos_carr_activa)
 
                 total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_carr_activa])
@@ -2553,13 +2573,33 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.rerun()
 
         st.markdown("---")
+        st.markdown("#### 🔴 Gestionar Ejemplares 'RETIRADOS'")
+        if carr_banco_sel not in st.session_state.ejemplares_retirados:
+            st.session_state.ejemplares_retirados[carr_banco_sel] = []
+
+        lista_todos_carr_banco = st.session_state.banco_caballos_por_carrera.get(carr_banco_sel, [])
+        retirados_actuales_banco = st.session_state.ejemplares_retirados[carr_banco_sel]
+
+        with st.container(border=True):
+            nuevos_retirados = st.multiselect(
+                f"Selecciona los ejemplares **RETIRADOS** en {carr_banco_sel}:",
+                options=lista_todos_carr_banco,
+                default=[c for c in retirados_actuales_banco if c in lista_todos_carr_banco],
+                key=f"multiselect_retirado_{carr_banco_sel}"
+            )
+            if st.button("💾 Guardar Cambios 'RETIRADOS'", key=f"btn_save_retirados_{carr_banco_sel}", use_container_width=True, type="primary"):
+                st.session_state.ejemplares_retirados[carr_banco_sel] = nuevos_retirados
+                guardar_estado_global()
+                st.toast(f"✅ ¡Ejemplares retirados actualizados para {carr_banco_sel}!")
+                st.rerun()
+
+        st.markdown("---")
         st.markdown("#### ⚠️ Gestionar Ejemplares 'NO VALE'")
         if 'ejemplares_no_valido' not in st.session_state:
             st.session_state.ejemplares_no_valido = {}
         if carr_banco_sel not in st.session_state.ejemplares_no_valido:
             st.session_state.ejemplares_no_valido[carr_banco_sel] = []
 
-        lista_todos_carr_banco = st.session_state.banco_caballos_por_carrera.get(carr_banco_sel, [])
         bloqueados_actuales_banco = st.session_state.ejemplares_no_valido[carr_banco_sel]
 
         with st.container(border=True):
