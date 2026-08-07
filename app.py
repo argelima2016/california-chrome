@@ -33,9 +33,6 @@ def init_supabase():
 
 supabase: Client = init_supabase()
 
-if not supabase:
-    st.error("⚠️ **ADVERTENCIA CRÍTICA:** No hay conexión con Supabase. Los datos entre la PC y los teléfonos no se sincronizarán. Verifica tus Secrets en Streamlit Cloud o la creación de la tabla `app_state` en Supabase.")
-
 # --- CREDENCIALES Y CONFIGURACIÓN DE TELEGRAM ---
 TELEGRAM_BOT_TOKEN = st.secrets.get("TELEGRAM_BOT_TOKEN", "8969428136:AAFRhNzoAFB8TVAXUp2hnjffzw1gFPCyyrY")
 TELEGRAM_CHAT_ID = st.secrets.get("TELEGRAM_CHAT_ID", "1111059746")
@@ -222,7 +219,7 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- VIGILANTE GLOBAL DE SINCRONIZACIÓN (ACTUALIZA LOS TELÉFONOS EN TIEMPO REAL EN CUALQUIER PESTAÑA) ---
+# --- VIGILANTE GLOBAL DE SINCRONIZACIÓN (ACTUALIZA LOS TELÉFONOS EN TIEMPO REAL) ---
 @st.fragment(run_every=2.0)
 def vigilante_sincronizacion_global():
     if supabase:
@@ -781,6 +778,12 @@ else:
 estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in lista_carreras_disponibles) and lista_carreras_disponibles else "abiertos"
 led_clase_css = "led-rojo" if estado_global_remate == "cerrados" else "led-verde"
 
+# Estado visual de Supabase en la interfaz
+if supabase:
+    st.sidebar.success("🟢 Base de datos sincronizada")
+else:
+    st.sidebar.error("🔴 Sin conexión a Supabase")
+
 col_h_izq, col_h_der = st.columns([1, 1], gap="small")
 with col_h_izq:
     if st.button("💳 Reportar Pago Móvil", key="btn_ir_reportar_pago_top", use_container_width=True, type="primary"):
@@ -1251,7 +1254,7 @@ def renderizar_tiempo_real_universal():
             
             if not carreras_filtradas_visibles:
                 if modo_actual_remate == "Ciegos":
-                    st.info("ℹ️ El Remate Ciego requiere exactamente dos carreras asignadas en la Zona Admin (1V y 6V).")
+                    st.info("ℹ️ El Remate Ciego requiere exactamente deux carreras asignadas en la Zona Admin (1V y 6V).")
                 else:
                     st.info(f"ℹ️ No hay carreras asignadas o habilitadas para la modalidad **{modo_actual_remate}**. Configúralas en Zona Admin.")
             else:
@@ -2507,7 +2510,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if ampm_cier == "AM" and h_cier_val == 12: h_c_24 = 0
 
                 dt_i_final = datetime.combine(f_ini, dtime(h_i_24, m_ini_val))
-                dt_c_final = datetime.combine(f_cier, dtime(h_c_24, m_cier_val))
+                dt_c_final = datetime.combine(f_cier, dtime(h_c_24, m_cm_24:=m_cier_val))
 
                 st.session_state.fechas_horas_inicio_remate_modalidad[clave_mod_carr_adm] = dt_i_final
                 st.session_state.fechas_horas_cierre_remate_modalidad[clave_mod_carr_adm] = dt_c_final
