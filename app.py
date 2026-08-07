@@ -1491,7 +1491,7 @@ def renderizar_tiempo_real_universal():
                 if carr_activa not in st.session_state.ejemplares_no_valido:
                     st.session_state.ejemplares_no_valido[carr_activa] = []
 
-                # --- ⚙️ GESTIÓN DE RETIROS Y NO VÁLIDOS (JUSTO ENCIMA DE LA TABLA) ---
+                # --- ⚙️ GESTIÓN DE RETIROS Y NO VÁLIDOS (ENCIMA DE LA TABLA DE REMATE) ---
                 with st.expander(f"⚙️ Gestionar Retiros / No Válidos - {carr_activa}", expanded=False):
                     banco_carr_rem = st.session_state.banco_caballos_por_carrera.get(carr_activa, [])
                     ret_act = st.session_state.ejemplares_retirados.get(carr_activa, [])
@@ -2054,12 +2054,14 @@ if menu_principal_opcion == "Dupletas":
             df_posiciones.index = df_posiciones.index + 1
             st.dataframe(df_posiciones, use_container_width=True)
 
+            max_puntos_actual = df_posiciones["puntos"].max() if not df_posiciones.empty else 0
             for t_id, info_p in tabla_puntuaciones.items():
-                if info_p['puntos'] >= 30:
+                if info_p['puntos'] >= 30 or (max_puntos_actual > 0 and info_p['puntos'] == max_puntos_actual and len(resultados_oficiales) >= len(carreras_permitidas)):
+                    t['estado'] = '🏆 ¡GANADOR!'
                     st.markdown(f"""
                         <div style="background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%); border: 3px solid #ffffff; border-radius: 10px; padding: 12px; text-align: center; color: #000000; font-weight: 900; margin-top: 10px; box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);">
-                            🎰 ¡JACKPOT DE 30 PUNTOS ALCANZADO! 🎰<br>
-                            El ticket <b>{t_id}</b> de <b>{info_p['jugador']}</b> acumuló la puntuación perfecta de 30 puntos. ¡Se le suma el monto acumulado al premio!
+                            🏆 ¡TICKET GANADOR DE POLLA - {t_id}! 🏆<br>
+                            El ticket de <b>{info_p['jugador']}</b> lidera con <b>{info_p['puntos']} puntos</b>. ¡Felicidades!
                         </div>
                     """, unsafe_allow_html=True)
                     break
@@ -2082,7 +2084,12 @@ if menu_principal_opcion == "Dupletas":
                 col_t1.markdown(f"🏷️ `{t['id']}`")
                 col_t2.markdown(f"👤 `{t['jugador']}`")
                 col_t3.markdown(f"💰 `{formatear_bs(t['monto'])}`")
-                col_t4.markdown(f"📌 **Estado:** `{t.get('estado', 'Pendiente')}`")
+                
+                estado_ticket_txt = t.get('estado', 'Pendiente')
+                if "GANADOR" in estado_ticket_txt:
+                    col_t4.markdown(f"📌 **Estado:** `<span style='color: #2ed573; font-weight: 900;'>{estado_ticket_txt}</span>`", unsafe_allow_html=True)
+                else:
+                    col_t4.markdown(f"📌 **Estado:** `{estado_ticket_txt}`")
                 
                 detalles_legs = " ➔ ".join([f"**{l['carrera']}**: {l['ejemplar']}" for l in t['legs']])
                 st.markdown(f"> {detalles_legs}")
@@ -2198,18 +2205,18 @@ elif menu_principal_opcion == "Cuentas":
         st.markdown("📱 **1. Datos para Pago Móvil**")
         p_movil = st.session_state.datos_pago_movil
         
-        # Copia de datos minimalista con el texto exacto pedido
+        # Botón minimalista de copiar datos arriba con el texto "COPIAR DATOS"
         html_pago_movil_vertical = f"""
-        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 8px 10px; font-family: sans-serif; color: #f0f6fc; margin-bottom: 6px; font-size: 11px;">
+        <button onclick="navigator.clipboard.writeText(`Banco: {p_movil['banco']}\\nTeléfono: {p_movil['telefono']}\\nCédula/RIF: {p_movil['cedula']}`); alert('¡Datos copiados!');" style="width: 100%; background: #21262d; color: #00ffff; border: 1px solid #30363d; padding: 7px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 11px; margin-bottom: 8px;">
+            📋 COPIAR DATOS
+        </button>
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 8px 10px; font-family: sans-serif; color: #f0f6fc; font-size: 11px;">
             <div style="margin-bottom: 4px;">🏦 <b>Banco:</b> {p_movil['banco']}</div>
             <div style="margin-bottom: 4px;">📱 <b>Teléfono:</b> {p_movil['telefono']}</div>
             <div>🆔 <b>Cédula/RIF:</b> {p_movil['cedula']}</div>
         </div>
-        <button onclick="navigator.clipboard.writeText(`Banco: {p_movil['banco']}\\nTeléfono: {p_movil['telefono']}\\nCédula/RIF: {p_movil['cedula']}`); alert('¡Datos copiados!');" style="width: 100%; background: #21262d; color: #00ffff; border: 1px solid #30363d; padding: 6px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 11px;">
-            📋 COPIAR DATOS
-        </button>
         """
-        components.html(html_pago_movil_vertical, height=85)
+        components.html(html_pago_movil_vertical, height=105)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
