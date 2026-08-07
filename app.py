@@ -24,13 +24,17 @@ SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "sb_publishable_C4EDNCtB6i6yL84HDx
 @st.cache_resource
 def init_supabase():
     try:
-        return create_client(SUPABASE_URL, SUPABASE_KEY)
-    except Exception:
+        client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        # Prueba rápida de conexión
+        client.table("app_state").select("id").eq("id", 1).execute()
+        return client
+    except Exception as e:
+        print("Error conectando a Supabase:", e)
         return None
 
 supabase: Client = init_supabase()
 
-# --- CREDENCIALES Y CONFIGURACIÓN DE TELEGRAM (SEGURIZADAS CON SECRETS) ---
+# --- CREDENCIALES Y CONFIGURACIÓN DE TELEGRAM ---
 TELEGRAM_BOT_TOKEN = st.secrets.get("TELEGRAM_BOT_TOKEN", "8969428136:AAFRhNzoAFB8TVAXUp2hnjffzw1gFPCyyrY")
 TELEGRAM_CHAT_ID = st.secrets.get("TELEGRAM_CHAT_ID", "1111059746")
 URL_DE_TU_APP = st.secrets.get("URL_DE_TU_APP", "https://tu-app.streamlit.app")
@@ -71,7 +75,7 @@ def enviar_notificacion_telegram_pago(reporte_idx, jugador, monto, banco, refere
     except Exception as e:
         print("Error enviando Telegram:", e)
 
-# --- HORA LOCAL DE VENEZUELA UNIFICADA (SIN DESFASE ENTRE PC Y TELÉFONO) ---
+# --- HORA LOCAL DE VENEZUELA UNIFICADA ---
 def obtener_hora_venezuela_local():
     try:
         zona_venezuela = ZoneInfo("America/Caracas")
@@ -85,7 +89,7 @@ def formatear_bs(monto):
     numero_formateado = f"{monto:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return f"Bs. {numero_formateado}"
 
-# --- SISTEMA DE PERSISTENCIA Y SINCRONIZACIÓN EN TIEMPO REAL CON SUPABASE (PROTEGIDO) ---
+# --- SISTEMA DE PERSISTENCIA Y SINCRONIZACIÓN EN TIEMPO REAL CON SUPABASE ---
 DB_ROW_ID = 1
 
 def cargar_estado_global(forzar_recarga=False):
