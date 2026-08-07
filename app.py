@@ -17,9 +17,9 @@ from supabase import create_client, Client
 # Configuración de pantalla completa optimizada para celulares
 st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺")
 
-# --- CREDENCIALES DE SUPABASE ---
-SUPABASE_URL = "https://qssnhvwdgxzwzkfusstf.supabase.co"
-SUPABASE_KEY = "sb_publishable_C4EDNCtB6i6yL84HDxw6tw_V5YGVmTQ"
+# --- CREDENCIALES DE SUPABASE (SEGURIZADAS CON SECRETS) ---
+SUPABASE_URL = st.secrets.get("SUPABASE_URL", "https://qssnhvwdgxzwzkfusstf.supabase.co")
+SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "sb_publishable_C4EDNCtB6i6yL84HDxw6tw_V5YGVmTQ")
 
 @st.cache_resource
 def init_supabase():
@@ -30,10 +30,10 @@ def init_supabase():
 
 supabase: Client = init_supabase()
 
-# --- CREDENCIALES Y CONFIGURACIÓN DE TELEGRAM ---
-TELEGRAM_BOT_TOKEN = "8969428136:AAFRhNzoAFB8TVAXUp2hnjffzw1gFPCyyrY"
-TELEGRAM_CHAT_ID = "1111059746"
-URL_DE_TU_APP = "https://tu-app.streamlit.app"  # Cambia esto por tu enlace real desplegado
+# --- CREDENCIALES Y CONFIGURACIÓN DE TELEGRAM (SEGURIZADAS CON SECRETS) ---
+TELEGRAM_BOT_TOKEN = st.secrets.get("TELEGRAM_BOT_TOKEN", "8969428136:AAFRhNzoAFB8TVAXUp2hnjffzw1gFPCyyrY")
+TELEGRAM_CHAT_ID = st.secrets.get("TELEGRAM_CHAT_ID", "1111059746")
+URL_DE_TU_APP = st.secrets.get("URL_DE_TU_APP", "https://tu-app.streamlit.app")
 
 def enviar_notificacion_telegram_pago(reporte_idx, jugador, monto, banco, referencia):
     if not TELEGRAM_BOT_TOKEN:
@@ -395,7 +395,7 @@ img_b64 = get_image_base64(nombres_archivos)
 if img_b64:
     logo_display = f'<img src="data:image/png;base64,{img_b64}" class="header-logo-img" />'
 else:
-    logo_display = '<span style="color: #f1c40f; font-size: 28px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">CALIFORNIA CHROME</span>'
+    logo_display = '<span style="color: #f1c40f; font-size: 28px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">WOLF READY TO RUN</span>'
 
 # --- INICIALIZAR REMATES Y LISTA DE CARRERAS DISPONIBLES PRIMERO ---
 if not st.session_state.remates:
@@ -1166,6 +1166,20 @@ menu_principal_opcion = st.session_state.menu_principal_opcion
 def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
     ahora_dt_frag = obtener_hora_venezuela_local()
+
+    # --- DETECCIÓN DE SUPERACIÓN DE PUJA (OUTBID NOTIFICATION) ---
+    if 'mis_caballos_previos' not in st.session_state:
+        st.session_state.mis_caballos_previos = {}
+    
+    usuario_actual = st.session_state.usuario_activo
+    for carr_k, rems in st.session_state.remates.items():
+        for ej_k, info in rems.items():
+            clave_cab = f"{carr_k}_{ej_k}"
+            dueño_anterior = st.session_state.mis_caballos_previos.get(clave_cab)
+            dueño_actual = info['jugador']
+            if dueño_anterior == usuario_actual and dueño_actual != usuario_actual and dueño_actual != "Sin Postor":
+                st.toast(f"⚠️ ¡Te superaron la puja en el ejemplar **{ej_k}** ({carr_k}) por {formatear_bs(info['monto'])}!", icon="🚨")
+            st.session_state.mis_caballos_previos[clave_cab] = dueño_actual
 
     if st.session_state.menu_principal_opcion == "Remates":
         st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
