@@ -1490,14 +1490,7 @@ def renderizar_tiempo_real_universal():
 
                 premio_total_calculado = pote_neto_base + incentivo_actual
 
-                # --- DISEÑO LLAMATIVO Y ÉPICO PARA EL POTE Y PREMIO TOTAL EN REMATES ---
-                st.markdown(f"""
-                    <div class="pote-cyber-card">
-                        <div class="pote-cyber-title">💰 POTE ACUMULADO ({carr_activa})</div>
-                        <div class="pote-cyber-value">{formatear_bs(total_pote)}</div>
-                    </div>
-                """, unsafe_allow_html=True)
-
+                # --- 1. PRIMERO: PREMIO LLAMATIVO (ARRIBA) ---
                 if incentivo_actual > 0:
                     st.markdown(f"""
                         <div class="incentivo-llamativo">
@@ -1505,6 +1498,13 @@ def renderizar_tiempo_real_universal():
                             <div class="incentivo-llamativo-monto">{formatear_bs(premio_total_calculado)}</div>
                         </div>
                     """, unsafe_allow_html=True)
+
+                # --- 2. SEGUNDO: INCENTIVO (IZQUIERDA) Y POTE (DERECHA) ABAJO DEL PREMIO LLAMATIVO ---
+                c_m1, c_m2 = st.columns(2)
+                with c_m1:
+                    st.metric(f"🎁 Incentivo ({carr_activa})", formatear_bs(incentivo_actual))
+                with c_m2:
+                    st.metric(f"💰 Pote ({carr_activa})", formatear_bs(total_pote))
 
                 if carr_activa in st.session_state.historial_ganadores:
                     info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
