@@ -1176,6 +1176,7 @@ def renderizar_tiempo_real_universal():
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
 
+                # --- LÓGICA Y MAPEO DE REMATE CIEGO ACTUALIZADA ---
                 carrera_real_mapeada = carr_activa
                 if modo_actual_remate == "Ciegos":
                     mapeo = st.session_state.get('mapeo_ciegos', {})
@@ -1188,25 +1189,30 @@ def renderizar_tiempo_real_universal():
                         if carrera_real_mapeada in st.session_state.historial_ganadores:
                             st.session_state.historial_ganadores[carr_activa] = st.session_state.historial_ganadores[carrera_real_mapeada]
 
+                        # REGLA 1: Menos de 14 ejemplares -> Los slots excedentes de la tabla no juegan y no cobran deuda
                         if total_real < 14:
-                            st.error(f"⚠️ La carrera mapeada ({carrera_real_mapeada}) tiene {total_real} ejemplares (< 14). ¡Las apuestas de este Remate Ciego han sido ANULADAS!")
-                            for cb_k, cb_inf in st.session_state.remates[carr_activa].items():
-                                if cb_inf['jugador'] != "Sin Postor" and cb_inf['jugador'] != "CASA":
+                            for idx_s, (cb_k, cb_inf) in enumerate(list(st.session_state.remates[carr_activa].items())):
+                                num_slot = idx_s + 1
+                                if num_slot > total_real:
                                     jug_ant = cb_inf['jugador']
                                     mnt_ant = cb_inf['monto']
-                                    if jug_ant in st.session_state.cuentas:
-                                        st.session_state.cuentas[jug_ant]['Pujas'] = max(0.0, st.session_state.cuentas[jug_ant]['Pujas'] - mnt_ant)
-                                    st.session_state.remates[carr_activa][cb_k] = {"jugador": "Sin Postor", "monto": 0.0}
-                            guardar_estado_global()
+                                    if jug_ant != "Sin Postor" and jug_ant != "CASA" and jug_ant != "No Juega":
+                                        if jug_ant in st.session_state.cuentas:
+                                            st.session_state.cuentas[jug_ant]['Pujas'] = max(0.0, st.session_state.cuentas[jug_ant]['Pujas'] - mnt_ant)
+                                    st.session_state.remates[carr_activa][cb_k] = {"jugador": "No Juega", "monto": 0.0}
+
+                        # REGLA 2: Más de 14 ejemplares -> Los excedentes a partir del 15 juegan para la CASA con MONTO FIJADO
                         else:
                             for idx_h, caballo_real in enumerate(banco_real):
                                 num_h = idx_h + 1
                                 slot_ciego = f"{num_h} - Ejemplar {num_h}"
-                                if slot_ciego in st.session_state.remates[carr_activa]:
-                                    if num_h > 14:
-                                        actual_postor = st.session_state.remates[carr_activa][slot_ciego]['jugador']
-                                        if actual_postor == "Sin Postor":
-                                            st.session_state.remates[carr_activa][slot_ciego] = {"jugador": "CASA", "monto": monto_fijo_ciego}
+                                if slot_ciego not in st.session_state.remates[carr_activa]:
+                                    st.session_state.remates[carr_activa][slot_ciego] = {"jugador": "Sin Postor", "monto": 0.0}
+                                
+                                if num_h > 14:
+                                    actual_postor = st.session_state.remates[carr_activa][slot_ciego]['jugador']
+                                    if actual_postor in ["Sin Postor", "No Juega"]:
+                                        st.session_state.remates[carr_activa][slot_ciego] = {"jugador": "CASA", "monto": monto_fijo_ciego}
 
                 if carr_activa in st.session_state.imagenes_carreras:
                     try:
@@ -2392,7 +2398,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     with tab2:
         st.markdown("### ✍️ Banco de Caballos (Data Persistente y Asignación)")
         
-        # --- 1. MAPEO DE REMATES CIEGOS (ARRIBA) ---
+        # --- 1. MAPEO DE REMATES CIEGOS (UBICADO ARRIBA) ---
         with st.container(border=True):
             st.markdown("🙈 **Mapeo de Remates Ciegos (1V y 6V)**")
             carreras_disp_mapeo = list(st.session_state.banco_caballos_por_carrera.keys())
