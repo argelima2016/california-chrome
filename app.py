@@ -15,7 +15,7 @@ from pypdf import PdfReader
 from supabase import create_client, Client
 
 # Configuración de pantalla completa optimizada para celulares
-st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺")
+st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺", initial_sidebar_state="collapsed")
 
 # --- CREDENCIALES DE SUPABASE (SEGURIZADAS CON SECRETS) ---
 SUPABASE_URL = st.secrets.get("SUPABASE_URL", "https://qssnhvwdgxzwzkfusstf.supabase.co")
@@ -241,7 +241,7 @@ def vigilante_sincronizacion_global():
 vigilante_sincronizacion_global()
 
 # --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ, ALERTAS MÓVILES Y RESPONSIVIDAD MÓVIL ---
-components.html("""
+components.html(r"""
     <script>
         let audioCtxGlobal = null;
 
@@ -329,56 +329,6 @@ components.html("""
                 const options = { timeZone: 'America/Caracas', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
                 relojElem.innerText = new Intl.DateTimeFormat('en-US', options).format(new Date());
             }
-
-            let tuercaBtn = doc.getElementById('custom-tuerca-sidebar-btn');
-            if (!tuercaBtn) {
-                tuercaBtn = doc.createElement('button');
-                tuercaBtn.id = 'custom-tuerca-sidebar-btn';
-                tuercaBtn.innerHTML = '⚙️';
-                tuercaBtn.title = 'Abrir / Cerrar Menú';
-                
-                tuercaBtn.style.position = 'fixed';
-                tuercaBtn.style.top = '8px';
-                tuercaBtn.style.right = '10px';
-                tuercaBtn.style.zIndex = '99999';
-                tuercaBtn.style.background = '#161b22';
-                tuercaBtn.style.border = '1px solid #30363d';
-                tuercaBtn.style.borderRadius = '8px';
-                tuercaBtn.style.fontSize = '18px';
-                tuercaBtn.style.width = '38px';
-                tuercaBtn.style.height = '38px';
-                tuercaBtn.style.cursor = 'pointer';
-                tuercaBtn.style.display = 'flex';
-                tuercaBtn.style.alignItems = 'center';
-                tuercaBtn.style.justifyContent = 'center';
-                tuercaBtn.style.boxShadow = '0px 4px 12px rgba(0,0,0,0.5)';
-
-                tuercaBtn.onclick = function() {
-                    const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
-                    if (sidebar) {
-                        const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
-                                       (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
-                        
-                        if (isClosed) {
-                            sidebar.setAttribute('aria-expanded', 'true');
-                            sidebar.style.transform = 'none';
-                            sidebar.style.visibility = 'visible';
-                            sidebar.style.display = 'block';
-                            sidebar.style.minWidth = '290px';
-                            sidebar.style.width = '290px';
-                        } else {
-                            sidebar.setAttribute('aria-expanded', 'false');
-                            sidebar.style.transform = 'translateX(-100%)';
-                            sidebar.style.visibility = 'hidden';
-                            sidebar.style.display = 'none';
-                            sidebar.style.minWidth = '0px';
-                            sidebar.style.width = '0px';
-                        }
-                    }
-                };
-                doc.body.appendChild(tuercaBtn);
-            }
         }
         setInterval(sincronizacionEnVivo, 1000);
     </script>
@@ -456,7 +406,7 @@ st.session_state.carreras_habilitadas_polla = [c for c in ultimas_6_carreras if 
 
 ahora_dt = obtener_hora_venezuela_local()
 
-# --- ESTILOS CSS GENERALES OPTIMIZADOS PARA TELÉFONOS MÓVILES ---
+# --- ESTILOS CSS GENERALES Y OCULTAR BARRA LATERAL ---
 st.markdown("""
     <style>
     * {
@@ -467,22 +417,13 @@ st.markdown("""
         color: #f0f6fc;
         overflow-x: hidden !important;
     }
-    @media (max-width: 768px) {
-        [data-testid="stSidebar"] {
-            min-width: 280px !important;
-            max-width: 280px !important;
-        }
-        [data-testid="stSidebar"] > div:first-child {
-            width: 280px !important;
-            padding-left: 0.8rem !important;
-            padding-right: 0.8rem !important;
-        }
-    }
-    @media (min-width: 769px) {
-        [data-testid="stSidebar"] {
-            min-width: 340px !important;
-            max-width: 340px !important;
-        }
+    /* ELIMINAR BARRA LATERAL POR COMPLETO */
+    [data-testid="stSidebar"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0px !important;
+        min-width: 0px !important;
     }
     [data-testid="stToolbar"] {
         display: none !important;
@@ -1159,12 +1100,6 @@ else:
     """, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
-
-# --- BARRA LATERAL SIMPLIFICADA ---
-st.sidebar.header("Sistema WOLF")
-st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
-st.sidebar.markdown("---")
-st.sidebar.info("💡 Todos los controles de administración, selector de usuario, retención y cierres ahora se encuentran organizados dentro de la **Zona Admin** en el menú principal.")
 
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
