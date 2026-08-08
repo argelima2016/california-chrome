@@ -1239,7 +1239,6 @@ def renderizar_tiempo_real_universal():
                 else:
                     carr_activa = st.session_state["carrera_remate_activa_seleccionada"]
 
-                # Asegurar de forma segura que carr_activa exista en remates
                 if carr_activa not in st.session_state.remates:
                     num_ej = 14 if modo_actual_remate == "Ciegos" else 10
                     st.session_state.remates[carr_activa] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, num_ej + 1)}
@@ -1259,7 +1258,7 @@ def renderizar_tiempo_real_universal():
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
 
-                # Validación de Remate Ciego (Reglas de < 14 / > 14)
+                # Validación y Mapeo de Remate Ciego (< 14 / > 14 / Retirados sincronizados)
                 carrera_real_mapeada = carr_activa
                 if modo_actual_remate == "Ciegos":
                     mapeo = st.session_state.get('mapeo_ciegos', {})
@@ -1269,6 +1268,10 @@ def renderizar_tiempo_real_universal():
                         total_real = len(banco_real)
                         monto_fijo_ciego = st.session_state.detalles_carreras.get(carr_activa, {}).get('monto_fijo_ciego', 500.0)
                         
+                        # Sincronizar ganador si la carrera mapeada ya fue liquidada
+                        if carrera_real_mapeada in st.session_state.historial_ganadores:
+                            st.session_state.historial_ganadores[carr_activa] = st.session_state.historial_ganadores[carrera_real_mapeada]
+
                         # REGLA 1: Menos de 14 ejemplares -> Anular apuestas
                         if total_real < 14:
                             st.error(f"⚠️ La carrera mapeada ({carrera_real_mapeada}) tiene {total_real} ejemplares (< 14). ¡Las apuestas de este Remate Ciego han sido ANULADAS!")
@@ -1447,21 +1450,29 @@ def renderizar_tiempo_real_universal():
                 if carr_activa not in st.session_state.ejemplares_no_valido:
                     st.session_state.ejemplares_no_valido[carr_activa] = []
 
-                # --- ⚙️ GESTIÓN DE RETIROS DESPLEGABLE (EN REMATES) ---
-                with st.expander(f"⚙️ Gestionar Retiros / No Válidos - {carr_activa}", expanded=False):
-                    banco_carr_rem = st.session_state.banco_caballos_por_carrera.get(carr_activa, [])
-                    ret_act = st.session_state.ejemplares_retirados.get(carr_activa, [])
-                    noval_act = st.session_state.ejemplares_no_valido.get(carr_activa, [])
-                    
-                    n_ret = st.multiselect("Ejemplares Retirados", options=banco_carr_rem, default=[c for c in ret_act if c in banco_carr_rem], key=f"quick_ret_{carr_activa}")
-                    n_noval = st.multiselect("Ejemplares No Valen", options=banco_carr_rem, default=[c for c in noval_act if c in banco_carr_rem], key=f"quick_noval_{carr_activa}")
-                    
-                    if st.button("💾 Guardar Cambios en Ejemplares", key=f"btn_quick_gestion_{carr_activa}", use_container_width=True, type="primary"):
-                        st.session_state.ejemplares_retirados[carr_activa] = n_ret
-                        st.session_state.ejemplares_no_valido[carr_activa] = n_noval
-                        guardar_estado_global()
-                        st.toast("✅ ¡Estado de ejemplares actualizado!")
-                        st.rerun()
+                # --- ⚙️ GESTIÓN DE RETIROS (SOLO EN ADELANTADOS) ---
+                if modo_actual_remate == "Adelantados":
+                    with st.expander(f"⚙️ Gestionar Retiros / No Válidos - {carr_activa}", expanded=False):
+                        banco_carr_rem = st.session_state.banco_caballos_por_carrera.get(carr_activa, [])
+                        ret_act = st.session_state.ejemplares_retirados.get(carr_activa, [])
+                        noval_act = st.session_state.ejemplares_no_valido.get(carr_activa, [])
+                        
+                        n_ret = st.multiselect("Ejemplares Retirados", options=banco_carr_rem, default=[c for c in ret_act if c in banco_carr_rem], key=f"quick_ret_{carr_activa}")
+                        n_noval = st.multiselect("Ejemplares No Valen", options=banco_carr_rem, default=[c for c in noval_act if c in banco_carr_rem], key=f"quick_noval_{carr_activa}")
+                        
+                        if st.button("💾 Guardar Cambios en Ejemplares", key=f"btn_quick_gestion_{carr_activa}", use_container_width=True, type="primary"):
+                            st.session_state.ejemplares_retirados[carr_activa] = n_ret
+                            st.session_state.ejemplares_no_valido[carr_activa] = n_noval
+                            guardar_estado_global()
+                            st.toast("✅ ¡Estado de ejemplares actualizado!")
+                            st.rerun()
+                else:
+                    # Sincronizar automáticamente retiros e inválidos para Ciegos y En Vivo desde su contraparte Adelantados/Real
+                    target_sync_key = carrera_real_mapeada if modo_actual_remate == "Ciegos" else carr_activa
+                    if target_sync_key in st.session_state.ejemplares_retirados:
+                        st.session_state.ejemplares_retirados[carr_activa] = st.session_state.ejemplares_retirados[target_sync_key]
+                    if target_sync_key in st.session_state.get('ejemplares_no_valido', {}):
+                        st.session_state.ejemplares_no_valido[carr_activa] = st.session_state.ejemplares_no_valido[target_sync_key]
 
                 # --- TABLA DE REMATES ---
                 retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
