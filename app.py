@@ -400,31 +400,19 @@ def obtener_siguientes_montos(monto_actual):
         siguientes = [ultimo + i * 1000 for i in range(1, 50)]
     return siguientes
 
-# --- LECTOR DE LOGOTIPO LOCAL ---
-def get_image_base64(nombres_posibles):
+# --- LECTOR DE IMAGEN FIJA ÚNICA (Gemini_Generated_Image_mn48tzmn48tzmn48.png) ---
+def get_image_base64(nombre_archivo):
     ruta_directorio = os.path.dirname(os.path.abspath(__file__))
-    for nombre_archivo in nombres_posibles:
-        try:
-            ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
-            if os.path.exists(ruta_imagen):
-                with open(ruta_imagen, "rb") as img_file:
-                    return base64.b64encode(img_file.read()).decode('utf-8')
-        except Exception:
-            continue
+    try:
+        ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
+        if os.path.exists(ruta_imagen):
+            with open(ruta_imagen, "rb") as img_file:
+                return base64.b64encode(img_file.read()).decode('utf-8')
+    except Exception:
+        pass
     return ""
 
-nombres_archivos = [
-    "1001397336_preview_rev_1.png",
-    "1001397336_preview_rev_1.jpg",
-    "1001397336.jpg",
-    "1001397336.png",
-    "1001394095_preview_rev_1_2.png",
-    "1001394095_preview_rev_1_2.jpg",
-    "logo.png",
-    "logo.jpg"
-]
-
-img_b64 = get_image_base64(nombres_archivos)
+img_b64 = get_image_base64("Gemini_Generated_Image_mn48tzmn48tzmn48.png")
 
 if img_b64:
     logo_display = f'<img src="data:image/png;base64,{img_b64}" class="header-logo-img" />'
@@ -1130,50 +1118,13 @@ html_banner_marquesina = f"""
 """
 components.html(html_banner_marquesina, height=36)
 
-# --- CARRUSEL AUTOMÁTICO DE IMÁGENES ---
-ruta_actual_dir = os.path.dirname(os.path.abspath(__file__))
-nombres_banners_posibles = ["1001398079.jpg", "1001398079.png", "1001398078.jpg", "1001398078.png", "1001398058.jpg", "1001398058.png", "rinconada.jpg", "rinconada.png"]
-lista_b64_banners = []
-for n_b in nombres_banners_posibles:
-    r_b = os.path.join(ruta_actual_dir, n_b)
-    if os.path.exists(r_b):
-        try:
-            with open(r_b, "rb") as f_b:
-                b64_str = base64.b64encode(f_b.read()).decode('utf-8')
-                lista_b64_banners.append(f"data:image/jpeg;base64,{b64_str}")
-        except Exception:
-            continue
-
-if lista_b64_banners:
-    js_images_array = json.dumps(lista_b64_banners)
-    html_slider = f"""
-    <style>
-        body {{ margin: 0; padding: 0; background-color: #080a0f; overflow: hidden; }}
-        .banner-slider-container {{ width: 100vw; height: 180px; margin: 0; padding: 0; overflow: hidden; position: relative; background-color: #080a0f; }}
-        .banner-slide-img {{ width: 100%; height: 100%; object-fit: cover; transition: opacity 1.2s ease-in-out; display: block; }}
-    </style>
-    <div class="banner-slider-container">
-        <img id="rinconada-slide" class="banner-slide-img" src="{lista_b64_banners[0]}" />
-    </div>
-    <script>
-        (function() {{
-            var images = {js_images_array};
-            var index = 0;
-            var imgElement = document.getElementById("rinconada-slide");
-            if(images.length > 1) {{
-                setInterval(function() {{
-                    index = (index + 1) % images.length;
-                    imgElement.style.opacity = "0.15";
-                    setTimeout(function() {{
-                        imgElement.src = images[index];
-                        imgElement.style.opacity = "1";
-                    }}, 400);
-                }}, 8000);
-            }}
-        }})();
-    </script>
-    """
-    components.html(html_slider, height=185)
+# --- IMAGEN FIJA ÚNICA ---
+if img_b64:
+    st.markdown(f"""
+        <div style="width: 100%; height: 180px; margin: 0 0 8px 0; overflow: hidden; border-radius: 6px;">
+            <img src="data:image/png;base64,{img_b64}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+        </div>
+    """, unsafe_allow_html=True)
 else:
     st.markdown("""
         <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); padding: 12px; text-align: center; margin-bottom: 8px; border-radius: 6px;">
@@ -1363,7 +1314,7 @@ def renderizar_tiempo_real_universal():
                     try: dt_limite = datetime.fromisoformat(dt_limite)
                     except Exception: dt_limite = None
 
-                # En Vivo cierra 10 segundos antes
+                # En Vivo cierra 10 segundos antes de la hora puesta
                 dt_limite_efectivo = dt_limite
                 if dt_limite and modo_actual_remate == "En Vivo":
                     dt_limite_efectivo = dt_limite - timedelta(seconds=10)
@@ -1842,6 +1793,8 @@ if menu_principal_opcion == "Dupletas":
         img_src_html = ""
         if carr_h in st.session_state.imagenes_carreras:
             img_src_html = f'<img src="{st.session_state.imagenes_carreras[carr_h]}" style="width:100%; height:260px; object-fit:cover; border-radius:8px; margin-bottom:10px;" />'
+        elif img_b64:
+            img_src_html = f'<img src="data:image/png;base64,{img_b64}" style="width:100%; height:260px; object-fit:cover; border-radius:8px; margin-bottom:10px;" />'
         else:
             img_src_html = f'<div style="width:100%; height:260px; background:#161b22; border:1px dashed #30363d; display:flex; align-items:center; justify-content:center; border-radius:8px; margin-bottom:10px; color:#8b949e; font-size:13px; font-weight:700;">{carr_h}</div>'
 
