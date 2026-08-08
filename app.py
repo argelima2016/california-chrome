@@ -1292,7 +1292,7 @@ def renderizar_tiempo_real_universal():
                     aviso_en_vivo_txt = " (Cierra 10s antes)" if modo_actual_remate == "En Vivo" else ""
                     st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:6px; border:1px solid #30363d; font-size:11px;'>⏰ Cierre Estricto ({modo_actual_remate}): <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b>{aviso_en_vivo_txt}</div>", unsafe_allow_html=True)
 
-                # --- CONTROL BLINDADO: SOLO SI LA CARRERA NO ESTÁ CERRADA ---
+                # --- CONTROL BLINDADO DE HORARIOS Y ALERTAS ---
                 if not carrera_cerrada and dt_limite_efectivo:
                     diferencia_segundos = (dt_limite_efectivo - ahora_dt_frag).total_seconds()
                     
@@ -1300,17 +1300,20 @@ def renderizar_tiempo_real_universal():
                         min_rest = int(diferencia_segundos / 60)
                         seg_rest = int(diferencia_segundos % 60)
                         
-                        alertas_target = [60, 30, 20, 10, 5, 4, 3, 2, 1]
-                        if min_rest in alertas_target and seg_rest <= 10:
+                        # Alertas de minutos (60, 30, 20, 10 min)
+                        alertas_target = [60, 30, 20, 10]
+                        if min_rest in alertas_target and seg_rest <= 5:
                             clave_alerta = f"{clave_mod_carr}_{min_rest}m"
                             if clave_alerta not in st.session_state.get('alertas_reproducidas', {}):
-                                if 'alertas_reproducidas' not in st.session_state: st.session_state.alertas_reproducidas = {}
+                                if 'alertas_reproducidas' not in st.session_state: 
+                                    st.session_state.alertas_reproducidas = {}
                                 st.session_state.alertas_reproducidas[clave_alerta] = True
                                 
                                 txt_tiempo = "1 hora" if min_rest == 60 else f"{min_rest} minutos"
                                 st.toast(f"⏳ ¡ATENCIÓN! Faltan {txt_tiempo} para el cierre de {carr_activa} ({modo_actual_remate})", icon="🚨")
                                 components.html("<script>window.parent.reproducirAlertaMovilYCalle('tiempo');</script>", height=0, width=0)
 
+                    # Activación estricta de los 10 segundos finales (Solo si está inactivo y exactamente en la ventana de 0 a 10s)
                     if estado_conteo == "INACTIVO":
                         if 0 < diferencia_segundos <= 10:
                             st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CONTEO_10S"
@@ -1324,11 +1327,12 @@ def renderizar_tiempo_real_universal():
                             st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt_frag.strftime('%I:%M:%S %p')
                             guardar_estado_global()
                             st.rerun()
+                            
                     elif estado_conteo == "CONTEO_10S":
                         tiempo_inicio = st.session_state.tiempo_inicio_conteo_modalidad.get(clave_mod_carr, ahora_dt_frag)
                         transcurridos = (ahora_dt_frag - tiempo_inicio).total_seconds()
                         
-                        if transcurridos >= 10:
+                        if transcurridos >= 10 or diferencia_segundos <= 0:
                             st.session_state.carreras_cerradas_remate[carr_activa] = True
                             st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
                             st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt_frag.strftime('%I:%M:%S %p')
