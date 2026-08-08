@@ -8,7 +8,6 @@ import requests
 import io
 import json
 import time
-import threading
 from bs4 import BeautifulSoup
 from datetime import datetime, time as dtime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -36,42 +35,6 @@ supabase: Client = init_supabase()
 
 if not supabase:
     st.error("⚠️ **ADVERTENCIA CRÍTICA:** No hay conexión con Supabase. Los datos entre la PC y los teléfonos no se sincronizarán. Verifica tus Secrets en Streamlit Cloud o la creación de la tabla `app_state` en Supabase.")
-
-# --- SUBSCRIPCIÓN A SUPABASE REALTIME (WEBSOCKETS) ---
-def configurar_realtime_supabase():
-    if not supabase:
-        return
-    try:
-        def handle_postgres_changes(payload):
-            new_data = payload.get("new", {})
-            if isinstance(new_data, dict) and "data" in new_data:
-                remote_ts = new_data["data"].get("_timestamp", 0.0)
-                local_ts = st.session_state.get("_local_timestamp", 0.0)
-                if remote_ts > local_ts:
-                    st.session_state["_local_timestamp"] = remote_ts
-                    st.rerun()
-
-        channel = supabase.channel("public:app_state")
-        channel.on(
-            "postgres_changes",
-            {
-                "event": "UPDATE",
-                "schema": "public",
-                "table": "app_state",
-                "filter": "id=eq.1"
-            },
-            handle_postgres_changes
-        )
-        channel.subscribe()
-    except Exception as e:
-        print("Error configurando Supabase Realtime:", e)
-
-@st.cache_resource
-def iniciar_escucha_websocket():
-    hilo = threading.Thread(target=configurar_realtime_supabase, daemon=True)
-    hilo.start()
-
-iniciar_escucha_websocket()
 
 # --- CREDENCIALES Y CONFIGURACIÓN DE TELEGRAM ---
 TELEGRAM_BOT_TOKEN = st.secrets.get("TELEGRAM_BOT_TOKEN", "8969428136:AAFRhNzoAFB8TVAXUp2hnjffzw1gFPCyyrY")
@@ -260,8 +223,8 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- VIGILANTE DE RESPALDO (CADA 8 SEGUNDOS) ---
-@st.fragment(run_every=8.0)
+# --- VIGILANTE DE SINCRONIZACIÓN SEGURO (CADA 6 SEGUNDOS) ---
+@st.fragment(run_every=6.0)
 def vigilante_sincronizacion_global():
     if supabase:
         try:
@@ -412,7 +375,7 @@ def cargar_base64_archivo(nombre_archivo):
         pass
     return ""
 
-# Cargar Logo para la cabecera
+# Cargar Logo para la cabecera (1001397336_preview_rev_1.png)
 logo_b64 = cargar_base64_archivo("1001397336_preview_rev_1.png")
 if not logo_b64:
     for alt in ["1001397336_preview_rev_1.jpg", "logo.png", "logo.jpg"]:
@@ -425,7 +388,7 @@ if logo_b64:
 else:
     logo_display = '<span style="color: #f1c40f; font-size: 28px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">WOLF READY TO RUN</span>'
 
-# Cargar Banner Estático Único
+# Cargar Banner Estático Único (Gemini_Generated_Image_mn48tzmn48tzmn48.png)
 banner_b64 = cargar_base64_archivo("Gemini_Generated_Image_mn48tzmn48tzmn48.png")
 
 # --- INICIALIZAR REMATES Y LISTA DE CARRERAS DISPONIBLES PRIMERO ---
@@ -595,7 +558,6 @@ st.markdown("""
         word-break: break-word;
     }
     
-    /* DISEÑO NUEVO Y MEJORADO PARA POTE E INCENTIVO */
     .dashboard-pote-card {
         background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
         border: 2px solid #f1c40f;
