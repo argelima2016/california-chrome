@@ -157,6 +157,12 @@ def cargar_estado_global(forzar_recarga=False):
         '_local_timestamp': 0.0
     }
     
+    # Preservar selecciones actuales del usuario si ya existen
+    menu_actual = st.session_state.get('menu_principal_opcion', "Remates")
+    sub_remate_actual = st.session_state.get('sub_remate_opcion', "En Vivo")
+    sub_dup_actual = st.session_state.get('sub_dupleta_opcion', "Dupleta")
+    usuario_actual_sesion = st.session_state.get('usuario_activo', "CASA")
+
     if not forzar_recarga and all(k in st.session_state for k in default_state.keys()):
         return
 
@@ -176,6 +182,12 @@ def cargar_estado_global(forzar_recarga=False):
             for k, v in default_state.items():
                 if k not in st.session_state or forzar_recarga:
                     st.session_state[k] = data.get(k, v)
+            
+            # Restaurar selecciones del usuario para que no se pierdan al sincronizar
+            st.session_state['menu_principal_opcion'] = menu_actual
+            st.session_state['sub_remate_opcion'] = sub_remate_actual
+            st.session_state['sub_dupleta_opcion'] = sub_dup_actual
+            st.session_state['usuario_activo'] = usuario_actual_sesion
             
             if "_timestamp" in data:
                 st.session_state["_local_timestamp"] = data.get("_timestamp", 0.0)
@@ -231,10 +243,10 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- VIGILANTE DE SINCRONIZACIÓN SEGURO (CADA 6 SEGUNDOS) ---
+# --- VIGILANTE DE SINCRONIZACIÓN SEGURO (CADA 6 SEGUNDOS, SIN FORZAR RERUN SI EL USUARIO ESTÁ EN CONFIGURACIÓN) ---
 @st.fragment(run_every=6.0)
 def vigilante_sincronizacion_global():
-    if supabase:
+    if supabase and st.session_state.get('menu_principal_opcion') != "🔒 Zona Admin":
         try:
             response = supabase.table("app_state").select("data").eq("id", DB_ROW_ID).execute()
             if response.data and len(response.data) > 0:
@@ -987,7 +999,7 @@ if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponib
 if not st.session_state.carreras_habilitadas_tripleta and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_tripleta = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL (CONSERVANDO ESTADO SIN RECARGAS BRUSCAS) ---
+# --- MENÚ PRINCIPAL HORIZONTAL (SEGURO SIN RECARGAS BRUSCAS) ---
 st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
 col_menu1, col_menu2, col_menu3, col_menu4 = st.columns(4, gap="small")
 
