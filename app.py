@@ -1581,7 +1581,7 @@ def renderizar_tiempo_real_universal():
 
                 if modo_actual_remate == "Adelantados":
                     with st.container(border=True):
-                        st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>🎯 Seleccionar y Liquidar Ganador - {carr_activa}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>GANADOR - {carr_activa}</p>", unsafe_allow_html=True)
                         if carr_activa not in st.session_state.historial_ganadores:
                             caballos_lista_ganador = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
                             if not caballos_lista_ganador:
@@ -2881,18 +2881,32 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         carr_img_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="adm_img_sel_carr")
         
         with st.container(border=True):
-            st.markdown("📸 **Imagen de la Carrera**")
+            st.markdown("📸 **Imagen de la Carrera (Optimizada para la Red)**")
             imagen_subida = st.file_uploader("Subir imagen (PNG, JPG)", type=["png", "jpg", "jpeg"], key=f"file_img_{carr_img_sel}")
             
-            _ = imagen_subida
             if imagen_subida is not None:
                 if st.button("💾 Guardar Imagen", key=f"btn_save_img_{carr_img_sel}", use_container_width=True, type="primary"):
                     try:
-                        bytes_imagen = imagen_subida.getvalue()
-                        b64_imagen = base64.b64encode(bytes_imagen).decode('utf-8')
+                        from PIL import Image
+                        img_pil = Image.open(imagen_subida)
+                        
+                        if img_pil.mode in ("RGBA", "P"):
+                            img_pil = img_pil.convert("RGB")
+                            
+                        max_ancho = 800
+                        if img_pil.width > max_ancho:
+                            proporcion = max_ancho / img_pil.width
+                            nuevo_alto = int(img_pil.height * proporcion)
+                            img_pil = img_pil.resize((max_ancho, nuevo_alto), Image.Resampling.LANCZOS)
+                            
+                        buffer = io.BytesIO()
+                        img_pil.save(buffer, format="JPEG", quality=75)
+                        bytes_comprimidos = buffer.getvalue()
+                        
+                        b64_imagen = base64.b64encode(bytes_comprimidos).decode('utf-8')
                         st.session_state.imagenes_carreras[carr_img_sel] = f"data:image/jpeg;base64,{b64_imagen}"
                         guardar_estado_global()
-                        st.toast("✅ ¡Imagen guardada de forma permanente!")
+                        st.toast("✅ ¡Imagen optimizada y guardada con éxito!")
                         st.rerun()
                     except Exception as e:
                         st.error(f"Error al procesar la imagen: {e}")
