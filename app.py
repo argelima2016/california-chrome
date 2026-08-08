@@ -987,12 +987,14 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
     return html
 
 # --- GARANTIZAR ESTADO INICIAL DE MODALIDADES ---
-if not st.session_state.carreras_activas_remate and lista_carreras_disponibles:
-    st.session_state.carreras_activas_remate = list(lista_carreras_disponibles)
+if not st.session_state.carreras_activas_remate and [c for c in st.session_state.remates.keys() if c not in ["1V", "6V"]]:
+    st.session_state.carreras_activas_remate = [c for c in st.session_state.remates.keys() if c not in ["1V", "6V"]]
 
 for mod in ["Adelantados", "Ciegos", "En Vivo"]:
     if mod not in st.session_state.carreras_por_modalidad:
         st.session_state.carreras_por_modalidad[mod] = []
+
+lista_carreras_disponibles = [c for c in st.session_state.remates.keys() if c not in ["1V", "6V"]]
 
 if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_dupleta = list(lista_carreras_disponibles)
@@ -1220,6 +1222,11 @@ def renderizar_tiempo_real_universal():
                     st.session_state["carrera_remate_activa_seleccionada"] = carr_activa
                 else:
                     carr_activa = st.session_state["carrera_remate_activa_seleccionada"]
+
+                # Asegurar de forma segura que carr_activa exista en remates
+                if carr_activa not in st.session_state.remates:
+                    num_ej = 14 if modo_actual_remate == "Ciegos" else 10
+                    st.session_state.remates[carr_activa] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, num_ej + 1)}
 
                 st.markdown("🔹 **Seleccionar Carrera:**")
                 carreras_totales_visibles = list(carreras_filtradas_visibles)
