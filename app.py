@@ -1857,7 +1857,7 @@ if menu_principal_opcion == "Dupletas":
                             cab_leg = siguiente_cab
                             st.session_state[k_sel_grid] = cab_leg
 
-                    seleccion_legs.append({"carrera": carr_leg, "ejemplار": cab_leg})
+                    seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
                     st.markdown(f"""
                             </div>
                             <div style="background: #0d1611; padding: 5px 12px; border-top: 1px solid #2e5a42; font-size: 11px; color: #00ffff;">
@@ -2146,17 +2146,20 @@ elif menu_principal_opcion == "Cuentas":
                     st.error("⚠️ Ingrese un monto válido y la referencia.")
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR
+# 4. ZONA DE ADMINISTRADOR (COMPLETA Y RESTAURADA)
 # =========================================================================
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Panel de Configuración y Administración</div>", unsafe_allow_html=True)
     
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs([
         "⚙️ Controles & Jornada",
         "✍️ Banco de Caballos", 
+        "⏰ Horarios Remates",
+        "🎁 Incentivos",
         "👥 Usuarios", 
         "⚙️ Dupleta/Polla", 
         "📺 Video", 
+        "💳 Pagos Móviles",
         "📊 Saldos", 
         "🖼️ Imágenes"
     ])
@@ -2221,7 +2224,107 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast(f"✅ ¡Jornada ajustada a {nueva_cantidad_carreras} carreras con éxito!")
                 st.rerun()
 
+        st.markdown("---")
+        st.markdown("📋 **Gestión de Ejemplares por Carrera y Asignación de Modalidades**")
+        carr_banco_sel = st.selectbox("Seleccionar Carrera", list(st.session_state.remates.keys()), key="select_carrera_banco_admin")
+        
+        with st.container(border=True):
+            st.markdown(f"🛠️ **Asignación de Modalidad para {carr_banco_sel}**")
+            es_en_vivo = carr_banco_sel in st.session_state.carreras_por_modalidad.get("En Vivo", [])
+            es_adelantados = carr_banco_sel in st.session_state.carreras_por_modalidad.get("Adelantados", [])
+            
+            nueva_mod_sel = st.radio("Modalidad de Remate", options=["Adelantados", "En Vivo"], index=0 if es_adelantados else (1 if es_en_vivo else 0), key=f"radio_mod_{carr_banco_sel}")
+            
+            if st.button("💾 Guardar Modalidad", key=f"btn_save_mod_{carr_banco_sel}", type="primary"):
+                for m_k in ["Adelantados", "En Vivo"]:
+                    if carr_banco_sel in st.session_state.carreras_por_modalidad[m_k]:
+                        st.session_state.carreras_por_modalidad[m_k].remove(carr_banco_sel)
+                st.session_state.carreras_por_modalidad[nueva_mod_sel].append(carr_banco_sel)
+                guardar_estado_global()
+                st.success(f"✅ Carrera {carr_banco_sel} asignada a **{nueva_mod_sel}**.")
+                st.rerun()
+
+        with st.container(border=True):
+            st.markdown(f"🐎 **Banco de Ejemplares - {carr_banco_sel}**")
+            banco_actual_c = st.session_state.banco_caballos_por_carrera.get(carr_banco_sel, [])
+            texto_banco_input = st.text_area("Lista de ejemplares (uno por línea)", value="\n".join(banco_actual_c), key=f"txtarea_banco_{carr_banco_sel}")
+            
+            if st.button("💾 Actualizar Banco de Ejemplares", key=f"btn_act_banco_{carr_banco_sel}", type="primary"):
+                nuevos_ejemplares = [line.strip().upper() for line in texto_banco_input.split("\n") if line.strip()]
+                if nuevos_ejemplares:
+                    st.session_state.banco_caballos_por_carrera[carr_banco_sel] = nuevos_ejemplares
+                    if carr_banco_sel not in st.session_state.remates:
+                        st.session_state.remates[carr_banco_sel] = {}
+                    
+                    remate_actual_c = st.session_state.remates[carr_banco_sel]
+                    nuevo_remate_c = {}
+                    for ej in nuevos_ejemplares:
+                        if ej in remate_actual_c:
+                            nuevo_remate_c[ej] = remate_actual_c[ej]
+                        else:
+                            nuevo_remate_c[ej] = {"jugador": "Sin Postor", "monto": 0.0}
+                    st.session_state.remates[carr_banco_sel] = nuevo_remate_c
+                    guardar_estado_global()
+                    st.success("✅ ¡Banco de ejemplares y remates actualizados correctamente!")
+                    st.rerun()
+
     with tab3:
+        st.markdown("### ⏰ Horarios de Apertura y Cierre de Remates")
+        with st.container(border=True):
+            mod_horario_sel = st.selectbox("Seleccionar Modalidad", options=["Adelantados", "Ciegos", "En Vivo"], key="admin_mod_horario_sel")
+            
+            if mod_horario_sel == "Ciegos":
+                carr_horario_sel = st.selectbox("Seleccionar Ciego", options=["1V", "6V"], key="admin_carr_horario_ciego")
+            else:
+                carr_horario_sel = st.selectbox("Seleccionar Carrera", options=lista_carreras_disponibles, key="admin_carr_horario_normal")
+
+            clave_h = f"{mod_horario_sel}_{carr_horario_sel}"
+            dt_i_actual = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_h, ahora_dt)
+            dt_c_actual = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_h, ahora_dt + timedelta(hours=1))
+
+            if isinstance(dt_i_actual, str):
+                try: dt_i_actual = datetime.fromisoformat(dt_i_actual)
+                except Exception: dt_i_actual = ahora_dt
+            if isinstance(dt_c_actual, str):
+                try: dt_c_actual = datetime.fromisoformat(dt_c_actual)
+                except Exception: dt_c_actual = ahora_dt + timedelta(hours=1)
+
+            col_fh1, col_fh2 = st.columns(2)
+            with col_fh1:
+                f_ini = st.date_input("Fecha Inicio", value=dt_i_actual.date(), key=f"f_ini_{clave_h}")
+                h_ini = st.time_input("Hora Inicio", value=dt_i_actual.time(), key=f"h_ini_{clave_h}")
+            with col_fh2:
+                f_fin = st.date_input("Fecha Cierre", value=dt_c_actual.date(), key=f"f_fin_{clave_h}")
+                h_fin = st.time_input("Hora Cierre", value=dt_c_actual.time(), key=f"h_fin_{clave_h}")
+
+            if st.button("💾 Guardar Horarios de Remate", key=f"btn_save_h_{clave_h}", type="primary"):
+                st.session_state.fechas_horas_inicio_remate_modalidad[clave_h] = datetime.combine(f_ini, h_ini)
+                st.session_state.fechas_horas_cierre_remate_modalidad[clave_h] = datetime.combine(f_fin, h_fin)
+                guardar_estado_global()
+                st.success(f"✅ Horarios guardados para **{carr_horario_sel} ({mod_horario_sel})**.")
+                st.rerun()
+
+    with tab4:
+        st.markdown("### 🎁 Gestión de Incentivos por Carrera")
+        with st.container(border=True):
+            carr_inc_sel = st.selectbox("Seleccionar Carrera para Incentivo", options=lista_carreras_disponibles, key="select_carr_incentivo_admin")
+            if carr_inc_sel not in st.session_state.detalles_carreras:
+                st.session_state.detalles_carreras[carr_inc_sel] = {"incentivo_adelantados": 0.0, "incentivo_ciegos": 0.0, "incentivo_envivo": 0.0}
+            
+            det_inc = st.session_state.detalles_carreras[carr_inc_sel]
+            m_adel = st.number_input("Incentivo Adelantados (Bs.)", min_value=0.0, value=float(det_inc.get('incentivo_adelantados', 0.0)), step=100.0, key=f"inc_ad_{carr_inc_sel}")
+            m_cieg = st.number_input("Incentivo Ciegos (Bs.)", min_value=0.0, value=float(det_inc.get('incentivo_ciegos', 0.0)), step=100.0, key=f"inc_ci_{carr_inc_sel}")
+            m_envi = st.number_input("Incentivo En Vivo (Bs.)", min_value=0.0, value=float(det_inc.get('incentivo_envivo', 0.0)), step=100.0, key=f"inc_en_{carr_inc_sel}")
+
+            if st.button("💾 Guardar Incentivos", key=f"btn_save_inc_{carr_inc_sel}", type="primary"):
+                st.session_state.detalles_carreras[carr_inc_sel]['incentivo_adelantados'] = m_adel
+                st.session_state.detalles_carreras[carr_inc_sel]['incentivo_ciegos'] = m_cieg
+                st.session_state.detalles_carreras[carr_inc_sel]['incentivo_envivo'] = m_envi
+                guardar_estado_global()
+                st.success("✅ ¡Incentivos actualizados correctamente!")
+                st.rerun()
+
+    with tab5:
         st.markdown("### 👥 Registro de Usuarios")
         with st.container(border=True):
             nuevo_usuario_input = st.text_input("Nuevo Usuario", placeholder="Ej: JUAN", key="input_nuevo_usuario_reg")
@@ -2235,8 +2338,8 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.toast(f"✅ ¡Registrado **{usuario_limpio}**!")
                     st.rerun()
 
-    with tab4:
-        st.markdown("### ⚙️ Configuración de Montos")
+    with tab6:
+        st.markdown("### ⚙️ Configuración de Dupleta, Tripleta y Polla")
         with st.container(border=True):
             monto_dup_cfg = st.number_input("Dupleta (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("Dupleta", 500.0)), step=50.0, key="cfg_monto_dupleta")
             monto_trip_cfg = st.number_input("Tripleta (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("Tripleta", 500.0)), step=50.0, key="cfg_monto_tripleta")
@@ -2250,7 +2353,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Montos guardados!")
                 st.rerun()
 
-    with tab5:
+    with tab7:
         st.markdown("### 📺 Video en Vivo")
         with st.container(border=True):
             nueva_url_video = st.text_input("URL", value=st.session_state.get('url_video_en_vivo', ''), placeholder="https://youtube.com/watch?v=...", key="input_live_video_url")
@@ -2260,7 +2363,30 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Guardado!")
                 st.rerun()
 
-    with tab6:
+    with tab8:
+        st.markdown("### 💳 Panel de Validación de Pagos Móviles (Telegram)")
+        reportes_pago_lista = st.session_state.get('reportes_pago', [])
+        if not reportes_pago_lista:
+            st.info("ℹ️ No hay reportes de pago móvil pendientes.")
+        else:
+            for idx_rp, rep in enumerate(reversed(reportes_pago_lista)):
+                with st.container(border=True):
+                    st.markdown(f"**Jugador:** {rep['jugador']} | **Monto:** {formatear_bs(rep['monto'])}")
+                    st.markdown(f"🏦 **Banco:** {rep['banco']} | **Ref:** {rep['referencia']} | 📅 {rep['fecha']}")
+                    st.markdown(f"📌 **Estado:** `{rep['estado']}`")
+                    
+                    if rep['estado'] == "Pendiente de Aprobación":
+                        if st.button(f"✅ Aprobar y Abonar {formatear_bs(rep['monto'])}", key=f"btn_aprobar_pago_{idx_rp}", type="primary"):
+                            rep['estado'] = "Aprobado"
+                            jug_rep = rep['jugador']
+                            if jug_rep not in st.session_state.cuentas:
+                                st.session_state.cuentas[jug_rep] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                            st.session_state.cuentas[jug_rep]['Abonos'] += rep['monto']
+                            guardar_estado_global()
+                            st.success(f"✅ ¡Pago aprobado y abonado a la cuenta de {jug_rep}!")
+                            st.rerun()
+
+    with tab9:
         st.markdown("### 📊 Saldos de Usuarios")
         usuarios_futuros = [u for u in st.session_state.lista_usuarios if u != "CASA"]
         if usuarios_futuros:
@@ -2274,7 +2400,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             st.dataframe(pd.DataFrame(datos_cuentas_adm), use_container_width=True, hide_index=True)
         st.metric("Ganancia Casa", formatear_bs(st.session_state.ganancia_casa))
 
-    with tab7:
+    with tab10:
         st.markdown("### 🖼️ Imágenes por Carrera")
         todas_carrs_img = list(st.session_state.remates.keys())
         carr_img_sel = st.selectbox("Seleccionar Carrera", todas_carrs_img, key="adm_img_sel_carr")
