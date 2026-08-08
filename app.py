@@ -1006,7 +1006,7 @@ if not elementos_carrusel_info:
 texto_unido_marquesina = " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ".join(elementos_carrusel_info)
 html_banner_marquesina = f"""
 <style>
-    .marquee-container {
+    .marquee-container {{
         width: 100%;
         background: transparent;
         border: none;
@@ -1017,8 +1017,8 @@ html_banner_marquesina = f"""
         box-sizing: border-box;
         display: flex;
         align-items: center;
-    }
-    .marquee-text {
+    }}
+    .marquee-text {{
         display: inline-block;
         white-space: nowrap;
         animation: scrollRight 150s linear infinite !important;
@@ -1031,15 +1031,15 @@ html_banner_marquesina = f"""
         letter-spacing: 1.2px;
         text-shadow: 0px 0px 8px rgba(0, 255, 255, 0.9), 2px 2px 2px #000000;
         padding-right: 100%;
-    }
-    @keyframes scrollRight {
-        0% {
+    }}
+    @keyframes scrollRight {{
+        0% {{
             transform: translateX(-100%);
-        }
-        100% {
+        }}
+        100% {{
             transform: translateX(100%);
-        }
-    }
+        }}
+    }}
 </style>
 <div class="marquee-container">
     <div class="marquee-text">{texto_unido_marquesina}</div>
