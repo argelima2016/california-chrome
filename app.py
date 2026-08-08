@@ -804,6 +804,15 @@ st.markdown("""
         background-color: #ff4757;
         color: #ff4757;
     }
+
+    /* ESTILO PARA LIMITAR EL TAMAÑO DE LA IMAGEN EN COMPUTADORAS (PC) */
+    @media (min-width: 769px) {
+        .imagen-carrera-pc-container {
+            max-width: 380px !important;
+            margin: 0 auto !important;
+            display: block !important;
+        }
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -1348,7 +1357,9 @@ def renderizar_tiempo_real_universal():
                 if carr_activa in st.session_state.imagenes_carreras:
                     try:
                         img_url_val = st.session_state.imagenes_carreras[carr_activa]
+                        st.markdown(f'<div class="imagen-carrera-pc-container">', unsafe_allow_html=True)
                         st.image(img_url_val, caption=f"Imagen oficial - {carr_activa}", use_container_width=True)
+                        st.markdown('</div>', unsafe_allow_html=True)
                     except Exception:
                         pass
 
@@ -1497,6 +1508,22 @@ def renderizar_tiempo_real_universal():
                     st.session_state.ejemplares_no_valido = {}
                 if carr_activa not in st.session_state.ejemplares_no_valido:
                     st.session_state.ejemplares_no_valido[carr_activa] = []
+
+                # --- ⚙️ GESTIÓN DE RETIROS Y NO VÁLIDOS (ENCIMA DE LA TABLA DE REMATE) ---
+                with st.expander(f"⚙️ Gestionar Retiros / No Válidos - {carr_activa}", expanded=False):
+                    banco_carr_rem = st.session_state.banco_caballos_por_carrera.get(carr_activa, [])
+                    ret_act = st.session_state.ejemplares_retirados.get(carr_activa, [])
+                    noval_act = st.session_state.ejemplares_no_valido.get(carr_activa, [])
+                    
+                    n_ret = st.multiselect("Ejemplares Retirados", options=banco_carr_rem, default=[c for c in ret_act if c in banco_carr_rem], key=f"quick_ret_{carr_activa}")
+                    n_noval = st.multiselect("Ejemplares No Valen", options=banco_carr_rem, default=[c for c in noval_act if c in banco_carr_rem], key=f"quick_noval_{carr_activa}")
+                    
+                    if st.button("💾 Guardar Cambios en Ejemplares", key=f"btn_quick_gestion_{carr_activa}", use_container_width=True, type="primary"):
+                        st.session_state.ejemplares_retirados[carr_activa] = n_ret
+                        st.session_state.ejemplares_no_valido[carr_activa] = n_noval
+                        guardar_estado_global()
+                        st.toast("✅ ¡Estado de ejemplares actualizado!")
+                        st.rerun()
 
                 # --- TABLA DE REMATES ---
                 retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
@@ -2575,6 +2602,49 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.toast("✅ ¡Agregado!")
                     st.rerun()
 
+        st.markdown("---")
+        st.markdown("#### 🔴 Gestionar Ejemplares 'RETIRADOS'")
+        if carr_banco_sel not in st.session_state.ejemplares_retirados:
+            st.session_state.ejemplares_retirados[carr_banco_sel] = []
+
+        lista_todos_carr_banco = st.session_state.banco_caballos_por_carrera.get(carr_banco_sel, [])
+        retirados_actuales_banco = st.session_state.ejemplares_retirados[carr_banco_sel]
+
+        with st.container(border=True):
+            nuevos_retirados = st.multiselect(
+                f"Selecciona los ejemplares **RETIRADOS** en {carr_banco_sel}:",
+                options=lista_todos_carr_banco,
+                default=[c for c in retirados_actuales_banco if c in lista_todos_carr_banco],
+                key=f"multiselect_retirado_{carr_banco_sel}"
+            )
+            if st.button("💾 Guardar Cambios 'RETIRADOS'", key=f"btn_save_retirados_{carr_banco_sel}", use_container_width=True, type="primary"):
+                st.session_state.ejemplares_retirados[carr_banco_sel] = nuevos_retirados
+                guardar_estado_global()
+                st.toast(f"✅ ¡Ejemplares retirados actualizados para {carr_banco_sel}!")
+                st.rerun()
+
+        st.markdown("---")
+        st.markdown("#### ⚠️ Gestionar Ejemplares 'NO VALE'")
+        if 'ejemplares_no_valido' not in st.session_state:
+            st.session_state.ejemplares_no_valido = {}
+        if carr_banco_sel not in st.session_state.ejemplares_no_valido:
+            st.session_state.ejemplares_no_valido[carr_banco_sel] = []
+
+        bloqueados_actuales_banco = st.session_state.ejemplares_no_valido[carr_banco_sel]
+
+        with st.container(border=True):
+            nuevos_no_validos = st.multiselect(
+                f"Selecciona los ejemplares que **NO VALEN** en {carr_banco_sel}:",
+                options=lista_todos_carr_banco,
+                default=[c for c in bloqueados_actuales_banco if c in lista_todos_carr_banco],
+                key=f"multiselect_no_vale_{carr_banco_sel}"
+            )
+            if st.button("💾 Guardar Cambios 'NO VALE'", key=f"btn_save_no_vale_{carr_banco_sel}", use_container_width=True, type="primary"):
+                st.session_state.ejemplares_no_valido[carr_banco_sel] = nuevos_no_validos
+                guardar_estado_global()
+                st.toast(f"✅ ¡Ejemplares 'NO VALE' actualizados para {carr_banco_sel}!")
+                st.rerun()
+
         for idx_b, ej_item in enumerate(st.session_state.banco_caballos_por_carrera[carr_banco_sel]):
             col_ib1, col_ib2 = st.columns([5, 1])
             with col_ib1: st.text(ej_item)
@@ -2673,7 +2743,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if ampm_cier_m == "AM" and h_cier_m_val == 12: h_cm_24 = 0
 
                 dt_im_final = datetime.combine(f_ini_m, dtime(h_im_24, m_ini_m_val))
-                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cier_m_val))
+                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cm_24:=m_cier_m_val))
 
                 st.session_state.fechas_horas_inicio_modalidad_multiple[mod_mult_sel] = dt_im_final
                 st.session_state.fechas_horas_cierre_modalidad_multiple[mod_mult_sel] = dt_cm_final
@@ -2855,7 +2925,9 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             if carr_img_sel in st.session_state.imagenes_carreras:
                 try:
                     img_guardada = st.session_state.imagenes_carreras[carr_img_sel]
-                    st.image(img_guardada, width=250, caption=f"Imagen guardada - {carr_img_sel}")
+                    st.markdown(f'<div class="imagen-carrera-pc-container">', unsafe_allow_html=True)
+                    st.image(img_guardada, caption=f"Imagen guardada - {carr_img_sel}", use_container_width=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
                 except Exception:
                     pass
                 
