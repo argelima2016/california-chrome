@@ -356,7 +356,7 @@ components.html(r"""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -1910,15 +1910,14 @@ if menu_principal_opcion == "Dupletas":
             carreras_usadas = set()
 
             if sub_dup_actual == "POLLA HIPICA":
-                # --- MODELO VISUAL IDÉNTICO A LA IMAGEN PARA POLLA HÍPICA ---
                 st.markdown("🎯 **Selección de Ejemplares (Modelo Bloque de Carreras con Grilla Numérica):**")
                 
                 for carr_leg in carreras_permitidas:
-                    st.markdown(f"""
+                    st.markdown("""
                         <div style="background: #1f3a2e; border: 1px solid #4e8a6d; border-radius: 8px 8px 0 0; padding: 6px 12px; font-weight: 900; color: #f1c40f; font-size: 14px; margin-top: 12px;">
-                            🏁 {carr_leg}
+                            🏁 {}
                         </div>
-                    """, unsafe_allow_html=True)
+                    """.format(carr_leg), unsafe_allow_html=True)
 
                     retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
                     no_val_carr_t = st.session_state.get('ejemplares_no_valido', {}).get(carr_leg, [])
@@ -1933,7 +1932,6 @@ if menu_principal_opcion == "Dupletas":
                         validos_ini = [c for c in banco_cab_carr if c not in excluidos_carr_t]
                         st.session_state[k_sel_grid] = validos_ini[0] if validos_ini else banco_cab_carr[0]
 
-                    # Grilla de botones numéricos estilo la imagen adjunta
                     cols_grid = st.columns(min(6, len(banco_cab_carr)), gap="small")
                     for idx_cb, cb_item in enumerate(banco_cab_carr):
                         col_i = idx_cb % 6
@@ -1963,9 +1961,12 @@ if menu_principal_opcion == "Dupletas":
                             st.session_state[k_sel_grid] = cab_leg
 
                     seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
-                    st.markdown("<div style='background: #11151c; padding: 6px; border: 1px solid #30363d; border-radius: 0 0 8px 8px; margin-bottom: 8px; font-size: 11px; color: #00ffff;'>Seleccionado en <b>{carr_leg}</b>: <b>{cab_leg}</b></div>".format(carr_leg=carr_leg, cab_leg=cab_leg), unsafe_allow_html=True)
+                    st.markdown("""
+                        <div style="background: #11151c; padding: 6px; border: 1px solid #30363d; border-radius: 0 0 8px 8px; margin-bottom: 8px; font-size: 11px; color: #00ffff;">
+                            Seleccionado en <b>{}</b>: <b>{}</b>
+                        </div>
+                    """.format(carr_leg, cab_leg), unsafe_allow_html=True)
             else:
-                # Dupleta o Tripleta estándar
                 cantidad_pasos = 2 if sub_dup_actual == "Dupleta" else 3
                 for paso in range(cantidad_pasos):
                     st.markdown(f"🔹 **Paso {paso + 1} de {cantidad_pasos}**")
@@ -2756,7 +2757,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if ampm_cier_m == "AM" and h_cier_m_val == 12: h_cm_24 = 0
 
                 dt_im_final = datetime.combine(f_ini_m, dtime(h_im_24, m_ini_m_val))
-                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cm_24:=m_cier_m_val))
+                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cier_m_val))
 
                 st.session_state.fechas_horas_inicio_modalidad_multiple[mod_mult_sel] = dt_im_final
                 st.session_state.fechas_horas_cierre_modalidad_multiple[mod_mult_sel] = dt_cm_final
