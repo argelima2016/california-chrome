@@ -13,9 +13,47 @@ from datetime import datetime, time as dtime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pypdf import PdfReader
 from supabase import create_client, Client
+import firebase_admin
+from firebase_admin import credentials, messaging
 
 # Configuración de pantalla completa optimizada para celulares
 st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺", initial_sidebar_state="collapsed")
+
+# --- INICIALIZACIÓN DE FIREBASE ADMIN (BACKEND) ---
+if not firebase_admin._apps:
+    try:
+        # Asegúrate de colocar la ruta correcta a tu archivo JSON de credenciales de Firebase Service Account
+        cred_path = "path/to/serviceAccountKey.json"
+        if os.path.exists(cred_path):
+            cred = credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(cred)
+        else:
+            # Alternativa si usas Streamlit Secrets para guardar el JSON de Firebase
+            firebase_json = st.secrets.get("FIREBASE_CREDENTIALS", None)
+            if firebase_json:
+                cred_dict = json.loads(firebase_json)
+                cred = credentials.Certificate(cred_dict)
+                firebase_admin.initialize_app(cred)
+    except Exception as e:
+        print("Error inicializando Firebase Admin:", e)
+
+def enviar_notificacion_push_firebase(fcm_token_destino, titulo, cuerpo):
+    if not firebase_admin._apps or not fcm_token_destino:
+        return False
+    try:
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title=titulo,
+                body=cuerpo,
+            ),
+            token=fcm_token_destino,
+        )
+        response = messaging.send(message)
+        print("Notificación push enviada con éxito:", response)
+        return True
+    except Exception as e:
+        print("Error enviando notificación push:", e)
+        return False
 
 # --- CREDENCIALES DE SUPABASE (SEGURIZADAS CON SECRETS) ---
 SUPABASE_URL = st.secrets.get("SUPABASE_URL", "https://qssnhvwdgxzwzkfusstf.supabase.co")
@@ -265,7 +303,7 @@ components.html(r"""
             Notification.requestPermission().then((permission) => {
                 if (permission === 'granted') {
                     console.log('Permiso de notificación concedido.');
-                    messaging.getToken({ vapidKey: 'TU_CLAVE_VAPID_AQUí' }).then((currentToken) => {
+                    messaging.getToken({ vapidKey: 'BDGoNAFevD5Lpno_jMjzbUGkUE8sN-TynspHaP1-M-Mbz1_iD6K4D16NADQ9dXpxDe-35SJIbhIp1pIoLnPPre4' }).then((currentToken) => {
                         if (currentToken) {
                             console.log('FCM Token:', currentToken);
                         } else {
