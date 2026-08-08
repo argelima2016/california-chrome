@@ -22,17 +22,19 @@ st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="�
 # --- INICIALIZACIÓN DE FIREBASE ADMIN (BACKEND) ---
 if not firebase_admin._apps:
     try:
-        # Asegúrate de colocar la ruta correcta a tu archivo JSON de credenciales de Firebase Service Account
-        cred_path = "path/to/serviceAccountKey.json"
-        if os.path.exists(cred_path):
-            cred = credentials.Certificate(cred_path)
+        firebase_json = st.secrets.get("FIREBASE_CREDENTIALS", None)
+        if firebase_json:
+            if isinstance(firebase_json, str):
+                cred_dict = json.loads(firebase_json)
+            else:
+                cred_dict = dict(firebase_json)
+            
+            cred = credentials.Certificate(cred_dict)
             firebase_admin.initialize_app(cred)
         else:
-            # Alternativa si usas Streamlit Secrets para guardar el JSON de Firebase
-            firebase_json = st.secrets.get("FIREBASE_CREDENTIALS", None)
-            if firebase_json:
-                cred_dict = json.loads(firebase_json)
-                cred = credentials.Certificate(cred_dict)
+            cred_path = "path/to/serviceAccountKey.json"
+            if os.path.exists(cred_path):
+                cred = credentials.Certificate(cred_path)
                 firebase_admin.initialize_app(cred)
     except Exception as e:
         print("Error inicializando Firebase Admin:", e)
@@ -2384,6 +2386,24 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     with tab1:
         st.markdown("### ⚙️ Controles Generales de la Jornada")
         
+        # --- SECCIÓN DE PRUEBA DE NOTIFICACIÓN PUSH ---
+        with st.container(border=True):
+            st.markdown("🔔 **Prueba de Notificación Push (Firebase)**")
+            token_prueba_input = st.text_input("FCM Token del Dispositivo Destino", placeholder="Pega aquí el token largo que sale en la consola del navegador")
+            titulo_prueba = st.text_input("Título", value="🐺 ¡Prueba WOLF!")
+            cuerpo_prueba = st.text_input("Mensaje", value="¡Las notificaciones push están funcionando!")
+            
+            if st.button("📤 Enviar Notificación de Prueba", type="primary", use_container_width=True):
+                if token_prueba_input:
+                    exito = enviar_notificacion_push_firebase(token_prueba_input.strip(), titulo_prueba, cuerpo_prueba)
+                    if exito:
+                        st.success("✅ ¡Notificación push enviada con éxito! Revisa tu pantalla o barra de notificaciones.")
+                    else:
+                        st.error("❌ Error al enviar. Revisa la consola del servidor para más detalles.")
+                else:
+                    st.warning("⚠️ Debes ingresar un token FCM válido.")
+        # ---------------------------------------------
+
         with st.container(border=True):
             st.markdown("👤 **Selector de Usuario Activo**")
             usuario_seleccionado_admin = st.selectbox(
@@ -2895,7 +2915,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                             st.session_state.cuentas[jug_r]['Abonos'] += mnt_r
                             rep['estado'] = "Aprobado (Abonado)"
                             guardar_estado_global()
-                            st.success(f"✅ ¡Pago de {formatear_bs(mnt_r)} abonado a {jug_r}!")
+                            st.success(f"✅ ¡Pago de {formatear_bs(mnt_r)} abonado al jugador {jug_r}!")
                             st.rerun()
 
         st.markdown("---")
