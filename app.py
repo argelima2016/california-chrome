@@ -1167,7 +1167,7 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }}, 400);
+                    }, 400);
                 }}, 8000);
             }}
         }})();
@@ -1910,14 +1910,42 @@ if menu_principal_opcion == "Dupletas":
             carreras_usadas = set()
 
             if sub_dup_actual == "POLLA HIPICA":
-                st.markdown("🎯 **Selección de Ejemplares (Modelo Bloque de Carreras con Grilla Numérica):**")
-                
+                # Estilo de tarjeta idéntico a la imagen adjunta (C8, C9, C10...)
+                st.markdown("""
+                <style>
+                .polla-card-box {
+                    background: #121e17;
+                    border: 1.5px solid #336148;
+                    border-radius: 10px;
+                    margin-bottom: 14px;
+                    overflow: hidden;
+                    box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+                }
+                .polla-card-title {
+                    background: #234734;
+                    color: #f1c40f;
+                    font-size: 13px;
+                    font-weight: 900;
+                    padding: 6px 12px;
+                    letter-spacing: 0.8px;
+                    border-bottom: 1px solid #336148;
+                }
+                .polla-card-content {
+                    padding: 10px;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+
                 for carr_leg in carreras_permitidas:
-                    st.markdown("""
-                        <div style="background: #1f3a2e; border: 1px solid #4e8a6d; border-radius: 8px 8px 0 0; padding: 6px 12px; font-weight: 900; color: #f1c40f; font-size: 14px; margin-top: 12px;">
-                            🏁 {}
-                        </div>
-                    """.format(carr_leg), unsafe_allow_html=True)
+                    match_c = re.search(r'\d+', carr_leg)
+                    num_c_str = match_c.group(0) if match_c else carr_leg
+                    titulo_carrera_box = f"C{num_c_str} ({carr_leg})"
+
+                    st.markdown(f"""
+                        <div class="polla-card-box">
+                            <div class="polla-card-title">🏁 {titulo_carrera_box}</div>
+                            <div class="polla-card-content">
+                    """, unsafe_allow_html=True)
 
                     retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
                     no_val_carr_t = st.session_state.get('ejemplares_no_valido', {}).get(carr_leg, [])
@@ -1932,21 +1960,24 @@ if menu_principal_opcion == "Dupletas":
                         validos_ini = [c for c in banco_cab_carr if c not in excluidos_carr_t]
                         st.session_state[k_sel_grid] = validos_ini[0] if validos_ini else banco_cab_carr[0]
 
-                    cols_grid = st.columns(min(6, len(banco_cab_carr)), gap="small")
-                    for idx_cb, cb_item in enumerate(banco_cab_carr):
-                        col_i = idx_cb % 6
-                        num_p = cb_item.split(" - ")[0]
-                        es_excluido = cb_item in excluidos_carr_t
-                        es_seleccionado = (st.session_state[k_sel_grid] == cb_item)
+                    # Grilla de botones numéricos divididos en filas de 7 ejemplares
+                    chunk_size = 7
+                    for i_chunk in range(0, len(banco_cab_carr), chunk_size):
+                        chunk_items = banco_cab_carr[i_chunk:i_chunk + chunk_size]
+                        cols_g = st.columns(len(chunk_items), gap="small")
+                        for idx_sub, cb_item in enumerate(chunk_items):
+                            num_p = cb_item.split(" - ")[0]
+                            es_excluido = cb_item in excluidos_carr_t
+                            es_seleccionado = (st.session_state[k_sel_grid] == cb_item)
 
-                        with cols_grid[col_i]:
-                            if es_excluido:
-                                st.button(f"❌ {num_p}", key=f"btn_g_{carr_leg}_{idx_cb}", disabled=True, use_container_width=True)
-                            else:
-                                btn_type = "primary" if es_seleccionado else "secondary"
-                                if st.button(f"{num_p}", key=f"btn_g_{carr_leg}_{idx_cb}", type=btn_type, use_container_width=True):
-                                    st.session_state[k_sel_grid] = cb_item
-                                    st.rerun()
+                            with cols_g[idx_sub]:
+                                if es_excluido:
+                                    st.button(f"❌ {num_p}", key=f"btn_g_{carr_leg}_{i_chunk}_{idx_sub}", disabled=True, use_container_width=True)
+                                else:
+                                    btn_type = "primary" if es_seleccionado else "secondary"
+                                    if st.button(f"{num_p}", key=f"btn_g_{carr_leg}_{i_chunk}_{idx_sub}", type=btn_type, use_container_width=True):
+                                        st.session_state[k_sel_grid] = cb_item
+                                        st.rerun()
 
                     cab_leg = st.session_state[k_sel_grid]
                     if cab_leg in excluidos_carr_t and banco_cab_carr:
@@ -1961,11 +1992,13 @@ if menu_principal_opcion == "Dupletas":
                             st.session_state[k_sel_grid] = cab_leg
 
                     seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
-                    st.markdown("""
-                        <div style="background: #11151c; padding: 6px; border: 1px solid #30363d; border-radius: 0 0 8px 8px; margin-bottom: 8px; font-size: 11px; color: #00ffff;">
-                            Seleccionado en <b>{}</b>: <b>{}</b>
+                    st.markdown(f"""
+                            </div>
+                            <div style="background: #0b130e; padding: 5px 12px; border-top: 1px solid #336148; font-size: 11px; color: #00ffff;">
+                                Seleccionado: <b>{cab_leg}</b>
+                            </div>
                         </div>
-                    """.format(carr_leg, cab_leg), unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
             else:
                 cantidad_pasos = 2 if sub_dup_actual == "Dupleta" else 3
                 for paso in range(cantidad_pasos):
@@ -2335,7 +2368,7 @@ elif menu_principal_opcion == "Cuentas":
         st.markdown("📋 **3. Mis Reportes Enviados**")
         mis_reportes = [r for r in st.session_state.reportes_pago if r['jugador'] == jugador_actual]
         if not mis_reportes:
-            st.info("ℹ️ No hay reportes de pago todavía.")
+            st.info("ℹ️ No has enviado reportes de pago todavía.")
         else:
             for rep in reversed(mis_reportes):
                 st.markdown(f"🔹 *{rep['fecha']}* | **{formatear_bs(rep['monto'])}** | Banco: `{rep['banco']}` | Ref: `{rep['referencia']}` | 📌 `{rep['estado']}`")
