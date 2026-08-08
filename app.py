@@ -165,7 +165,8 @@ def cargar_estado_global(forzar_recarga=False):
         'config_montos_especiales': {"Dupleta": 500.0, "Tripleta": 500.0, "POLLA HIPICA": 1000.0},
         'dupleta_bloqueada': False,
         'carreras_activas_remate': [],
-        'carreras_por_modalidad': {"Adelantados": [], "Ciegos": [], "En Vivo": []},
+        'carreras_por_modalidad': {"Adelantados": [], "Ciegos": ["1V", "6V"], "En Vivo": []},
+        'mapeo_ciegos': {"1V": "", "6V": ""},
         'total_carreras_semana': 10,
         'porcentaje_casa': 30,
         'url_video_en_vivo': "",
@@ -228,7 +229,7 @@ def guardar_estado_global():
         'estado_conteo_carrera_modalidad', 'alertas_reproducidas', 'cuentas', 'historial_jugadas', 'ganancia_casa',
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
-        'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
+        'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad', 'mapeo_ciegos',
         'total_carreras_semana', 'porcentaje_casa', 'url_video_en_vivo', 'imagenes_carreras', 'admin_tab_seleccionada',
         'datos_pago_movil', 'reportes_pago', 'resultados_oficiales_polla'
     ]
@@ -433,13 +434,32 @@ if not st.session_state.remates:
             "hora_cierre_real": "No registrada"
         }
 
-lista_carreras_disponibles = list(st.session_state.remates.keys())
+# Asegurar 1V y 6V por defecto para Remates Ciegos con 14 ejemplares
+for ciego_key in ["1V", "6V"]:
+    if ciego_key not in st.session_state.remates:
+        st.session_state.banco_caballos_por_carrera[ciego_key] = [f"{j} - Ejemplar {j}" for j in range(1, 15)]
+        st.session_state.remates[ciego_key] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 15)}
+        st.session_state.detalles_carreras[ciego_key] = {
+            "condicion": f"Remate Ciego {ciego_key}", 
+            "distancia": "1200 mts", 
+            "hora": "02:00 PM", 
+            "monto_fijo_ciego": 500.0, 
+            "incentivo_adelantados": 0.0,
+            "incentivo_ciegos": 0.0,
+            "incentivo_envivo": 0.0,
+            "hora_cierre_real": "No registrada"
+        }
+
+if "1V" not in st.session_state.carreras_por_modalidad.get("Ciegos", []):
+    st.session_state.carreras_por_modalidad["Ciegos"] = ["1V", "6V"]
+
+lista_carreras_disponibles = [c for c in st.session_state.remates.keys() if c not in ["1V", "6V"]]
 
 # --- REGLA: AUTOMÁTICAMENTE LAS ÚLTIMAS 6 CARRERAS CONSECUTIVAS PARA POLLA HÍPICA ---
-total_carrs = st.session_state.get('total_carreras_semana', len(lista_carreras_disponibles))
+total_carrs = st.session_state.get('total_carreras_semana', 10)
 inicio_polla_idx = max(1, total_carrs - 5)
 ultimas_6_carreras = [f"Carrera {i}" for i in range(inicio_polla_idx, total_carrs + 1)]
-st.session_state.carreras_habilitadas_polla = [c for c in ultimas_6_carreras if c in lista_carreras_disponibles]
+st.session_state.carreras_habilitadas_polla = [c for c in ultimas_6_carreras if f"Carrera {i}" in st.session_state.remates]
 
 ahora_dt = obtener_hora_venezuela_local()
 
@@ -800,7 +820,7 @@ else:
     color_balance = "#58a6ff"
 
 # --- CABECERA SUPERIOR MODERNA ---
-estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in lista_carreras_disponibles) and lista_carreras_disponibles else "abiertos"
+estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in list(st.session_state.remates.keys())) and list(st.session_state.remates.keys()) else "abiertos"
 led_clase_css = "led-rojo" if estado_global_remate == "cerrados" else "led-verde"
 
 col_h_izq, col_h_der = st.columns([1, 1], gap="small")
@@ -834,13 +854,10 @@ st.markdown(header_html, unsafe_allow_html=True)
 
 def obtener_abreviatura_carrera(nombre_carrera, modo_actual=""):
     if modo_actual == "Ciegos":
-        carreras_ciegas = st.session_state.carreras_por_modalidad.get("Ciegos", [])
-        if len(carreras_ciegas) >= 2:
-            if nombre_carrera == carreras_ciegas[0]:
-                return "1V"
-            elif nombre_carrera == carreras_ciegas[1]:
-                return "6V"
-        
+        if nombre_carrera == "1V":
+            return "1V"
+        elif nombre_carrera == "6V":
+            return "6V"
     match = re.search(r'\d+', nombre_carrera)
     if match:
         return f"C{match.group(0)}"
@@ -1021,9 +1038,8 @@ carreras_adelantados = [c for c in st.session_state.carreras_por_modalidad.get("
 if carreras_adelantados:
     elementos_carrusel_info.append("ADELANTADOS: " + " | ".join(carreras_adelantados))
 
-carreras_ciegos = [c for c in st.session_state.carreras_por_modalidad.get("Ciegos", []) if c in lista_carreras_disponibles]
-if carreras_ciegos:
-    elementos_carrusel_info.append("CIEGOS: " + " | ".join(carreras_ciegos))
+carreras_ciegos = ["1V", "6V"]
+elementos_carrusel_info.append("CIEGOS: 1V | 6V")
 
 carreras_envivo = [c for c in st.session_state.carreras_por_modalidad.get("En Vivo", []) if c in lista_carreras_disponibles]
 if carreras_envivo:
@@ -1185,24 +1201,20 @@ def renderizar_tiempo_real_universal():
         st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
         modo_actual_remate = st.session_state.sub_remate_opcion
 
-        if not lista_carreras_disponibles:
+        if not list(st.session_state.remates.keys()):
             st.warning("⚠️ No hay carreras cargadas en el sistema.")
         else:
-            carreras_asignadas_admin = st.session_state.carreras_por_modalidad.get(modo_actual_remate, [])
-            
             if modo_actual_remate == "Ciegos":
-                carreras_filtradas_visibles = [c for c in carreras_asignadas_admin if c in lista_carreras_disponibles][:2]
+                carreras_filtradas_visibles = ["1V", "6V"]
             else:
+                carreras_asignadas_admin = st.session_state.carreras_por_modalidad.get(modo_actual_remate, [])
                 carreras_filtradas_visibles = [
                     c for c in lista_carreras_disponibles 
                     if c in carreras_asignadas_admin and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
                 ]
             
             if not carreras_filtradas_visibles:
-                if modo_actual_remate == "Ciegos":
-                    st.info("ℹ️ El Remate Ciego requiere exactamente dos carreras asignadas en la Zona Admin (1V y 6V).")
-                else:
-                    st.info(f"ℹ️ No hay carreras asignadas o habilitadas para la modalidad **{modo_actual_remate}**. Configúralas en Zona Admin.")
+                st.info(f"ℹ️ No hay carreras asignadas o habilitadas para la modalidad **{modo_actual_remate}**. Configúralas en Zona Admin.")
             else:
                 if "carrera_remate_activa_seleccionada" not in st.session_state or st.session_state["carrera_remate_activa_seleccionada"] not in carreras_filtradas_visibles:
                     carr_activa = carreras_filtradas_visibles[0]
@@ -1225,6 +1237,39 @@ def renderizar_tiempo_real_universal():
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
 
+                # Si es Remate Ciego, verificar mapeo y reglas de < 14 / > 14
+                carrera_real_mapeada = carr_activa
+                if modo_actual_remate == "Ciegos":
+                    mapeo = st.session_state.get('mapeo_ciegos', {})
+                    carrera_real_mapeada = mapeo.get(carr_activa, "")
+                    if carrera_real_mapeada and carrera_real_mapeada in st.session_state.banco_caballos_por_carrera:
+                        banco_real = st.session_state.banco_caballos_por_carrera[carrera_real_mapeada]
+                        total_real = len(banco_real)
+                        monto_fijo_ciego = st.session_state.detalles_carreras.get(carr_activa, {}).get('monto_fijo_ciego', 500.0)
+                        
+                        # REGLA 1: MENOS DE 14 -> ANULAR APUESTAS
+                        if total_real < 14:
+                            st.error(f"⚠️ La carrera mapeada ({carrera_real_mapeada}) tiene {total_real} ejemplares (< 14). ¡Las apuestas de este Remate Ciego han sido ANULADAS!")
+                            for cb_k, cb_inf in st.session_state.remates[carr_activa].items():
+                                if cb_inf['jugador'] != "Sin Postor" and cb_inf['jugador'] != "CASA":
+                                    jug_ant = cb_inf['jugador']
+                                    mnt_ant = cb_inf['monto']
+                                    if jug_ant in st.session_state.cuentas:
+                                        st.session_state.cuentas[jug_ant]['Pujas'] = max(0.0, st.session_state.cuentas[jug_ant]['Pujas'] - mnt_ant)
+                                    st.session_state.remates[carr_activa][cb_k] = {"jugador": "Sin Postor", "monto": 0.0}
+                            guardar_estado_global()
+                        else:
+                            # Sincronizar los 14 primeros ejemplares o asignar excedentes a CASA
+                            for idx_h, caballo_real in enumerate(banco_real):
+                                num_h = idx_h + 1
+                                slot_ciego = f"{num_h} - Ejemplar {num_h}"
+                                if slot_ciego in st.session_state.remates[carr_activa]:
+                                    # REGLA 2: MAS DE 14 -> ASIGNAR A LA CASA
+                                    if num_h > 14:
+                                        actual_postor = st.session_state.remates[carr_activa][slot_ciego]['jugador']
+                                        if actual_postor == "Sin Postor":
+                                            st.session_state.remates[carr_activa][slot_ciego] = {"jugador": "CASA", "monto": monto_fijo_ciego}
+
                 if carr_activa in st.session_state.imagenes_carreras:
                     try:
                         img_url_val = st.session_state.imagenes_carreras[carr_activa]
@@ -1237,10 +1282,11 @@ def renderizar_tiempo_real_universal():
                 carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
                 estado_icono = "🔴" if carrera_cerrada else "🟢"
                 
+                info_mapeo_txt = f" (Mapeada a: {carrera_real_mapeada})" if (modo_actual_remate == "Ciegos" and carrera_real_mapeada) else ""
                 st.markdown(f"""
                     <div style="font-size: 13px; font-weight: 800; color: #f0f6fc; display: flex; align-items: center; gap: 6px; margin-top: 6px; margin-bottom: 6px;">
                         <span>{estado_icono}</span>
-                        <span>{carr_activa}</span>
+                        <span>{carr_activa}{info_mapeo_txt}</span>
                         <span style="font-size: 10px; font-weight: 600; color: #8b949e; background: #161b22; padding: 1px 5px; border-radius: 4px; border: 1px solid #30363d;">{modo_actual_remate}</span>
                     </div>
                 """, unsafe_allow_html=True)
@@ -1721,7 +1767,7 @@ if menu_principal_opcion == "Dupletas":
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
     else: # POLLA HIPICA
         pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
-        total_c = st.session_state.get('total_carreras_semana', len(lista_carreras_disponibles))
+        total_c = st.session_state.get('total_carreras_semana', 10)
         inicio_p = max(1, total_c - 5)
         carreras_ult6 = [f"Carrera {i}" for i in range(inicio_p, total_c + 1)]
         carreras_permitidas = [c for c in carreras_ult6 if c in lista_carreras_disponibles]
@@ -2332,6 +2378,24 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 guardar_estado_global()
 
         with st.container(border=True):
+            st.markdown("🙈 **Mapeo de Remates Ciegos (1V y 6V)**")
+            carreras_disp_mapeo = list(st.session_state.banco_caballos_por_carrera.keys())
+            carreras_disp_mapeo = [c for c in carreras_disp_mapeo if c not in ["1V", "6V"]]
+            
+            if 'mapeo_ciegos' not in st.session_state:
+                st.session_state.mapeo_ciegos = {"1V": "", "6V": ""}
+
+            map_1v = st.selectbox("Asignar Carrera Real a 1V", options=[""] + carreras_disp_mapeo, index=(carreras_disp_mapeo.index(st.session_state.mapeo_ciegos.get("1V")) + 1) if st.session_state.mapeo_ciegos.get("1V") in carreras_disp_mapeo else 0, key="sel_map_1v")
+            map_6v = st.selectbox("Asignar Carrera Real a 6V", options=[""] + carreras_disp_mapeo, index=(carreras_disp_mapeo.index(st.session_state.mapeo_ciegos.get("6V")) + 1) if st.session_state.mapeo_ciegos.get("6V") in carreras_disp_mapeo else 0, key="sel_map_6v")
+
+            if st.button("💾 Guardar Mapeo de Ciegos", key="btn_save_map_ciegos", type="primary"):
+                st.session_state.mapeo_ciegos["1V"] = map_1v
+                st.session_state.mapeo_ciegos["6V"] = map_6v
+                guardar_estado_global()
+                st.toast("✅ ¡Mapeo de Remates Ciegos guardado!")
+                st.rerun()
+
+        with st.container(border=True):
             st.markdown("🔒 **Estado de Dupletas y Polla Hípica**")
             if st.session_state.dupleta_bloqueada:
                 st.markdown("<p style='color: #ff4757; font-weight: bold;'>🔴 ESTADO: BLOQUEADAS</p>", unsafe_allow_html=True)
@@ -2348,7 +2412,8 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
         with st.container(border=True):
             st.markdown("🏁 **Cierre y Liquidación Manual de Remates**")
-            carr_seleccionada_liq = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="admin_liq_sel_carrera")
+            todas_carrs_liq = list(st.session_state.remates.keys())
+            carr_seleccionada_liq = st.selectbox("Seleccionar Carrera", todas_carrs_liq, key="admin_liq_sel_carrera")
             c_cerrada_actual = st.session_state.carreras_cerradas_remate.get(carr_seleccionada_liq, False)
             
             if not c_cerrada_actual:
@@ -2454,6 +2519,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         with st.container(border=True):
             st.markdown("⚡ **Panel Didáctico: Carreras Activas para Remate General**")
             carreras_disponibles_todas = list(st.session_state.remates.keys())
+            carreras_disponibles_todas = [c for c in carreras_disponibles_todas if c not in ["1V", "6V"]]
             if not carreras_disponibles_todas:
                 st.warning("⚠️ No hay carreras en el banco.")
             else:
@@ -2479,28 +2545,27 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         st.markdown("---")
         with st.container(border=True):
             st.markdown("🎯 **Asignación Independiente de Carreras por Modalidad**")
-            carreras_existentes = list(st.session_state.remates.keys())
+            carreras_existentes = list(st.session_state.banco_caballos_por_carrera.keys())
+            carreras_existentes = [c for c in carreras_existentes if c not in ["1V", "6V"]]
             
             modalidades_dict = st.session_state.carreras_por_modalidad
             
             def_adel = [c for c in modalidades_dict.get("Adelantados", []) if c in carreras_existentes]
-            def_ciego = [c for c in modalidades_dict.get("Ciegos", []) if c in carreras_existentes]
             def_envivo = [c for c in modalidades_dict.get("En Vivo", []) if c in carreras_existentes]
 
             sel_adel = st.multiselect("Carreras para Adelantados", options=carreras_existentes, default=def_adel, key="multiselect_carr_adelantados")
-            sel_ciego = st.multiselect("Carreras para Ciegos (Seleccione exactamente 2 para 1V y 6V)", options=carreras_existentes, default=def_ciego, key="multiselect_carr_ciegos")
             sel_envivo = st.multiselect("Carreras para 🔴 En Vivo", options=carreras_existentes, default=def_envivo, key="multiselect_carr_envivo")
 
             if st.button("💾 Guardar Modalidades Independientes", key="btn_save_mod_independientes", use_container_width=True, type="primary"):
                 st.session_state.carreras_por_modalidad["Adelantados"] = sel_adel
-                st.session_state.carreras_por_modalidad["Ciegos"] = sel_ciego
                 st.session_state.carreras_por_modalidad["En Vivo"] = sel_envivo
                 guardar_estado_global()
                 st.toast("✅ ¡Modalidades guardadas correctamente!")
                 st.rerun()
 
         st.markdown("---")
-        carr_banco_sel = st.selectbox("Seleccionar Carrera para Editar", lista_carreras_disponibles, key="adm_banco_sel_carrera")
+        todas_carreras_banco = list(st.session_state.banco_caballos_por_carrera.keys())
+        carr_banco_sel = st.selectbox("Seleccionar Carrera para Editar", todas_carreras_banco, key="adm_banco_sel_carrera")
         
         if carr_banco_sel not in st.session_state.banco_caballos_por_carrera:
             st.session_state.banco_caballos_por_carrera[carr_banco_sel] = []
@@ -2723,7 +2788,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if ampm_cier_m == "AM" and h_cier_m_val == 12: h_cm_24 = 0
 
                 dt_im_final = datetime.combine(f_ini_m, dtime(h_im_24, m_ini_m_val))
-                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cier_m_val))
+                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cm_24:=m_cier_m_val))
 
                 st.session_state.fechas_horas_inicio_modalidad_multiple[mod_mult_sel] = dt_im_final
                 st.session_state.fechas_horas_cierre_modalidad_multiple[mod_mult_sel] = dt_cm_final
@@ -2734,7 +2799,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
         st.markdown("---")
         with st.container(border=True):
             st.markdown("🏇 **Carreras Habilitadas (Dupleta y Tripleta)**")
-            carr_disp_all = list(st.session_state.remates.keys())
+            carr_disp_all = [c for c in list(st.session_state.remates.keys()) if c not in ["1V", "6V"]]
             
             def_dup = [c for c in st.session_state.carreras_habilitadas_dupleta if c in carr_disp_all]
             def_trip = [c for c in st.session_state.carreras_habilitadas_tripleta if c in carr_disp_all]
@@ -2866,7 +2931,8 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
     with tab7:
         st.markdown("### 🖼️ Imágenes por Carrera")
-        carr_img_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="adm_img_sel_carr")
+        todas_carrs_img = list(st.session_state.remates.keys())
+        carr_img_sel = st.selectbox("Seleccionar Carrera", todas_carrs_img, key="adm_img_sel_carr")
         
         with st.container(border=True):
             st.markdown("📸 **Imagen de la Carrera (Optimizada para la Red)**")
