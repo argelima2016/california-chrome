@@ -463,7 +463,7 @@ st.session_state.carreras_habilitadas_polla = [c for c in ultimas_6_carreras if 
 
 ahora_dt = obtener_hora_venezuela_local()
 
-# --- ESTILOS CSS GENERALES Y OCULTAR BARRA LATERAL ---
+# --- ESTILOS CSS GENERALES Y DISEÑO MEJORADO DE POTES ---
 st.markdown("""
     <style>
     * {
@@ -584,54 +584,70 @@ st.markdown("""
         word-break: break-word;
     }
     
-    .incentivo-llamativo {
-        background: linear-gradient(135deg, #1f1c2c 0%, #923d41 100%);
-        border: 2px dashed #00ffff;
-        padding: 12px 14px;
+    /* DISEÑO NUEVO Y MEJORADO PARA POTE E INCENTIVO */
+    .dashboard-pote-card {
+        background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
+        border: 2px solid #f1c40f;
         border-radius: 12px;
+        padding: 12px 14px;
         text-align: center;
         margin: 8px 0;
-        box-shadow: 0px 0px 18px rgba(0, 255, 255, 0.4);
+        box-shadow: 0px 4px 20px rgba(241, 196, 15, 0.25);
         width: 100%;
         box-sizing: border-box;
     }
-    .incentivo-llamativo-monto {
-        color: #ffffff;
-        font-size: clamp(18px, 5vw, 24px);
+    .dp-header {
+        color: #00ffff;
+        font-size: 11px;
         font-weight: 900;
-        letter-spacing: 0.8px;
-        text-shadow: 2px 2px 6px #000000, 0 0 12px rgba(0, 255, 255, 0.8);
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+    }
+    .dp-total-value {
+        color: #f1c40f;
+        font-size: clamp(20px, 5.5vw, 28px);
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        text-shadow: 2px 2px 8px #000000, 0 0 15px rgba(241, 196, 15, 0.8);
+        margin-bottom: 10px;
+        word-break: break-word;
+    }
+    .dp-grid {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border-top: 1px dashed rgba(241, 196, 15, 0.4);
+        padding-top: 8px;
+        gap: 8px;
+    }
+    .dp-item {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        align-items: center;
+    }
+    .dp-divider {
+        width: 1px;
+        height: 26px;
+        background-color: rgba(241, 196, 15, 0.4);
+    }
+    .dp-label {
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #8b949e;
+        margin-bottom: 2px;
+        letter-spacing: 0.5px;
+    }
+    .dp-val {
+        font-size: clamp(13px, 3.5vw, 16px);
+        font-weight: 900;
+        text-shadow: 1px 1px 4px #000000;
         word-break: break-word;
     }
 
-    .pote-cyber-card {
-        background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
-        border: 2px solid #f1c40f;
-        border-radius: 10px;
-        padding: 10px 12px;
-        text-align: center;
-        margin: 4px 0;
-        box-shadow: 0px 0px 15px rgba(241, 196, 15, 0.3);
-        width: 100%;
-        box-sizing: border-box;
-    }
-    .pote-cyber-title {
-        color: #00ffff;
-        font-size: 10px;
-        font-weight: 900;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        margin-bottom: 3px;
-        text-shadow: 0 0 6px rgba(0, 255, 255, 0.6);
-    }
-    .pote-cyber-value {
-        color: #f1c40f;
-        font-size: clamp(15px, 4vw, 20px);
-        font-weight: 900;
-        text-shadow: 2px 2px 5px #000000, 0 0 10px rgba(241, 196, 15, 0.8);
-        word-break: break-word;
-    }
-    
     @keyframes parpadeoGanador {
         0% {{ transform: scale(1); box-shadow: 0 0 12px #f1c40f, inset 0 0 12px #f1c40f; }}
         50% {{ transform: scale(1.02); box-shadow: 0 0 25px #00ffff, inset 0 0 18px #00ffff; }}
@@ -1472,31 +1488,24 @@ def renderizar_tiempo_real_universal():
 
                 premio_total_calculado = pote_neto_base + incentivo_actual
 
-                # --- 1. PREMIO TOTAL LLAMATIVO (ARRIBA) ---
-                if incentivo_actual > 0 or premio_total_calculado > 0:
-                    st.markdown(f"""
-                        <div class="incentivo-llamativo">
-                            <div style="font-size: 11px; font-weight: 900; color: #00ffff; text-transform: uppercase; margin-bottom: 3px; letter-spacing: 1px;">🎁 PREMIO TOTAL (INCLUYE INCENTIVO)</div>
-                            <div class="incentivo-llamativo-monto">{formatear_bs(premio_total_calculado)}</div>
+                # --- NUEVA TARJETA UNIFICADA Y MODERNA DE POTES ---
+                st.markdown(f"""
+                    <div class="dashboard-pote-card">
+                        <div class="dp-header">🏆 PREMIO TOTAL (INCLUYE INCENTIVO)</div>
+                        <div class="dp-total-value">{formatear_bs(premio_total_calculado)}</div>
+                        <div class="dp-grid">
+                            <div class="dp-item">
+                                <span class="dp-label">💰 POTE ({carr_activa})</span>
+                                <span class="dp-val" style="color: #f1c40f;">{formatear_bs(total_pote)}</span>
+                            </div>
+                            <div class="dp-divider"></div>
+                            <div class="dp-item">
+                                <span class="dp-label">🎁 INCENTIVO</span>
+                                <span class="dp-val" style="color: #2ed573;">{formatear_bs(incentivo_actual)}</span>
+                            </div>
                         </div>
-                    """, unsafe_allow_html=True)
-
-                # --- 2. INCENTIVO (IZQUIERDA) Y POTE (DERECHA) ---
-                col_m1, col_m2 = st.columns(2, gap="small")
-                with col_m1:
-                    st.markdown(f"""
-                        <div class="pote-cyber-card">
-                            <div class="pote-cyber-title" style="color: #2ed573;">🎁 INCENTIVO</div>
-                            <div class="pote-cyber-value" style="color: #2ed573;">{formatear_bs(incentivo_actual)}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                with col_m2:
-                    st.markdown(f"""
-                        <div class="pote-cyber-card">
-                            <div class="pote-cyber-title">💰 POTE ({carr_activa})</div>
-                            <div class="pote-cyber-value">{formatear_bs(total_pote)}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    </div>
+                """, unsafe_allow_html=True)
 
                 if carr_activa in st.session_state.historial_ganadores:
                     info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
