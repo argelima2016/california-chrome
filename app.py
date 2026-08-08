@@ -8,6 +8,7 @@ import requests
 import io
 import json
 import time
+import threading
 from bs4 import BeautifulSoup
 from datetime import datetime, time as dtime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -35,6 +36,42 @@ supabase: Client = init_supabase()
 
 if not supabase:
     st.error("⚠️ **ADVERTENCIA CRÍTICA:** No hay conexión con Supabase. Los datos entre la PC y los teléfonos no se sincronizarán. Verifica tus Secrets en Streamlit Cloud o la creación de la tabla `app_state` en Supabase.")
+
+# --- SUBSCRIPCIÓN A SUPABASE REALTIME (WEBSOCKETS) ---
+def configurar_realtime_supabase():
+    if not supabase:
+        return
+    try:
+        def handle_postgres_changes(payload):
+            new_data = payload.get("new", {})
+            if isinstance(new_data, dict) and "data" in new_data:
+                remote_ts = new_data["data"].get("_timestamp", 0.0)
+                local_ts = st.session_state.get("_local_timestamp", 0.0)
+                if remote_ts > local_ts:
+                    st.session_state["_local_timestamp"] = remote_ts
+                    st.rerun()
+
+        channel = supabase.channel("public:app_state")
+        channel.on(
+            "postgres_changes",
+            {
+                "event": "UPDATE",
+                "schema": "public",
+                "table": "app_state",
+                "filter": "id=eq.1"
+            },
+            handle_postgres_changes
+        )
+        channel.subscribe()
+    except Exception as e:
+        print("Error configurando Supabase Realtime:", e)
+
+@st.cache_resource
+def iniciar_escucha_websocket():
+    hilo = threading.Thread(target=configurar_realtime_supabase, daemon=True)
+    hilo.start()
+
+iniciar_escucha_websocket()
 
 # --- CREDENCIALES Y CONFIGURACIÓN DE TELEGRAM ---
 TELEGRAM_BOT_TOKEN = st.secrets.get("TELEGRAM_BOT_TOKEN", "8969428136:AAFRhNzoAFB8TVAXUp2hnjffzw1gFPCyyrY")
@@ -222,8 +259,8 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- VIGILANTE GLOBAL DE SINCRONIZACIÓN OPTIMIZADO (4 SEGUNDOS PARA EVITAR PARPADEOS) ---
-@st.fragment(run_every=4.0)
+# --- VIGILANTE DE RESPALDO (CADA 8 SEGUNDOS) ---
+@st.fragment(run_every=8.0)
 def vigilante_sincronizacion_global():
     if supabase:
         try:
@@ -576,9 +613,9 @@ st.markdown("""
     }
     
     @keyframes parpadeoGanador {
-        0% { transform: scale(1); box-shadow: 0 0 12px #f1c40f, inset 0 0 12px #f1c40f; }
-        50% { transform: scale(1.02); box-shadow: 0 0 25px #00ffff, inset 0 0 18px #00ffff; }
-        100% { transform: scale(1); box-shadow: 0 0 12px #f1c40f, inset 0 0 12px #f1c40f; }
+        0% {{ transform: scale(1); box-shadow: 0 0 12px #f1c40f, inset 0 0 12px #f1c40f; }}
+        50% {{ transform: scale(1.02); box-shadow: 0 0 25px #00ffff, inset 0 0 18px #00ffff; }}
+        100% {{ transform: scale(1); box-shadow: 0 0 12px #f1c40f, inset 0 0 12px #f1c40f; }}
     }
     .ganador-banner-epic {
         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
@@ -711,9 +748,9 @@ st.markdown("""
     }
     
     @keyframes parpadeoLed {
-        0% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.4; transform: scale(0.9); }
-        100% { opacity: 1; transform: scale(1); }
+        0% {{ opacity: 1; transform: scale(1); }}
+        50% {{ opacity: 0.4; transform: scale(0.9); }}
+        100% {{ opacity: 1; transform: scale(1); }}
     }
     .led-estado {
         width: 8px;
@@ -1104,7 +1141,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (OPTIMIZADO PARA EVITAR PARPADEOS)
+# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL
 # =========================================================================
 @st.fragment(run_every=2.0)
 def renderizar_tiempo_real_universal():
@@ -2256,7 +2293,7 @@ elif menu_principal_opcion == "Cuentas":
             st.info("ℹ️ No hay tickets múltiples registrados.")
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR (CON TODOS LOS CONTROLES Y BASE DE DATOS)
+# 4. ZONA DE ADMINISTRADOR
 # =========================================================================
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Panel de Configuración y Administración</div>", unsafe_allow_html=True)
