@@ -240,7 +240,7 @@ def vigilante_sincronizacion_global():
 vigilante_sincronizacion_global()
 
 # --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ, ALERTAS MÓVILES Y RESPONSIVIDAD MÓVIL ---
-components.html("""
+components.html(r"""
     <script>
         let audioCtxGlobal = null;
 
@@ -1167,7 +1167,7 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }}, 400);
+                    }, 400);
                 }}, 8000);
             }}
         }})();
@@ -1909,59 +1909,89 @@ if menu_principal_opcion == "Dupletas":
             valido_legs = True
             carreras_usadas = set()
 
-            cantidad_pasos = 2 if sub_dup_actual == "Dupleta" else (3 if sub_dup_actual == "Tripleta" else len(carreras_permitidas))
-
-            for paso in range(cantidad_pasos):
-                st.markdown(f"🔹 **Paso {paso + 1} de {cantidad_pasos}**")
+            if sub_dup_actual == "POLLA HIPICA":
+                # --- MODELO VISUAL IDÉNTICO A LA IMAGEN PARA POLLA HÍPICA ---
+                st.markdown("🎯 **Selección de Ejemplares (Modelo Bloque de Carreras con Grilla Numérica):**")
                 
-                carr_leg = carreras_permitidas[paso % len(carreras_permitidas)]
-                st.markdown(f"🏁 **Carrera:** `{carr_leg}`")
-                
-                retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
-                no_val_carr_t = st.session_state.get('ejemplares_no_valido', {}).get(carr_leg, [])
-                excluidos_carr_t = set(retirados_carr_t) | set(no_val_carr_t)
+                for carr_leg in carreras_permitidas:
+                    st.markdown(f"""
+                        <div style="background: #1f3a2e; border: 1px solid #4e8a6d; border-radius: 8px 8px 0 0; padding: 6px 12px; font-weight: 900; color: #f1c40f; font-size: 14px; margin-top: 12px;">
+                            🏁 {carr_leg}
+                        </div>
+                    """, unsafe_allow_html=True)
 
-                banco_cab_carr = st.session_state.banco_caballos_por_carrera.get(carr_leg, [])
-                caballos_in_carr = [c for c in banco_cab_carr if c not in excluidos_carr_t]
-                if not caballos_in_carr:
-                    caballos_in_carr = banco_cab_carr if banco_cab_carr else ["1 - Ejemplar 1"]
+                    retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
+                    no_val_carr_t = st.session_state.get('ejemplares_no_valido', {}).get(carr_leg, [])
+                    excluidos_carr_t = set(retirados_carr_t) | set(no_val_carr_t)
 
-                st.markdown("🐎 **Selecciona tu ejemplar (Modelo Grilla Visual):**")
-                k_sel_polla_grid = f"sel_grid_{sub_dup_actual}_{carr_leg}_{paso}"
-                if k_sel_polla_grid not in st.session_state or st.session_state[k_sel_polla_grid] not in caballos_in_carr:
-                    st.session_state[k_sel_polla_grid] = caballos_in_carr[0]
+                    banco_cab_carr = st.session_state.banco_caballos_por_carrera.get(carr_leg, [])
+                    if not banco_cab_carr:
+                        banco_cab_carr = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
 
-                cols_g = st.columns(min(3, len(caballos_in_carr)), gap="small")
-                for idx_cb_g, cb_g_item in enumerate(caballos_in_carr):
-                    cg_idx = idx_cb_g % len(cols_g)
-                    num_parte_g = cb_g_item.split(" - ")[0]
-                    nombre_corto_g = cb_g_item.split(" - ")[1] if " - " in cb_g_item else cb_g_item
-                    es_seleccionado_grid = (st.session_state[k_sel_polla_grid] == cb_g_item)
+                    k_sel_grid = f"grid_polla_{carr_leg}"
+                    if k_sel_grid not in st.session_state or st.session_state[k_sel_grid] not in banco_cab_carr:
+                        validos_ini = [c for c in banco_cab_carr if c not in excluidos_carr_t]
+                        st.session_state[k_sel_grid] = validos_ini[0] if validos_ini else banco_cab_carr[0]
+
+                    # Grilla de botones numéricos estilo la imagen adjunta
+                    cols_grid = st.columns(min(6, len(banco_cab_carr)), gap="small")
+                    for idx_cb, cb_item in enumerate(banco_cab_carr):
+                        col_i = idx_cb % 6
+                        num_p = cb_item.split(" - ")[0]
+                        es_excluido = cb_item in excluidos_carr_t
+                        es_seleccionado = (st.session_state[k_sel_grid] == cb_item)
+
+                        with cols_grid[col_i]:
+                            if es_excluido:
+                                st.button(f"❌ {num_p}", key=f"btn_g_{carr_leg}_{idx_cb}", disabled=True, use_container_width=True)
+                            else:
+                                btn_type = "primary" if es_seleccionado else "secondary"
+                                if st.button(f"{num_p}", key=f"btn_g_{carr_leg}_{idx_cb}", type=btn_type, use_container_width=True):
+                                    st.session_state[k_sel_grid] = cb_item
+                                    st.rerun()
+
+                    cab_leg = st.session_state[k_sel_grid]
+                    if cab_leg in excluidos_carr_t and banco_cab_carr:
+                        idx_ret = banco_cab_carr.index(cab_leg) if cab_leg in banco_cab_carr else 0
+                        siguiente_cab = None
+                        for siguiente_c in banco_cab_carr[idx_ret + 1:] + banco_cab_carr[:idx_ret]:
+                            if siguiente_c not in excluidos_carr_t:
+                                siguiente_cab = siguiente_c
+                                break
+                        if siguiente_cab:
+                            cab_leg = siguiente_cab
+                            st.session_state[k_sel_grid] = cab_leg
+
+                    seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
+                    st.markdown("<div style='background: #11151c; padding: 6px; border: 1px solid #30363d; border-radius: 0 0 8px 8px; margin-bottom: 8px; font-size: 11px; color: #00ffff;'>Seleccionado en <b>{carr_leg}</b>: <b>{cab_leg}</b></div>".format(carr_leg=carr_leg, cab_leg=cab_leg), unsafe_allow_html=True)
+            else:
+                # Dupleta o Tripleta estándar
+                cantidad_pasos = 2 if sub_dup_actual == "Dupleta" else 3
+                for paso in range(cantidad_pasos):
+                    st.markdown(f"🔹 **Paso {paso + 1} de {cantidad_pasos}**")
+                    carr_leg = carreras_permitidas[paso % len(carreras_permitidas)]
+                    st.markdown(f"🏁 **Carrera:** `{carr_leg}`")
                     
-                    with cols_g[cg_idx]:
-                        if st.button(f"#{num_parte_g} {nombre_corto_g[:10]}", key=f"btn_grid_sel_{carr_leg}_{idx_cb_g}_{paso}", use_container_width=True, type="primary" if es_seleccionado_grid else "secondary"):
-                            st.session_state[k_sel_polla_grid] = cb_g_item
-                            st.rerun()
+                    retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
+                    no_val_carr_t = st.session_state.get('ejemplares_no_valido', {}).get(carr_leg, [])
+                    excluidos_carr_t = set(retirados_carr_t) | set(no_val_carr_t)
 
-                cab_leg = st.session_state[k_sel_polla_grid]
-                st.info(f"Seleccionado para `{carr_leg}`: **{cab_leg}**")
+                    banco_cab_carr = st.session_state.banco_caballos_por_carrera.get(carr_leg, [])
+                    caballos_in_carr = [c for c in banco_cab_carr if c not in excluidos_carr_t]
+                    if not caballos_in_carr:
+                        caballos_in_carr = banco_cab_carr if banco_cab_carr else ["1 - Ejemplar 1"]
 
-                if sub_dup_actual == "POLLA HIPICA" and cab_leg in excluidos_carr_t and banco_cab_carr:
-                    idx_ret = banco_cab_carr.index(cab_leg) if cab_leg in banco_cab_carr else 0
-                    siguiente_cab = None
-                    for siguiente_c in banco_cab_carr[idx_ret + 1:] + banco_cab_carr[:idx_ret]:
-                        if siguiente_c not in excluidos_carr_t:
-                            siguiente_cab = siguiente_c
-                            break
-                    if siguiente_cab:
-                        cab_leg = siguiente_cab
-                        st.info(f"🔄 **Corrimiento automático Polla Hípica:** El ejemplar en `{carr_leg}` está retirado. Se corrió al activo: **{cab_leg}**")
+                    cab_leg = st.selectbox(
+                        f"Selecciona el Ejemplar para {carr_leg}", 
+                        options=caballos_in_carr, 
+                        key=f"ticket_cab_{sub_dup_actual}_{paso}"
+                    )
 
-                if carr_leg in carreras_usadas:
-                    valido_legs = False
-                carreras_usadas.add(carr_leg)
-                seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
-                st.markdown("---")
+                    if carr_leg in carreras_usadas:
+                        valido_legs = False
+                    carreras_usadas.add(carr_leg)
+                    seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
+                    st.markdown("---")
 
             if not st.session_state.dupleta_bloqueada and not bloqueo_por_horario:
                 if st.button(f"🚀 Emitir Ticket de {sub_dup_actual}", key=f"btn_emitir_{sub_dup_actual}", use_container_width=True, type="primary"):
@@ -2726,7 +2756,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if ampm_cier_m == "AM" and h_cier_m_val == 12: h_cm_24 = 0
 
                 dt_im_final = datetime.combine(f_ini_m, dtime(h_im_24, m_ini_m_val))
-                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cier_m_val))
+                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cm_24:=m_cier_m_val))
 
                 st.session_state.fechas_horas_inicio_modalidad_multiple[mod_mult_sel] = dt_im_final
                 st.session_state.fechas_horas_cierre_modalidad_multiple[mod_mult_sel] = dt_cm_final
