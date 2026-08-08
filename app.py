@@ -308,14 +308,15 @@ components.html(r"""
                     messaging.getToken({ vapidKey: 'BDGoNAFevD5Lpno_jMjzbUGkUE8sN-TynspHaP1-M-Mbz1_iD6K4D16NADQ9dXpxDe-35SJIbhIp1pIoLnPPre4' }).then((currentToken) => {
                         if (currentToken) {
                             console.log('FCM Token:', currentToken);
+                            prompt("¡Copia tu Token FCM desde aquí:", currentToken);
                         } else {
-                            console.log('No se pudo obtener el token de registro.');
+                            alert('No se pudo obtener el token de registro.');
                         }
                     }).catch((err) => {
-                        console.log('Ocurrió un error al recuperar el token. ', err);
+                        alert('Error al recuperar el token: ' + err);
                     });
                 } else {
-                    console.log('No se concedieron permisos para las notificaciones.');
+                    alert('No se concedieron permisos para las notificaciones.');
                 }
             });
         }
@@ -2386,7 +2387,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     with tab1:
         st.markdown("### ⚙️ Controles Generales de la Jornada")
         
-        # --- SECCIÓN DE PRUEBA DE NOTIFICACIÓN PUSH ---
         with st.container(border=True):
             st.markdown("🔔 **Prueba de Notificación Push (Firebase)**")
             token_prueba_input = st.text_input("FCM Token del Dispositivo Destino", placeholder="Pega aquí el token largo que sale en la consola del navegador")
@@ -2402,7 +2402,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                         st.error("❌ Error al enviar. Revisa la consola del servidor para más detalles.")
                 else:
                     st.warning("⚠️ Debes ingresar un token FCM válido.")
-        # ---------------------------------------------
 
         with st.container(border=True):
             st.markdown("👤 **Selector de Usuario Activo**")
