@@ -8,3 +8,4 @@ pypdf
 requests
 beautifulsoup4
 supabase
+firebase-admin
