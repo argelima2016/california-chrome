@@ -225,7 +225,7 @@ def guardar_estado_global():
     if supabase:
         try:
             supabase.table("app_state").upsert({"id": DB_ROW_ID, "data": data}).execute()
-            st.cache_data.clear() # Limpiar caché local al guardar para forzar lectura fresca
+            st.cache_data.clear()
         except Exception as e:
             print("Error al guardar en Supabase: ", e)
 
@@ -442,7 +442,7 @@ st.session_state.carreras_habilitadas_polla = [c for c in ultimas_6_carreras if 
 
 ahora_dt = obtener_hora_venezuela_local()
 
-# --- ESTILOS CSS GENERALES Y TRANSICIÓN SUAVE (ELIMINA PARPADEOS) ---
+# --- ESTILOS CSS GENERALES Y TRANSICIÓN SUAVE ---
 st.markdown("""
     <style>
     * {
@@ -987,7 +987,7 @@ if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponib
 if not st.session_state.carreras_habilitadas_tripleta and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_tripleta = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL (SIN RECARGAS BRUSCAS) ---
+# --- MENÚ PRINCIPAL HORIZONTAL (CONSERVANDO ESTADO SIN RECARGAS BRUSCAS) ---
 st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
 col_menu1, col_menu2, col_menu3, col_menu4 = st.columns(4, gap="small")
 
@@ -2389,7 +2389,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     with tab2:
         st.markdown("### ✍️ Banco de Caballos (Data Persistente y Asignación)")
         
-        # --- 1. MAPEO DE REMATES CIEGOS (UBICADO ARRIBA) ---
+        # --- 1. MAPEO DE REMATES CIEGOS (ARRIBA) ---
         with st.container(border=True):
             st.markdown("🙈 **Mapeo de Remates Ciegos (1V y 6V)**")
             carreras_disp_mapeo = list(st.session_state.banco_caballos_por_carrera.keys())
