@@ -1167,7 +1167,7 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }, 400);
+                    }}, 400);
                 }}, 8000);
             }}
         }})();
@@ -1910,41 +1910,19 @@ if menu_principal_opcion == "Dupletas":
             carreras_usadas = set()
 
             if sub_dup_actual == "POLLA HIPICA":
-                # Estilo de tarjeta idéntico a la imagen adjunta (C8, C9, C10...)
-                st.markdown("""
-                <style>
-                .polla-card-box {
-                    background: #121e17;
-                    border: 1.5px solid #336148;
-                    border-radius: 10px;
-                    margin-bottom: 14px;
-                    overflow: hidden;
-                    box-shadow: 0 3px 10px rgba(0,0,0,0.5);
-                }
-                .polla-card-title {
-                    background: #234734;
-                    color: #f1c40f;
-                    font-size: 13px;
-                    font-weight: 900;
-                    padding: 6px 12px;
-                    letter-spacing: 0.8px;
-                    border-bottom: 1px solid #336148;
-                }
-                .polla-card-content {
-                    padding: 10px;
-                }
-                </style>
-                """, unsafe_allow_html=True)
-
+                st.markdown("🎯 **Selección de Ejemplares (Modelo Tarjetas C8, C9, etc. con Grilla Numérica):**")
+                
                 for carr_leg in carreras_permitidas:
                     match_c = re.search(r'\d+', carr_leg)
                     num_c_str = match_c.group(0) if match_c else carr_leg
                     titulo_carrera_box = f"C{num_c_str} ({carr_leg})"
 
                     st.markdown(f"""
-                        <div class="polla-card-box">
-                            <div class="polla-card-title">🏁 {titulo_carrera_box}</div>
-                            <div class="polla-card-content">
+                        <div style="background: #16221c; border: 1.5px solid #2e5a42; border-radius: 10px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.5);">
+                            <div style="background: #234734; color: #f1c40f; font-size: 13px; font-weight: 900; padding: 6px 12px; border-bottom: 1px solid #2e5a42;">
+                                🏁 {titulo_carrera_box}
+                            </div>
+                            <div style="padding: 10px;">
                     """, unsafe_allow_html=True)
 
                     retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
@@ -1960,7 +1938,6 @@ if menu_principal_opcion == "Dupletas":
                         validos_ini = [c for c in banco_cab_carr if c not in excluidos_carr_t]
                         st.session_state[k_sel_grid] = validos_ini[0] if validos_ini else banco_cab_carr[0]
 
-                    # Grilla de botones numéricos divididos en filas de 7 ejemplares
                     chunk_size = 7
                     for i_chunk in range(0, len(banco_cab_carr), chunk_size):
                         chunk_items = banco_cab_carr[i_chunk:i_chunk + chunk_size]
@@ -1994,7 +1971,7 @@ if menu_principal_opcion == "Dupletas":
                     seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
                     st.markdown(f"""
                             </div>
-                            <div style="background: #0b130e; padding: 5px 12px; border-top: 1px solid #336148; font-size: 11px; color: #00ffff;">
+                            <div style="background: #0d1611; padding: 5px 12px; border-top: 1px solid #2e5a42; font-size: 11px; color: #00ffff;">
                                 Seleccionado: <b>{cab_leg}</b>
                             </div>
                         </div>
@@ -2368,7 +2345,7 @@ elif menu_principal_opcion == "Cuentas":
         st.markdown("📋 **3. Mis Reportes Enviados**")
         mis_reportes = [r for r in st.session_state.reportes_pago if r['jugador'] == jugador_actual]
         if not mis_reportes:
-            st.info("ℹ️ No has enviado reportes de pago todavía.")
+            st.info("ℹ️ No hay envíos de pago todavía.")
         else:
             for rep in reversed(mis_reportes):
                 st.markdown(f"🔹 *{rep['fecha']}* | **{formatear_bs(rep['monto'])}** | Banco: `{rep['banco']}` | Ref: `{rep['referencia']}` | 📌 `{rep['estado']}`")
