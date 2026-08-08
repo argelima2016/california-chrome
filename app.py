@@ -356,7 +356,7 @@ components.html("""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -1237,8 +1237,15 @@ with st.sidebar.expander("🏁 Cierre y Liquidación de Remates", expanded=False
             st.rerun()
 
 if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada", use_container_width=True):
+    keys_excluidos = [
+        'banco_caballos_por_carrera', 
+        'lista_usuarios', 
+        'datos_pago_movil', 
+        'reportes_pago', 
+        'cuentas'
+    ]
     for key in list(st.session_state.keys()):
-        if key not in ['banco_caballos_por_carrera', 'lista_usuarios']:
+        if key not in keys_excluidos:
             del st.session_state[key]
     guardar_estado_global()
     st.toast("🚨 Jornada reiniciada.")
@@ -2205,7 +2212,6 @@ elif menu_principal_opcion == "Cuentas":
         st.markdown("📱 **1. Datos para Pago Móvil**")
         p_movil = st.session_state.datos_pago_movil
         
-        # Botón minimalista de copiar datos arriba con el texto "COPIAR DATOS"
         html_pago_movil_vertical = f"""
         <button onclick="navigator.clipboard.writeText(`Banco: {p_movil['banco']}\\nTeléfono: {p_movil['telefono']}\\nCédula/RIF: {p_movil['cedula']}`); alert('¡Datos copiados!');" style="width: 100%; background: #21262d; color: #00ffff; border: 1px solid #30363d; padding: 7px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 11px; margin-bottom: 8px;">
             📋 COPIAR DATOS
