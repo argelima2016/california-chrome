@@ -548,7 +548,6 @@ st.markdown("""
         width: 100% !important;
     }
     
-    /* BOTÓN DE PUJA ÉPICO Y LLAMATIVO */
     div.stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #f1c40f 0%, #d4ac0d 100%) !important;
         color: #080a0f !important;
@@ -586,7 +585,6 @@ st.markdown("""
         word-break: break-word;
     }
     
-    /* TARJETAS LLAMATIVAS Y ÉPICAS PARA PREMIOS Y POTES (FLEXIBLE PARA PANTALLAS MÓVILES) */
     .incentivo-llamativo {
         background: linear-gradient(135deg, #1f1c2c 0%, #923d41 100%);
         border: 2px dashed #00ffff;
@@ -812,7 +810,6 @@ st.markdown("""
         color: #ff4757;
     }
 
-    /* ESTILO PARA LIMITAR EL TAMAÑO DE LA IMAGEN EN COMPUTADORAS (PC) */
     @media (min-width: 769px) {
         .imagen-carrera-pc-container {
             max-width: 380px !important;
@@ -1170,8 +1167,8 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }, 400);
-                }, 8000);
+                    }}, 400);
+                }}, 8000);
             }}
         }})();
     </script>
@@ -1610,7 +1607,7 @@ def renderizar_tiempo_real_universal():
                                     monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
                                     
                                     incentivo_establecido = float(detalles_carr.get('incentivo_adelantados', 0.0))
-                                    premio_final_liq = pote_carr_total - monto_casa_calc + incentiv_establecido if 'incentivo_establecido' in locals() else pote_carr_total - monto_casa_calc + float(detalles_carr.get('incentivo_adelantados', 0.0))
+                                    premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_establecido
                                     
                                     info_g = st.session_state.remates[carr_activa][caballo_ganador_elegido]
                                     if info_g['jugador'] != "Sin Postor":
@@ -1854,14 +1851,12 @@ if menu_principal_opcion == "Dupletas":
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
     else: # POLLA HIPICA
         pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
-        # Siempre las últimas 6 carreras consecutivas de la semana
         total_c = st.session_state.get('total_carreras_semana', len(lista_carreras_disponibles))
         inicio_p = max(1, total_c - 5)
         carreras_ult6 = [f"Carrera {i}" for i in range(inicio_p, total_c + 1)]
         carreras_permitidas = [c for c in carreras_ult6 if c in lista_carreras_disponibles]
         st.session_state.carreras_habilitadas_polla = carreras_permitidas
 
-    # --- DISEÑO LLAMATIVO Y ÉPICO PARA EL POTE ---
     st.markdown(f"""
         <div class="pote-cyber-card">
             <div class="pote-cyber-title">💰 POTE ACUMULADO DE {sub_dup_actual.upper()}</div>
@@ -1931,13 +1926,11 @@ if menu_principal_opcion == "Dupletas":
                 if not caballos_in_carr:
                     caballos_in_carr = banco_cab_carr if banco_cab_carr else ["1 - Ejemplar 1"]
 
-                # --- MODELO DE SELECCIÓN VISUAL (ESTILO TARJETAS / GRILLA COMO LA IMAGEN) ---
                 st.markdown("🐎 **Selecciona tu ejemplar (Modelo Grilla Visual):**")
                 k_sel_polla_grid = f"sel_grid_{sub_dup_actual}_{carr_leg}_{paso}"
                 if k_sel_polla_grid not in st.session_state or st.session_state[k_sel_polla_grid] not in caballos_in_carr:
                     st.session_state[k_sel_polla_grid] = caballos_in_carr[0]
 
-                # Grilla interactiva de selección rápida de ejemplares
                 cols_g = st.columns(min(3, len(caballos_in_carr)), gap="small")
                 for idx_cb_g, cb_g_item in enumerate(caballos_in_carr):
                     cg_idx = idx_cb_g % len(cols_g)
@@ -1984,7 +1977,6 @@ if menu_principal_opcion == "Dupletas":
                             st.session_state.polla_tickets
                         )
 
-                        # REGLA: En POLLA HÍPICA se permite registrar pollas repetidas (duplicadas)
                         duplicado = False
                         if sub_dup_actual != "POLLA HIPICA":
                             for t in lista_tickets_activo:
@@ -2101,7 +2093,6 @@ if menu_principal_opcion == "Dupletas":
 
             max_puntos_actual = df_posiciones["puntos"].max() if not df_posiciones.empty else 0
             
-            # REGLA: Si hay varios ganadores con los mismos puntos máximos, el pote se reparte equitativamente
             if max_puntos_actual > 0 and len(resultados_oficiales) >= len(carreras_permitidas):
                 tickets_ganadores_lista = [row for row in tabla_puntuaciones.values() if row['puntos'] == max_puntos_actual]
                 cant_ganadores = len(tickets_ganadores_lista)
@@ -2452,7 +2443,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.session_state.carreras_habilitadas_dupleta = list(carreras_generadas)
                 st.session_state.carreras_habilitadas_tripleta = list(carreras_generadas)
                 
-                # Actualizar últimas 6 carreras para polla hípica
                 inicio_p_adm = max(1, nueva_cantidad_carreras - 5)
                 st.session_state.carreras_habilitadas_polla = [f"Carrera {i}" for i in range(inicio_p_adm, nueva_cantidad_carreras + 1)]
                 
