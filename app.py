@@ -241,7 +241,7 @@ def vigilante_sincronizacion_global():
 vigilante_sincronizacion_global()
 
 # --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ, ALERTAS MÓVILES Y RESPONSIVIDAD MÓVIL ---
-components.html(r"""
+components.html("""
     <script>
         let audioCtxGlobal = null;
 
@@ -1143,7 +1143,7 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }, 400);
+                    }}, 400);
                 }}, 8000);
             }}
         }})();
@@ -1159,6 +1159,14 @@ else:
     """, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
+
+# --- BARRA LATERAL SIMPLIFICADA ---
+st.sidebar.header("Sistema WOLF")
+st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
+st.sidebar.markdown("---")
+st.sidebar.info("💡 Todos los controles de administración, selector de usuario, retención y cierres ahora se encuentran organizados dentro de la **Zona Admin** en el menú principal.")
+
+menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
 # BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (OPTIMIZADO PARA EVITAR PARPADEOS)
