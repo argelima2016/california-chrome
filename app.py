@@ -278,7 +278,7 @@ def vigilante_sincronizacion_global():
 
 vigilante_sincronizacion_global()
 
-# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ Y ALERTAS MÓVILES ---
+# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ Y SÍNTESIS DE VOZ EN VIVO ---
 components.html(r"""
     <script>
         let audioCtxGlobal = null;
@@ -297,6 +297,17 @@ components.html(r"""
 
         window.addEventListener('click', inicializarAudio, { once: true });
         window.addEventListener('touchstart', inicializarAudio, { once: true });
+
+        function hablarNumero(texto) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let utterance = new SpeechSynthesisUtterance(texto);
+                utterance.lang = 'es-ES';
+                utterance.rate = 1.25;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+        window.hablarNumero = hablarNumero;
 
         function reproducirAlertaMovilYCalle(tipo) {
             if ("vibrate" in navigator) {
@@ -1336,7 +1347,7 @@ def renderizar_tiempo_real_universal():
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- ⏱️ CONTROL DE HORARIOS Y CONTEO EN VIVO ---
+                # --- ⏱️ CONTROL DE HORARIOS Y CONTEO EN VIVO (EN VIVO CIERRA 10 SEGUNDOS ANTES) ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
@@ -1350,6 +1361,11 @@ def renderizar_tiempo_real_universal():
                     try: dt_limite = datetime.fromisoformat(dt_limite)
                     except Exception: dt_limite = None
 
+                # Regla: En Vivo cierra 10 segundos antes de la hora puesta
+                dt_limite_efectivo = dt_limite
+                if dt_limite and modo_actual_remate == "En Vivo":
+                    dt_limite_efectivo = dt_limite - timedelta(seconds=10)
+
                 if dt_inicio and carrera_cerrada:
                     if ahora_dt_frag >= dt_inicio:
                         st.session_state.carreras_cerradas_remate[carr_activa] = False
@@ -1359,10 +1375,11 @@ def renderizar_tiempo_real_universal():
                 if dt_inicio:
                     st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:3px; border:1px solid #30363d; font-size:11px;'>🟢 Inicio Remate ({modo_actual_remate}): <b>{dt_inicio.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
                 if dt_limite:
-                    st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:6px; border:1px solid #30363d; font-size:11px;'>⏰ Cierre Estricto ({modo_actual_remate}): <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+                    aviso_en_vivo_txt = " (Cierra 10s antes)" if modo_actual_remate == "En Vivo" else ""
+                    st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:6px; border:1px solid #30363d; font-size:11px;'>⏰ Cierre Estricto ({modo_actual_remate}): <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b>{aviso_en_vivo_txt}</div>", unsafe_allow_html=True)
 
-                if dt_limite and not carrera_cerrada:
-                    diferencia_segundos = (dt_limite - ahora_dt_frag).total_seconds()
+                if dt_limite_efectivo and not carrera_cerrada:
+                    diferencia_segundos = (dt_limite_efectivo - ahora_dt_frag).total_seconds()
                     
                     if diferencia_segundos > 0:
                         min_rest = int(diferencia_segundos / 60)
@@ -1418,15 +1435,25 @@ def renderizar_tiempo_real_universal():
                                         if (window.intervaloRelojVivo) {{
                                             clearInterval(window.intervaloRelojVivo);
                                         }}
+                                        // Sintetizar voz del número actual
+                                        if (window.parent.hablarNumero) {{
+                                            window.parent.hablarNumero(segs.toString());
+                                        }}
                                         window.intervaloRelojVivo = setInterval(function() {{
                                             segs--;
                                             if (segs > 0) {{
                                                 if (digito) digito.innerText = segs;
+                                                if (window.parent.hablarNumero) {{
+                                                    window.parent.hablarNumero(segs.toString());
+                                                }}
                                             }} else {{
                                                 if (digito) {{
                                                     digito.parentElement.style.borderColor = "#f1c40f";
                                                     digito.parentElement.style.background = "linear-gradient(135deg, #3d3100 0%, #161b22 100%)";
                                                     digito.parentElement.innerHTML = "<div style='color: #f1c40f; font-size: 14px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 6px #f1c40f; padding: 4px;'>🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>";
+                                                }}
+                                                if (window.parent.hablarNumero) {{
+                                                    window.parent.hablarNumero("Cerrado");
                                                 }}
                                                 clearInterval(window.intervaloRelojVivo);
                                             }}
@@ -1450,7 +1477,7 @@ def renderizar_tiempo_real_universal():
                 if carr_activa not in st.session_state.ejemplares_no_valido:
                     st.session_state.ejemplares_no_valido[carr_activa] = []
 
-                # --- ⚙️ GESTIÓN DE RETIROS (SOLO EN ADELANTADOS) ---
+                # --- ⚙️ GESTIÓN DE RETIROS (SOLO EN ADELANTADOS, SINCRONIZADO AUTOMÁTICAMENTE PARA CIEGOS Y EN VIVO) ---
                 if modo_actual_remate == "Adelantados":
                     with st.expander(f"⚙️ Gestionar Retiros / No Válidos - {carr_activa}", expanded=False):
                         banco_carr_rem = st.session_state.banco_caballos_por_carrera.get(carr_activa, [])
@@ -1467,7 +1494,6 @@ def renderizar_tiempo_real_universal():
                             st.toast("✅ ¡Estado de ejemplares actualizado!")
                             st.rerun()
                 else:
-                    # Sincronizar automáticamente retiros e inválidos para Ciegos y En Vivo desde su contraparte Adelantados/Real
                     target_sync_key = carrera_real_mapeada if modo_actual_remate == "Ciegos" else carr_activa
                     if target_sync_key in st.session_state.ejemplares_retirados:
                         st.session_state.ejemplares_retirados[carr_activa] = st.session_state.ejemplares_retirados[target_sync_key]
@@ -1499,7 +1525,7 @@ def renderizar_tiempo_real_universal():
 
                 premio_total_calculado = pote_neto_base + incentivo_actual
 
-                # --- NUEVA TARJETA UNIFICADA Y MODERNA DE POTES ---
+                # --- TARJETA DE POTES Y PREMIOS ---
                 st.markdown(f"""
                     <div class="dashboard-pote-card">
                         <div class="dp-header">🏆 PREMIO TOTAL (INCLUYE INCENTIVO)</div>
@@ -1590,7 +1616,7 @@ def renderizar_tiempo_real_universal():
                 if dt_inicio and ahora_dt_frag < dt_inicio:
                     fuera_de_horario = True
                     st.error("⏳ **REMATES CERRADOS:** Aún no es la hora de apertura para esta modalidad.")
-                elif (dt_limite and ahora_dt_frag >= dt_limite) or carrera_cerrada:
+                elif (dt_limite_efectivo and ahora_dt_frag >= dt_limite_efectivo) or carrera_cerrada:
                     fuera_de_horario = True
                     st.error("🔒 **REMATES FINALIZADOS:** El tiempo límite de esta modalidad ha culminado.")
 
