@@ -1006,7 +1006,7 @@ if not elementos_carrusel_info:
 texto_unido_marquesina = " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ".join(elementos_carrusel_info)
 html_banner_marquesina = f"""
 <style>
-    .marquee-container {{
+    .marquee-container {
         width: 100%;
         background: transparent;
         border: none;
@@ -1017,8 +1017,8 @@ html_banner_marquesina = f"""
         box-sizing: border-box;
         display: flex;
         align-items: center;
-    }}
-    .marquee-text {{
+    }
+    .marquee-text {
         display: inline-block;
         white-space: nowrap;
         animation: scrollRight 150s linear infinite !important;
@@ -1031,15 +1031,15 @@ html_banner_marquesina = f"""
         letter-spacing: 1.2px;
         text-shadow: 0px 0px 8px rgba(0, 255, 255, 0.9), 2px 2px 2px #000000;
         padding-right: 100%;
-    }}
-    @keyframes scrollRight {{
-        0% {{
+    }
+    @keyframes scrollRight {
+        0% {
             transform: translateX(-100%);
-        }}
-        100% {{
+        }
+        100% {
             transform: translateX(100%);
-        }}
-    }}
+        }
+    }
 </style>
 <div class="marquee-container">
     <div class="marquee-text">{texto_unido_marquesina}</div>
@@ -1426,7 +1426,7 @@ def renderizar_tiempo_real_universal():
                     """, unsafe_allow_html=True)
 
                 if modo_actual_remate == "Adelantados":
-                    with st.expander(f"🏆 Seleccionar y Liquidar Ganador - {carr_activa}", expanded=False):
+                    with st.expander(f"GANADOR - {carr_activa}", expanded=False):
                         if carr_activa not in st.session_state.historial_ganadores:
                             caballos_lista_ganador = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
                             if not caballos_lista_ganador:
@@ -2686,7 +2686,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if ampm_cier_m == "AM" and h_cier_m_val == 12: h_cm_24 = 0
 
                 dt_im_final = datetime.combine(f_ini_m, dtime(h_im_24, m_ini_m_val))
-                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cm_24:=m_cier_m_val))
+                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cier_m_val))
 
                 st.session_state.fechas_horas_inicio_modalidad_multiple[mod_mult_sel] = dt_im_final
                 st.session_state.fechas_horas_cierre_modalidad_multiple[mod_mult_sel] = dt_cm_final
