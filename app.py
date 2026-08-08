@@ -223,8 +223,8 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- VIGILANTE DE SINCRONIZACIÓN SEGURO (CADA 8 SEGUNDOS) ---
-@st.fragment(run_every=8.0)
+# --- VIGILANTE DE SINCRONIZACIÓN SEGURO (CADA 6 SEGUNDOS) ---
+@st.fragment(run_every=6.0)
 def vigilante_sincronizacion_global():
     if supabase:
         try:
@@ -375,6 +375,7 @@ def cargar_base64_archivo(nombre_archivo):
         pass
     return ""
 
+# Cargar Logo para la cabecera (1001397336_preview_rev_1.png)
 logo_b64 = cargar_base64_archivo("1001397336_preview_rev_1.png")
 if not logo_b64:
     for alt in ["1001397336_preview_rev_1.jpg", "logo.png", "logo.jpg"]:
@@ -387,6 +388,7 @@ if logo_b64:
 else:
     logo_display = '<span style="color: #f1c40f; font-size: 28px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">WOLF READY TO RUN</span>'
 
+# Cargar Banner Estático Único (Gemini_Generated_Image_mn48tzmn48tzmn48.png)
 banner_b64 = cargar_base64_archivo("Gemini_Generated_Image_mn48tzmn48tzmn48.png")
 
 # --- INICIALIZAR REMATES Y LISTA DE CARRERAS DISPONIBLES PRIMERO ---
@@ -406,6 +408,7 @@ if not st.session_state.remates:
             "hora_cierre_real": "No registrada"
         }
 
+# Asegurar 1V y 6V por defecto para Remates Ciegos con 14 ejemplares
 for ciego_key in ["1V", "6V"]:
     if ciego_key not in st.session_state.remates:
         st.session_state.banco_caballos_por_carrera[ciego_key] = [f"{j} - Ejemplar {j}" for j in range(1, 15)]
@@ -426,6 +429,7 @@ if "1V" not in st.session_state.carreras_por_modalidad.get("Ciegos", []):
 
 lista_carreras_disponibles = [c for c in st.session_state.remates.keys() if c not in ["1V", "6V"]]
 
+# --- REGLA: AUTOMÁTICAMENTE LAS ÚLTIMAS 6 CARRERAS CONSECUTIVAS PARA POLLA HÍPICA ---
 total_carrs = st.session_state.get('total_carreras_semana', 10)
 inicio_polla_idx = max(1, total_carrs - 5)
 ultimas_6_carreras = [f"Carrera {i}" for i in range(inicio_polla_idx, total_carrs + 1)]
@@ -436,56 +440,351 @@ ahora_dt = obtener_hora_venezuela_local()
 # --- ESTILOS CSS GENERALES Y DISEÑO MEJORADO DE POTES ---
 st.markdown("""
     <style>
-    * { box-sizing: border-box !important; }
-    .stApp { background-color: #080a0f; color: #f0f6fc; overflow-x: hidden !important; }
-    [data-testid="stSidebar"] { display: none !important; visibility: hidden !important; opacity: 0 !important; width: 0px !important; min-width: 0px !important; }
-    [data-testid="stToolbar"] { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }
-    header[data-testid="stHeader"] { display: none !important; }
-    footer, #MainMenu { visibility: hidden !important; display: none !important; }
-    .block-container { padding-top: 0.2rem !important; padding-bottom: 1.5rem !important; padding-left: 0.3rem !important; padding-right: 0.3rem !important; max-width: 100% !important; margin: 0 auto !important; }
+    * {
+        box-sizing: border-box !important;
+    }
+    .stApp {
+        background-color: #080a0f;
+        color: #f0f6fc;
+        overflow-x: hidden !important;
+    }
+    /* OCULTAR BARRA LATERAL */
+    [data-testid="stSidebar"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0px !important;
+        min-width: 0px !important;
+    }
+    [data-testid="stToolbar"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
+    footer, #MainMenu {
+        visibility: hidden !important;
+        display: none !important;
+    }
+    .block-container {
+        padding-top: 0.2rem !important;
+        padding-bottom: 1.5rem !important;
+        padding-left: 0.3rem !important;
+        padding-right: 0.3rem !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
+        overflow-x: hidden !important;
+    }
+    div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        width: 100% !important;
+        gap: 4px !important;
+        padding-bottom: 4px !important;
+        scrollbar-width: thin;
+    }
+    div[data-testid="stHorizontalBlock"] > div {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 90px !important;
+        max-width: none !important;
+    }
+    .carreras-scroll-container div[data-testid="stHorizontalBlock"] > div {
+        min-width: 48px !important;
+        width: 48px !important;
+    }
     
-    div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; overflow-x: auto !important; overflow-y: hidden !important; -webkit-overflow-scrolling: touch !important; width: 100% !important; gap: 4px !important; padding-bottom: 4px !important; scrollbar-width: thin; }
-    div[data-testid="stHorizontalBlock"] > div { flex: 0 0 auto !important; width: auto !important; min-width: 90px !important; max-width: none !important; }
-    .carreras-scroll-container div[data-testid="stHorizontalBlock"] > div { min-width: 48px !important; width: 48px !important; }
+    div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"]:has(button) {
+        gap: 3px !important;
+        margin-top: -12px !important;
+        margin-bottom: -12px !important;
+    }
+    div[data-testid="column"]:has(button) {
+        padding: 0px 1px !important;
+    }
 
-    .stButton button { border-radius: 8px !important; font-weight: 800 !important; padding: 0.4rem 0.6rem !important; min-height: 42px !important; font-size: 12px !important; width: 100% !important; }
-    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #f1c40f 0%, #d4ac0d 100%) !important; color: #080a0f !important; font-size: 15px !important; font-weight: 900 !important; border: 2px solid #ffffff !important; box-shadow: 0px 4px 18px rgba(241, 196, 15, 0.6) !important; text-transform: uppercase !important; }
-
-    .subasta-header { font-size: clamp(13px, 3.2vw, 16px); font-weight: 800; color: #f1e05a; margin-bottom: 4px; border-bottom: 2px solid #f1e05a; padding-bottom: 2px; }
-    .carrera-condicion-card { background-color: #161b22; border: 1px solid #30363d; padding: 8px 10px; border-radius: 6px; font-size: 11px; color: #f0f6fc; margin-bottom: 8px; line-height: 1.3; }
+    .stButton button {
+        border-radius: 8px !important;
+        font-weight: 800 !important;
+        padding: 0.4rem 0.6rem !important;
+        min-height: 42px !important;
+        font-size: 12px !important;
+        letter-spacing: 0.3px;
+        white-space: nowrap !important;
+        width: 100% !important;
+    }
     
-    .dashboard-pote-card { background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%); border: 2px solid #f1c40f; border-radius: 12px; padding: 12px 14px; text-align: center; margin: 8px 0; box-shadow: 0px 4px 20px rgba(241, 196, 15, 0.25); width: 100%; box-sizing: border-box; }
-    .dp-header { color: #00ffff; font-size: 11px; font-weight: 900; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 4px; }
-    .dp-total-value { color: #f1c40f; font-size: clamp(20px, 5.5vw, 28px); font-weight: 900; margin-bottom: 10px; }
-    .dp-grid { display: flex; justify-content: space-around; align-items: center; border-top: 1px dashed rgba(241, 196, 15, 0.4); padding-top: 8px; gap: 8px; }
-    .dp-item { display: flex; flex-direction: column; flex: 1; align-items: center; }
-    .dp-divider { width: 1px; height: 26px; background-color: rgba(241, 196, 15, 0.4); }
-    .dp-label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #8b949e; margin-bottom: 2px; }
-    .dp-val { font-size: clamp(13px, 3.5vw, 16px); font-weight: 900; }
+    div.stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #f1c40f 0%, #d4ac0d 100%) !important;
+        color: #080a0f !important;
+        font-size: 15px !important;
+        font-weight: 900 !important;
+        border: 2px solid #ffffff !important;
+        box-shadow: 0px 4px 18px rgba(241, 196, 15, 0.6) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        transition: all 0.2s ease-in-out;
+    }
+    div.stButton > button[kind="primary"]:hover {
+        transform: scale(1.02);
+        box-shadow: 0px 6px 22px rgba(241, 196, 15, 0.9) !important;
+    }
+
+    .subasta-header {
+        font-size: clamp(13px, 3.2vw, 16px);
+        font-weight: 800;
+        color: #f1e05a;
+        margin-bottom: 4px;
+        border-bottom: 2px solid #f1e05a;
+        padding-bottom: 2px;
+    }
+    
+    .carrera-condicion-card {
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        padding: 8px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        color: #f0f6fc;
+        margin-bottom: 8px;
+        line-height: 1.3;
+        word-break: break-word;
+    }
+    
+    .dashboard-pote-card {
+        background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
+        border: 2px solid #f1c40f;
+        border-radius: 12px;
+        padding: 12px 14px;
+        text-align: center;
+        margin: 8px 0;
+        box-shadow: 0px 4px 20px rgba(241, 196, 15, 0.25);
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .dp-header {
+        color: #00ffff;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+    }
+    .dp-total-value {
+        color: #f1c40f;
+        font-size: clamp(20px, 5.5vw, 28px);
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        text-shadow: 2px 2px 8px #000000, 0 0 15px rgba(241, 196, 15, 0.8);
+        margin-bottom: 10px;
+        word-break: break-word;
+    }
+    .dp-grid {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border-top: 1px dashed rgba(241, 196, 15, 0.4);
+        padding-top: 8px;
+        gap: 8px;
+    }
+    .dp-item {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        align-items: center;
+    }
+    .dp-divider {
+        width: 1px;
+        height: 26px;
+        background-color: rgba(241, 196, 15, 0.4);
+    }
+    .dp-label {
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #8b949e;
+        margin-bottom: 2px;
+        letter-spacing: 0.5px;
+    }
+    .dp-val {
+        font-size: clamp(13px, 3.5vw, 16px);
+        font-weight: 900;
+        text-shadow: 1px 1px 4px #000000;
+        word-break: break-word;
+    }
 
     @keyframes parpadeoGanador {
         0% {{ transform: scale(1); box-shadow: 0 0 12px #f1c40f, inset 0 0 12px #f1c40f; }}
         50% {{ transform: scale(1.02); box-shadow: 0 0 25px #00ffff, inset 0 0 18px #00ffff; }}
         100% {{ transform: scale(1); box-shadow: 0 0 12px #f1c40f, inset 0 0 12px #f1c40f; }}
     }
-    .ganador-banner-epic { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); border: 2px solid #f1c40f; border-radius: 12px; padding: 12px; text-align: center; margin: 10px 0; animation: parpadeoGanador 2s infinite ease-in-out; }
-    .ganador-titulo-epic { color: #00ffff; font-size: 12px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
-    .ganador-nombre-epic { color: #f1c40f; font-size: 20px; font-weight: 900; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 3px; }
-    .ganador-premio-epic { color: #2ed573; font-size: 15px; font-weight: 900; }
+    .ganador-banner-epic {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        border: 2px solid #f1c40f;
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+        margin: 10px 0;
+        animation: parpadeoGanador 2s infinite ease-in-out;
+    }
+    .ganador-titulo-epic {
+        color: #00ffff;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        text-shadow: 0 0 6px rgba(0, 255, 255, 0.8);
+    }
+    .ganador-nombre-epic {
+        color: #f1c40f;
+        font-size: 20px;
+        font-weight: 900;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+        text-shadow: 2px 2px 5px #000000, 0 0 10px rgba(241, 196, 15, 0.8);
+    }
+    .ganador-premio-epic {
+        color: #2ed573;
+        font-size: 15px;
+        font-weight: 900;
+        text-shadow: 1px 1px 3px #000000;
+    }
 
-    .ticket-jugador-card { background: #0d1117; border: 2px solid #30363d; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0px 3px 10px rgba(0,0,0,0.5); }
-    .ticket-header-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #30363d; padding-bottom: 4px; margin-bottom: 6px; font-size: 11px; font-weight: 800; color: #f1c40f; }
-    .ticket-body-row { font-size: 12px; color: #f0f6fc; margin-bottom: 3px; font-weight: 600; }
+    .ticket-jugador-card {
+        background: #0d1117;
+        border: 2px solid #30363d;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        box-shadow: 0px 3px 10px rgba(0,0,0,0.5);
+    }
+    .ticket-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px dashed #30363d;
+        padding-bottom: 4px;
+        margin-bottom: 6px;
+        font-size: 11px;
+        font-weight: 800;
+        color: #f1c40f;
+    }
+    .ticket-body-row {
+        font-size: 12px;
+        color: #f0f6fc;
+        margin-bottom: 3px;
+        font-weight: 600;
+    }
     
-    .header-container-modern { background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); border: 1px solid #30363d; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 10px; width: 100%; }
-    .header-top-row { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 6px; }
-    .header-user-card { display: flex; align-items: center; gap: 8px; background: #080a0f; border: 1px solid #30363d; padding: 4px 10px; border-radius: 6px; }
-    .user-details { display: flex; flex-direction: column; text-align: right; }
-    .u-name-container { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
-    .u-name { color: #f0f6fc; font-size: 12px; font-weight: 800; }
-    .u-bal { font-size: 10px; font-weight: 700; }
-    .u-avatar-badge { width: 30px; height: 30px; background: #1f6feb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-    .header-logo-img { max-height: 95px; width: auto; object-fit: contain; }
+    .header-container-modern {
+        background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+        border: 1px solid #30363d;
+        border-radius: 10px;
+        padding: 10px 14px;
+        margin-bottom: 8px;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .header-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        gap: 6px;
+    }
+    .header-user-card {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #080a0f;
+        border: 1px solid #30363d;
+        padding: 4px 10px;
+        border-radius: 6px;
+    }
+    .user-details {
+        display: flex;
+        flex-direction: column;
+        text-align: right;
+    }
+    .u-name-container {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+    }
+    .u-name {
+        color: #f0f6fc;
+        font-size: 12px;
+        font-weight: 800;
+    }
+    .u-bal {
+        font-size: 10px;
+        font-weight: 700;
+    }
+    .u-avatar-badge {
+        width: 30px;
+        height: 30px;
+        background: #1f6feb;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+    }
+    .header-bottom-row-logo {
+        text-align: center;
+        border-top: 1px solid #21262d;
+        padding-top: 8px;
+    }
+    .header-logo-img {
+        max-height: 95px;
+        width: auto;
+        object-fit: contain;
+    }
+    
+    @keyframes parpadeoLed {
+        0% {{ opacity: 1; transform: scale(1); }}
+        50% {{ opacity: 0.4; transform: scale(0.9); }}
+        100% {{ opacity: 1; transform: scale(1); }}
+    }
+    .led-estado {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 6px currentColor;
+    }
+    .led-verde {
+        background-color: #2ed573;
+        color: #2ed573;
+        animation: parpadeoLed 1.5s infinite ease-in-out;
+    }
+    .led-rojo {
+        background-color: #ff4757;
+        color: #ff4757;
+    }
+
+    @media (min-width: 769px) {
+        .imagen-carrera-pc-container {
+            max-width: 380px !important;
+            margin: 0 auto !important;
+            display: block !important;
+        }
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -494,7 +793,10 @@ if usuario_en_sesion not in st.session_state.cuentas:
     st.session_state.cuentas[usuario_en_sesion] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
 
 vals_sesion = st.session_state.cuentas[usuario_en_sesion]
-neto_usuario = vals_sesion['Pujas'] - vals_sesion['Abonos'] - vals_sesion['Premios']
+pujas_usu = vals_sesion['Pujas']
+premios_usu = vals_sesion['Premios']
+abonos_usu = vals_sesion['Abonos']
+neto_usuario = pujas_usu - abonos_usu - premios_usu
 
 if neto_usuario > 0:
     etiqueta_balance = f"Deuda: {formatear_bs(neto_usuario)}"
@@ -506,18 +808,18 @@ else:
     etiqueta_balance = "Al día: Bs. 0,00"
     color_balance = "#58a6ff"
 
-# --- CABECERA SUPERIOR ---
+# --- CABECERA SUPERIOR MODERNA ---
 estado_global_remate = "cerrados" if all(st.session_state.carreras_cerradas_remate.get(c, False) for c in list(st.session_state.remates.keys())) and list(st.session_state.remates.keys()) else "abiertos"
 led_clase_css = "led-rojo" if estado_global_remate == "cerrados" else "led-verde"
 
-col_h_izq, _ = st.columns([1, 1], gap="small")
+col_h_izq, col_h_der = st.columns([1, 1], gap="small")
 with col_h_izq:
     if st.button("💳 Reportar Pago Móvil", key="btn_ir_reportar_pago_top", use_container_width=True, type="primary"):
         st.session_state.menu_principal_opcion = "Cuentas"
         guardar_estado_global()
         st.rerun()
 
-st.markdown(f"""
+header_html = f"""
     <div class="header-container-modern" style="margin-top: 4px;">
         <div class="header-top-row">
             <div></div>
@@ -525,34 +827,95 @@ st.markdown(f"""
                 <div class="user-details">
                     <div class="u-name-container">
                         <span class="u-name">{usuario_en_sesion}</span>
-                        <span class="led-estado {led_clase_css}"></span>
+                        <span class="led-estado {led_clase_css}" title="Remates En Línea"></span>
                     </div>
                     <span class="u-bal" style="color: {color_balance};">{etiqueta_balance}</span>
                 </div>
                 <div class="u-avatar-badge">🐺</div>
             </div>
         </div>
-        <div style="text-align: center; border-top: 1px solid #21262d; padding-top: 8px;">
+        <div class="header-bottom-row-logo">
             {logo_display}
         </div>
     </div>
-""", unsafe_allow_html=True)
+"""
+st.markdown(header_html, unsafe_allow_html=True)
 
 def obtener_abreviatura_carrera(nombre_carrera, modo_actual=""):
     if modo_actual == "Ciegos":
-        return "1V" if nombre_carrera == "1V" else "6V"
+        if nombre_carrera == "1V":
+            return "1V"
+        elif nombre_carrera == "6V":
+            return "6V"
     match = re.search(r'\d+', nombre_carrera)
-    return f"C{match.group(0)}" if match else nombre_carrera[:3].upper()
+    if match:
+        return f"C{match.group(0)}"
+    return nombre_carrera[:3].upper()
 
 def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
     html = """
     <style>
-        .tabla-referencia { width: 100%; border-collapse: collapse; font-family: sans-serif; background-color: #ffffff; color: #000000; margin-bottom: 8px; table-layout: fixed; }
-        .tabla-referencia th { border-top: 2px solid #dfc729; border-bottom: 2px solid #dfc729; padding: 5px 3px; text-align: left; font-weight: 800; background-color: #ffffff; color: #000000; font-size: 10px; }
-        .tabla-referencia td { border-bottom: 1px solid #dfc729; padding: 5px 3px; background-color: #fbfbfb; color: #111111; font-size: 10px; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .badge-numero { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; font-weight: bold; font-size: 10px; border-radius: 2px; }
-        .retirado-row td { background-color: #ffe6e6 !important; color: #990000 !important; text-decoration: line-through; }
-        .novale-row td { background-color: #fff3cd !important; color: #856404 !important; font-style: italic; }
+        .tabla-referencia {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            margin-bottom: 8px;
+            table-layout: fixed;
+        }
+        .tabla-referencia th {
+            border-top: 2px solid #dfc729;
+            border-bottom: 2px solid #dfc729;
+            padding: 5px 3px;
+            text-align: left;
+            font-weight: 800;
+            background-color: #ffffff;
+            color: #000000;
+            font-size: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tabla-referencia td {
+            border-bottom: 1px solid #dfc729;
+            padding: 5px 3px;
+            background-color: #fbfbfb;
+            color: #111111;
+            font-size: 10px;
+            vertical-align: middle;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .badge-numero {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            font-weight: bold;
+            font-size: 10px;
+            border-radius: 2px;
+            box-sizing: border-box;
+        }
+        .badge-1 { background-color: #e3242b; color: #ffffff; }
+        .badge-2 { background-color: #ffffff; color: #000000; border: 1.5px solid #000000; }
+        .badge-3 { background-color: #1d11c0; color: #ffffff; }
+        .badge-4 { background-color: #f1c40f; color: #000000; }
+        .badge-5 { background-color: #28a745; color: #ffffff; }
+        .badge-6 { background-color: #000000; color: #ffffff; }
+        .badge-7 { background-color: #fd7e14; color: #ffffff; }
+        .badge-default { background-color: #6c757d; color: #ffffff; }
+        .retirado-row td {
+            background-color: #ffe6e6 !important;
+            color: #990000 !important;
+            text-decoration: line-through;
+        }
+        .novale-row td {
+            background-color: #fff3cd !important;
+            color: #856404 !important;
+            font-style: italic;
+        }
     </style>
     <div style="background-color: #ffffff; padding: 2px; border-radius: 6px; overflow-x: auto; width: 100%;">
         <table class="tabla-referencia">
@@ -568,26 +931,66 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
     """
     for cab, info in remates_dict.items():
         match_num = re.match(r'^(\d+)', cab)
-        num = int(match_num.group(1)) if match_num else 0
-        nombre_solo = cab.split(" - ", 1)[1] if " - " in cab else cab
+        if match_num:
+            num = int(match_num.group(1))
+            nombre_solo = cab.split(" - ", 1)[1] if " - " in cab else cab
+        else:
+            num = 0
+            nombre_solo = cab
+            
+        if num == 1: badge_class = "badge-1"
+        elif num == 2: badge_class = "badge-2"
+        elif num == 3: badge_class = "badge-3"
+        elif num == 4: badge_class = "badge-4"
+        elif num == 5: badge_class = "badge-5"
+        elif num == 6: badge_class = "badge-6"
+        elif num == 7: badge_class = "badge-7"
+        else: badge_class = "badge-default"
         
         es_retirado = cab in retirados_list
         es_novale = cab in no_validos_list
-        clase_fila = "retirado-row" if es_retirado else ("novale-row" if es_novale else "")
-        etiqueta_estado = " (RETIRADO)" if es_retirado else (" (NO VALE)" if es_novale else "")
+        
+        if es_retirado:
+            clase_fila = "retirado-row"
+            etiqueta_estado = " (RETIRADO)"
+        elif es_novale:
+            clase_fila = "novale-row"
+            etiqueta_estado = " (NO VALE)"
+        else:
+            clase_fila = ""
+            etiqueta_estado = ""
         
         html += f"""
                 <tr class="{clase_fila}">
-                    <td><span class="badge-numero" style="background:#333; color:#fff;">{num}</span></td>
-                    <td style="font-weight: 800; font-size: 11px;">{nombre_solo.upper()}{etiqueta_estado}</td>
-                    <td>{info['jugador']}</td>
-                    <td style="font-weight: bold;">{formatear_bs(info['monto'])}</td>
+                    <td><span class="badge-numero {badge_class}">{num}</span></td>
+                    <td style="font-weight: 800; font-size: 11px;" title="{nombre_solo.upper()}{etiqueta_estado}">{nombre_solo.upper()}{etiqueta_estado}</td>
+                    <td title="{info['jugador']}">{info['jugador']}</td>
+                    <td style="font-weight: bold; color: { '#990000' if es_retirado else ('#856404' if es_novale else '#000000') };">{formatear_bs(info['monto'])}</td>
                 </tr>
         """
-    html += "</tbody></table></div>"
+    html += """
+            </tbody>
+        </table>
+    </div>
+    """
     return html
 
-# --- MENÚ PRINCIPAL HORIZONTAL (MANTENIDO EXACTAMENTE IGUAL) ---
+# --- GARANTIZAR ESTADO INICIAL DE MODALIDADES ---
+if not st.session_state.carreras_activas_remate and [c for c in st.session_state.remates.keys() if c not in ["1V", "6V"]]:
+    st.session_state.carreras_activas_remate = [c for c in st.session_state.remates.keys() if c not in ["1V", "6V"]]
+
+for mod in ["Adelantados", "Ciegos", "En Vivo"]:
+    if mod not in st.session_state.carreras_por_modalidad:
+        st.session_state.carreras_por_modalidad[mod] = []
+
+lista_carreras_disponibles = [c for c in st.session_state.remates.keys() if c not in ["1V", "6V"]]
+
+if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponibles:
+    st.session_state.carreras_habilitadas_dupleta = list(lista_carreras_disponibles)
+if not st.session_state.carreras_habilitadas_tripleta and lista_carreras_disponibles:
+    st.session_state.carreras_habilitadas_tripleta = list(lista_carreras_disponibles)
+
+# --- MENÚ PRINCIPAL HORIZONTAL ---
 st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
 col_menu1, col_menu2, col_menu3, col_menu4 = st.columns(4, gap="small")
 
@@ -616,37 +1019,120 @@ with col_menu4:
         st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
+
 st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
-# --- BANNER Y MARQUESINA ---
+# --- BANNER MARQUESINA DINÁMICO ---
 elementos_carrusel_info = []
+
 carreras_adelantados = [c for c in st.session_state.carreras_por_modalidad.get("Adelantados", []) if c in lista_carreras_disponibles]
 if carreras_adelantados:
     elementos_carrusel_info.append("ADELANTADOS: " + " | ".join(carreras_adelantados))
+
 elementos_carrusel_info.append("CIEGOS: 1V | 6V")
+
 carreras_envivo = [c for c in st.session_state.carreras_por_modalidad.get("En Vivo", []) if c in lista_carreras_disponibles]
 if carreras_envivo:
     elementos_carrusel_info.append("🔴 EN VIVO: " + " | ".join(carreras_envivo))
 
-texto_unido_marquesina = " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ".join(elementos_carrusel_info)
-st.markdown(f'<div style="width: 100%; overflow: hidden; padding: 6px 0; font-family: Arial Black; font-size: 13px; color: #00ffff; text-transform: uppercase;">{texto_unido_marquesina}</div>', unsafe_allow_html=True)
+carreras_dupleta = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
+if carreras_dupleta:
+    elementos_carrusel_info.append("DUPLETA: " + " | ".join(carreras_dupleta))
 
+carreras_tripleta = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
+if carreras_tripleta:
+    elementos_carrusel_info.append("TRIPLETA: " + " | ".join(carreras_tripleta))
+
+if not elementos_carrusel_info:
+    elementos_carrusel_info.append("⏳ CONFIGURA LAS CARRERAS ASIGNADAS EN LA ZONA ADMIN")
+
+texto_unido_marquesina = " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ".join(elementos_carrusel_info)
+html_banner_marquesina = f"""
+<style>
+    .marquee-container {{
+        width: 100%;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 6px 0;
+        margin-bottom: 8px;
+        overflow: hidden;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+    }}
+    .marquee-text {{
+        display: inline-block;
+        white-space: nowrap;
+        animation: scrollRight 150s linear infinite !important;
+        animation-play-state: running !important;
+        font-family: 'Arial Black', Gadget, sans-serif;
+        font-size: 13px;
+        font-weight: 900;
+        color: #00ffff;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        text-shadow: 0px 0px 8px rgba(0, 255, 255, 0.9), 2px 2px 2px #000000;
+        padding-right: 100%;
+    }}
+    @keyframes scrollRight {{
+        0% {{
+            transform: translateX(-100%);
+        }}
+        100% {{
+            transform: translateX(100%);
+        }}
+    }}
+</style>
+<div class="marquee-container">
+    <div class="marquee-text">{texto_unido_marquesina}</div>
+</div>
+"""
+components.html(html_banner_marquesina, height=36)
+
+# --- IMAGEN FIJA ÚNICA DE LA CARTELERA ---
 if banner_b64:
-    st.markdown(f'<div style="width: 100%; height: 160px; margin-bottom: 8px; border-radius: 6px; overflow:hidden;"><img src="data:image/png;base64,{banner_b64}" style="width: 100%; height: 100%; object-fit: cover;" /></div>', unsafe_allow_html=True)
+    st.markdown(f"""
+        <div style="width: 100%; height: 180px; margin: 0 0 8px 0; overflow: hidden; border-radius: 6px;">
+            <img src="data:image/png;base64,{banner_b64}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+        </div>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+        <div style="background: linear-gradient(90deg, #11141d 0%, #1f2937 100%); padding: 12px; text-align: center; margin-bottom: 8px; border-radius: 6px;">
+            <h3 style="color: #f1c40f; margin: 0; font-weight: 900; letter-spacing: 1px; font-size: 14px;">INH - HIPÓDROMO DE LA RINCONADA</h3>
+            <p style="color: #8b949e; font-size: 10px; margin: 3px 0 0 0;">¡La pasión del hipismo venezolano en vivo!</p>
+        </div>
+    """, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
+
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (INSTANTÁNEO)
+# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (OPTIMIZADO CADA 8 SEGUNDOS)
 # =========================================================================
 @st.fragment(run_every=8.0)
 def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
     ahora_dt_frag = obtener_hora_venezuela_local()
 
+    # --- DETECCIÓN DE SUPERACIÓN DE PUJA (OUTBID NOTIFICATION) ---
+    if 'mis_caballos_previos' not in st.session_state:
+        st.session_state.mis_caballos_previos = {}
+    
+    usuario_actual = st.session_state.usuario_activo
+    for carr_k, rems in st.session_state.remates.items():
+        for ej_k, info in rems.items():
+            clave_cab = f"{carr_k}_{ej_k}"
+            dueño_anterior = st.session_state.mis_caballos_previos.get(clave_cab)
+            dueño_actual = info['jugador']
+            if dueño_anterior == usuario_actual and dueño_actual != usuario_actual and dueño_actual != "Sin Postor":
+                st.toast(f"⚠️ ¡Te superaron la puja en el ejemplar **{ej_k}** ({carr_k}) por {formatear_bs(info['monto'])}!", icon="🚨")
+            st.session_state.mis_caballos_previos[clave_cab] = dueño_actual
+
     if st.session_state.menu_principal_opcion == "Remates":
-        # SUBMENÚ HORIZONTAL DE REMATES MANTENIDO EXACTAMENTE IGUAL
+        st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
         col_so1, col_so2, col_so3 = st.columns(3, gap="small")
         with col_so1:
             if st.button("Adelantados", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
@@ -663,199 +1149,1832 @@ def renderizar_tiempo_real_universal():
                 st.session_state.sub_remate_opcion = "En Vivo"
                 guardar_estado_global()
                 st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
         modo_actual_remate = st.session_state.sub_remate_opcion
 
-        if modo_actual_remate == "Ciegos":
-            carreras_filtradas_visibles = ["1V", "6V"]
+        if not list(st.session_state.remates.keys()):
+            st.warning("⚠️ No hay carreras cargadas en el sistema.")
         else:
-            carreras_asignadas_admin = st.session_state.carreras_por_modalidad.get(modo_actual_remate, [])
-            carreras_filtradas_visibles = [c for c in lista_carreras_disponibles if c in carreras_asignadas_admin]
+            if modo_actual_remate == "Ciegos":
+                carreras_filtradas_visibles = ["1V", "6V"]
+            else:
+                carreras_asignadas_admin = st.session_state.carreras_por_modalidad.get(modo_actual_remate, [])
+                carreras_filtradas_visibles = [
+                    c for c in lista_carreras_disponibles 
+                    if c in carreras_asignadas_admin and ((c in st.session_state.carreras_activas_remate) or st.session_state.carreras_cerradas_remate.get(c, False))
+                ]
+            
+            if not carreras_filtradas_visibles:
+                st.info(f"ℹ️ No hay carreras asignadas o habilitadas para la modalidad **{modo_actual_remate}**. Configúralas en Zona Admin.")
+            else:
+                if "carrera_remate_activa_seleccionada" not in st.session_state or st.session_state["carrera_remate_activa_seleccionada"] not in carreras_filtradas_visibles:
+                    carr_activa = carreras_filtradas_visibles[0]
+                    st.session_state["carrera_remate_activa_seleccionada"] = carr_activa
+                else:
+                    carr_activa = st.session_state["carrera_remate_activa_seleccionada"]
 
-        if carreras_filtradas_visibles:
-            carr_activa = st.session_state.get("carrera_remate_activa_seleccionada", carreras_filtradas_visibles[0])
-            if carr_activa not in carreras_filtradas_visibles:
-                carr_activa = carreras_filtradas_visibles[0]
-                st.session_state["carrera_remate_activa_seleccionada"] = carr_activa
+                if carr_activa not in st.session_state.remates:
+                    num_ej = 14 if modo_actual_remate == "Ciegos" else 10
+                    st.session_state.remates[carr_activa] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, num_ej + 1)}
 
-            # SELECCIONADOR DE CARRERAS HORIZONTAL (MANTENIDO IGUAL)
-            st.markdown("🔹 **Seleccionar Carrera:**")
-            cols_carreras = st.columns(len(carreras_filtradas_visibles), gap="small")
-            for idx, c_nombre in enumerate(carreras_filtradas_visibles):
-                abreviatura = obtener_abreviatura_carrera(c_nombre, modo_actual=modo_actual_remate)
-                with cols_carreras[idx]:
-                    if st.button(abreviatura, key=f"rem_btn_sel_carr_{idx}", use_container_width=True, type="primary" if c_nombre == carr_activa else "secondary"):
-                        st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
-                        guardar_estado_global()
-                        st.rerun()
-            st.markdown("---")
+                st.markdown("🔹 **Seleccionar Carrera:**")
+                carreras_totales_visibles = list(carreras_filtradas_visibles)
+                st.markdown('<div class="carreras-scroll-container">', unsafe_allow_html=True)
+                cols_carreras = st.columns(len(carreras_totales_visibles), gap="small")
+                for idx, c_nombre in enumerate(carreras_totales_visibles):
+                    abreviatura = obtener_abreviatura_carrera(c_nombre, modo_actual=modo_actual_remate)
+                    es_activa = (c_nombre == carr_activa)
+                    with cols_carreras[idx]:
+                        if st.button(abreviatura, key=f"rem_btn_sel_carr_{idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
+                            st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
+                            guardar_estado_global()
+                            st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown("---")
 
-            if carr_activa not in st.session_state.remates:
-                num_ej = 14 if modo_actual_remate == "Ciegos" else 10
-                st.session_state.remates[carr_activa] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, num_ej + 1)}
+                # Validación y Mapeo de Remate Ciego (< 14 / > 14 / Retirados sincronizados)
+                carrera_real_mapeada = carr_activa
+                if modo_actual_remate == "Ciegos":
+                    mapeo = st.session_state.get('mapeo_ciegos', {})
+                    carrera_real_mapeada = mapeo.get(carr_activa, "")
+                    if carrera_real_mapeada and carrera_real_mapeada in st.session_state.banco_caballos_por_carrera:
+                        banco_real = st.session_state.banco_caballos_por_carrera[carrera_real_mapeada]
+                        total_real = len(banco_real)
+                        monto_fijo_ciego = st.session_state.detalles_carreras.get(carr_activa, {}).get('monto_fijo_ciego', 500.0)
+                        
+                        # Sincronizar ganador si la carrera mapeada ya fue liquidada
+                        if carrera_real_mapeada in st.session_state.historial_ganadores:
+                            st.session_state.historial_ganadores[carr_activa] = st.session_state.historial_ganadores[carrera_real_mapeada]
 
-            retirados_c = st.session_state.ejemplares_retirados.get(carr_activa, [])
-            noval_c = st.session_state.ejemplares_no_valido.get(carr_activa, [])
-            excluidos_c = set(retirados_c) | set(noval_c)
+                        # REGLA 1: Menos de 14 ejemplares -> Anular apuestas
+                        if total_real < 14:
+                            st.error(f"⚠️ La carrera mapeada ({carrera_real_mapeada}) tiene {total_real} ejemplares (< 14). ¡Las apuestas de este Remate Ciego han sido ANULADAS!")
+                            for cb_k, cb_inf in st.session_state.remates[carr_activa].items():
+                                if cb_inf['jugador'] != "Sin Postor" and cb_inf['jugador'] != "CASA":
+                                    jug_ant = cb_inf['jugador']
+                                    mnt_ant = cb_inf['monto']
+                                    if jug_ant in st.session_state.cuentas:
+                                        st.session_state.cuentas[jug_ant]['Pujas'] = max(0.0, st.session_state.cuentas[jug_ant]['Pujas'] - mnt_ant)
+                                    st.session_state.remates[carr_activa][cb_k] = {"jugador": "Sin Postor", "monto": 0.0}
+                            guardar_estado_global()
+                        else:
+                            # REGLA 2: Más de 14 -> Asignar excedentes a CASA
+                            for idx_h, caballo_real in enumerate(banco_real):
+                                num_h = idx_h + 1
+                                slot_ciego = f"{num_h} - Ejemplar {num_h}"
+                                if slot_ciego in st.session_state.remates[carr_activa]:
+                                    if num_h > 14:
+                                        actual_postor = st.session_state.remates[carr_activa][slot_ciego]['jugador']
+                                        if actual_postor == "Sin Postor":
+                                            st.session_state.remates[carr_activa][slot_ciego] = {"jugador": "CASA", "monto": monto_fijo_ciego}
 
-            tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], retirados_c, noval_c)
-            components.html(tabla_html, height=min(max(130, (len(st.session_state.remates[carr_activa]) * 32) + 45), 380), scrolling=True)
+                if carr_activa in st.session_state.imagenes_carreras:
+                    try:
+                        img_url_val = st.session_state.imagenes_carreras[carr_activa]
+                        st.markdown(f'<div class="imagen-carrera-pc-container">', unsafe_allow_html=True)
+                        st.image(img_url_val, caption=f"Imagen oficial - {carr_activa}", use_container_width=True)
+                        st.markdown('</div>', unsafe_allow_html=True)
+                    except Exception:
+                        pass
 
-            total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_c])
-            porcentaje_casa_val = st.session_state.get('porcentaje_casa', 30)
-            incentivo_actual = float(st.session_state.detalles_carreras.get(carr_activa, {}).get(f'incentivo_{modo_actual_remate.lower()}', 0.0))
-            premio_total = (total_pote * (1 - porcentaje_casa_val / 100)) + incentivo_actual
-
-            st.markdown(f"""
-                <div class="dashboard-pote-card">
-                    <div class="dp-header">🏆 PREMIO TOTAL (INCLUYE INCENTIVO)</div>
-                    <div class="dp-total-value">{formatear_bs(premio_total)}</div>
-                    <div class="dp-grid">
-                        <div class="dp-item"><span class="dp-label">💰 POTE</span><span class="dp-val" style="color: #f1c40f;">{formatear_bs(total_pote)}</span></div>
-                        <div class="dp-divider"></div>
-                        <div class="dp-item"><span class="dp-label">🎁 INCENTIVO</span><span class="dp-val" style="color: #2ed573;">{formatear_bs(incentivo_actual)}</span></div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-
-            if carr_activa in st.session_state.historial_ganadores:
-                ig = st.session_state.historial_ganadores[carr_activa]
+                carrera_cerrada = st.session_state.carreras_cerradas_remate.get(carr_activa, False)
+                estado_icono = "🔴" if carrera_cerrada else "🟢"
+                
+                info_mapeo_txt = f" (Mapeada a: {carrera_real_mapeada})" if (modo_actual_remate == "Ciegos" and carrera_real_mapeada) else ""
                 st.markdown(f"""
-                    <div class="ganador-banner-epic">
-                        <div class="ganador-titulo-epic">🏆 ¡RESULTADO OFICIAL - {carr_activa.upper()}! 🏆</div>
-                        <div class="ganador-nombre-epic">🎉 {ig.get('Ganador', 'N/A')} 🎉</div>
-                        <div style="color: #00ffff; font-size: 13px; font-weight: 900;">🐎 {ig.get('Caballo', '').upper()}</div>
-                        <div class="ganador-premio-epic">💰 {ig.get('Premio', '0')}</div>
+                    <div style="font-size: 13px; font-weight: 800; color: #f0f6fc; display: flex; align-items: center; gap: 6px; margin-top: 6px; margin-bottom: 6px;">
+                        <span>{estado_icono}</span>
+                        <span>{carr_activa}{info_mapeo_txt}</span>
+                        <span style="font-size: 10px; font-weight: 600; color: #8b949e; background: #161b22; padding: 1px 5px; border-radius: 4px; border: 1px solid #30363d;">{modo_actual_remate}</span>
                     </div>
                 """, unsafe_allow_html=True)
 
-            if modo_actual_remate == "Adelantados":
-                with st.expander(f"⚙️ Gestionar Retiros / Liquidar Ganador - {carr_activa}", expanded=False):
-                    banco_c = st.session_state.banco_caballos_por_carrera.get(carr_activa, [])
-                    n_ret = st.multiselect("Retirados", options=banco_c, default=[c for c in retirados_c if c in banco_c], key=f"ret_{carr_activa}")
-                    n_nov = st.multiselect("No Valen", options=banco_c, default=[c for c in noval_c if c in banco_c], key=f"nov_{carr_activa}")
-                    if st.button("💾 Guardar Retiros", key=f"btn_ret_{carr_activa}", type="primary"):
-                        st.session_state.ejemplares_retirados[carr_activa] = n_ret
-                        st.session_state.ejemplares_no_valido[carr_activa] = n_nov
-                        guardar_estado_global()
-                        st.rerun()
+                if carr_activa not in st.session_state.detalles_carreras:
+                    st.session_state.detalles_carreras[carr_activa] = {
+                        "condicion": "Condición general", 
+                        "distancia": "1200 mts", 
+                        "hora": "02:00 PM", 
+                        "monto_fijo_ciego": 500.0, 
+                        "incentivo_adelantados": 0.0,
+                        "incentivo_ciegos": 0.0,
+                        "incentivo_envivo": 0.0,
+                        "hora_cierre_real": "No registrada"
+                    }
+                
+                detalles_carr = st.session_state.detalles_carreras[carr_activa]
+                st.markdown(f"""
+                    <div class="carrera-condicion-card">
+                        <b>🏁 {carr_activa}</b><br>
+                        🏷️ <b>Condición:</b> {detalles_carr.get('condicion', 'N/A')}<br>
+                        📏 <b>Distancia:</b> {detalles_carr.get('distancia', 'N/A')} &nbsp;|&nbsp; ⏰ <b>Hora:</b> {detalles_carr.get('hora', 'N/A')}
+                    </div>
+                """, unsafe_allow_html=True)
 
-                    if carr_activa not in st.session_state.historial_ganadores:
-                        cab_g = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_c]
-                        gan_sel = st.selectbox("Ganador", cab_g if cab_g else list(st.session_state.remates[carr_activa].keys()), key=f"gan_{carr_activa}")
-                        if st.button("🏆 Liquidar", key=f"liq_{carr_activa}", type="primary"):
-                            info_g = st.session_state.remates[carr_activa][gan_sel]
-                            if info_g['jugador'] != "Sin Postor":
-                                if info_g['jugador'] not in st.session_state.cuentas:
-                                    st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                                st.session_state.cuentas[info_g['jugador']]['Premios'] += premio_total
-                            st.session_state.ganancia_casa += total_pote * (porcentaje_casa_val / 100)
-                            st.session_state.historial_ganadores[carr_activa] = {"Ganador": info_g['jugador'], "Premio": formatear_bs(premio_total), "Caballo": gan_sel}
+                # --- ⏱️ CONTROL DE HORARIOS Y CONTEO EN VIVO (EN VIVO CIERRA 10 SEGUNDOS ANTES) ---
+                clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
+                dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
+                dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
+                estado_conteo = st.session_state.estado_conteo_carrera_modalidad.get(clave_mod_carr, "INACTIVO")
+
+                if isinstance(dt_inicio, str):
+                    try: dt_inicio = datetime.fromisoformat(dt_inicio)
+                    except Exception: dt_inicio = None
+
+                if isinstance(dt_limite, str):
+                    try: dt_limite = datetime.fromisoformat(dt_limite)
+                    except Exception: dt_limite = None
+
+                # En Vivo cierra 10 segundos antes de la hora puesta
+                dt_limite_efectivo = dt_limite
+                if dt_limite and modo_actual_remate == "En Vivo":
+                    dt_limite_efectivo = dt_limite - timedelta(seconds=10)
+
+                if dt_inicio and carrera_cerrada:
+                    if ahora_dt_frag >= dt_inicio:
+                        st.session_state.carreras_cerradas_remate[carr_activa] = False
+                        guardar_estado_global()
+                        carrera_cerrada = False
+
+                if dt_inicio:
+                    st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:3px; border:1px solid #30363d; font-size:11px;'>🟢 Inicio Remate ({modo_actual_remate}): <b>{dt_inicio.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+                if dt_limite:
+                    aviso_en_vivo_txt = " (Cierra 10s antes)" if modo_actual_remate == "En Vivo" else ""
+                    st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:6px; border:1px solid #30363d; font-size:11px;'>⏰ Cierre Estricto ({modo_actual_remate}): <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b>{aviso_en_vivo_txt}</div>", unsafe_allow_html=True)
+
+                if dt_limite_efectivo and not carrera_cerrada:
+                    diferencia_segundos = (dt_limite_efectivo - ahora_dt_frag).total_seconds()
+                    
+                    if diferencia_segundos > 0:
+                        min_rest = int(diferencia_segundos / 60)
+                        seg_rest = int(diferencia_segundos % 60)
+                        
+                        alertas_target = [60, 30, 20, 10, 5, 4, 3, 2, 1]
+                        if min_rest in alertas_target and seg_rest <= 10:
+                            clave_alerta = f"{clave_mod_carr}_{min_rest}m"
+                            if clave_alerta not in st.session_state.get('alertas_reproducidas', {}):
+                                if 'alertas_reproducidas' not in st.session_state: st.session_state.alertas_reproducidas = {}
+                                st.session_state.alertas_reproducidas[clave_alerta] = True
+                                
+                                txt_tiempo = "1 hora" if min_rest == 60 else f"{min_rest} minutos"
+                                st.toast(f"⏳ ¡ATENCIÓN! Faltan {txt_tiempo} para el cierre de {carr_activa} ({modo_actual_remate})", icon="🚨")
+                                components.html("<script>window.parent.reproducirAlertaMovilYCalle('tiempo');</script>", height=0, width=0)
+
+                    if estado_conteo == "INACTIVO":
+                        if 0 < diferencia_segundos <= 10:
+                            st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CONTEO_10S"
+                            st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = ahora_dt_frag
+                            guardar_estado_global()
+                            components.html("<script>window.parent.reproducirAlertaMovilYCalle('cierre');</script>", height=0, width=0)
+                            st.rerun()
+                        elif diferencia_segundos <= 0:
+                            st.session_state.carreras_cerradas_remate[carr_activa] = True
+                            st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
+                            st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt_frag.strftime('%I:%M:%S %p')
                             guardar_estado_global()
                             st.rerun()
+                    elif estado_conteo == "CONTEO_10S":
+                        tiempo_inicio = st.session_state.tiempo_inicio_conteo_modalidad.get(clave_mod_carr, ahora_dt_frag)
+                        transcurridos = (ahora_dt_frag - tiempo_inicio).total_seconds()
+                        
+                        if transcurridos >= 10:
+                            st.session_state.carreras_cerradas_remate[carr_activa] = True
+                            st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr] = "CERRADO"
+                            st.session_state.detalles_carreras[carr_activa]["hora_cierre_real"] = ahora_dt_frag.strftime('%I:%M:%S %p')
+                            guardar_estado_global()
+                            st.rerun()
+                        else:
+                            restantes_10s = max(0, 10 - int(transcurridos))
+                            if restantes_10s > 0:
+                                html_anuncio_movil = f"""
+                                <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #2b0909 0%, #161b22 100%); border: 3px solid #ff4757; border-radius: 8px; padding: 6px 10px; text-align: center; box-shadow: 0px 4px 15px rgba(255, 71, 87, 0.6); margin-bottom: 8px;">
+                                    <div style="color: #ff4757; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase;">⚠️ CIERRE INMINENTE ⚠️</div>
+                                    <div id="cuenta-atras-vivo" style="color: #00ffff; font-size: 28px; font-weight: 900; font-family: monospace; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0, 255, 255, 0.9);">{restantes_10s}</div>
+                                    <div style="color: #f1c40f; font-size: 9px; font-weight: 700; text-transform: uppercase;">SEGUNDOS (Nuevas pujas reinician)</div>
+                                </div>
+                                <script>
+                                    (function() {{
+                                        let segs = {restantes_10s};
+                                        const digito = document.getElementById("cuenta-atras-vivo");
+                                        if (window.intervaloRelojVivo) {{
+                                            clearInterval(window.intervaloRelojVivo);
+                                        }}
+                                        if (window.parent.hablarNumero) {{
+                                            window.parent.hablarNumero(segs.toString());
+                                        }}
+                                        window.intervaloRelojVivo = setInterval(function() {{
+                                            segs--;
+                                            if (segs > 0) {{
+                                                if (digito) digito.innerText = segs;
+                                                if (window.parent.hablarNumero) {{
+                                                    window.parent.hablarNumero(segs.toString());
+                                                }}
+                                            }} else {{
+                                                if (digito) {{
+                                                    digito.parentElement.style.borderColor = "#f1c40f";
+                                                    digito.parentElement.style.background = "linear-gradient(135deg, #3d3100 0%, #161b22 100%)";
+                                                    digito.parentElement.innerHTML = "<div style='color: #f1c40f; font-size: 14px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 6px #f1c40f; padding: 4px;'>🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>";
+                                                }}
+                                                if (window.parent.hablarNumero) {{
+                                                    window.parent.hablarNumero("Cerrado");
+                                                }}
+                                                clearInterval(window.intervaloRelojVivo);
+                                            }}
+                                        }}, 1000);
+                                    }})();
+                                </script>
+                                """
+                                components.html(html_anuncio_movil, height=75)
 
-            # Panel de Pujas Rápido
-            st.markdown("---")
-            lista_activos = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_c]
-            if lista_activos:
-                k_sel = f"sel_cab_{carr_activa}"
-                if k_sel not in st.session_state or st.session_state[k_sel] not in lista_activos:
-                    st.session_state[k_sel] = lista_activos[0]
+                if carrera_cerrada:
+                    components.html("""
+                        <div style="position: sticky; top: 0px; z-index: 999999; width: 100%; background: linear-gradient(135deg, #3d3100 0%, #161b22 100%); border: 3px solid #f1c40f; border-radius: 8px; padding: 8px; text-align: center; box-shadow: 0px 4px 15px rgba(241, 196, 15, 0.4); margin-bottom: 8px;">
+                            <div style="color: #f1c40f; font-size: 15px; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 8px #f1c40f;">🔒 ¡CERRADO EL REMATE, SUERTE! 🐎</div>
+                        </div>
+                    """, height=48)
+
+                if carr_activa not in st.session_state.ejemplares_retirados:
+                    st.session_state.ejemplares_retirados[carr_activa] = []
+                if 'ejemplares_no_valido' not in st.session_state:
+                    st.session_state.ejemplares_no_valido = {}
+                if carr_activa not in st.session_state.ejemplares_no_valido:
+                    st.session_state.ejemplares_no_valido[carr_activa] = []
+
+                # --- ⚙️ GESTIÓN DE RETIROS (SOLO EN ADELANTADOS, SINCRONIZADO PARA CIEGOS Y EN VIVO) ---
+                if modo_actual_remate == "Adelantados":
+                    with st.expander(f"⚙️ Gestionar Retiros / No Válidos - {carr_activa}", expanded=False):
+                        banco_carr_rem = st.session_state.banco_caballos_por_carrera.get(carr_activa, [])
+                        ret_act = st.session_state.ejemplares_retirados.get(carr_activa, [])
+                        noval_act = st.session_state.ejemplares_no_valido.get(carr_activa, [])
+                        
+                        n_ret = st.multiselect("Ejemplares Retirados", options=banco_carr_rem, default=[c for c in ret_act if c in banco_carr_rem], key=f"quick_ret_{carr_activa}")
+                        n_noval = st.multiselect("Ejemplares No Valen", options=banco_carr_rem, default=[c for c in noval_act if c in banco_carr_rem], key=f"quick_noval_{carr_activa}")
+                        
+                        if st.button("💾 Guardar Cambios en Ejemplares", key=f"btn_quick_gestion_{carr_activa}", use_container_width=True, type="primary"):
+                            st.session_state.ejemplares_retirados[carr_activa] = n_ret
+                            st.session_state.ejemplares_no_valido[carr_activa] = n_noval
+                            guardar_estado_global()
+                            st.toast("✅ ¡Estado de ejemplares actualizado!")
+                            st.rerun()
+                else:
+                    target_sync_key = carrera_real_mapeada if modo_actual_remate == "Ciegos" else carr_activa
+                    if target_sync_key in st.session_state.ejemplares_retirados:
+                        st.session_state.ejemplares_retirados[carr_activa] = st.session_state.ejemplares_retirados[target_sync_key]
+                    if target_sync_key in st.session_state.get('ejemplares_no_valido', {}):
+                        st.session_state.ejemplares_no_valido[carr_activa] = st.session_state.ejemplares_no_valido[target_sync_key]
+
+                # --- TABLA DE REMATES ---
+                retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
+                no_validos_carr_activa = st.session_state.ejemplares_no_valido.get(carr_activa, [])
                 
-                sel_c = st.selectbox("Seleccionar Ejemplar para Pujar", lista_activos, key=k_sel)
-                puja_actual = st.session_state.remates[carr_activa][sel_c]['monto']
-                monto_p = st.selectbox("Monto de Puja", obtener_siguientes_montos(puja_actual), format_func=lambda x: formatear_bs(x), key=f"monto_{carr_activa}")
+                tabla_html = generar_tabla_html_remate(st.session_state.remates[carr_activa], retirados_carr_activa, no_validos_carr_activa)
+                cantidad_filas = len(st.session_state.remates[carr_activa])
+                altura_dinamica = min(max(130, (cantidad_filas * 32) + 45), 380)
+                components.html(tabla_html, height=altura_dinamica, scrolling=True)
                 
-                if st.button(f"🔨 CONFIRMAR PUJA ({formatear_bs(monto_p)})", key=f"pujar_{carr_activa}", type="primary", use_container_width=True):
-                    st.session_state.remates[carr_activa][sel_c] = {"jugador": usuario_en_sesion, "monto": monto_p}
-                    if usuario_en_sesion not in st.session_state.cuentas:
-                        st.session_state.cuentas[usuario_en_sesion] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                    st.session_state.cuentas[usuario_en_sesion]['Pujas'] += monto_p
-                    guardar_estado_global()
-                    st.success("✅ ¡Puja registrada!")
-                    st.rerun()
+                excluidos_carr_activa = set(retirados_carr_activa) | set(no_validos_carr_activa)
+
+                total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_carr_activa])
+                porcentaje_casa_val = st.session_state.get('porcentaje_casa', 30)
+                monto_casa = total_pote * (porcentaje_casa_val / 100)
+                pote_neto_base = total_pote - monto_casa
+
+                if modo_actual_remate == "Adelantados":
+                    incentivo_actual = float(detalles_carr.get('incentivo_adelantados', 0.0))
+                elif modo_actual_remate == "Ciegos":
+                    incentivo_actual = float(detalles_carr.get('incentivo_ciegos', 0.0))
+                else:
+                    incentivo_actual = float(detalles_carr.get('incentivo_envivo', 0.0))
+
+                premio_total_calculado = pote_neto_base + incentivo_actual
+
+                # --- TARJETA DE POTES Y PREMIOS ---
+                st.markdown(f"""
+                    <div class="dashboard-pote-card">
+                        <div class="dp-header">🏆 PREMIO TOTAL (INCLUYE INCENTIVO)</div>
+                        <div class="dp-total-value">{formatear_bs(premio_total_calculado)}</div>
+                        <div class="dp-grid">
+                            <div class="dp-item">
+                                <span class="dp-label">💰 POTE ({carr_activa})</span>
+                                <span class="dp-val" style="color: #f1c40f;">{formatear_bs(total_pote)}</span>
+                            </div>
+                            <div class="dp-divider"></div>
+                            <div class="dp-item">
+                                <span class="dp-label">🎁 INCENTIVO</span>
+                                <span class="dp-val" style="color: #2ed573;">{formatear_bs(incentivo_actual)}</span>
+                            </div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+                if carr_activa in st.session_state.historial_ganadores:
+                    info_ganador_prev = st.session_state.historial_ganadores[carr_activa]
+                    ganador_nombre = info_ganador_prev.get('Ganador', 'N/A')
+                    premio_ganado = info_ganador_prev.get('Premio', '0')
+                    caballo_ganador_str = info_ganador_prev.get('Caballo', 'N/A')
+
+                    st.markdown(f"""
+                        <div class="ganador-banner-epic">
+                            <div class="ganador-titulo-epic">🏆 ¡RESULTADO OFICIAL - {carr_activa.upper()}! 🏆</div>
+                            <div class="ganador-nombre-epic">🎉 {ganador_nombre} 🎉</div>
+                            <div style="color: #00ffff; font-size: 14px; font-weight: 900; margin-bottom: 3px; text-shadow: 0 0 6px rgba(0,255,255,0.7);">🐎 EJEMPLAR: {caballo_ganador_str.upper()}</div>
+                            <div class="ganador-premio-epic">💰 Premio Liquidado: {premio_ganado}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                if modo_actual_remate == "Adelantados":
+                    with st.expander(f"GANADOR - {carr_activa}", expanded=False):
+                        if carr_activa not in st.session_state.historial_ganadores:
+                            caballos_lista_ganador = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
+                            if not caballos_lista_ganador:
+                                caballos_lista_ganador = list(st.session_state.remates[carr_activa].keys())
+                            col_g1, col_g2 = st.columns([3, 2], gap="small")
+                            with col_g1:
+                                caballo_ganador_elegido = st.selectbox("Ejemplar Ganador", caballos_lista_ganador, key=f"rem_sel_ganador_{carr_activa}", label_visibility="collapsed")
+                            with col_g2:
+                                if st.button("🏆 Liquidar Ganador", key=f"rem_btn_liquidar_{carr_activa}", use_container_width=True, type="primary"):
+                                    pote_carr_total = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_carr_activa])
+                                    monto_casa_calc = pote_carr_total * (porcentaje_casa_val / 100)
+                                    
+                                    incentivo_establecido = float(detalles_carr.get('incentivo_adelantados', 0.0))
+                                    premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_establecido
+                                    
+                                    info_g = st.session_state.remates[carr_activa][caballo_ganador_elegido]
+                                    if info_g['jugador'] != "Sin Postor":
+                                        if info_g['jugador'] not in st.session_state.cuentas:
+                                            st.session_state.cuentas[info_g['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                        st.session_state.cuentas[info_g['jugador']]['Premios'] += premio_final_liq
+                                    st.session_state.ganancia_casa += monto_casa_calc
+                                    st.session_state.historial_ganadores[carr_activa] = {
+                                        "Ganador": info_g['jugador'], 
+                                        "Premio": formatear_bs(premio_final_liq),
+                                        "Caballo": caballo_ganador_elegido
+                                    }
+                                    guardar_estado_global()
+                                    st.rerun()
+                        else:
+                            st.info("ℹ️ Esta carrera ya tiene un ganador liquidado.")
+
+                with st.expander(f"📜 Historial de Pujas - {carr_activa} ({modo_actual_remate})", expanded=False):
+                    historial_carrera_actual = [
+                        h for h in st.session_state.historial_jugadas 
+                        if h.get('carrera') == carr_activa and "Remate" in h.get('type', h.get('tipo', ''))
+                    ]
+                    if not historial_carrera_actual:
+                        st.info(f"ℹ️ No hay registros de pujas para {carr_activa}.")
+                    else:
+                        datos_h_carr = []
+                        for h in reversed(historial_carrera_actual):
+                            datos_h_carr.append({
+                                "Fecha / Hora": h.get('fecha', ''),
+                                "Modo": h.get('tipo', ''),
+                                "Jugador": h.get('jugador', ''),
+                                "Ejemplar": h.get('detalle', ''),
+                                "Monto": formatear_bs(h.get('monto', 0.0))
+                            })
+                        st.dataframe(pd.DataFrame(datos_h_carr), use_container_width=True, hide_index=True)
+
+                # --- BLOQUEO ESTRICTO POR HORARIO ---
+                fuera_de_horario = False
+                if dt_inicio and ahora_dt_frag < dt_inicio:
+                    fuera_de_horario = True
+                    st.error("⏳ **REMATES CERRADOS:** Aún no es la hora de apertura para esta modalidad.")
+                elif (dt_limite_efectivo and ahora_dt_frag >= dt_limite_efectivo) or carrera_cerrada:
+                    fuera_de_horario = True
+                    st.error("🔒 **REMATES FINALIZADOS:** El tiempo límite de esta modalidad ha culminado.")
+
+                with st.container(border=True):
+                    if fuera_de_horario:
+                        st.warning("🚫 Las acciones de puja están deshabilitadas fuera del horario establecido.")
+                    else:
+                        if modo_actual_remate == "Ciegos":
+                            st.markdown(f"🙈 **Remate Ciego - Asignación de Ejemplar ({carr_activa})**")
+                            monto_fijo_carrera = detalles_carr.get('monto_fijo_ciego', 500.0)
+
+                            caballos_disponibles_ciego = [
+                                cab for cab, info in st.session_state.remates[carr_activa].items() 
+                                if (info['jugador'] == "Sin Postor" or info['monto'] <= 0) and cab not in excluidos_carr_activa
+                            ]
+
+                            if not caballos_disponibles_ciego:
+                                st.warning("⚠️ Todos los ejemplares disponibles de esta carrera ya han sido adquiridos.")
+                            else:
+                                st.markdown("🎲 **Panel Didáctico (Elige un número para asignar):**")
+                                cols_ciego_grid = st.columns(min(3, len(caballos_disponibles_ciego)), gap="small")
+                                for idx_cb, cb_disp in enumerate(caballos_disponibles_ciego):
+                                    c_idx = idx_cb % len(cols_ciego_grid)
+                                    num_cb_parte = cb_disp.split(" - ")[0]
+                                    with cols_ciego_grid[c_idx]:
+                                        if carrera_cerrada:
+                                            st.button(f"🔒#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, disabled=True)
+                                        else:
+                                            if st.button(f"#{num_cb_parte}", key=f"btn_ciego_grid_{carr_activa}_{cb_disp}", use_container_width=True, type="primary"):
+                                                st.session_state.remates[carr_activa][cb_disp] = {
+                                                    "jugador": st.session_state.usuario_activo, 
+                                                    "monto": monto_fijo_carrera
+                                                }
+
+                                                st.session_state.historial_jugadas.append({
+                                                    "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                                    "jugador": st.session_state.usuario_activo,
+                                                    "tipo": f"Remate Ciego ({modo_actual_remate})",
+                                                    "carrera": carr_activa,
+                                                    "detalle": cb_disp,
+                                                    "monto": monto_fijo_carrera
+                                                })
+                                                if st.session_state.usuario_activo not in st.session_state.cuentas:
+                                                    st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                                st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_fijo_carrera
+                                                guardar_estado_global()
+                                                
+                                                components.html("<script>window.parent.reproducirAlertaMovilYCalle('exito');</script>", height=0, width=0)
+                                                st.success(f"🎉 #{num_cb_parte} asignado a **{st.session_state.usuario_activo}** ({formatear_bs(monto_fijo_carrera)})!")
+                                                st.rerun()
+                        else:
+                            st.markdown(f"⚡ **Registro Rápido de Puja - {carr_activa}**")
+                            lista_caballos_activos = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
+                            
+                            if not lista_caballos_activos:
+                                st.warning("No hay ejemplares disponibles para pujar.")
+                            else:
+                                k_sel_cab = f"rem_caballo_activo_click_{carr_activa}"
+                                if k_sel_cab not in st.session_state or st.session_state[k_sel_cab] not in lista_caballos_activos:
+                                    st.session_state[k_sel_cab] = lista_caballos_activos[0]
+                                    
+                                st.markdown(f"🔹 **1. Seleccionar Ejemplar (Disponibles: {len(lista_caballos_activos)}):**")
+                                
+                                cantidad_ejemplares = len(lista_caballos_activos)
+                                cols_ejemplares = 3
+                                num_filas = (cantidad_ejemplares + cols_ejemplares - 1) // cols_ejemplares
+                                
+                                idx_cab = 0
+                                for f in range(num_filas):
+                                    cols_fila = st.columns(cols_ejemplares, gap="small")
+                                    for c in range(cols_ejemplares):
+                                        if idx_cab < cantidad_ejemplares:
+                                            cab_item = lista_caballos_activos[idx_cab]
+                                            num_parte = cab_item.split(" - ")[0]
+                                            
+                                            info_remate_cab = st.session_state.remates[carr_activa].get(cab_item, {})
+                                            propietario = info_remate_cab.get('jugador', 'Sin Postor')
+                                            
+                                            if propietario == "Sin Postor" or propietario == "CASA" or info_remate_cab.get('monto', 0.0) == 0:
+                                                color_estilo = "background-color: #e2e8f0 !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important;"
+                                            elif propietario == st.session_state.usuario_activo:
+                                                color_estilo = "background-color: #22c55e !important; color: #ffffff !important; border: 1px solid #16a34a !important;"
+                                            else:
+                                                color_estilo = "background-color: #ef4444 !important; color: #ffffff !important; border: 1px solid #dc2626 !important;"
+
+                                            with cols_fila[c]:
+                                                st.markdown(f"""
+                                                    <style>
+                                                    div[data-testid="stVerticalBlock"] button[key="rem_btn_cab_{carr_activa}_{idx_cab}"] {{
+                                                        {color_estilo}
+                                                    }}
+                                                    </style>
+                                                """, unsafe_allow_html=True)
+
+                                                if st.button(f"#{num_parte}", key=f"rem_btn_cab_{carr_activa}_{idx_cab}", use_container_width=True):
+                                                    st.session_state[k_sel_cab] = cab_item
+                                                    st.rerun()
+
+                                            idx_cab += 1
+                                
+                                caballo_seleccionado = st.session_state[k_sel_cab]
+                                propietario_actual_sel = st.session_state.remates[carr_activa][caballo_seleccionado].get('jugador', 'Sin Postor')
+                                st.info(f"Ejemplar activo: **{caballo_seleccionado}** (Poseedor actual: **{propietario_actual_sel}**)")
+
+                                puja_actual = st.session_state.remates[carr_activa][caballo_seleccionado]['monto']
+                                opciones_escala = obtener_siguientes_montos(puja_actual)
+                                monto_puja = st.selectbox("💰 **2. Monto de Puja**", opciones_escala, format_func=lambda x: formatear_bs(x), key=f"rem_sel_monto_{carr_activa}_{caballo_seleccionado}")
+                                
+                                if carrera_cerrada:
+                                    st.button(f"🔒 CERRADO - NO DISPONIBLE", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary", disabled=True)
+                                else:
+                                    st.markdown("<div style='margin-top: 6px;'></div>", unsafe_allow_html=True)
+                                    if st.button(f"🔨 ¡CONFIRMAR PUJA DE {formatear_bs(monto_puja)}!", key=f"rem_btn_confirmar_{carr_activa}", use_container_width=True, type="primary"):
+                                        if monto_puja <= puja_actual:
+                                            st.error("El monto debe ser mayor a la puja actual.")
+                                        else:
+                                            st.session_state.remates[carr_activa][caballo_seleccionado] = {"jugador": st.session_state.usuario_activo, "monto": monto_puja}
+
+                                            st.session_state.historial_jugadas.append({
+                                                "fecha": ahora_dt_frag.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                                "jugador": st.session_state.usuario_activo,
+                                                "tipo": f"Remate ({modo_actual_remate})",
+                                                "carrera": carr_activa,
+                                                "detalle": caballo_seleccionado,
+                                                "monto": monto_puja
+                                            })
+                                            if estado_conteo == "CONTEO_10S":
+                                                st.session_state.tiempo_inicio_conteo_modalidad[clave_mod_carr] = obtener_hora_venezuela_local()
+                                            guardar_estado_global()
+                                            
+                                            components.html("<script>window.parent.reproducirAlertaMovilYCalle('exito');</script>", height=0, width=0)
+                                            st.success("✅ ¡Puja registrada correctamente!")
+                                            st.rerun()
 
 renderizar_tiempo_real_universal()
 
 # =========================================================================
-# MÓDULOS SECUNDARIOS (DUPLETAS, CUENTAS, ADMIN)
+# 2. MÓDULO DE DUPLETA, TRIPLETA Y POLLA HÍPICA
 # =========================================================================
 if menu_principal_opcion == "Dupletas":
-    st.markdown("<div class='subasta-header'>🎟️ Módulo de Dupleta, Tripleta y Polla Hípica</div>", unsafe_allow_html=True)
+    st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
     col_d1, col_d2, col_d3 = st.columns(3, gap="small")
     with col_d1:
-        if st.button("Dupleta", key="d_dup", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
+        if st.button("🎟️ Dupleta", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Dupleta"
             guardar_estado_global()
             st.rerun()
     with col_d2:
-        if st.button("Tripleta", key="d_tri", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Tripleta" else "secondary"):
+        if st.button("🎟️ Tripleta", key="sub_dup_tripleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Tripleta" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Tripleta"
             guardar_estado_global()
             st.rerun()
     with col_d3:
-        if st.button("POLLA", key="d_pol", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "POLLA HIPICA" else "secondary"):
+        if st.button("🏇 POLLA HIPICA", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "POLLA HIPICA" else "secondary"):
             st.session_state.sub_dupleta_opcion = "POLLA HIPICA"
             guardar_estado_global()
             st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    sub_dup = st.session_state.sub_dupleta_opcion
-    monto_tkt = st.session_state.config_montos_especiales.get(sub_dup, 500.0)
-    pote_m = sum([t['monto'] for t in (st.session_state.dupletas_tickets if sub_dup=="Dupleta" else st.session_state.tripleta_tickets if sub_dup=="Tripleta" else st.session_state.polla_tickets) if t.get('estado')=='Pendiente'])
+    st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
+    sub_dup_actual = st.session_state.sub_dupleta_opcion
+
+    st.markdown(f"<div class='subasta-header'>🎟️ Armado Visual de {sub_dup_actual}</div>", unsafe_allow_html=True)
+    
+    clave_mod_mult = sub_dup_actual
+    dt_inicio_m = st.session_state.fechas_horas_inicio_modalidad_multiple.get(clave_mod_mult)
+    dt_cierre_m = st.session_state.fechas_horas_cierre_modalidad_multiple.get(clave_mod_mult)
+
+    if isinstance(dt_inicio_m, str):
+        try: dt_inicio_m = datetime.fromisoformat(dt_inicio_m)
+        except Exception: dt_inicio_m = None
+    if isinstance(dt_cierre_m, str):
+        try: dt_cierre_m = datetime.fromisoformat(dt_cierre_m)
+        except Exception: dt_cierre_m = None
+
+    bloqueo_por_horario = False
+    if dt_inicio_m and ahora_dt < dt_inicio_m:
+        bloqueo_por_horario = True
+        st.warning(f"⏳ **AÚN NO ABRE:** Esta modalidad abre el {dt_inicio_m.strftime('%d/%m/%Y a las %I:%M %p')}.")
+    elif dt_cierre_m and ahora_dt > dt_cierre_m:
+        bloqueo_por_horario = True
+        st.error(f"🔒 **CERRADO ESTRICTO (Hora Tope):** El horario de emisión finalizó el {dt_cierre_m.strftime('%d/%m/%Y a las %I:%M %p')}.")
+
+    if dt_inicio_m:
+        st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:3px; border:1px solid #30363d; font-size:11px;'>🟢 Apertura ({sub_dup_actual}): <b>{dt_inicio_m.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+    if dt_cierre_m:
+        st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:6px; border:1px solid #30363d; font-size:11px;'>⏰ Cierre Estricto ({sub_dup_actual}): <b>{dt_cierre_m.strftime('%d/%m/%Y - %I:%M %p')}</b></div>", unsafe_allow_html=True)
+
+    if st.session_state.dupleta_bloqueada or bloqueo_por_horario:
+        st.error("🔒 **BLOQUEADO:** Emisión cerrada temporalmente (Hora tope vencida o bloqueo de administrador).")
+
+    monto_unico_seccion = st.session_state.config_montos_especiales.get(sub_dup_actual, 500.0)
+
+    if sub_dup_actual == "Dupleta":
+        pote_total = sum([t['monto'] for t in st.session_state.dupletas_tickets if t.get('estado') == 'Pendiente'])
+        carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_dupleta if c in lista_carreras_disponibles]
+    elif sub_dup_actual == "Tripleta":
+        pote_total = sum([t['monto'] for t in st.session_state.tripleta_tickets if t.get('estado') == 'Pendiente'])
+        carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
+    else: # POLLA HIPICA
+        pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
+        total_c = st.session_state.get('total_carreras_semana', 10)
+        inicio_p = max(1, total_c - 5)
+        carreras_ult6 = [f"Carrera {i}" for i in range(inicio_p, total_c + 1)]
+        carreras_permitidas = [c for c in carreras_ult6 if c in lista_carreras_disponibles]
+        st.session_state.carreras_habilitadas_polla = carreras_permitidas
 
     st.markdown(f"""
         <div class="pote-cyber-card">
-            <div class="dp-header">POTE ACUMULADO DE {sub_dup}</div>
-            <div class="dp-total-value">{formatear_bs(pote_m)}</div>
+            <div class="pote-cyber-title">💰 POTE ACUMULADO DE {sub_dup_actual.upper()}</div>
+            <div class="pote-cyber-value">{formatear_bs(pote_total)}</div>
         </div>
     """, unsafe_allow_html=True)
 
-    with st.container(border=True):
-        st.markdown(f"👤 Jugador: `{usuario_en_sesion}` | Costo: `{formatear_bs(monto_tkt)}`")
-        if st.button(f"🚀 Emitir Ticket de {sub_dup}", key="emitir_tkt", type="primary", use_container_width=True):
-            ticket_id = f"TKT-{len(st.session_state.dupletas_tickets)+1:04d}"
-            nuevo_t = {"id": ticket_id, "jugador": usuario_en_sesion, "monto": monto_tkt, "legs": [{"carrera": "Carrera 1", "ejemplar": "1 - Ejemplar 1"}], "estado": "Pendiente", "fecha": ahora_dt.strftime('%d/%m %I:%M %p')}
-            st.session_state.dupletas_tickets.append(nuevo_t)
-            st.session_state.cuentas[usuario_en_sesion]['Pujas'] += monto_tkt
-            guardar_estado_global()
-            st.success("✅ ¡Ticket emitido con éxito!")
-            st.rerun()
-
-elif menu_principal_opcion == "Cuentas":
-    st.markdown("<div class='subasta-header'>📊 Mis Cuentas y Reporte de Pago Móvil</div>", unsafe_allow_html=True)
-    col_c1, col_c2, col_c3, col_c4 = st.columns(4)
-    col_c1.metric("Compras", formatear_bs(vals_sesion['Pujas']))
-    col_c2.metric("Premios", formatear_bs(vals_sesion['Premios']))
-    col_c3.metric("Pagos", formatear_bs(vals_sesion['Abonos']))
-    col_c4.metric("Neto", formatear_bs(neto_usuario))
-
-    with st.container(border=True):
-        st.markdown("📱 **Datos para Pago Móvil**")
-        pm = st.session_state.datos_pago_movil
-        st.info(f"Banco: {pm['banco']} | Teléfono: {pm['telefono']} | Cédula: {pm['cedula']}")
+    cards_html_slider = ""
+    for carr_h in carreras_permitidas:
+        det_h = st.session_state.detalles_carreras.get(carr_h, {})
+        cond_h = det_h.get('condicion', 'Carrera oficial')
+        dist_h = det_h.get('distancia', '1200 mts')
+        hora_h = det_h.get('hora', '02:00 PM')
         
-        with st.form("rep_pago"):
-            m_p = st.number_input("Monto (Bs.)", min_value=1.0, step=100.0)
-            ref_p = st.text_input("Referencia (Últimos 4 dígitos)")
-            if st.form_submit_button("📤 Enviar Reporte", type="primary"):
-                if m_p > 0 and ref_p:
-                    st.session_state.reportes_pago.append({"jugador": usuario_en_sesion, "monto": m_p, "banco": pm['banco'], "referencia": ref_p, "fecha": ahora_dt.strftime('%d/%m %I:%M'), "estado": "Pendiente"})
-                    enviar_notificacion_telegram_pago(0, usuario_en_sesion, m_p, pm['banco'], ref_p)
+        img_src_html = ""
+        if carr_h in st.session_state.imagenes_carreras:
+            img_src_html = f'<img src="{st.session_state.imagenes_carreras[carr_h]}" style="width:100%; height:260px; object-fit:cover; border-radius:8px; margin-bottom:10px;" />'
+        elif banner_b64:
+            img_src_html = f'<img src="data:image/png;base64,{banner_b64}" style="width:100%; height:260px; object-fit:cover; border-radius:8px; margin-bottom:10px;" />'
+        else:
+            img_src_html = f'<div style="width:100%; height:260px; background:#161b22; border:1px dashed #30363d; display:flex; align-items:center; justify-content:center; border-radius:8px; margin-bottom:10px; color:#8b949e; font-size:13px; font-weight:700;">{carr_h}</div>'
+
+        cards_html_slider += f"""
+            <div style="flex: 0 0 210px; background: #0d1117; border: 1px solid #30363d; border-radius: 12px; padding: 12px; text-align: left; box-shadow: 0px 5px 15px rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    {img_src_html}
+                    <div style="color: #f1c40f; font-size: 14px; font-weight: 900; margin-bottom: 5px;">{carr_h}</div>
+                    <div style="color: #8b949e; font-size: 10px; line-height: 1.3; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">{cond_h}</div>
+                </div>
+                <div style="color: #ffffff; font-size: 10px; font-weight: 700; margin-top: 10px; border-top: 1px solid #21262d; padding-top: 6px;">📏 {dist_h} &nbsp;|&nbsp; ⏰ {hora_h}</div>
+            </div>
+        """
+
+    if cards_html_slider:
+        st.markdown("🖼️ **Carrusel de Carreras Disponibles (Tarjetas Verticales Amplias):**")
+        st.markdown(f"""
+            <div style="display: flex; overflow-x: auto; gap: 12px; padding-bottom: 12px; margin-bottom: 14px; scrollbar-width: thin;">
+                {cards_html_slider}
+            </div>
+        """, unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.markdown(f"👤 **Jugador Activo:** `{st.session_state.usuario_activo}` &nbsp;|&nbsp; 💵 **Costo Ticket:** `{formatear_bs(monto_unico_seccion)}`")
+        if sub_dup_actual == "POLLA HIPICA":
+            st.markdown("<p style='color: #00ffff; font-size: 11px; font-weight: 700;'>ℹ️ <b>Regla de Polla Hípica:</b> Se juega en las últimas 6 carreras consecutivas de la semana. <u>Se permite registrar pollas/tickets repetidos</u>. Si hay varios ganadores con los mismos puntos máximos, <b>el pote se repartirá equitativamente entre ellos</b>.</p>", unsafe_allow_html=True)
+        st.markdown("---")
+
+        if not carreras_permitidas:
+            st.warning(f"⚠️ No hay carreras habilitadas para **{sub_dup_actual}**.")
+        else:
+            seleccion_legs = []
+            valido_legs = True
+            carreras_usadas = set()
+
+            if sub_dup_actual == "POLLA HIPICA":
+                st.markdown("🎯 **Selección de Ejemplares (Modelo Tarjetas C8, C9, etc. con Grilla Numérica):**")
+                
+                for carr_leg in carreras_permitidas:
+                    match_c = re.search(r'\d+', carr_leg)
+                    num_c_str = match_c.group(0) if match_c else carr_leg
+                    titulo_carrera_box = f"C{num_c_str} ({carr_leg})"
+
+                    st.markdown(f"""
+                        <div style="background: #16221c; border: 1.5px solid #2e5a42; border-radius: 10px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.5);">
+                            <div style="background: #234734; color: #f1c40f; font-size: 13px; font-weight: 900; padding: 6px 12px; border-bottom: 1px solid #2e5a42;">
+                                🏁 {titulo_carrera_box}
+                            </div>
+                            <div style="padding: 10px;">
+                    """, unsafe_allow_html=True)
+
+                    retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
+                    no_val_carr_t = st.session_state.get('ejemplares_no_valido', {}).get(carr_leg, [])
+                    excluidos_carr_t = set(retirados_carr_t) | set(no_val_carr_t)
+
+                    banco_cab_carr = st.session_state.banco_caballos_por_carrera.get(carr_leg, [])
+                    if not banco_cab_carr:
+                        banco_cab_carr = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
+
+                    k_sel_grid = f"grid_polla_{carr_leg}"
+                    if k_sel_grid not in st.session_state or st.session_state[k_sel_grid] not in banco_cab_carr:
+                        validos_ini = [c for c in banco_cab_carr if c not in excluidos_carr_t]
+                        st.session_state[k_sel_grid] = validos_ini[0] if validos_ini else banco_cab_carr[0]
+
+                    chunk_size = 7
+                    for i_chunk in range(0, len(banco_cab_carr), chunk_size):
+                        chunk_items = banco_cab_carr[i_chunk:i_chunk + chunk_size]
+                        cols_g = st.columns(len(chunk_items), gap="small")
+                        for idx_sub, cb_item in enumerate(chunk_items):
+                            num_p = cb_item.split(" - ")[0]
+                            es_excluido = cb_item in excluidos_carr_t
+                            es_seleccionado = (st.session_state[k_sel_grid] == cb_item)
+
+                            with cols_g[idx_sub]:
+                                if es_excluido:
+                                    st.button(f"❌ {num_p}", key=f"btn_g_{carr_leg}_{i_chunk}_{idx_sub}", disabled=True, use_container_width=True)
+                                else:
+                                    btn_type = "primary" if es_seleccionado else "secondary"
+                                    if st.button(f"{num_p}", key=f"btn_g_{carr_leg}_{i_chunk}_{idx_sub}", type=btn_type, use_container_width=True):
+                                        st.session_state[k_sel_grid] = cb_item
+                                        st.rerun()
+
+                    cab_leg = st.session_state[k_sel_grid]
+                    if cab_leg in excluidos_carr_t and banco_cab_carr:
+                        idx_ret = banco_cab_carr.index(cab_leg) if cab_leg in banco_cab_carr else 0
+                        siguiente_cab = None
+                        for siguiente_c in banco_cab_carr[idx_ret + 1:] + banco_cab_carr[:idx_ret]:
+                            if siguiente_c not in excluidos_carr_t:
+                                siguiente_cab = siguiente_c
+                                break
+                        if siguiente_cab:
+                            cab_leg = siguiente_cab
+                            st.session_state[k_sel_grid] = cab_leg
+
+                    seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
+                    st.markdown(f"""
+                            </div>
+                            <div style="background: #0d1611; padding: 5px 12px; border-top: 1px solid #2e5a42; font-size: 11px; color: #00ffff;">
+                                Seleccionado: <b>{cab_leg}</b>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+            else:
+                cantidad_pasos = 2 if sub_dup_actual == "Dupleta" else 3
+                for paso in range(cantidad_pasos):
+                    st.markdown(f"🔹 **Paso {paso + 1} de {cantidad_pasos}**")
+                    carr_leg = carreras_permitidas[paso % len(carreras_permitidas)]
+                    st.markdown(f"🏁 **Carrera:** `{carr_leg}`")
+                    
+                    retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
+                    no_val_carr_t = st.session_state.get('ejemplares_no_valido', {}).get(carr_leg, [])
+                    excluidos_carr_t = set(retirados_carr_t) | set(no_val_carr_t)
+
+                    banco_cab_carr = st.session_state.banco_caballos_por_carrera.get(carr_leg, [])
+                    caballos_in_carr = [c for c in banco_cab_carr if c not in excluidos_carr_t]
+                    if not caballos_in_carr:
+                        caballos_in_carr = banco_cab_carr if banco_cab_carr else ["1 - Ejemplar 1"]
+
+                    cab_leg = st.selectbox(
+                        f"Selecciona el Ejemplar para {carr_leg}", 
+                        options=caballos_in_carr, 
+                        key=f"ticket_cab_{sub_dup_actual}_{paso}"
+                    )
+
+                    if carr_leg in carreras_usadas:
+                        valido_legs = False
+                    carreras_usadas.add(carr_leg)
+                    seleccion_legs.append({"carrera": carr_leg, "ejemplar": cab_leg})
+                    st.markdown("---")
+
+            if not st.session_state.dupleta_bloqueada and not bloqueo_por_horario:
+                if st.button(f"🚀 Emitir Ticket de {sub_dup_actual}", key=f"btn_emitir_{sub_dup_actual}", use_container_width=True, type="primary"):
+                    if not valido_legs:
+                        st.error("⚠️ No puedes repetir la misma carrera en el mismo ticket.")
+                    else:
+                        legs_ordenadas = sorted(seleccion_legs, key=lambda x: x['carrera'])
+                        firma_combinacion = tuple((l['carrera'], l['ejemplar']) for l in legs_ordenadas)
+
+                        lista_tickets_activo = (
+                            st.session_state.dupletas_tickets if sub_dup_actual == "Dupleta" else
+                            st.session_state.tripleta_tickets if sub_dup_actual == "Tripleta" else
+                            st.session_state.polla_tickets
+                        )
+
+                        duplicado = False
+                        if sub_dup_actual != "POLLA HIPICA":
+                            for t in lista_tickets_activo:
+                                t_legs_ordenadas = sorted(t['legs'], key=lambda x: x['carrera'])
+                                t_firma = tuple((l['carrera'], l['ejemplar']) for l in t_legs_ordenadas)
+                                if t_firma == firma_combinacion:
+                                    duplicado = True
+                                    break
+
+                        if duplicado:
+                            st.error("❌ **BLOQUEADO:** Ya existe un ticket con esta misma combinación.")
+                        else:
+                            prefijo_id = "DUP" if sub_dup_actual == "Dupleta" else ("TRIP" if sub_dup_actual == "Tripleta" else "POLLA")
+                            ticket_id = f"{prefijo_id}-{len(lista_tickets_activo) + 1:04d}"
+                            
+                            nuevo_ticket_dict = {
+                                "id": ticket_id, "jugador": st.session_state.usuario_activo, "monto": monto_unico_seccion,
+                                "legs": seleccion_legs, "estado": "Pendiente", "fecha": ahora_dt.strftime('%d/%m %I:%M %p')
+                            }
+
+                            if sub_dup_actual == "Dupleta":
+                                st.session_state.dupletas_tickets.append(nuevo_ticket_dict)
+                            elif sub_dup_actual == "Tripleta":
+                                st.session_state.tripleta_tickets.append(nuevo_ticket_dict)
+                            else:
+                                st.session_state.polla_tickets.append(nuevo_ticket_dict)
+
+                            detalles_str = " ➔ ".join([f"{l['carrera']}: {l['ejemplar']}" for l in seleccion_legs])
+                            st.session_state.historial_jugadas.append({
+                                "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                "jugador": st.session_state.usuario_activo,
+                                "tipo": sub_dup_actual,
+                                "carrera": "Múltiple",
+                                "detalle": f"Ticket {ticket_id} ({detalles_str})",
+                                "monto": monto_unico_seccion
+                            })
+                            if st.session_state.usuario_activo not in st.session_state.cuentas:
+                                st.session_state.cuentas[st.session_state.usuario_activo] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                            st.session_state.cuentas[st.session_state.usuario_activo]['Pujas'] += monto_unico_seccion
+                            
+                            guardar_estado_global()
+                            
+                            components.html("<script>window.parent.reproducirAlertaMovilYCalle('exito');</script>", height=0, width=0)
+                            st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito (Estado: PENDIENTE)!")
+                            st.rerun()
+
+    if sub_dup_actual == "POLLA HIPICA":
+        st.markdown("---")
+        st.markdown("### 🏆 Panel de Resultados y Tabla de Posiciones (Polla Hípica)")
+        
+        with st.container(border=True):
+            st.markdown("🎯 **Cargar Resultados Oficiales por Carrera (Puntuación: 1° = 5 Ptos | 2° = 3 Ptos | 3° = 1 Pto)**")
+            carr_res_sel = st.selectbox("Seleccionar Carrera", carreras_permitidas, key="sel_carrera_resultado_polla")
+            
+            banco_caballos_carr = st.session_state.banco_caballos_por_carrera.get(carr_res_sel, [])
+            
+            col_res1, col_res2, col_res3 = st.columns(3)
+            with col_res1:
+                res_1ro = st.selectbox("1er Lugar (5 Ptos)", options=["Sin Asignar"] + banco_caballos_carr, key=f"res_1ro_{carr_res_sel}")
+            with col_res2:
+                res_2do = st.selectbox("2do Lugar (3 Ptos)", options=["Sin Asignar"] + banco_caballos_carr, key=f"res_2do_{carr_res_sel}")
+            with col_res3:
+                res_3ro = st.selectbox("3er Lugar (1 Pto)", options=["Sin Asignar"] + banco_caballos_carr, key=f"res_3ro_{carr_res_sel}")
+
+            if st.button("💾 Guardar Resultados Oficiales Carrera", key=f"btn_guardar_res_{carr_res_sel}", type="primary"):
+                if 'resultados_oficiales_polla' not in st.session_state:
+                    st.session_state.resultados_oficiales_polla = {}
+                st.session_state.resultados_oficiales_polla[carr_res_sel] = {
+                    "1ro": res_1ro, "2do": res_2do, "3ro": res_3ro
+                }
+                guardar_estado_global()
+                st.success(f"✅ Resultados oficiales de **{carr_res_sel}** guardados correctamente.")
+                st.rerun()
+
+        st.markdown("#### 📊 Tabla de Posiciones y Puntuación en Vivo")
+        
+        tabla_puntuaciones = {} 
+        resultados_oficiales = st.session_state.get('resultados_oficiales_polla', {})
+        
+        for t in st.session_state.polla_tickets:
+            puntos_ticket = 0
+            detalle_puntos = []
+            
+            for leg in t['legs']:
+                carr_l = leg['carrera']
+                ej_apostado = leg['ejemplar'].split(" (")[0]
+                
+                if carr_l in resultados_oficiales:
+                    res_c = resultados_oficiales[carr_l]
+                    
+                    if res_c.get("1ro") != "Sin Asignar" and ej_apostado in res_c.get("1ro"):
+                        puntos_ticket += 5
+                        detalle_puntos.append(f"{carr_l}: 1° (+5)")
+                    elif res_c.get("2do") != "Sin Asignar" and ej_apostado in res_c.get("2do"):
+                        puntos_ticket += 3
+                        detalle_puntos.append(f"{carr_l}: 2° (+3)")
+                    elif res_c.get("3ro") != "Sin Asignar" and ej_apostado in res_c.get("3ro"):
+                        puntos_ticket += 1
+                        detalle_puntos.append(f"{carr_l}: 3° (+1)")
+            
+            tabla_puntuaciones[t['id']] = {
+                "ticket": t['id'],
+                "jugador": t['jugador'],
+                "puntos": puntos_ticket,
+                "monto": t['monto'],
+                "detalle": " | ".join(detalle_puntos) if detalle_puntos else "Sin puntos aún"
+            }
+
+        if tabla_puntuaciones:
+            df_posiciones = pd.DataFrame(list(tabla_puntuaciones.values()))
+            df_posiciones = df_posiciones.sort_values(by="puntos", ascending=False).reset_index(drop=True)
+            df_posiciones.index = df_posiciones.index + 1
+            st.dataframe(df_posiciones, use_container_width=True)
+
+            max_puntos_actual = df_posiciones["puntos"].max() if not df_posiciones.empty else 0
+            
+            if max_puntos_actual > 0 and len(resultados_oficiales) >= len(carreras_permitidas):
+                tickets_ganadores_lista = [row for row in tabla_puntuaciones.values() if row['puntos'] == max_puntos_actual]
+                cant_ganadores = len(tickets_ganadores_lista)
+                pote_repartido = pote_total / cant_ganadores if cant_ganadores > 0 else 0
+
+                nombres_ganadores_str = ", ".join([f"{g['ticket']} ({g['jugador']})" for g in tickets_ganadores_lista])
+                
+                st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%); border: 3px solid #ffffff; border-radius: 10px; padding: 12px; text-align: center; color: #000000; font-weight: 900; margin-top: 10px; box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);">
+                        🏆 ¡POLLA HÍPICA FINALIZADA - POTES REPARTIDOS! 🏆<br>
+                        Ganadores con <b>{max_puntos_actual} puntos</b>: {nombres_ganadores_str}<br>
+                        💰 Pote total ({formatear_bs(pote_total)}) repartido entre {cant_ganadores} ganador(es): <b>{formatear_bs(pote_repartido)} c/u</b>.
+                    </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.info("ℹ️ No hay tickets registrados en la Polla Hípica para calcular posiciones.")
+
+    st.markdown("---")
+    st.markdown(f"### 📋 Historial de Tickets ({sub_dup_actual})")
+    lista_tickets_activo_ver = (
+        st.session_state.dupletas_tickets if sub_dup_actual == "Dupleta" else
+        st.session_state.tripleta_tickets if sub_dup_actual == "Tripleta" else
+        st.session_state.polla_tickets
+    )
+    if not lista_tickets_activo_ver:
+        st.info("No hay tickets emitidos todavía en esta sección.")
+    else:
+        for idx_t, t in enumerate(reversed(lista_tickets_activo_ver)):
+            with st.container(border=True):
+                col_t1, col_t2, col_t3, col_t4 = st.columns([2, 2, 2, 2])
+                col_t1.markdown(f"🏷️ `{t['id']}`")
+                col_t2.markdown(f"👤 `{t['jugador']}`")
+                col_t3.markdown(f"💰 `{formatear_bs(t['monto'])}`")
+                
+                estado_ticket_txt = t.get('estado', 'Pendiente')
+                if "GANADOR" in estado_ticket_txt:
+                    col_t4.markdown(f"📌 **Estado:** `<span style='color: #2ed573; font-weight: 900;'>{estado_ticket_txt}</span>`", unsafe_allow_html=True)
+                else:
+                    col_t4.markdown(f"📌 **Estado:** `{estado_ticket_txt}`")
+                
+                detalles_legs = " ➔ ".join([f"**{l['carrera']}**: {l['ejemplar']}" for l in t['legs']])
+                st.markdown(f"> {detalles_legs}")
+                st.caption(f"Emitido: {t['fecha']}")
+
+                if sub_dup_actual != "POLLA HIPICA":
+                    retirado_in_ticket = False
+                    carrera_afectada = None
+                    for leg in t['legs']:
+                        carr_l = leg['carrera']
+                        ej_l = leg['ejemplar'].split(" (")[0]
+                        retirados_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
+                        noval_carr = st.session_state.get('ejemplares_no_valido', {}).get(carr_l, [])
+                        if ej_l in retirados_carr or ej_l in noval_carr:
+                            retirado_in_ticket = True
+                            carrera_afectada = carr_l
+                            break
+
+                    if retirado_in_ticket:
+                        if t.get('estado') == 'Pendiente':
+                            t['estado'] = 'Nulo (Retirado/No Valido)'
+                            jug_t = t['jugador']
+                            monto_t = t['monto']
+                            if jug_t in st.session_state.cuentas:
+                                st.session_state.cuentas[jug_t]['Pujas'] = max(0.0, st.session_state.cuentas[jug_t]['Pujas'] - monto_t)
+                            st.session_state.historial_jugadas.append({
+                                "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                "jugador": jug_t,
+                                "tipo": "Ticket Anulado (Retiro/Invalidez)",
+                                "carrera": carrera_afectada,
+                                "detalle": f"Ticket {t['id']} anulado por retiro/invalidez",
+                                "monto": -monto_t
+                            })
+                            guardar_estado_global()
+
+                        st.error(f"❌ El ticket **{t['id']}** está **NULO** y su monto ha sido restado porque el ejemplar de la **{carrera_afectada}** fue retirado o marcado como no válido:")
+                        
+                        with st.form(key=f"form_modificar_ticket_{t['id']}_{idx_t}"):
+                            nuevas_legs = []
+                            for i_l, leg in enumerate(t['legs']):
+                                carr_l = leg['carrera']
+                                ej_actual = leg['ejemplar'].split(" (")[0]
+                                
+                                if carr_l == carrera_afectada:
+                                    ret_carr = st.session_state.ejemplares_retirados.get(carr_l, [])
+                                    noval_carr = st.session_state.get('ejemplares_no_valido', {}).get(carr_l, [])
+                                    excl_carr = set(ret_carr) | set(noval_carr)
+                                    disponibles_l = [c for c in list(st.session_state.remates.get(carr_l, {}).keys()) if c not in excl_carr]
+                                    
+                                    idx_def = 0
+                                    if ej_actual in disponibles_l:
+                                        idx_def = disponibles_l.index(ej_actual)
+
+                                    nuevo_ej = st.selectbox(
+                                        f"Elija nuevo ejemplar para {carr_l} (Invalido/Retirado: {ej_actual})",
+                                        options=disponibles_l if disponibles_l else [ej_actual],
+                                        index=idx_def,
+                                        key=f"mod_ticket_{t['id']}_carr_{carr_l}"
+                                    )
+                                    nuevas_legs.append({"carrera": carr_l, "ejemplar": f"{nuevo_ej} (Cambiado por retiro/invalidez)"})
+                                else:
+                                    nuevas_legs.append(leg)
+
+                            if st.form_submit_button("🔄 Reactivar y Asignar Nuevo Ejemplar", use_container_width=True):
+                                t['legs'] = nuevas_legs
+                                t['estado'] = 'Pendiente'
+                                jug_t = t['jugador']
+                                monto_t = t['monto']
+                                
+                                if jug_t not in st.session_state.cuentas:
+                                    st.session_state.cuentas[jug_t] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                st.session_state.cuentas[jug_t]['Pujas'] += monto_t
+                                
+                                st.session_state.historial_jugadas.append({
+                                    "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                                    "jugador": jug_t,
+                                    "tipo": sub_dup_actual,
+                                    "carrera": "Múltiple Reactivada",
+                                    "detalle": f"Ticket {t['id']} reactivado tras cambio",
+                                    "monto": monto_t
+                                })
+
+                                guardar_estado_global()
+                                st.success(f"✅ ¡Ticket {t['id']} reactivado con éxito!")
+                                st.rerun()
+
+# =========================================================================
+# 3. MÓDULO DE CUENTAS
+# =========================================================================
+elif menu_principal_opcion == "Cuentas":
+    st.markdown('<div id="reportar-pago-section"></div>', unsafe_allow_html=True)
+    
+    st.markdown("<div class='subasta-header'>📊 Mis Cuentas, Historial y Reporte de Pago Móvil</div>", unsafe_allow_html=True)
+    jugador_actual = st.session_state.usuario_activo
+    st.markdown(f"👤 **Jugador en Sesión:** `{jugador_actual}`")
+
+    if jugador_actual not in st.session_state.cuentas:
+        st.session_state.cuentas[jugador_actual] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+    
+    vals = st.session_state.cuentas[jugador_actual]
+    pujas, premios, abonos = vals['Pujas'], vals['Premios'], vals['Abonos']
+    balance_neto = pujas - abonos - premios
+
+    col_cu1, col_cu2, col_cu3, col_cu4 = st.columns(4, gap="small")
+    col_cu1.metric("🛒 Compras", formatear_bs(pujas))
+    col_cu2.metric("🏆 Premios", formatear_bs(premios))
+    col_cu3.metric("💳 Pagos", formatear_bs(abonos))
+    col_cu4.metric("⚖️ Neto", formatear_bs(balance_neto))
+
+    st.markdown("---")
+
+    with st.container(border=True):
+        st.markdown("📱 **1. Datos para Pago Móvil**")
+        p_movil = st.session_state.datos_pago_movil
+        
+        html_pago_movil_vertical = f"""
+        <button onclick="navigator.clipboard.writeText(`Banco: {p_movil['banco']}\\nTeléfono: {p_movil['telefono']}\\nCédula/RIF: {p_movil['cedula']}`); alert('¡Datos copiados!');" style="width: 100%; background: #21262d; color: #00ffff; border: 1px solid #30363d; padding: 7px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 11px; margin-bottom: 8px;">
+            📋 COPIAR DATOS
+        </button>
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 8px 10px; font-family: sans-serif; color: #f0f6fc; font-size: 11px;">
+            <div style="margin-bottom: 4px;">🏦 <b>Banco:</b> {p_movil['banco']}</div>
+            <div style="margin-bottom: 4px;">📱 <b>Teléfono:</b> {p_movil['telefono']}</div>
+            <div>🆔 <b>Cédula/RIF:</b> {p_movil['cedula']}</div>
+        </div>
+        """
+        components.html(html_pago_movil_vertical, height=105)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    BANCOS_VENEZUELA = [
+        "0102 - Banco de Venezuela", "0104 - Venezolano de Crédito", "0105 - Mercantil",
+        "0108 - Provincial", "0114 - Bancaribe", "0115 - Exterior", "0128 - Banco Caroní",
+        "0134 - Banesco", "0137 - Sofitasa", "0138 - Banco Plaza", "0151 - BFC Banco Fondo Común",
+        "0156 - 100% Banco", "0157 - Del Sur", "0163 - Banco del Tesoro",
+        "0169 - Mi Banco", "0171 - Banco Activo", "0172 - Bancamiga", "0174 - Banplus",
+        "0175 - Bicentenario", "0177 - Banfanb", "0191 - BNC Nacional de Crédito"
+    ]
+
+    with st.container(border=True):
+        st.markdown("📝 **2. Reportar un Pago Realizado**")
+        with st.form(key="form_reportar_pago_jugador"):
+            monto_rep = st.number_input("Monto Pagado (Bs.)", min_value=0.5, step=100.0)
+            banco_remitente = st.selectbox("Banco Emisor (de donde envió)", BANCOS_VENEZUELA)
+            ref_pago = st.text_input("Últimos 4 dígitos o Referencia")
+            
+            if st.form_submit_button("📤 Enviar Reporte de Pago", use_container_width=True):
+                if monto_rep > 0 and ref_pago:
+                    nuevo_reporte = {
+                        "jugador": jugador_actual,
+                        "monto": monto_rep,
+                        "banco": banco_remitente,
+                        "referencia": ref_pago,
+                        "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M %p'),
+                        "estado": "Pendiente de Aprobación"
+                    }
+                    st.session_state.reportes_pago.append(nuevo_reporte)
+                    
+                    idx_nuevo = len(st.session_state.reportes_pago) - 1
+                    enviar_notificacion_telegram_pago(idx_nuevo, jugador_actual, monto_rep, banco_remitente, ref_pago)
+                    
                     guardar_estado_global()
-                    st.success("✅ Reporte enviado.")
+                    st.success("✅ ¡Reporte de pago enviado con éxito! Notificación enviada a Telegram.")
+                    st.rerun()
+                else:
+                    st.error("⚠️ Ingrese un monto válido y la referencia.")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.markdown("📋 **3. Mis Reportes Enviados**")
+        mis_reportes = [r for r in st.session_state.reportes_pago if r['jugador'] == jugador_actual]
+        if not mis_reportes:
+            st.info("ℹ️ No has enviado reportes de pago todavía.")
+        else:
+            for rep in reversed(mis_reportes):
+                st.markdown(f"🔹 *{rep['fecha']}* | **{formatear_bs(rep['monto'])}** | Banco: `{rep['banco']}` | Ref: `{rep['referencia']}` | 📌 `{rep['estado']}`")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.markdown(f"### 🎟️ 4. Historial de Tickets y Asignaciones de `{jugador_actual}`")
+
+        st.markdown("#### 🐎 Tickets de Remates Ganadores (Al Cierre)")
+        remates_ganados_por_carrera = {}
+        for carr_k, remates_carr in st.session_state.remates.items():
+            carrera_remate_cerrada = st.session_state.carreras_cerradas_remate.get(carr_k, False)
+            if carrera_remate_cerrada:
+                for ej_k, info_rem in remates_carr.items():
+                    if info_rem['jugador'] == jugador_actual and info_rem['monto'] > 0:
+                        retirados_c = st.session_state.ejemplares_retirados.get(carr_k, [])
+                        noval_c = st.session_state.get('ejemplares_no_valido', {}).get(carr_k, [])
+                        if ej_k not in retirados_c and ej_k not in noval_c:
+                            remates_ganados_por_carrera[carr_k] = {
+                                "ejemplar": ej_k,
+                                "monto": info_rem['monto']
+                            }
+
+        if remates_ganados_por_carrera:
+            for carr_k, info_r in remates_ganados_por_carrera.items():
+                detalles_c = st.session_state.detalles_carreras.get(carr_k, {})
+                
+                fecha_puja = "Jornada actual"
+                for h in reversed(st.session_state.historial_jugadas):
+                    if h.get('carrera') == carr_k and h.get('jugador') == jugador_actual and h.get('detalle') == info_r['ejemplar']:
+                        fecha_puja = h.get('fecha', '')
+                        break
+
+                ticket_html = f"""
+                    <div class="ticket-jugador-card">
+                        <div class="ticket-header-row">
+                            <span>🏷️ TICKET REMATE (OFICIAL)</span>
+                            <span>📅 {fecha_puja}</span>
+                        </div>
+                        <div class="ticket-body-row">🏁 <b>Carrera:</b> {carr_k}</div>
+                        <div class="ticket-body-row">🐎 <b>Ejemplar:</b> {info_r['ejemplar']}</div>
+                        <div class="ticket-body-row" style="color: #f1c40f; margin-top: 6px;">💰 <b>Monto:</b> {formatear_bs(info_r['monto'])}</div>
+                    </div>
+                """
+                st.markdown(ticket_html, unsafe_allow_html=True)
+        else:
+            st.info("ℹ️ Los tickets de remate se muestran aquí cuando se cierren las carreras.")
+
+        st.markdown("---")
+        tickets_usuario_dupletas = [t for t in st.session_state.dupletas_tickets if t['jugador'] == jugador_actual]
+        tickets_usuario_tripletas = [t for t in st.session_state.tripleta_tickets if t['jugador'] == jugador_actual]
+        tickets_usuario_pollas = [t for t in st.session_state.polla_tickets if t['jugador'] == jugador_actual]
+        todos_tickets_multiples = tickets_usuario_dupletas + tickets_usuario_tripletas + tickets_usuario_pollas
+
+        if todos_tickets_multiples:
+            st.markdown("#### 🎟️ Tickets Múltiples")
+            for t in reversed(todos_tickets_multiples):
+                detalles_legs = " ➔ ".join([f"**{l['carrera']}**: {l['ejemplar']}" for l in t['legs']])
+                estado_t = t.get('estado', 'Pendiente')
+                color_est = "#2ed573" if estado_t == 'Pendiente' else "#ff4757"
+
+                ticket_m_html = f"""
+                    <div class="ticket-jugador-card" style="border-color: {color_est};">
+                        <div class="ticket-header-row">
+                            <span>🏷️ {t['id']}</span>
+                            <span style="color: {color_est};">📌 {estado_t}</span>
+                        </div>
+                        <div class="ticket-body-row">🛤️ <b>Selecciones:</b> {detalles_legs}</div>
+                        <div class="ticket-body-row" style="color: #f1c40f; margin-top: 6px;">💰 <b>Monto:</b> {formatear_bs(t['monto'])}</div>
+                    </div>
+                """
+                st.markdown(ticket_m_html, unsafe_allow_html=True)
+        else:
+            st.info("ℹ️ No hay tickets múltiples registrados.")
+
+# =========================================================================
+# 4. ZONA DE ADMINISTRADOR
+# =========================================================================
+elif menu_principal_opcion == "🔒 Zona Admin":
+    st.markdown("<div class='subasta-header'>🔒 Panel de Configuración y Administración</div>", unsafe_allow_html=True)
+    
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        "⚙️ Controles & Jornada",
+        "✍️ Banco de Caballos", 
+        "👥 Usuarios", 
+        "⚙️ Dupleta/Polla", 
+        "📺 Video", 
+        "📊 Saldos", 
+        "🖼️ Imágenes"
+    ])
+
+    with tab1:
+        st.markdown("### ⚙️ Controles Generales de la Jornada")
+        
+        with st.container(border=True):
+            st.markdown("👤 **Selector de Usuario Activo**")
+            usuario_seleccionado_admin = st.selectbox(
+                "Cambiar de Usuario en Sesión",
+                options=st.session_state.lista_usuarios,
+                index=st.session_state.lista_usuarios.index(st.session_state.usuario_activo) if st.session_state.usuario_activo in st.session_state.lista_usuarios else 0,
+                key="admin_select_usuario_activo"
+            )
+            if usuario_seleccionado_admin != st.session_state.usuario_activo:
+                st.session_state.usuario_activo = usuario_seleccionado_admin
+                guardar_estado_global()
+                st.rerun()
+
+        with st.container(border=True):
+            st.markdown("🏠 **Retención de la Casa**")
+            porcentaje_casa_val = st.slider("Porcentaje de retención (%)", 0, 50, int(st.session_state.get('porcentaje_casa', 30)), key="admin_slider_retencion_casa")
+            if porcentaje_casa_val != st.session_state.get('porcentaje_casa', 30):
+                st.session_state.porcentaje_casa = porcentaje_casa_val
+                guardar_estado_global()
+
+        with st.container(border=True):
+            st.markdown("🙈 **Mapeo de Remates Ciegos (1V y 6V)**")
+            carreras_disp_mapeo = list(st.session_state.banco_caballos_por_carrera.keys())
+            carreras_disp_mapeo = [c for c in carreras_disp_mapeo if c not in ["1V", "6V"]]
+            
+            if 'mapeo_ciegos' not in st.session_state:
+                st.session_state.mapeo_ciegos = {"1V": "", "6V": ""}
+
+            map_1v = st.selectbox("Asignar Carrera Real a 1V", options=[""] + carreras_disp_mapeo, index=(carreras_disp_mapeo.index(st.session_state.mapeo_ciegos.get("1V")) + 1) if st.session_state.mapeo_ciegos.get("1V") in carreras_disp_mapeo else 0, key="sel_map_1v")
+            map_6v = st.selectbox("Asignar Carrera Real a 6V", options=[""] + carreras_disp_mapeo, index=(carreras_disp_mapeo.index(st.session_state.mapeo_ciegos.get("6V")) + 1) if st.session_state.mapeo_ciegos.get("6V") in carreras_disp_mapeo else 0, key="sel_map_6v")
+
+            if st.button("💾 Guardar Mapeo de Ciegos", key="btn_save_map_ciegos", type="primary"):
+                st.session_state.mapeo_ciegos["1V"] = map_1v
+                st.session_state.mapeo_ciegos["6V"] = map_6v
+                guardar_estado_global()
+                st.toast("✅ ¡Mapeo de Remates Ciegos guardado!")
+                st.rerun()
+
+        with st.container(border=True):
+            st.markdown("🔒 **Estado de Dupletas y Polla Hípica**")
+            if st.session_state.dupleta_bloqueada:
+                st.markdown("<p style='color: #ff4757; font-weight: bold;'>🔴 ESTADO: BLOQUEADAS</p>", unsafe_allow_html=True)
+                if st.button("🔓 Desbloquear Emisión", key="admin_btn_desbloquear_dupleta", use_container_width=True, type="primary"):
+                    st.session_state.dupleta_bloqueada = False
+                    guardar_estado_global()
+                    st.rerun()
+            else:
+                st.markdown("<p style='color: #00d2d3; font-weight: bold;'>🟢 ESTADO: ABIERTAS</p>", unsafe_allow_html=True)
+                if st.button("🔒 Bloquear Emisión", key="admin_btn_bloquear_dupleta", use_container_width=True):
+                    st.session_state.dupleta_bloqueada = True
+                    guardar_estado_global()
                     st.rerun()
 
-elif menu_principal_opcion == "🔒 Zona Admin":
-    st.markdown("<div class='subasta-header'>🔒 Panel de Administración</div>", unsafe_allow_html=True)
-    at1, at2, at3 = st.tabs(["⚙️ Controles", "✍️ Caballos", "📊 Saldos"])
-    with at1:
-        us_sel = st.selectbox("Usuario Activo", st.session_state.lista_usuarios, key="adm_u_act")
-        if us_sel != st.session_state.usuario_activo:
-            st.session_state.usuario_activo = us_sel
-            guardar_estado_global()
-            st.rerun()
-    with at2:
-        st.markdown("Gestión de banco de caballos.")
-    with at3:
-        st.metric("Ganancia Total Casa", formatear_bs(st.session_state.ganancia_casa))
+        with st.container(border=True):
+            st.markdown("🏁 **Cierre y Liquidación Manual de Remates**")
+            todas_carrs_liq = list(st.session_state.remates.keys())
+            carr_seleccionada_liq = st.selectbox("Seleccionar Carrera", todas_carrs_liq, key="admin_liq_sel_carrera")
+            c_cerrada_actual = st.session_state.carreras_cerradas_remate.get(carr_seleccionada_liq, False)
+            
+            if not c_cerrada_actual:
+                if st.button(f"🔒 Cerrar Remate - {carr_seleccionada_liq}", key=f"admin_liq_cerrar_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
+                    st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = True
+                    st.session_state.estado_conteo_carrera_modalidad[carr_seleccionada_liq] = "CERRADO"
+                    st.session_state.detalles_carreras[carr_seleccionada_liq]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
+                    if not st.session_state.remates_cargados_en_cuentas.get(carr_seleccionada_liq, False):
+                        retirados_carr = st.session_state.ejemplares_retirados.get(carr_seleccionada_liq, [])
+                        no_val_carr = st.session_state.get('ejemplares_no_valido', {}).get(carr_seleccionada_liq, [])
+                        for cab, info in st.session_state.remates[carr_seleccionada_liq].items():
+                            if cab in retirados_carr or cab in no_val_carr:
+                                continue
+                            if info['jugador'] != "Sin Postor" and info['monto'] > 0:
+                                if info['jugador'] not in st.session_state.cuentas:
+                                    st.session_state.cuentas[info['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                st.session_state.cuentas[info['jugador']]['Pujas'] += info['monto']
+                        st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = True
+                    guardar_estado_global()
+                    st.rerun()
+            else:
+                if st.button(f"🔓 Reabrir Remate - {carr_seleccionada_liq}", key=f"admin_liq_reabrir_{carr_seleccionada_liq}", use_container_width=True):
+                    st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = False
+                    st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = False
+                    guardar_estado_global()
+                    st.rerun()
+
+        with st.container(border=True):
+            st.markdown("🚨 **Acción Crítica de Jornada**")
+            if st.button("🗑️ Reiniciar Toda la Jornada", key="admin_btn_reiniciar_jornada", use_container_width=True):
+                keys_excluidos = [
+                    'banco_caballos_por_carrera', 
+                    'lista_usuarios', 
+                    'datos_pago_movil', 
+                    'reportes_pago', 
+                    'cuentas'
+                ]
+                for key in list(st.session_state.keys()):
+                    if key not in keys_excluidos:
+                        del st.session_state[key]
+                guardar_estado_global()
+                st.toast("🚨 Jornada reiniciada.")
+                st.rerun()
+
+    with tab2:
+        st.markdown("### ✍️ Banco de Caballos (Data Persistente y Asignación)")
+        with st.container(border=True):
+            st.markdown("📅 **Configuración General de la Semana**")
+            nueva_cantidad_carreras = st.number_input(
+                "¿Cuántas carreras van a correr esta semana?", 
+                min_value=1, max_value=25, 
+                value=int(st.session_state.total_carreras_semana), 
+                step=1, key="input_total_carreras_semana"
+            )
+            if st.button("💾 Actualizar Carreras", key="btn_actualizar_cant_carreras", use_container_width=True, type="primary"):
+                st.session_state.total_carreras_semana = nueva_cantidad_carreras
+                
+                carreras_generadas = [f"Carrera {i}" for i in range(1, nueva_cantidad_carreras + 1)]
+                
+                for c_n in carreras_generadas:
+                    if c_n not in st.session_state.banco_caballos_por_carrera:
+                        st.session_state.banco_caballos_por_carrera[c_n] = [f"{j} - Ejemplar {j}" for j in range(1, 11)]
+                    
+                    if c_n not in st.session_state.remates:
+                        st.session_state.remates[c_n] = {f"{j} - Ejemplar {j}": {"jugador": "Sin Postor", "monto": 0.0} for j in range(1, 11)}
+                    
+                    if c_n not in st.session_state.detalles_carreras:
+                        st.session_state.detalles_carreras[c_n] = {
+                            "condicion": "Condición estándar", 
+                            "distancia": "1200 mts", 
+                            "hora": "02:00 PM", 
+                            "monto_fijo_ciego": 500.0, 
+                            "incentivo_adelantados": 0.0,
+                            "incentivo_ciegos": 0.0,
+                            "incentivo_envivo": 0.0,
+                            "hora_cierre_real": "No registrada"
+                        }
+                    
+                    if c_n not in st.session_state.carreras_cerradas_remate:
+                        st.session_state.carreras_cerradas_remate[c_n] = False
+                    if c_n not in st.session_state.remates_cargados_en_cuentas:
+                        st.session_state.remates_cargados_en_cuentas[c_n] = False
+                    if c_n not in st.session_state.ejemplares_retirados:
+                        st.session_state.ejemplares_retirados[c_n] = []
+                    if 'ejemplares_no_valido' in st.session_state and c_n not in st.session_state.ejemplares_no_valido:
+                        st.session_state.ejemplares_no_valido[c_n] = []
+
+                st.session_state.carreras_activas_remate = list(carreras_generadas)
+                st.session_state.carreras_habilitadas_dupleta = list(carreras_generadas)
+                st.session_state.carreras_habilitadas_tripleta = list(carreras_generadas)
+                
+                inicio_p_adm = max(1, nueva_cantidad_carreras - 5)
+                st.session_state.carreras_habilitadas_polla = [f"Carrera {i}" for i in range(inicio_p_adm, nueva_cantidad_carreras + 1) if f"Carrera {i}" in st.session_state.remates]
+                
+                if not st.session_state.carreras_por_modalidad.get("Adelantados"):
+                    st.session_state.carreras_por_modalidad["Adelantados"] = list(carreras_generadas)
+
+                guardar_estado_global()
+                st.toast(f"✅ ¡Jornada ajustada a {nueva_cantidad_carreras} carreras con éxito!")
+                st.rerun()
+
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown("⚡ **Panel Didáctico: Carreras Activas para Remate General**")
+            carreras_disponibles_todas = list(st.session_state.remates.keys())
+            carreras_disponibles_todas = [c for c in carreras_disponibles_todas if c not in ["1V", "6V"]]
+            if not carreras_disponibles_todas:
+                st.warning("⚠️ No hay carreras en el banco.")
+            else:
+                carreras_activas_actuales = st.session_state.carreras_activas_remate
+                cols_grid = st.columns(min(4, len(carreras_disponibles_todas)), gap="small")
+                nuevas_activas = []
+                for i, carr_n in enumerate(carreras_disponibles_todas):
+                    col_idx = i % len(cols_grid)
+                    with cols_grid[col_idx]:
+                        estado_marcado = st.checkbox(
+                            f"🏁 {carr_n}", 
+                            value=(carr_n in carreras_activas_actuales),
+                            key=f"chk_didactico_activa_{carr_n}"
+                        )
+                        if estado_marcado:
+                            nuevas_activas.append(carr_n)
+                if st.button("💾 Guardar Carreras Activas", key="btn_save_activas_didactico", use_container_width=True, type="primary"):
+                    st.session_state.carreras_activas_remate = nuevas_activas
+                    guardar_estado_global()
+                    st.toast("✅ ¡Actualizado con éxito!")
+                    st.rerun()
+
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown("🎯 **Asignación Independiente de Carreras por Modalidad**")
+            carreras_existentes = list(st.session_state.banco_caballos_por_carrera.keys())
+            carreras_existentes = [c for c in carreras_existentes if c not in ["1V", "6V"]]
+            
+            modalidades_dict = st.session_state.carreras_por_modalidad
+            
+            def_adel = [c for c in modalidades_dict.get("Adelantados", []) if c in carreras_existentes]
+            def_envivo = [c for c in modalidades_dict.get("En Vivo", []) if c in carreras_existentes]
+
+            sel_adel = st.multiselect("Carreras para Adelantados", options=carreras_existentes, default=def_adel, key="multiselect_carr_adelantados")
+            sel_envivo = st.multiselect("Carreras para 🔴 En Vivo", options=carreras_existentes, default=def_envivo, key="multiselect_carr_envivo")
+
+            if st.button("💾 Guardar Modalidades Independientes", key="btn_save_mod_independientes", use_container_width=True, type="primary"):
+                st.session_state.carreras_por_modalidad["Adelantados"] = sel_adel
+                st.session_state.carreras_por_modalidad["En Vivo"] = sel_envivo
+                guardar_estado_global()
+                st.toast("✅ ¡Modalidades guardadas correctamente!")
+                st.rerun()
+
+        st.markdown("---")
+        todas_carreras_banco = list(st.session_state.banco_caballos_por_carrera.keys())
+        carr_banco_sel = st.selectbox("Seleccionar Carrera para Editar", todas_carreras_banco, key="adm_banco_sel_carrera")
+        
+        if carr_banco_sel not in st.session_state.banco_caballos_por_carrera:
+            st.session_state.banco_caballos_por_carrera[carr_banco_sel] = []
+        if carr_banco_sel not in st.session_state.detalles_carreras:
+            st.session_state.detalles_carreras[carr_banco_sel] = {
+                "condicion": "Condición general", 
+                "distancia": "1200 mts", 
+                "hora": "02:00 PM", 
+                "monto_fijo_ciego": 500.0, 
+                "incentivo_adelantados": 0.0,
+                "incentivo_ciegos": 0.0,
+                "incentivo_envivo": 0.0,
+                "hora_cierre_real": "No registrada"
+            }
+
+        det_actuales = st.session_state.detalles_carreras[carr_banco_sel]
+        with st.container(border=True):
+            st.markdown(f"🛠️ **Detalles e Incentivos por Modalidad ({carr_banco_sel})**")
+            edit_cond = st.text_input("Condición", value=det_actuales.get('condicion', ''), key=f"banco_cond_{carr_banco_sel}")
+            col_b1, col_b2, col_b3 = st.columns(3)
+            with col_b1:
+                edit_dist = st.text_input("Distancia", value=det_actuales.get('distancia', ''), key=f"banco_dist_{carr_banco_sel}")
+            with col_b2:
+                edit_hora = st.text_input("Hora", value=det_actuales.get('hora', ''), key=f"banco_hora_{carr_banco_sel}")
+            with col_b3:
+                edit_monto_ciego = st.number_input("Monto Fijo Ciego", min_value=0.0, value=float(det_actuales.get('monto_fijo_ciego', 500.0)), step=50.0, key=f"banco_monto_ciego_{carr_banco_sel}")
+
+            st.markdown("🎁 **Incentivos Separados por Modalidad:**")
+            col_inc1, col_inc2, col_inc3 = st.columns(3)
+            with col_inc1:
+                edit_inc_adel = st.number_input("Incentivo Adelantados", min_value=0.0, value=float(det_actuales.get('incentivo_adelantados', 0.0)), step=50.0, key=f"banco_inc_adel_{carr_banco_sel}")
+            with col_inc2:
+                edit_inc_ciegos = st.number_input("Incentivo Ciegos", min_value=0.0, value=float(det_actuales.get('incentivo_ciegos', 0.0)), step=50.0, key=f"banco_inc_ciegos_{carr_banco_sel}")
+            with col_inc3:
+                edit_inc_envivo = st.number_input("Incentivo En Vivo", min_value=0.0, value=float(det_actuales.get('incentivo_envivo', 0.0)), step=50.0, key=f"banco_inc_envivo_{carr_banco_sel}")
+            
+            if st.button("💾 Guardar Detalles e Incentivos", key=f"btn_save_banco_det_{carr_banco_sel}", use_container_width=True, type="primary"):
+                st.session_state.detalles_carreras[carr_banco_sel] = {
+                    "condicion": edit_cond, 
+                    "distancia": edit_dist, 
+                    "hora": edit_hora, 
+                    "monto_fijo_ciego": edit_monto_ciego,
+                    "incentivo_adelantados": edit_inc_adel,
+                    "incentivo_ciegos": edit_inc_ciegos,
+                    "incentivo_envivo": edit_inc_envivo,
+                    "hora_cierre_real": det_actuales.get("hora_cierre_real", "No registrada")
+                }
+                guardar_estado_global()
+                st.toast("✅ ¡Detalles e incentivos guardados!")
+                st.rerun()
+
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown(f"⏰ **Control de Horarios Individuales por Modalidad ({carr_banco_sel})**")
+            mod_seleccionada_horarios = st.selectbox("Seleccionar Modalidad para Configurar Horarios", ["Adelantados", "Ciegos", "En Vivo"], key=f"sel_mod_horarios_{carr_banco_sel}")
+            
+            clave_mod_carr_adm = f"{mod_seleccionada_horarios}_{carr_banco_sel}"
+            
+            col_h1, col_h2 = st.columns(2)
+            with col_h1:
+                st.markdown(f"**🟢 Inicio ({mod_seleccionada_horarios})**")
+                f_ini = st.date_input("Fecha Inicio", value=ahora_dt.date(), key=f"f_ini_{clave_mod_carr_adm}")
+                
+                c_hi1, c_hi2, c_hi3 = st.columns(3)
+                with c_hi1:
+                    h_ini_val = st.number_input("Hora (1-12)", min_value=1, max_value=12, value=2, key=f"hi_h_{clave_mod_carr_adm}")
+                with c_hi2:
+                    m_ini_val = st.number_input("Min (0-59)", min_value=0, max_value=59, value=0, key=f"hi_m_{clave_mod_carr_adm}")
+                with c_hi3:
+                    ampm_ini = st.selectbox("AM/PM", ["AM", "PM"], index=1, key=f"hi_ap_{clave_mod_carr_adm}")
+
+            with col_h2:
+                st.markdown(f"**⏰ Cierre Estricto ({mod_seleccionada_horarios})**")
+                f_cier = st.date_input("Fecha Cierre", value=ahora_dt.date(), key=f"f_cier_{clave_mod_carr_adm}")
+                
+                c_hc1, c_hc2, c_hc3 = st.columns(3)
+                with c_hc1:
+                    h_cier_val = st.number_input("Hora (1-12)", min_value=1, max_value=12, value=2, key=f"hc_h_{clave_mod_carr_adm}")
+                with c_hc2:
+                    m_cier_val = st.number_input("Min (0-59)", min_value=0, max_value=59, value=30, key=f"hc_m_{clave_mod_carr_adm}")
+                with c_hc3:
+                    ampm_cier = st.selectbox("AM/PM", ["AM", "PM"], index=1, key=f"hc_ap_{clave_mod_carr_adm}")
+
+            if st.button(f"💾 Guardar Horarios para {mod_seleccionada_horarios}", key=f"btn_save_horarios_{clave_mod_carr_adm}", use_container_width=True, type="primary"):
+                h_i_24 = h_ini_val if ampm_ini == "AM" else (h_ini_val + 12 if h_ini_val < 12 else 12)
+                if ampm_ini == "AM" and h_ini_val == 12: h_i_24 = 0
+                
+                h_c_24 = h_cier_val if ampm_cier == "AM" else (h_cier_val + 12 if h_cier_val < 12 else 12)
+                if ampm_cier == "AM" and h_cier_val == 12: h_c_24 = 0
+
+                dt_i_final = datetime.combine(f_ini, dtime(h_i_24, m_ini_val))
+                dt_c_final = datetime.combine(f_cier, dtime(h_c_24, m_cier_val))
+
+                st.session_state.fechas_horas_inicio_remate_modalidad[clave_mod_carr_adm] = dt_i_final
+                st.session_state.fechas_horas_cierre_remate_modalidad[clave_mod_carr_adm] = dt_c_final
+                st.session_state.estado_conteo_carrera_modalidad[clave_mod_carr_adm] = "INACTIVO"
+                guardar_estado_global()
+                st.toast(f"✅ ¡Horarios guardados para {carr_banco_sel} en modalidad {mod_seleccionada_horarios}!")
+                st.rerun()
+
+        st.markdown("---")
+        st.markdown("#### 🐎 Ejemplares Inscritos (Persistentes en Supabase)")
+        with st.container(border=True):
+            nuevo_nom_banco = st.text_input("Nombre del Ejemplar", placeholder="Ej: Rey David", key=f"adm_banco_input_{carr_banco_sel}")
+            if st.button("💾 Agregar Ejemplar", key=f"adm_banco_btn_add_{carr_banco_sel}", use_container_width=True, type="primary"):
+                nom_limp = nuevo_nom_banco.strip().title()
+                if nom_limp:
+                    nums = [int(re.match(r'^(\d+)', e).group(1)) for e in st.session_state.banco_caballos_por_carrera[carr_banco_sel] if re.match(r'^(\d+)', e)]
+                    sig_num = 1
+                    while sig_num in nums and sig_num <= 25: sig_num += 1
+                    formato_nuevo = f"{sig_num} - {nom_limp}"
+                    
+                    if formato_nuevo not in st.session_state.banco_caballos_por_carrera[carr_banco_sel]:
+                        st.session_state.banco_caballos_por_carrera[carr_banco_sel].append(formato_nuevo)
+                        st.session_state.banco_caballos_por_carrera[carr_banco_sel].sort(key=lambda x: int(re.match(r'^(\d+)', x).group(1)))
+
+                    if carr_banco_sel not in st.session_state.remates:
+                        st.session_state.remates[carr_banco_sel] = {}
+                    if formato_nuevo not in st.session_state.remates[carr_banco_sel]:
+                        st.session_state.remates[carr_banco_sel][formato_nuevo] = {"jugador": "Sin Postor", "monto": 0.0}
+                    guardar_estado_global()
+                    st.toast("✅ ¡Ejemplar agregado y guardado en data!")
+                    st.rerun()
+
+        for idx_b, ej_item in enumerate(st.session_state.banco_caballos_por_carrera[carr_banco_sel]):
+            col_ib1, col_ib2 = st.columns([5, 1])
+            with col_ib1: st.text(ej_item)
+            with col_ib2:
+                if st.button("🗑️", key=f"adm_banco_del_{carr_banco_sel}_{idx_b}", use_container_width=True):
+                    st.session_state.banco_caballos_por_carrera[carr_banco_sel].pop(idx_b)
+                    if carr_banco_sel in st.session_state.remates and ej_item in st.session_state.remates[carr_banco_sel]:
+                        del st.session_state.remates[carr_banco_sel][ej_item]
+                    guardar_estado_global()
+                    st.rerun()
+
+    with tab3:
+        st.markdown("### 👥 Registro de Usuarios")
+        with st.container(border=True):
+            nuevo_usuario_input = st.text_input("Nuevo Usuario", placeholder="Ej: JUAN", key="input_nuevo_usuario_reg")
+            if st.button("➕ Registrar", key="btn_registrar_nuevo_usuario", use_container_width=True, type="primary"):
+                usuario_limpio = nuevo_usuario_input.strip().upper()
+                if not usuario_limpio:
+                    st.warning("⚠️ Escribe un nombre válido.")
+                elif usuario_limpio in st.session_state.lista_usuarios:
+                    st.error("❌ Ya existe.")
+                else:
+                    st.session_state.lista_usuarios.append(usuario_limpio)
+                    if usuario_limpio not in st.session_state.cuentas:
+                        st.session_state.cuentas[usuario_limpio] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                    guardar_estado_global()
+                    st.toast(f"✅ ¡Registrado **{usuario_limpio}**!")
+                    st.rerun()
+
+        st.markdown("---")
+        for u in st.session_state.lista_usuarios:
+            col_u1, col_u2 = st.columns([4, 1])
+            with col_u1: st.markdown(f"👤 **{u}**")
+            with col_u2:
+                if u != "CASA":
+                    if st.button("🗑️", key=f"btn_del_usu_{u}", use_container_width=True):
+                        st.session_state.lista_usuarios.remove(u)
+                        if u in st.session_state.cuentas:
+                            del st.session_state.cuentas[u]
+                        if st.session_state.usuario_activo == u:
+                            st.session_state.usuario_activo = "CASA"
+                        guardar_estado_global()
+                        st.rerun()
+
+    with tab4:
+        st.markdown("### ⚙️ Configuración de Montos, Horarios y Carreras")
+        with st.container(border=True):
+            st.markdown("💰 **Montos Únicos**")
+            monto_dup_cfg = st.number_input("Dupleta (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("Dupleta", 500.0)), step=50.0, key="cfg_monto_dupleta")
+            monto_trip_cfg = st.number_input("Tripleta (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("Tripleta", 500.0)), step=50.0, key="cfg_monto_tripleta")
+            monto_polla_cfg = st.number_input("Polla Hípica (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("POLLA HIPICA", 1000.0)), step=50.0, key="cfg_monto_polla")
+            
+            if st.button("💾 Guardar Montos", key="btn_save_montos_cfg", use_container_width=True, type="primary"):
+                st.session_state.config_montos_especiales["Dupleta"] = monto_dup_cfg
+                st.session_state.config_montos_especiales["Tripleta"] = monto_trip_cfg
+                st.session_state.config_montos_especiales["POLLA HIPICA"] = monto_polla_cfg
+                guardar_estado_global()
+                st.toast("✅ ¡Guardado!")
+                st.rerun()
+
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown("⏰ **Control de Horarios (Hora Tope) por Modalidad (Dupleta / Tripleta / Polla Hípica)**")
+            mod_mult_sel = st.selectbox("Seleccionar Modalidad Múltiple", ["Dupleta", "Tripleta", "POLLA HIPICA"], key="sel_mod_multiple_horarios")
+            
+            col_hm1, col_hm2 = st.columns(2)
+            with col_hm1:
+                st.markdown(f"**🟢 Inicio ({mod_mult_sel})**")
+                f_ini_m = st.date_input("Fecha Inicio Múltiple", value=ahora_dt.date(), key=f"f_ini_m_{mod_mult_sel}")
+                
+                c_hmi1, c_hmi2, c_hmi3 = st.columns(3)
+                with c_hmi1:
+                    h_ini_m_val = st.number_input("Hora (1-12)", min_value=1, max_value=12, value=2, key=f"him_h_{mod_mult_sel}")
+                with c_hmi2:
+                    m_ini_m_val = st.number_input("Min (0-59)", min_value=0, max_value=59, value=0, key=f"him_m_{mod_mult_sel}")
+                with c_hmi3:
+                    ampm_ini_m = st.selectbox("AM/PM", ["AM", "PM"], index=1, key=f"him_ap_{mod_mult_sel}")
+
+            with col_hm2:
+                st.markdown(f"**⏰ Cierre Estricto (Hora Tope) ({mod_mult_sel})**")
+                f_cier_m = st.date_input("Fecha Cierre Múltiple", value=ahora_dt.date(), key=f"f_cier_m_{mod_mult_sel}")
+                
+                c_hmc1, c_hmc2, c_hmc3 = st.columns(3)
+                with c_hmc1:
+                    h_cier_m_val = st.number_input("Hora (1-12)", min_value=1, max_value=12, value=2, key=f"hcm_h_{mod_mult_sel}")
+                with c_hmc2:
+                    m_cier_m_val = st.number_input("Min (0-59)", min_value=0, max_value=59, value=30, key=f"hcm_m_{mod_mult_sel}")
+                with c_hmc3:
+                    ampm_cier_m = st.selectbox("AM/PM", ["AM", "PM"], index=1, key=f"hcm_ap_{mod_mult_sel}")
+
+            if st.button(f"💾 Guardar Horarios para {mod_mult_sel}", key=f"btn_save_horarios_m_{mod_mult_sel}", use_container_width=True, type="primary"):
+                h_im_24 = h_ini_m_val if ampm_ini_m == "AM" else (h_ini_m_val + 12 if h_ini_m_val < 12 else 12)
+                if ampm_ini_m == "AM" and h_ini_m_val == 12: h_im_24 = 0
+                
+                h_cm_24 = h_cier_m_val if ampm_cier_m == "AM" else (h_cier_m_val + 12 if h_cier_m_val < 12 else 12)
+                if ampm_cier_m == "AM" and h_cier_m_val == 12: h_cm_24 = 0
+
+                dt_im_final = datetime.combine(f_ini_m, dtime(h_im_24, m_ini_m_val))
+                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cm_24:=m_cier_m_val))
+
+                st.session_state.fechas_horas_inicio_modalidad_multiple[mod_mult_sel] = dt_im_final
+                st.session_state.fechas_horas_cierre_modalidad_multiple[mod_mult_sel] = dt_cm_final
+                guardar_estado_global()
+                st.toast(f"✅ ¡Horarios guardados para {mod_mult_sel}!")
+                st.rerun()
+
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown("🏇 **Carreras Habilitadas (Dupleta y Tripleta)**")
+            carr_disp_all = [c for c in list(st.session_state.remates.keys()) if c not in ["1V", "6V"]]
+            
+            def_dup = [c for c in st.session_state.carreras_habilitadas_dupleta if c in carr_disp_all]
+            def_trip = [c for c in st.session_state.carreras_habilitadas_tripleta if c in carr_disp_all]
+
+            sel_dup_hab = st.multiselect("Dupleta", options=carr_disp_all, default=def_dup, key="multiselect_hab_dup")
+            sel_trip_hab = st.multiselect("Tripleta", options=carr_disp_all, default=def_trip, key="multiselect_hab_trip")
+
+            if st.button("💾 Guardar Habilitadas", key="btn_save_carr_hab", use_container_width=True, type="primary"):
+                st.session_state.carreras_habilitadas_dupleta = sel_dup_hab
+                st.session_state.carreras_habilitadas_tripleta = sel_trip_hab
+                guardar_estado_global()
+                st.toast("✅ ¡Guardado!")
+                st.rerun()
+
+    with tab5:
+        st.markdown("### 📺 Video en Vivo")
+        with st.container(border=True):
+            nueva_url_video = st.text_input("URL", value=st.session_state.get('url_video_en_vivo', ''), placeholder="https://youtube.com/watch?v=...", key="input_live_video_url")
+            col_v1, col_v2 = st.columns(2)
+            with col_v1:
+                if st.button("💾 Guardar", key="btn_save_video_url", use_container_width=True, type="primary"):
+                    st.session_state.url_video_en_vivo = nueva_url_video.strip()
+                    guardar_estado_global()
+                    st.toast("✅ ¡Guardado!")
+                    st.rerun()
+            with col_v2:
+                if st.button("🗑️ Desactivar", key="btn_clear_video_url", use_container_width=True):
+                    st.session_state.url_video_en_vivo = ""
+                    guardar_estado_global()
+                    st.toast("🗑️ Desactivado.")
+                    st.rerun()
+
+    with tab6:
+        st.markdown("### 📊 Saldos de Usuarios y Gestión de Pagos")
+        
+        with st.container(border=True):
+            st.markdown("⚙️ **Configurar Datos de Pago Móvil para los Jugadores**")
+            p_adm = st.session_state.datos_pago_movil
+            n_banco = st.text_input("Banco", value=p_adm['banco'], key="adm_p_banco")
+            n_tlf = st.text_input("Teléfono", value=p_adm['telefono'], key="adm_p_tlf")
+            n_ci = st.text_input("Cédula / RIF", value=p_adm['cedula'], key="adm_p_ci")
+            if st.button("💾 Guardar Datos de Pago Móvil", key="btn_save_pagomovil_adm", type="primary"):
+                st.session_state.datos_pago_movil = {'banco': n_banco, 'telefono': n_tlf, 'cedula': n_ci}
+                guardar_estado_global()
+                st.toast("✅ ¡Datos de pago móvil actualizados!")
+                st.rerun()
+
+        st.markdown("---")
+        st.markdown("📬 **Reportes de Pago Recibidos de Jugadores**")
+        if not st.session_state.reportes_pago:
+            st.info("ℹ️ No hay reportes de pago pendientes.")
+        else:
+            for idx_rep, rep in enumerate(reversed(st.session_state.reportes_pago)):
+                with st.container(border=True):
+                    col_r1, col_r2, col_r3 = st.columns([3, 3, 2])
+                    col_r1.markdown(f"👤 **{rep['jugador']}** | 💰 **{formatear_bs(rep['monto'])}**")
+                    col_r2.markdown(f"🏦 Banco: `{rep['banco']}` | Ref: `{rep['referencia']}`\n📅 {rep['fecha']}")
+                    col_r3.markdown(f"📌 Estado: **{rep['estado']}**")
+                    
+                    if rep['estado'] == "Pendiente de Aprobación":
+                        if st.button(f"✅ Aprobar y Abonar", key=f"btn_aprobar_rep_{idx_rep}", type="primary"):
+                            jug_r = rep['jugador']
+                            mnt_r = rep['monto']
+                            if jug_r not in st.session_state.cuentas:
+                                st.session_state.cuentas[jug_r] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                            st.session_state.cuentas[jug_r]['Abonos'] += mnt_r
+                            rep['estado'] = "Aprobado (Abonado)"
+                            guardar_estado_global()
+                            st.success(f"✅ ¡Pago de {formatear_bs(mnt_r)} abonado a {jug_r}!")
+                            st.rerun()
+
+        st.markdown("---")
+        usuarios_futuros = [u for u in st.session_state.lista_usuarios if u != "CASA"]
+        if not usuarios_futuros:
+            st.info("ℹ️ No hay usuarios registrados.")
+        else:
+            datos_cuentas_adm = []
+            for jugador in usuarios_futuros:
+                if jugador not in st.session_state.cuentas:
+                    st.session_state.cuentas[jugador] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                vals = st.session_state.cuentas[jugador]
+                pujas, premios, abonos = vals['Pujas'], vals['Premios'], vals['Abonos']
+                balance_neto = pujas - abonos - premios
+                datos_cuentas_adm.append({"Usuario": jugador, "Compras": formatear_bs(pujas), "Premios": formatear_bs(premios), "Pagos": formatear_bs(abonos), "Neto": formatear_bs(balance_neto)})
+            st.dataframe(pd.DataFrame(datos_cuentas_adm), use_container_width=True, hide_index=True)
+
+        st.metric("Ganancia Casa", formatear_bs(st.session_state.ganancia_casa))
+        st.markdown("---")
+        
+        col_op1, col_op2 = st.columns(2, gap="small")
+        
+        with col_op1:
+            with st.container(border=True):
+                st.markdown("#### 💵 Registrar Abono Directo")
+                jugador_abonar = st.selectbox("Usuario", st.session_state.lista_usuarios, key="adm_abono_jugador")
+                monto_abono = st.number_input("Monto Abono (Bs.)", min_value=0.0, step=100.0, key="adm_abono_monto")
+                if st.button("➕ Aplicar Abono", key="adm_btn_aplicar_abono", use_container_width=True, type="primary"):
+                    if jugador_abonar not in st.session_state.cuentas:
+                        st.session_state.cuentas[jugador_abonar] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                    st.session_state.cuentas[jugador_abonar]['Abonos'] += monto_abono
+                    guardar_estado_global()
+                    st.toast(f"✅ Abono registrado a {jugador_abonar}")
+                    st.rerun()
+
+        with col_op2:
+            with st.container(border=True):
+                st.markdown("#### 💸 Registrar Retiro")
+                jugador_retirar = st.selectbox("Usuario", st.session_state.lista_usuarios, key="adm_retiro_jugador")
+                monto_retiro = st.number_input("Monto Retiro (Bs.)", min_value=0.0, step=100.0, key="adm_retiro_monto")
+                if st.button("➖ Aplicar Retiro", key="adm_btn_aplicar_retiro", use_container_width=True, type="primary"):
+                    if jugador_retirar not in st.session_state.cuentas:
+                        st.session_state.cuentas[jugador_retirar] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                    
+                    st.session_state.cuentas[jugador_retirar]['Pujas'] = max(0.0, st.session_state.cuentas[jugador_retirar]['Pujas'] - monto_retiro)
+                    st.session_state.cuentas[jugador_retirar]['Premios'] = max(0.0, st.session_state.cuentas[jugador_retirar]['Premios'] - monto_retiro)
+                    
+                    st.session_state.historial_jugadas.append({
+                        "fecha": ahora_dt.strftime('%d/%m/%Y %I:%M:%S %p'),
+                        "jugador": jugador_retirar,
+                        "tipo": "Retiro",
+                        "carrera": "General",
+                        "detalle": f"Retiro de fondos aplicado",
+                        "monto": monto_retiro
+                    })
+                    
+                    guardar_estado_global()
+                    st.toast(f"✅ Retiro de {formatear_bs(monto_retiro)} deducido a {jugador_retirar}")
+                    st.rerun()
+
+    with tab7:
+        st.markdown("### 🖼️ Imágenes por Carrera")
+        todas_carrs_img = list(st.session_state.remates.keys())
+        carr_img_sel = st.selectbox("Seleccionar Carrera", todas_carrs_img, key="adm_img_sel_carr")
+        
+        with st.container(border=True):
+            st.markdown("📸 **Imagen de la Carrera (Optimizada para la Red)**")
+            imagen_subida = st.file_uploader("Subir imagen (PNG, JPG)", type=["png", "jpg", "jpeg"], key=f"file_img_{carr_img_sel}")
+            
+            if imagen_subida is not None:
+                if st.button("💾 Guardar Imagen", key=f"btn_save_img_{carr_img_sel}", use_container_width=True, type="primary"):
+                    try:
+                        from PIL import Image
+                        img_pil = Image.open(imagen_subida)
+                        
+                        if img_pil.mode in ("RGBA", "P"):
+                            img_pil = img_pil.convert("RGB")
+                            
+                        max_ancho = 800
+                        if img_pil.width > max_ancho:
+                            proporcion = max_ancho / img_pil.width
+                            nuevo_alto = int(img_pil.height * proporcion)
+                            img_pil = img_pil.resize((max_ancho, nuevo_alto), Image.Resampling.LANCZOS)
+                            
+                        buffer = io.BytesIO()
+                        img_pil.save(buffer, format="JPEG", quality=75)
+                        bytes_comprimidos = buffer.getvalue()
+                        
+                        b64_imagen = base64.b64encode(bytes_comprimidos).decode('utf-8')
+                        st.session_state.imagenes_carreras[carr_img_sel] = f"data:image/jpeg;base64,{b64_imagen}"
+                        guardar_estado_global()
+                        st.toast("✅ ¡Imagen optimizada y guardada con éxito!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error al procesar la imagen: {e}")
+
+            if carr_img_sel in st.session_state.imagenes_carreras:
+                try:
+                    img_guardada = st.session_state.imagenes_carreras[carr_img_sel]
+                    st.markdown(f'<div class="imagen-carrera-pc-container">', unsafe_allow_html=True)
+                    st.image(img_guardada, caption=f"Imagen guardada - {carr_img_sel}", use_container_width=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
+                except Exception:
+                    pass
+                
+                if st.button("🗑️ Eliminar Imagen", key=f"btn_del_img_{carr_img_sel}", use_container_width=True):
+                    del st.session_state.imagenes_carreras[carr_img_sel]
+                    guardar_estado_global()
+                    st.toast("🗑️ Removida")
+                    st.rerun()
+
+# =========================================================================
+# TRANSMISIÓN EN VIVO
+# =========================================================================
+url_live_video = st.session_state.get('url_video_en_vivo', '').strip()
+
+if url_live_video:
+    st.markdown("<br><hr style='border-color: #30363d;'>", unsafe_allow_html=True)
+    st.markdown("### 📺 TRANSMISIÓN EN VIVO")
+    yt_match = re.search(r'(?:v=|\/embed\/|youtu\.be\/|\/v\/|\/e\/|watch\?v=|&v=)([^#&?]{11})', url_live_video)
+    if yt_match:
+        yt_id = yt_match.group(1)
+        embed_url = f"https://www.youtube.com/embed/{yt_id}?playsinline=1"
+        try:
+            st.video(embed_url)
+        except Exception:
+            st.video(url_live_video)
+    else:
+        try:
+            st.video(url_live_video)
+        except Exception:
+            st.video(url_live_video)
