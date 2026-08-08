@@ -2327,24 +2327,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 guardar_estado_global()
 
         with st.container(border=True):
-            st.markdown("🙈 **Mapeo de Remates Ciegos (1V y 6V)**")
-            carreras_disp_mapeo = list(st.session_state.banco_caballos_por_carrera.keys())
-            carreras_disp_mapeo = [c for c in carreras_disp_mapeo if c not in ["1V", "6V"]]
-            
-            if 'mapeo_ciegos' not in st.session_state:
-                st.session_state.mapeo_ciegos = {"1V": "", "6V": ""}
-
-            map_1v = st.selectbox("Asignar Carrera Real a 1V", options=[""] + carreras_disp_mapeo, index=(carreras_disp_mapeo.index(st.session_state.mapeo_ciegos.get("1V")) + 1) if st.session_state.mapeo_ciegos.get("1V") in carreras_disp_mapeo else 0, key="sel_map_1v")
-            map_6v = st.selectbox("Asignar Carrera Real a 6V", options=[""] + carreras_disp_mapeo, index=(carreras_disp_mapeo.index(st.session_state.mapeo_ciegos.get("6V")) + 1) if st.session_state.mapeo_ciegos.get("6V") in carreras_disp_mapeo else 0, key="sel_map_6v")
-
-            if st.button("💾 Guardar Mapeo de Ciegos", key="btn_save_map_ciegos", type="primary"):
-                st.session_state.mapeo_ciegos["1V"] = map_1v
-                st.session_state.mapeo_ciegos["6V"] = map_6v
-                guardar_estado_global()
-                st.toast("✅ ¡Mapeo de Remates Ciegos guardado!")
-                st.rerun()
-
-        with st.container(border=True):
             st.markdown("🔒 **Estado de Dupletas y Polla Hípica**")
             if st.session_state.dupleta_bloqueada:
                 st.markdown("<p style='color: #ff4757; font-weight: bold;'>🔴 ESTADO: BLOQUEADAS</p>", unsafe_allow_html=True)
@@ -2409,6 +2391,51 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
     with tab2:
         st.markdown("### ✍️ Banco de Caballos (Data Persistente y Asignación)")
+        
+        # --- 1. MAPEO DE REMATES CIEGOS (ARRIBA) ---
+        with st.container(border=True):
+            st.markdown("🙈 **Mapeo de Remates Ciegos (1V y 6V)**")
+            carreras_disp_mapeo = list(st.session_state.banco_caballos_por_carrera.keys())
+            carreras_disp_mapeo = [c for c in carreras_disp_mapeo if c not in ["1V", "6V"]]
+            
+            if 'mapeo_ciegos' not in st.session_state:
+                st.session_state.mapeo_ciegos = {"1V": "", "6V": ""}
+
+            map_1v = st.selectbox("Asignar Carrera Real a 1V", options=[""] + carreras_disp_mapeo, index=(carreras_disp_mapeo.index(st.session_state.mapeo_ciegos.get("1V")) + 1) if st.session_state.mapeo_ciegos.get("1V") in carreras_disp_mapeo else 0, key="sel_map_1v")
+            map_6v = st.selectbox("Asignar Carrera Real a 6V", options=[""] + carreras_disp_mapeo, index=(carreras_disp_mapeo.index(st.session_state.mapeo_ciegos.get("6V")) + 1) if st.session_state.mapeo_ciegos.get("6V") in carreras_disp_mapeo else 0, key="sel_map_6v")
+
+            if st.button("💾 Guardar Mapeo de Ciegos", key="btn_save_map_ciegos", type="primary"):
+                st.session_state.mapeo_ciegos["1V"] = map_1v
+                st.session_state.mapeo_ciegos["6V"] = map_6v
+                guardar_estado_global()
+                st.toast("✅ ¡Mapeo de Remates Ciegos guardado!")
+                st.rerun()
+
+        st.markdown("---")
+
+        # --- 2. ASIGNACIÓN INDEPENDIENTE DE CARRERAS POR MODALIDAD ---
+        with st.container(border=True):
+            st.markdown("🎯 **Asignación Independiente de Carreras por Modalidad**")
+            carreras_existentes = list(st.session_state.banco_caballos_por_carrera.keys())
+            carreras_existentes = [c for c in carreras_existentes if c not in ["1V", "6V"]]
+            
+            modalidades_dict = st.session_state.carreras_por_modalidad
+            
+            def_adel = [c for c in modalidades_dict.get("Adelantados", []) if c in carreras_existentes]
+            def_envivo = [c for c in modalidades_dict.get("En Vivo", []) if c in carreras_existentes]
+
+            sel_adel = st.multiselect("Carreras para Adelantados", options=carreras_existentes, default=def_adel, key="multiselect_carr_adelantados")
+            sel_envivo = st.multiselect("Carreras para 🔴 En Vivo", options=carreras_existentes, default=def_envivo, key="multiselect_carr_envivo")
+
+            if st.button("💾 Guardar Modalidades Independientes", key="btn_save_mod_independientes", use_container_width=True, type="primary"):
+                st.session_state.carreras_por_modalidad["Adelantados"] = sel_adel
+                st.session_state.carreras_por_modalidad["En Vivo"] = sel_envivo
+                guardar_estado_global()
+                st.toast("✅ ¡Modalidades guardadas correctamente!")
+                st.rerun()
+
+        st.markdown("---")
+
         with st.container(border=True):
             st.markdown("📅 **Configuración General de la Semana**")
             nueva_cantidad_carreras = st.number_input(
@@ -2490,27 +2517,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     guardar_estado_global()
                     st.toast("✅ ¡Actualizado con éxito!")
                     st.rerun()
-
-        st.markdown("---")
-        with st.container(border=True):
-            st.markdown("🎯 **Asignación Independiente de Carreras por Modalidad**")
-            carreras_existentes = list(st.session_state.banco_caballos_por_carrera.keys())
-            carreras_existentes = [c for c in carreras_existentes if c not in ["1V", "6V"]]
-            
-            modalidades_dict = st.session_state.carreras_por_modalidad
-            
-            def_adel = [c for c in modalidades_dict.get("Adelantados", []) if c in carreras_existentes]
-            def_envivo = [c for c in modalidades_dict.get("En Vivo", []) if c in carreras_existentes]
-
-            sel_adel = st.multiselect("Carreras para Adelantados", options=carreras_existentes, default=def_adel, key="multiselect_carr_adelantados")
-            sel_envivo = st.multiselect("Carreras para 🔴 En Vivo", options=carreras_existentes, default=def_envivo, key="multiselect_carr_envivo")
-
-            if st.button("💾 Guardar Modalidades Independientes", key="btn_save_mod_independientes", use_container_width=True, type="primary"):
-                st.session_state.carreras_por_modalidad["Adelantados"] = sel_adel
-                st.session_state.carreras_por_modalidad["En Vivo"] = sel_envivo
-                guardar_estado_global()
-                st.toast("✅ ¡Modalidades guardadas correctamente!")
-                st.rerun()
 
         st.markdown("---")
         todas_carreras_banco = list(st.session_state.banco_caballos_por_carrera.keys())
