@@ -13,49 +13,9 @@ from datetime import datetime, time as dtime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from pypdf import PdfReader
 from supabase import create_client, Client
-import firebase_admin
-from firebase_admin import credentials, messaging
 
 # Configuración de pantalla completa optimizada para celulares
 st.set_page_config(page_title="WOLF READY TO RUN", layout="wide", page_icon="🐺", initial_sidebar_state="collapsed")
-
-# --- INICIALIZACIÓN DE FIREBASE ADMIN (BACKEND) ---
-if not firebase_admin._apps:
-    try:
-        firebase_json = st.secrets.get("FIREBASE_CREDENTIALS", None)
-        if firebase_json:
-            if isinstance(firebase_json, str):
-                cred_dict = json.loads(firebase_json)
-            else:
-                cred_dict = dict(firebase_json)
-            
-            cred = credentials.Certificate(cred_dict)
-            firebase_admin.initialize_app(cred)
-        else:
-            cred_path = "path/to/serviceAccountKey.json"
-            if os.path.exists(cred_path):
-                cred = credentials.Certificate(cred_path)
-                firebase_admin.initialize_app(cred)
-    except Exception as e:
-        print("Error inicializando Firebase Admin:", e)
-
-def enviar_notificacion_push_firebase(fcm_token_destino, titulo, cuerpo):
-    if not firebase_admin._apps or not fcm_token_destino:
-        return False
-    try:
-        message = messaging.Message(
-            notification=messaging.Notification(
-                title=titulo,
-                body=cuerpo,
-            ),
-            token=fcm_token_destino,
-        )
-        response = messaging.send(message)
-        print("Notificación push enviada con éxito:", response)
-        return True
-    except Exception as e:
-        print("Error enviando notificación push:", e)
-        return False
 
 # --- CREDENCIALES DE SUPABASE (SEGURIZADAS CON SECRETS) ---
 SUPABASE_URL = st.secrets.get("SUPABASE_URL", "https://qssnhvwdgxzwzkfusstf.supabase.co")
@@ -281,46 +241,9 @@ def vigilante_sincronizacion_global():
 
 vigilante_sincronizacion_global()
 
-# --- SCRIPT JS GLOBAL PARA AUDIO, VOZ, FIREBASE Y DESBLOQUEO DE NAVEGADOR ---
+# --- SCRIPT JS GLOBAL PARA AUDIO, VOZ Y DESBLOQUEO DE NAVEGADOR ---
 components.html(r"""
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
     <script>
-        const firebaseConfig = {
-            apiKey: "TU_API_KEY",
-            authDomain: "TU_AUTH_DOMAIN",
-            projectId: "TU_PROJECT_ID",
-            storageBucket: "TU_STORAGE_BUCKET",
-            messagingSenderId: "TU_MESSAGING_SENDER_ID",
-            appId: "TU_APP_ID"
-        };
-
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-
-        const messaging = firebase.messaging();
-
-        function solicitarPermisoNotificaciones() {
-            Notification.requestPermission().then((permission) => {
-                if (permission === 'granted') {
-                    console.log('Permiso de notificación concedido.');
-                    messaging.getToken({ vapidKey: 'BDGoNAFevD5Lpno_jMjzbUGkUE8sN-TynspHaP1-M-Mbz1_iD6K4D16NADQ9dXpxDe-35SJIbhIp1pIoLnPPre4' }).then((currentToken) => {
-                        if (currentToken) {
-                            console.log('FCM Token:', currentToken);
-                            prompt("¡Copia tu Token FCM desde aquí:", currentToken);
-                        } else {
-                            alert('No se pudo obtener el token de registro.');
-                        }
-                    }).catch((err) => {
-                        alert('Error al recuperar el token: ' + err);
-                    });
-                } else {
-                    alert('No se concedieron permisos para las notificaciones.');
-                }
-            });
-        }
-
         let audioCtxGlobal = null;
 
         function inicializarAudio() {
@@ -333,7 +256,6 @@ components.html(r"""
             if (audioCtxGlobal && audioCtxGlobal.state === 'suspended') {
                 audioCtxGlobal.resume();
             }
-            solicitarPermisoNotificaciones();
         }
 
         window.parent.addEventListener('click', inicializarAudio, { once: true });
@@ -418,17 +340,14 @@ components.html(r"""
     </script>
 """, height=0, width=0)
 
-# --- BOTÓN FLOTANTE PARA ACTIVAR AUDIO Y NOTIFICACIONES MANUALMENTE ---
+# --- BOTÓN FLOTANTE PARA ACTIVAR AUDIO MANUALMENTE ---
 components.html(r"""
-    <div style="position: fixed; bottom: 10px; right: 10px; z-index: 999999; display: flex; flex-direction: column; gap: 6px;">
+    <div style="position: fixed; bottom: 10px; right: 10px; z-index: 999999;">
         <button onclick="window.parent.inicializarAudio && window.parent.inicializarAudio(); alert('🔊 ¡Audio activado correctamente para alertas y voz!');" style="background: linear-gradient(135deg, #f1c40f 0%, #d4ac0d 100%); color: #080a0f; border: 2px solid #ffffff; padding: 8px 12px; border-radius: 20px; font-weight: 900; font-size: 11px; cursor: pointer; box-shadow: 0 4px 15px rgba(241,196,15,0.6);">
             🔊 ACTIVAR AUDIO / VOZ
         </button>
-        <button onclick="Notification.requestPermission().then(p => alert('🔔 Estado de notificaciones push: ' + p));" style="background: linear-gradient(135deg, #2ed573 0%, #17b978 100%); color: #ffffff; border: 2px solid #ffffff; padding: 8px 12px; border-radius: 20px; font-weight: 900; font-size: 11px; cursor: pointer; box-shadow: 0 4px 15px rgba(46,213,115,0.6);">
-            🔔 ACTIVAR PUSH
-        </button>
     </div>
-""", height=85)
+""", height=40)
 
 # --- ESCALA DE PUJAS ---
 ESCALA_PUJAS = [
@@ -2387,22 +2306,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     with tab1:
         st.markdown("### ⚙️ Controles Generales de la Jornada")
         
-        with st.container(border=True):
-            st.markdown("🔔 **Prueba de Notificación Push (Firebase)**")
-            token_prueba_input = st.text_input("FCM Token del Dispositivo Destino", placeholder="Pega aquí el token largo que sale en la consola del navegador")
-            titulo_prueba = st.text_input("Título", value="🐺 ¡Prueba WOLF!")
-            cuerpo_prueba = st.text_input("Mensaje", value="¡Las notificaciones push están funcionando!")
-            
-            if st.button("📤 Enviar Notificación de Prueba", type="primary", use_container_width=True):
-                if token_prueba_input:
-                    exito = enviar_notificacion_push_firebase(token_prueba_input.strip(), titulo_prueba, cuerpo_prueba)
-                    if exito:
-                        st.success("✅ ¡Notificación push enviada con éxito! Revisa tu pantalla o barra de notificaciones.")
-                    else:
-                        st.error("❌ Error al enviar. Revisa la consola del servidor para más detalles.")
-                else:
-                    st.warning("⚠️ Debes ingresar un token FCM válido.")
-
         with st.container(border=True):
             st.markdown("👤 **Selector de Usuario Activo**")
             usuario_seleccionado_admin = st.selectbox(
