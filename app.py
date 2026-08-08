@@ -130,6 +130,7 @@ def cargar_estado_global(forzar_recarga=False):
         'carreras_activas_remate': [],
         'carreras_por_modalidad': {"Adelantados": [], "Ciegos": [], "En Vivo": []},
         'total_carreras_semana': 10,
+        'porcentaje_casa': 30,
         'url_video_en_vivo': "",
         'admin_tab_seleccionada': "✍️ Caballos",
         'imagenes_carreras': {},
@@ -191,7 +192,7 @@ def guardar_estado_global():
         'dupletas_tickets', 'tripleta_tickets', 'polla_tickets', 'carreras_habilitadas_dupleta',
         'carreras_habilitadas_tripleta', 'carreras_habilitadas_polla', 'config_montos_especiales',
         'dupleta_bloqueada', 'carreras_activas_remate', 'carreras_por_modalidad',
-        'total_carreras_semana', 'url_video_en_vivo', 'imagenes_carreras', 'admin_tab_seleccionada',
+        'total_carreras_semana', 'porcentaje_casa', 'url_video_en_vivo', 'imagenes_carreras', 'admin_tab_seleccionada',
         'datos_pago_movil', 'reportes_pago', 'resultados_oficiales_polla'
     ]
     data = {}
@@ -1164,83 +1165,11 @@ else:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# --- BARRA LATERAL ---
-st.sidebar.header("barra lateral")
+# --- BARRA LATERAL SIMPLIFICADA ---
+st.sidebar.header("Sistema WOLF")
 st.sidebar.markdown(f"🕒 **Hora:** `{ahora_dt.strftime('%I:%M:%S %p')}`")
-
-with st.sidebar.expander("👤 Usuario Activo y Selector", expanded=True):
-    usuario_seleccionado_sidebar = st.selectbox(
-        "Cambiar de Usuario",
-        options=st.session_state.lista_usuarios,
-        index=st.session_state.lista_usuarios.index(st.session_state.usuario_activo) if st.session_state.usuario_activo in st.session_state.lista_usuarios else 0,
-        key="sb_selectbox_usuario_activo"
-    )
-    if usuario_seleccionado_sidebar != st.session_state.usuario_activo:
-        st.session_state.usuario_activo = usuario_seleccionado_sidebar
-        guardar_estado_global()
-        st.rerun()
-
-with st.sidebar.expander("🏠 Retención de la Casa", expanded=False):
-    porcentaje_casa = st.slider("Retención (%)", 0, 50, 30, key="sb_slider_retencion_casa")
-
-with st.sidebar.expander("🔒 Estado Dupletas / Polla Hípica", expanded=False):
-    if st.session_state.dupleta_bloqueada:
-        st.markdown("<p style='color: #ff4757; font-weight: bold;'>🔴 BLOQUEADAS</p>", unsafe_allow_html=True)
-        if st.button("🔓 Desbloquear", key="sb_btn_desbloquear_dupleta", use_container_width=True):
-            st.session_state.dupleta_bloqueada = False
-            guardar_estado_global()
-            st.rerun()
-    else:
-        st.markdown("<p style='color: #00d2d3; font-weight: bold;'>🟢 ABIERTAS</p>", unsafe_allow_html=True)
-        if st.button("🔒 Bloquear", key="sb_btn_bloquear_dupleta", use_container_width=True):
-            st.session_state.dupleta_bloqueada = True
-            guardar_estado_global()
-            st.rerun()
-
-with st.sidebar.expander("🏁 Cierre y Liquidación de Remates", expanded=False):
-    carr_seleccionada_liq = st.selectbox("Gestionar Carrera", lista_carreras_disponibles, key="sb_liq_sel_carrera")
-    c_cerrada_actual = st.session_state.carreras_cerradas_remate.get(carr_seleccionada_liq, False)
-    
-    st.markdown("---")
-    if not c_cerrada_actual:
-        if st.button("🔒 Cerrar Remate Manual", key=f"sb_liq_cerrar_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
-            st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = True
-            st.session_state.estado_conteo_carrera_modalidad[carr_seleccionada_liq] = "CERRADO"
-            st.session_state.detalles_carreras[carr_seleccionada_liq]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
-            if not st.session_state.remates_cargados_en_cuentas.get(carr_seleccionada_liq, False):
-                retirados_carr = st.session_state.ejemplares_retirados.get(carr_seleccionada_liq, [])
-                no_val_carr = st.session_state.get('ejemplares_no_valido', {}).get(carr_seleccionada_liq, [])
-                for cab, info in st.session_state.remates[carr_seleccionada_liq].items():
-                    if cab in retirados_carr or cab in no_val_carr:
-                        continue
-                    if info['jugador'] != "Sin Postor" and info['monto'] > 0:
-                        if info['jugador'] not in st.session_state.cuentas:
-                            st.session_state.cuentas[info['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
-                        st.session_state.cuentas[info['jugador']]['Pujas'] += info['monto']
-                st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = True
-            guardar_estado_global()
-            st.rerun()
-    else:
-        if st.button("🔓 Reabrir Remate", key=f"sb_liq_reabrir_{carr_seleccionada_liq}", use_container_width=True):
-            st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = False
-            st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = False
-            guardar_estado_global()
-            st.rerun()
-
-if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada", use_container_width=True):
-    keys_excluidos = [
-        'banco_caballos_por_carrera', 
-        'lista_usuarios', 
-        'datos_pago_movil', 
-        'reportes_pago', 
-        'cuentas'
-    ]
-    for key in list(st.session_state.keys()):
-        if key not in keys_excluidos:
-            del st.session_state[key]
-    guardar_estado_global()
-    st.toast("🚨 Jornada reiniciada.")
-    st.rerun()
+st.sidebar.markdown("---")
+st.sidebar.info("💡 Todos los controles de administrador, selector de usuario, retención y cierres ahora se encuentran organizados dentro de la **Zona Admin** en el menú principal.")
 
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
@@ -1512,7 +1441,8 @@ def renderizar_tiempo_real_universal():
                 excluidos_carr_activa = set(retirados_carr_activa) | set(no_validos_carr_activa)
 
                 total_pote = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_carr_activa])
-                monto_casa = total_pote * (porcentaje_casa / 100)
+                porcentaje_casa_val = st.session_state.get('porcentaje_casa', 30)
+                monto_casa = total_pote * (porcentaje_casa_val / 100)
                 pote_neto_base = total_pote - monto_casa
 
                 if modo_actual_remate == "Adelantados":
@@ -1577,7 +1507,7 @@ def renderizar_tiempo_real_universal():
                             with col_g2:
                                 if st.button("🏆 Liquidar Ganador", key=f"rem_btn_liquidar_{carr_activa}", use_container_width=True, type="primary"):
                                     pote_carr_total = sum([info['monto'] for cab_n, info in st.session_state.remates[carr_activa].items() if cab_n not in excluidos_carr_activa])
-                                    monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
+                                    monto_casa_calc = pote_carr_total * (porcentaje_casa_val / 100)
                                     
                                     incentivo_establecido = float(detalles_carr.get('incentivo_adelantados', 0.0))
                                     premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_establecido
@@ -2396,13 +2326,14 @@ elif menu_principal_opcion == "Cuentas":
             st.info("ℹ️ No hay tickets múltiples registrados.")
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR
+# 4. ZONA DE ADMINISTRADOR (CON TODOS LOS CONTROLES DE LA BARRA LATERAL)
 # =========================================================================
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Panel de Configuración y Administración</div>", unsafe_allow_html=True)
     
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "✍️ Caballos", 
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        "⚙️ Controles & Jornada",
+        "✍️ Banco de Caballos", 
         "👥 Usuarios", 
         "⚙️ Dupleta/Polla", 
         "📺 Video", 
@@ -2411,7 +2342,92 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     ])
 
     with tab1:
-        st.markdown("### ✍️ Banco de Caballos y Carreras Activas")
+        st.markdown("### ⚙️ Controles Generales de la Jornada")
+        
+        with st.container(border=True):
+            st.markdown("👤 **Selector de Usuario Activo**")
+            usuario_seleccionado_admin = st.selectbox(
+                "Cambiar de Usuario en Sesión",
+                options=st.session_state.lista_usuarios,
+                index=st.session_state.lista_usuarios.index(st.session_state.usuario_activo) if st.session_state.usuario_activo in st.session_state.lista_usuarios else 0,
+                key="admin_select_usuario_activo"
+            )
+            if usuario_seleccionado_admin != st.session_state.usuario_activo:
+                st.session_state.usuario_activo = usuario_seleccionado_admin
+                guardar_estado_global()
+                st.rerun()
+
+        with st.container(border=True):
+            st.markdown("🏠 **Retención de la Casa**")
+            porcentaje_casa_val = st.slider("Porcentaje de retención (%)", 0, 50, int(st.session_state.get('porcentaje_casa', 30)), key="admin_slider_retencion_casa")
+            if porcentaje_casa_val != st.session_state.get('porcentaje_casa', 30):
+                st.session_state.porcentaje_casa = porcentaje_casa_val
+                guardar_estado_global()
+
+        with st.container(border=True):
+            st.markdown("🔒 **Estado de Dupletas y Polla Hípica**")
+            if st.session_state.dupleta_bloqueada:
+                st.markdown("<p style='color: #ff4757; font-weight: bold;'>🔴 ESTADO: BLOQUEADAS</p>", unsafe_allow_html=True)
+                if st.button("🔓 Desbloquear Emisión", key="admin_btn_desbloquear_dupleta", use_container_width=True, type="primary"):
+                    st.session_state.dupleta_bloqueada = False
+                    guardar_estado_global()
+                    st.rerun()
+            else:
+                st.markdown("<p style='color: #00d2d3; font-weight: bold;'>🟢 ESTADO: ABIERTAS</p>", unsafe_allow_html=True)
+                if st.button("🔒 Bloquear Emisión", key="admin_btn_bloquear_dupleta", use_container_width=True):
+                    st.session_state.dupleta_bloqueada = True
+                    guardar_estado_global()
+                    st.rerun()
+
+        with st.container(border=True):
+            st.markdown("🏁 **Cierre y Liquidación Manual de Remates**")
+            carr_seleccionada_liq = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="admin_liq_sel_carrera")
+            c_cerrada_actual = st.session_state.carreras_cerradas_remate.get(carr_seleccionada_liq, False)
+            
+            if not c_cerrada_actual:
+                if st.button(f"🔒 Cerrar Remate - {carr_seleccionada_liq}", key=f"admin_liq_cerrar_{carr_seleccionada_liq}", use_container_width=True, type="primary"):
+                    st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = True
+                    st.session_state.estado_conteo_carrera_modalidad[carr_seleccionada_liq] = "CERRADO"
+                    st.session_state.detalles_carreras[carr_seleccionada_liq]["hora_cierre_real"] = ahora_dt.strftime('%I:%M:%S %p')
+                    if not st.session_state.remates_cargados_en_cuentas.get(carr_seleccionada_liq, False):
+                        retirados_carr = st.session_state.ejemplares_retirados.get(carr_seleccionada_liq, [])
+                        no_val_carr = st.session_state.get('ejemplares_no_valido', {}).get(carr_seleccionada_liq, [])
+                        for cab, info in st.session_state.remates[carr_seleccionada_liq].items():
+                            if cab in retirados_carr or cab in no_val_carr:
+                                continue
+                            if info['jugador'] != "Sin Postor" and info['monto'] > 0:
+                                if info['jugador'] not in st.session_state.cuentas:
+                                    st.session_state.cuentas[info['jugador']] = {'Pujas': 0.0, 'Premios': 0.0, 'Abonos': 0.0}
+                                st.session_state.cuentas[info['jugador']]['Pujas'] += info['monto']
+                        st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = True
+                    guardar_estado_global()
+                    st.rerun()
+            else:
+                if st.button(f"🔓 Reabrir Remate - {carr_seleccionada_liq}", key=f"admin_liq_reabrir_{carr_seleccionada_liq}", use_container_width=True):
+                    st.session_state.carreras_cerradas_remate[carr_seleccionada_liq] = False
+                    st.session_state.remates_cargados_en_cuentas[carr_seleccionada_liq] = False
+                    guardar_estado_global()
+                    st.rerun()
+
+        with st.container(border=True):
+            st.markdown("🚨 **Acción Crítica de Jornada**")
+            if st.button("🗑️ Reiniciar Toda la Jornada", key="admin_btn_reiniciar_jornada", use_container_width=True):
+                keys_excluidos = [
+                    'banco_caballos_por_carrera', 
+                    'lista_usuarios', 
+                    'datos_pago_movil', 
+                    'reportes_pago', 
+                    'cuentas'
+                ]
+                for key in list(st.session_state.keys()):
+                    if key not in keys_excluidos:
+                        del st.session_state[key]
+                guardar_estado_global()
+                st.toast("🚨 Jornada reiniciada.")
+                st.rerun()
+
+    with tab2:
+        st.markdown("### ✍️ Banco de Caballos (Data Persistente y Asignación)")
         with st.container(border=True):
             st.markdown("📅 **Configuración General de la Semana**")
             nueva_cantidad_carreras = st.number_input(
@@ -2619,10 +2635,10 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.rerun()
 
         st.markdown("---")
-        st.markdown("#### 🐎 Ejemplares Inscritos")
+        st.markdown("#### 🐎 Ejemplares Inscritos (Persistentes en Supabase)")
         with st.container(border=True):
             nuevo_nom_banco = st.text_input("Nombre del Ejemplar", placeholder="Ej: Rey David", key=f"adm_banco_input_{carr_banco_sel}")
-            if st.button("💾 Agregar", key=f"adm_banco_btn_add_{carr_banco_sel}", use_container_width=True, type="primary"):
+            if st.button("💾 Agregar Ejemplar", key=f"adm_banco_btn_add_{carr_banco_sel}", use_container_width=True, type="primary"):
                 nom_limp = nuevo_nom_banco.strip().title()
                 if nom_limp:
                     nums = [int(re.match(r'^(\d+)', e).group(1)) for e in st.session_state.banco_caballos_por_carrera[carr_banco_sel] if re.match(r'^(\d+)', e)]
@@ -2639,7 +2655,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     if formato_nuevo not in st.session_state.remates[carr_banco_sel]:
                         st.session_state.remates[carr_banco_sel][formato_nuevo] = {"jugador": "Sin Postor", "monto": 0.0}
                     guardar_estado_global()
-                    st.toast("✅ ¡Agregado!")
+                    st.toast("✅ ¡Ejemplar agregado y guardado en data!")
                     st.rerun()
 
         for idx_b, ej_item in enumerate(st.session_state.banco_caballos_por_carrera[carr_banco_sel]):
@@ -2653,7 +2669,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     guardar_estado_global()
                     st.rerun()
 
-    with tab2:
+    with tab3:
         st.markdown("### 👥 Registro de Usuarios")
         with st.container(border=True):
             nuevo_usuario_input = st.text_input("Nuevo Usuario", placeholder="Ej: JUAN", key="input_nuevo_usuario_reg")
@@ -2686,7 +2702,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                         guardar_estado_global()
                         st.rerun()
 
-    with tab3:
+    with tab4:
         st.markdown("### ⚙️ Configuración de Montos, Horarios y Carreras")
         with st.container(border=True):
             st.markdown("💰 **Montos Únicos**")
@@ -2766,7 +2782,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Guardado!")
                 st.rerun()
 
-    with tab4:
+    with tab5:
         st.markdown("### 📺 Video en Vivo")
         with st.container(border=True):
             nueva_url_video = st.text_input("URL", value=st.session_state.get('url_video_en_vivo', ''), placeholder="https://youtube.com/watch?v=...", key="input_live_video_url")
@@ -2784,7 +2800,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.toast("🗑️ Desactivado.")
                     st.rerun()
 
-    with tab5:
+    with tab6:
         st.markdown("### 📊 Saldos de Usuarios y Gestión de Pagos")
         
         with st.container(border=True):
@@ -2881,7 +2897,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.toast(f"✅ Retiro de {formatear_bs(monto_retiro)} deducido a {jugador_retirar}")
                     st.rerun()
 
-    with tab6:
+    with tab7:
         st.markdown("### 🖼️ Imágenes por Carrera")
         carr_img_sel = st.selectbox("Seleccionar Carrera", lista_carreras_disponibles, key="adm_img_sel_carr")
         
