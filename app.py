@@ -241,9 +241,45 @@ def vigilante_sincronizacion_global():
 
 vigilante_sincronizacion_global()
 
-# --- SCRIPT JS GLOBAL PARA AUDIO, VOZ Y DESBLOQUEO DE NAVEGADOR ---
+# --- SCRIPT JS GLOBAL PARA AUDIO, VOZ, FIREBASE Y DESBLOQUEO DE NAVEGADOR ---
 components.html(r"""
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
     <script>
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_AUTH_DOMAIN",
+            projectId: "TU_PROJECT_ID",
+            storageBucket: "TU_STORAGE_BUCKET",
+            messagingSenderId: "TU_MESSAGING_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const messaging = firebase.messaging();
+
+        function solicitarPermisoNotificaciones() {
+            Notification.requestPermission().then((permission) => {
+                if (permission === 'granted') {
+                    console.log('Permiso de notificación concedido.');
+                    messaging.getToken({ vapidKey: 'TU_CLAVE_VAPID_AQUí' }).then((currentToken) => {
+                        if (currentToken) {
+                            console.log('FCM Token:', currentToken);
+                        } else {
+                            console.log('No se pudo obtener el token de registro.');
+                        }
+                    }).catch((err) => {
+                        console.log('Ocurrió un error al recuperar el token. ', err);
+                    });
+                } else {
+                    console.log('No se concedieron permisos para las notificaciones.');
+                }
+            });
+        }
+
         let audioCtxGlobal = null;
 
         function inicializarAudio() {
@@ -256,6 +292,7 @@ components.html(r"""
             if (audioCtxGlobal && audioCtxGlobal.state === 'suspended') {
                 audioCtxGlobal.resume();
             }
+            solicitarPermisoNotificaciones();
         }
 
         window.parent.addEventListener('click', inicializarAudio, { once: true });
@@ -340,14 +377,17 @@ components.html(r"""
     </script>
 """, height=0, width=0)
 
-# --- BOTÓN FLOTANTE PARA ACTIVAR AUDIO MANUALMENTE ---
+# --- BOTÓN FLOTANTE PARA ACTIVAR AUDIO Y NOTIFICACIONES MANUALMENTE ---
 components.html(r"""
-    <div style="position: fixed; bottom: 10px; right: 10px; z-index: 999999;">
+    <div style="position: fixed; bottom: 10px; right: 10px; z-index: 999999; display: flex; flex-direction: column; gap: 6px;">
         <button onclick="window.parent.inicializarAudio && window.parent.inicializarAudio(); alert('🔊 ¡Audio activado correctamente para alertas y voz!');" style="background: linear-gradient(135deg, #f1c40f 0%, #d4ac0d 100%); color: #080a0f; border: 2px solid #ffffff; padding: 8px 12px; border-radius: 20px; font-weight: 900; font-size: 11px; cursor: pointer; box-shadow: 0 4px 15px rgba(241,196,15,0.6);">
             🔊 ACTIVAR AUDIO / VOZ
         </button>
+        <button onclick="Notification.requestPermission().then(p => alert('🔔 Estado de notificaciones push: ' + p));" style="background: linear-gradient(135deg, #2ed573 0%, #17b978 100%); color: #ffffff; border: 2px solid #ffffff; padding: 8px 12px; border-radius: 20px; font-weight: 900; font-size: 11px; cursor: pointer; box-shadow: 0 4px 15px rgba(46,213,115,0.6);">
+            🔔 ACTIVAR PUSH
+        </button>
     </div>
-""", height=40)
+""", height=85)
 
 # --- ESCALA DE PUJAS ---
 ESCALA_PUJAS = [
@@ -375,7 +415,6 @@ def cargar_base64_archivo(nombre_archivo):
         pass
     return ""
 
-# Cargar Logo para la cabecera (1001397336_preview_rev_1.png)
 logo_b64 = cargar_base64_archivo("1001397336_preview_rev_1.png")
 if not logo_b64:
     for alt in ["1001397336_preview_rev_1.jpg", "logo.png", "logo.jpg"]:
@@ -388,7 +427,6 @@ if logo_b64:
 else:
     logo_display = '<span style="color: #f1c40f; font-size: 28px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">WOLF READY TO RUN</span>'
 
-# Cargar Banner Estático Único (Gemini_Generated_Image_mn48tzmn48tzmn48.png)
 banner_b64 = cargar_base64_archivo("Gemini_Generated_Image_mn48tzmn48tzmn48.png")
 
 # --- INICIALIZAR REMATES Y LISTA DE CARRERAS DISPONIBLES PRIMERO ---
@@ -408,7 +446,6 @@ if not st.session_state.remates:
             "hora_cierre_real": "No registrada"
         }
 
-# Asegurar 1V y 6V por defecto para Remates Ciegos con 14 ejemplares
 for ciego_key in ["1V", "6V"]:
     if ciego_key not in st.session_state.remates:
         st.session_state.banco_caballos_por_carrera[ciego_key] = [f"{j} - Ejemplar {j}" for j in range(1, 15)]
@@ -429,7 +466,6 @@ if "1V" not in st.session_state.carreras_por_modalidad.get("Ciegos", []):
 
 lista_carreras_disponibles = [c for c in st.session_state.remates.keys() if c not in ["1V", "6V"]]
 
-# --- REGLA: AUTOMÁTICAMENTE LAS ÚLTIMAS 6 CARRERAS CONSECUTIVAS PARA POLLA HÍPICA ---
 total_carrs = st.session_state.get('total_carreras_semana', 10)
 inicio_polla_idx = max(1, total_carrs - 5)
 ultimas_6_carreras = [f"Carrera {i}" for i in range(inicio_polla_idx, total_carrs + 1)]
@@ -448,7 +484,6 @@ st.markdown("""
         color: #f0f6fc;
         overflow-x: hidden !important;
     }
-    /* OCULTAR BARRA LATERAL */
     [data-testid="stSidebar"] {
         display: none !important;
         visibility: hidden !important;
@@ -500,7 +535,6 @@ st.markdown("""
         min-width: 48px !important;
         width: 48px !important;
     }
-    
     div[data-testid="stVerticalBlock"] div[data-testid="stHorizontalBlock"]:has(button) {
         gap: 3px !important;
         margin-top: -12px !important;
@@ -509,7 +543,6 @@ st.markdown("""
     div[data-testid="column"]:has(button) {
         padding: 0px 1px !important;
     }
-
     .stButton button {
         border-radius: 8px !important;
         font-weight: 800 !important;
@@ -520,7 +553,6 @@ st.markdown("""
         white-space: nowrap !important;
         width: 100% !important;
     }
-    
     div.stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #f1c40f 0%, #d4ac0d 100%) !important;
         color: #080a0f !important;
@@ -536,7 +568,6 @@ st.markdown("""
         transform: scale(1.02);
         box-shadow: 0px 6px 22px rgba(241, 196, 15, 0.9) !important;
     }
-
     .subasta-header {
         font-size: clamp(13px, 3.2vw, 16px);
         font-weight: 800;
@@ -545,7 +576,6 @@ st.markdown("""
         border-bottom: 2px solid #f1e05a;
         padding-bottom: 2px;
     }
-    
     .carrera-condicion-card {
         background-color: #161b22;
         border: 1px solid #30363d;
@@ -557,7 +587,6 @@ st.markdown("""
         line-height: 1.3;
         word-break: break-word;
     }
-    
     .dashboard-pote-card {
         background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
         border: 2px solid #f1c40f;
@@ -620,7 +649,6 @@ st.markdown("""
         text-shadow: 1px 1px 4px #000000;
         word-break: break-word;
     }
-
     @keyframes parpadeoGanador {
         0% {{ transform: scale(1); box-shadow: 0 0 12px #f1c40f, inset 0 0 12px #f1c40f; }}
         50% {{ transform: scale(1.02); box-shadow: 0 0 25px #00ffff, inset 0 0 18px #00ffff; }}
@@ -659,7 +687,6 @@ st.markdown("""
         font-weight: 900;
         text-shadow: 1px 1px 3px #000000;
     }
-
     .ticket-jugador-card {
         background: #0d1117;
         border: 2px solid #30363d;
@@ -685,7 +712,6 @@ st.markdown("""
         margin-bottom: 3px;
         font-weight: 600;
     }
-    
     .header-container-modern {
         background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
         border: 1px solid #30363d;
@@ -755,7 +781,6 @@ st.markdown("""
         width: auto;
         object-fit: contain;
     }
-    
     @keyframes parpadeoLed {
         0% {{ opacity: 1; transform: scale(1); }}
         50% {{ opacity: 0.4; transform: scale(0.9); }}
@@ -777,7 +802,6 @@ st.markdown("""
         background-color: #ff4757;
         color: #ff4757;
     }
-
     @media (min-width: 769px) {
         .imagen-carrera-pc-container {
             max-width: 380px !important;
@@ -975,7 +999,6 @@ def generar_tabla_html_remate(remates_dict, retirados_list, no_validos_list=[]):
     """
     return html
 
-# --- GARANTIZAR ESTADO INICIAL DE MODALIDADES ---
 if not st.session_state.carreras_activas_remate and [c for c in st.session_state.remates.keys() if c not in ["1V", "6V"]]:
     st.session_state.carreras_activas_remate = [c for c in st.session_state.remates.keys() if c not in ["1V", "6V"]]
 
@@ -1117,7 +1140,6 @@ def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
     ahora_dt_frag = obtener_hora_venezuela_local()
 
-    # --- DETECCIÓN DE SUPERACIÓN DE PUJA (OUTBID NOTIFICATION) ---
     if 'mis_caballos_previos' not in st.session_state:
         st.session_state.mis_caballos_previos = {}
     
@@ -1194,7 +1216,6 @@ def renderizar_tiempo_real_universal():
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
 
-                # Validación y Mapeo de Remate Ciego (< 14 / > 14 / Retirados sincronizados)
                 carrera_real_mapeada = carr_activa
                 if modo_actual_remate == "Ciegos":
                     mapeo = st.session_state.get('mapeo_ciegos', {})
@@ -1204,11 +1225,9 @@ def renderizar_tiempo_real_universal():
                         total_real = len(banco_real)
                         monto_fijo_ciego = st.session_state.detalles_carreras.get(carr_activa, {}).get('monto_fijo_ciego', 500.0)
                         
-                        # Sincronizar ganador si la carrera mapeada ya fue liquidada
                         if carrera_real_mapeada in st.session_state.historial_ganadores:
                             st.session_state.historial_ganadores[carr_activa] = st.session_state.historial_ganadores[carrera_real_mapeada]
 
-                        # REGLA 1: Menos de 14 ejemplares -> Anular apuestas
                         if total_real < 14:
                             st.error(f"⚠️ La carrera mapeada ({carrera_real_mapeada}) tiene {total_real} ejemplares (< 14). ¡Las apuestas de este Remate Ciego han sido ANULADAS!")
                             for cb_k, cb_inf in st.session_state.remates[carr_activa].items():
@@ -1220,7 +1239,6 @@ def renderizar_tiempo_real_universal():
                                     st.session_state.remates[carr_activa][cb_k] = {"jugador": "Sin Postor", "monto": 0.0}
                             guardar_estado_global()
                         else:
-                            # REGLA 2: Más de 14 -> Asignar excedentes a CASA
                             for idx_h, caballo_real in enumerate(banco_real):
                                 num_h = idx_h + 1
                                 slot_ciego = f"{num_h} - Ejemplar {num_h}"
@@ -1272,7 +1290,6 @@ def renderizar_tiempo_real_universal():
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- ⏱️ CONTROL DE HORARIOS Y CONTEO EN VIVO (EN VIVO CIERRA 10 SEGUNDOS ANTES) ---
                 clave_mod_carr = f"{modo_actual_remate}_{carr_activa}"
                 dt_inicio = st.session_state.fechas_horas_inicio_remate_modalidad.get(clave_mod_carr)
                 dt_limite = st.session_state.fechas_horas_cierre_remate_modalidad.get(clave_mod_carr)
@@ -1286,7 +1303,6 @@ def renderizar_tiempo_real_universal():
                     try: dt_limite = datetime.fromisoformat(dt_limite)
                     except Exception: dt_limite = None
 
-                # En Vivo cierra 10 segundos antes de la hora puesta
                 dt_limite_efectivo = dt_limite
                 if dt_limite and modo_actual_remate == "En Vivo":
                     dt_limite_efectivo = dt_limite - timedelta(seconds=10)
@@ -1401,7 +1417,6 @@ def renderizar_tiempo_real_universal():
                 if carr_activa not in st.session_state.ejemplares_no_valido:
                     st.session_state.ejemplares_no_valido[carr_activa] = []
 
-                # --- ⚙️ GESTIÓN DE RETIROS (SOLO EN ADELANTADOS, SINCRONIZADO PARA CIEGOS Y EN VIVO) ---
                 if modo_actual_remate == "Adelantados":
                     with st.expander(f"⚙️ Gestionar Retiros / No Válidos - {carr_activa}", expanded=False):
                         banco_carr_rem = st.session_state.banco_caballos_por_carrera.get(carr_activa, [])
@@ -1424,7 +1439,6 @@ def renderizar_tiempo_real_universal():
                     if target_sync_key in st.session_state.get('ejemplares_no_valido', {}):
                         st.session_state.ejemplares_no_valido[carr_activa] = st.session_state.ejemplares_no_valido[target_sync_key]
 
-                # --- TABLA DE REMATES ---
                 retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
                 no_validos_carr_activa = st.session_state.ejemplares_no_valido.get(carr_activa, [])
                 
@@ -1449,7 +1463,6 @@ def renderizar_tiempo_real_universal():
 
                 premio_total_calculado = pote_neto_base + incentivo_actual
 
-                # --- TARJETA DE POTES Y PREMIOS ---
                 st.markdown(f"""
                     <div class="dashboard-pote-card">
                         <div class="dp-header">🏆 PREMIO TOTAL (INCLUYE INCENTIVO)</div>
@@ -1535,7 +1548,6 @@ def renderizar_tiempo_real_universal():
                             })
                         st.dataframe(pd.DataFrame(datos_h_carr), use_container_width=True, hide_index=True)
 
-                # --- BLOQUEO ESTRICTO POR HORARIO ---
                 fuera_de_horario = False
                 if dt_inicio and ahora_dt_frag < dt_inicio:
                     fuera_de_horario = True
@@ -1740,7 +1752,7 @@ if menu_principal_opcion == "Dupletas":
     elif sub_dup_actual == "Tripleta":
         pote_total = sum([t['monto'] for t in st.session_state.tripleta_tickets if t.get('estado') == 'Pendiente'])
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
-    else: # POLLA HIPICA
+    else:
         pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
         total_c = st.session_state.get('total_carreras_semana', 10)
         inicio_p = max(1, total_c - 5)
