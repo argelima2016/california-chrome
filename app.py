@@ -356,7 +356,7 @@ components.html(r"""
                     const sidebar = doc.querySelector('section[data-testid="stSidebar"]');
                     if (sidebar) {
                         const currentTransform = window.getComputedStyle(sidebar).transform;
-                        const isClosed = sidebar.getAttribute('aria-expanded'] === 'false' || 
+                        const isClosed = sidebar.getAttribute('aria-expanded') === 'false' || 
                                        (currentTransform && currentTransform !== 'none' && !currentTransform.includes('matrix(1, 0, 0, 1, 0, 0)'));
                         
                         if (isClosed) {
@@ -1167,7 +1167,7 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }, 400);
+                    }}, 400);
                 }}, 8000);
             }}
         }})();
@@ -2335,7 +2335,7 @@ elif menu_principal_opcion == "Cuentas":
         st.markdown("📋 **3. Mis Reportes Enviados**")
         mis_reportes = [r for r in st.session_state.reportes_pago if r['jugador'] == jugador_actual]
         if not mis_reportes:
-            st.info("ℹ️ No has enviado reportes de pago todavía.")
+            st.info("ℹ️ No hay reportes de pago todavía.")
         else:
             for rep in reversed(mis_reportes):
                 st.markdown(f"🔹 *{rep['fecha']}* | **{formatear_bs(rep['monto'])}** | Banco: `{rep['banco']}` | Ref: `{rep['referencia']}` | 📌 `{rep['estado']}`")
@@ -2757,7 +2757,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if ampm_cier_m == "AM" and h_cier_m_val == 12: h_cm_24 = 0
 
                 dt_im_final = datetime.combine(f_ini_m, dtime(h_im_24, m_ini_m_val))
-                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cier_m_val))
+                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cm_24:=m_cier_m_val))
 
                 st.session_state.fechas_horas_inicio_modalidad_multiple[mod_mult_sel] = dt_im_final
                 st.session_state.fechas_horas_cierre_modalidad_multiple[mod_mult_sel] = dt_cm_final
