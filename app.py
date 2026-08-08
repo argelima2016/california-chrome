@@ -459,7 +459,7 @@ lista_carreras_disponibles = [c for c in st.session_state.remates.keys() if c no
 total_carrs = st.session_state.get('total_carreras_semana', 10)
 inicio_polla_idx = max(1, total_carrs - 5)
 ultimas_6_carreras = [f"Carrera {i}" for i in range(inicio_polla_idx, total_carrs + 1)]
-st.session_state.carreras_habilitadas_polla = [c for c in ultimas_6_carreras if f"Carrera {i}" in st.session_state.remates]
+st.session_state.carreras_habilitadas_polla = [c for c in ultimas_6_carreras if c in st.session_state.remates]
 
 ahora_dt = obtener_hora_venezuela_local()
 
@@ -1038,7 +1038,6 @@ carreras_adelantados = [c for c in st.session_state.carreras_por_modalidad.get("
 if carreras_adelantados:
     elementos_carrusel_info.append("ADELANTADOS: " + " | ".join(carreras_adelantados))
 
-carreras_ciegos = ["1V", "6V"]
 elementos_carrusel_info.append("CIEGOS: 1V | 6V")
 
 carreras_envivo = [c for c in st.session_state.carreras_por_modalidad.get("En Vivo", []) if c in lista_carreras_disponibles]
@@ -1237,7 +1236,7 @@ def renderizar_tiempo_real_universal():
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
 
-                # Si es Remate Ciego, verificar mapeo y reglas de < 14 / > 14
+                # Validación de Remate Ciego (Reglas de < 14 / > 14)
                 carrera_real_mapeada = carr_activa
                 if modo_actual_remate == "Ciegos":
                     mapeo = st.session_state.get('mapeo_ciegos', {})
@@ -1247,7 +1246,7 @@ def renderizar_tiempo_real_universal():
                         total_real = len(banco_real)
                         monto_fijo_ciego = st.session_state.detalles_carreras.get(carr_activa, {}).get('monto_fijo_ciego', 500.0)
                         
-                        # REGLA 1: MENOS DE 14 -> ANULAR APUESTAS
+                        # REGLA 1: Menos de 14 ejemplares -> Anular apuestas
                         if total_real < 14:
                             st.error(f"⚠️ La carrera mapeada ({carrera_real_mapeada}) tiene {total_real} ejemplares (< 14). ¡Las apuestas de este Remate Ciego han sido ANULADAS!")
                             for cb_k, cb_inf in st.session_state.remates[carr_activa].items():
@@ -1259,12 +1258,11 @@ def renderizar_tiempo_real_universal():
                                     st.session_state.remates[carr_activa][cb_k] = {"jugador": "Sin Postor", "monto": 0.0}
                             guardar_estado_global()
                         else:
-                            # Sincronizar los 14 primeros ejemplares o asignar excedentes a CASA
+                            # REGLA 2: Más de 14 -> Asignar excedentes a CASA
                             for idx_h, caballo_real in enumerate(banco_real):
                                 num_h = idx_h + 1
                                 slot_ciego = f"{num_h} - Ejemplar {num_h}"
                                 if slot_ciego in st.session_state.remates[carr_activa]:
-                                    # REGLA 2: MAS DE 14 -> ASIGNAR A LA CASA
                                     if num_h > 14:
                                         actual_postor = st.session_state.remates[carr_activa][slot_ciego]['jugador']
                                         if actual_postor == "Sin Postor":
@@ -2506,7 +2504,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.session_state.carreras_habilitadas_tripleta = list(carreras_generadas)
                 
                 inicio_p_adm = max(1, nueva_cantidad_carreras - 5)
-                st.session_state.carreras_habilitadas_polla = [f"Carrera {i}" for i in range(inicio_p_adm, nueva_cantidad_carreras + 1)]
+                st.session_state.carreras_habilitadas_polla = [f"Carrera {i}" for i in range(inicio_p_adm, nueva_cantidad_carreras + 1) if f"Carrera {i}" in st.session_state.remates]
                 
                 if not st.session_state.carreras_por_modalidad.get("Adelantados"):
                     st.session_state.carreras_por_modalidad["Adelantados"] = list(carreras_generadas)
