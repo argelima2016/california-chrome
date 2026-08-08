@@ -278,7 +278,7 @@ def vigilante_sincronizacion_global():
 
 vigilante_sincronizacion_global()
 
-# --- SCRIPT JS PARA AUTO-ACTUALIZACIÓN, RELOJ Y SÍNTESIS DE VOZ EN VIVO ---
+# --- SCRIPT JS GLOBAL PARA AUDIO, VOZ Y DESBLOQUEO DE NAVEGADOR ---
 components.html(r"""
     <script>
         let audioCtxGlobal = null;
@@ -295,19 +295,19 @@ components.html(r"""
             }
         }
 
-        window.addEventListener('click', inicializarAudio, { once: true });
-        window.addEventListener('touchstart', inicializarAudio, { once: true });
+        window.parent.addEventListener('click', inicializarAudio, { once: true });
+        window.parent.addEventListener('touchstart', inicializarAudio, { once: true });
 
         function hablarNumero(texto) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
+            if ('speechSynthesis' in window.parent) {
+                window.parent.speechSynthesis.cancel();
                 let utterance = new SpeechSynthesisUtterance(texto);
                 utterance.lang = 'es-ES';
                 utterance.rate = 1.25;
-                window.speechSynthesis.speak(utterance);
+                window.parent.speechSynthesis.speak(utterance);
             }
         }
-        window.hablarNumero = hablarNumero;
+        window.parent.hablarNumero = hablarNumero;
 
         function reproducirAlertaMovilYCalle(tipo) {
             if ("vibrate" in navigator) {
@@ -349,7 +349,7 @@ components.html(r"""
                 console.log("Audio no disponible: ", e);
             }
         }
-        window.reproducirAlertaMovilYCalle = reproducirAlertaMovilYCalle;
+        window.parent.reproducirAlertaMovilYCalle = reproducirAlertaMovilYCalle;
 
         function sincronizacionEnVivo() {
             const doc = window.parent.document;
@@ -372,16 +372,19 @@ components.html(r"""
                     }
                 });
             });
-
-            const relojElem = doc.getElementById('reloj-js-vivo');
-            if (relojElem) {
-                const options = { timeZone: 'America/Caracas', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-                relojElem.innerText = new Intl.DateTimeFormat('en-US', options).format(new Date());
-            }
         }
         setInterval(sincronizacionEnVivo, 1000);
     </script>
 """, height=0, width=0)
+
+# --- BOTÓN FLOTANTE PARA ACTIVAR AUDIO MANUALMENTE ---
+components.html(r"""
+    <div style="position: fixed; bottom: 10px; right: 10px; z-index: 999999;">
+        <button onclick="window.parent.inicializarAudio && window.parent.inicializarAudio(); alert('🔊 ¡Audio activado correctamente para alertas y voz!');" style="background: linear-gradient(135deg, #f1c40f 0%, #d4ac0d 100%); color: #080a0f; border: 2px solid #ffffff; padding: 8px 12px; border-radius: 20px; font-weight: 900; font-size: 11px; cursor: pointer; box-shadow: 0 4px 15px rgba(241,196,15,0.6);">
+            🔊 ACTIVAR AUDIO / VOZ
+        </button>
+    </div>
+""", height=40)
 
 # --- ESCALA DE PUJAS ---
 ESCALA_PUJAS = [
@@ -595,7 +598,6 @@ st.markdown("""
         word-break: break-word;
     }
     
-    /* DISEÑO NUEVO Y MEJORADO PARA POTE E INCENTIVO */
     .dashboard-pote-card {
         background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
         border: 2px solid #f1c40f;
@@ -1361,7 +1363,7 @@ def renderizar_tiempo_real_universal():
                     try: dt_limite = datetime.fromisoformat(dt_limite)
                     except Exception: dt_limite = None
 
-                # Regla: En Vivo cierra 10 segundos antes de la hora puesta
+                # En Vivo cierra 10 segundos antes
                 dt_limite_efectivo = dt_limite
                 if dt_limite and modo_actual_remate == "En Vivo":
                     dt_limite_efectivo = dt_limite - timedelta(seconds=10)
@@ -1435,7 +1437,6 @@ def renderizar_tiempo_real_universal():
                                         if (window.intervaloRelojVivo) {{
                                             clearInterval(window.intervaloRelojVivo);
                                         }}
-                                        // Sintetizar voz del número actual
                                         if (window.parent.hablarNumero) {{
                                             window.parent.hablarNumero(segs.toString());
                                         }}
@@ -1477,7 +1478,7 @@ def renderizar_tiempo_real_universal():
                 if carr_activa not in st.session_state.ejemplares_no_valido:
                     st.session_state.ejemplares_no_valido[carr_activa] = []
 
-                # --- ⚙️ GESTIÓN DE RETIROS (SOLO EN ADELANTADOS, SINCRONIZADO AUTOMÁTICAMENTE PARA CIEGOS Y EN VIVO) ---
+                # --- ⚙️ GESTIÓN DE RETIROS (SOLO EN ADELANTADOS, SINCRONIZADO PARA CIEGOS Y EN VIVO) ---
                 if modo_actual_remate == "Adelantados":
                     with st.expander(f"⚙️ Gestionar Retiros / No Válidos - {carr_activa}", expanded=False):
                         banco_carr_rem = st.session_state.banco_caballos_por_carrera.get(carr_activa, [])
