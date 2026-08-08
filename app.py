@@ -1263,9 +1263,9 @@ if st.sidebar.button("🗑️ Reiniciar Jornada", key="sb_btn_reiniciar_jornada"
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL
+# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (OPTIMIZADO PARA EVITAR PARPADEOS)
 # =========================================================================
-@st.fragment(run_every=1.0)
+@st.fragment(run_every=2.0)
 def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
     ahora_dt_frag = obtener_hora_venezuela_local()
@@ -1509,7 +1509,7 @@ def renderizar_tiempo_real_universal():
                 if carr_activa not in st.session_state.ejemplares_no_valido:
                     st.session_state.ejemplares_no_valido[carr_activa] = []
 
-                # --- ⚙️ GESTIÓN DE RETIROS Y NO VÁLIDOS (ENCIMA DE LA TABLA DE REMATE) ---
+                # --- ⚙️ GESTIÓN DE RETIROS DESPLEGABLE (EN REMATES) ---
                 with st.expander(f"⚙️ Gestionar Retiros / No Válidos - {carr_activa}", expanded=False):
                     banco_carr_rem = st.session_state.banco_caballos_por_carrera.get(carr_activa, [])
                     ret_act = st.session_state.ejemplares_retirados.get(carr_activa, [])
