@@ -804,6 +804,15 @@ st.markdown("""
         background-color: #ff4757;
         color: #ff4757;
     }
+
+    /* ESTILO PARA LIMITAR EL TAMAÑO DE LA IMAGEN EN COMPUTADORAS (PC) */
+    @media (min-width: 769px) {
+        .imagen-carrera-pc-container {
+            max-width: 380px !important;
+            margin: 0 auto !important;
+            display: block !important;
+        }
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -1348,7 +1357,9 @@ def renderizar_tiempo_real_universal():
                 if carr_activa in st.session_state.imagenes_carreras:
                     try:
                         img_url_val = st.session_state.imagenes_carreras[carr_activa]
+                        st.markdown(f'<div class="imagen-carrera-pc-container">', unsafe_allow_html=True)
                         st.image(img_url_val, caption=f"Imagen oficial - {carr_activa}", use_container_width=True)
+                        st.markdown('</div>', unsafe_allow_html=True)
                     except Exception:
                         pass
 
@@ -2914,7 +2925,9 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             if carr_img_sel in st.session_state.imagenes_carreras:
                 try:
                     img_guardada = st.session_state.imagenes_carreras[carr_img_sel]
-                    st.image(img_guardada, width=250, caption=f"Imagen guardada - {carr_img_sel}")
+                    st.markdown(f'<div class="imagen-carrera-pc-container">', unsafe_allow_html=True)
+                    st.image(img_guardada, caption=f"Imagen guardada - {carr_img_sel}", use_container_width=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
                 except Exception:
                     pass
                 
