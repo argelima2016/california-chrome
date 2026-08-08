@@ -768,26 +768,6 @@ st.markdown("""
         object-fit: contain;
     }
     
-    .reloj-digital-container {
-        background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
-        border: 1.2px solid #00ffff;
-        border-radius: 8px;
-        padding: 6px 14px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 10px;
-        box-shadow: 0px 0px 12px rgba(0, 255, 255, 0.25);
-    }
-    .reloj-digital-txt {
-        color: #00ffff;
-        font-size: 16px;
-        font-weight: 900;
-        letter-spacing: 1.5px;
-        text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
-        font-family: monospace;
-    }
-    
     @keyframes parpadeoLed {
         0% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.4; transform: scale(0.9); }
@@ -1348,13 +1328,6 @@ def renderizar_tiempo_real_universal():
                             st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
-
-                hora_actual_envivo = ahora_dt_frag.strftime('%I:%M:%S %p')
-                st.markdown(f"""
-                    <div class="reloj-digital-container">
-                        <span id="reloj-js-vivo" class="reloj-digital-txt">{hora_actual_envivo}</span>
-                    </div>
-                """, unsafe_allow_html=True)
 
                 if carr_activa in st.session_state.imagenes_carreras:
                     try:
@@ -2345,7 +2318,7 @@ elif menu_principal_opcion == "Cuentas":
         st.markdown("📋 **3. Mis Reportes Enviados**")
         mis_reportes = [r for r in st.session_state.reportes_pago if r['jugador'] == jugador_actual]
         if not mis_reportes:
-            st.info("ℹ️ No hay envíos de pago todavía.")
+            st.info("ℹ️ No has enviado reportes de pago todavía.")
         else:
             for rep in reversed(mis_reportes):
                 st.markdown(f"🔹 *{rep['fecha']}* | **{formatear_bs(rep['monto'])}** | Banco: `{rep['banco']}` | Ref: `{rep['referencia']}` | 📌 `{rep['estado']}`")
