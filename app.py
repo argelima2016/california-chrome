@@ -91,8 +91,20 @@ def formatear_bs(monto):
     numero_formateado = f"{monto:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return f"Bs. {numero_formateado}"
 
-# --- SISTEMA DE PERSISTENCIA Y SINCRONIZACIÓN EN TIEMPO REAL CON SUPABASE ---
+# --- SISTEMA DE CACHÉ INTELIGENTE Y PERSISTENCIA CON SUPABASE ---
 DB_ROW_ID = 1
+
+@st.cache_data(ttl=60)
+def consultar_supabase_remoto():
+    if not supabase:
+        return None
+    try:
+        response = supabase.table("app_state").select("data").eq("id", DB_ROW_ID).execute()
+        if response.data and len(response.data) > 0:
+            return response.data[0].get("data")
+    except Exception as e:
+        print("Error consultando Supabase:", e)
+    return None
 
 def cargar_estado_global(forzar_recarga=False):
     default_state = {
@@ -145,15 +157,10 @@ def cargar_estado_global(forzar_recarga=False):
         '_local_timestamp': 0.0
     }
     
-    data = None
-    if supabase:
-        try:
-            response = supabase.table("app_state").select("data").eq("id", DB_ROW_ID).execute()
-            if response.data and len(response.data) > 0:
-                data = response.data[0].get("data")
-        except Exception as e:
-            print("Error cargando de Supabase:", e)
-            data = None
+    if not forzar_recarga and all(k in st.session_state for k in default_state.keys()):
+        return
+
+    data = consultar_supabase_remoto()
 
     if data and isinstance(data, dict) and len(data.keys()) > 0:
         try:
@@ -218,6 +225,7 @@ def guardar_estado_global():
     if supabase:
         try:
             supabase.table("app_state").upsert({"id": DB_ROW_ID, "data": data}).execute()
+            st.cache_data.clear() # Limpiar caché local al guardar para forzar lectura fresca
         except Exception as e:
             print("Error al guardar en Supabase: ", e)
 
@@ -235,6 +243,7 @@ def vigilante_sincronizacion_global():
                 local_ts = st.session_state.get("_local_timestamp", 0.0)
                 if remote_ts > local_ts:
                     st.session_state["_local_timestamp"] = remote_ts
+                    st.cache_data.clear()
                     st.rerun()
         except Exception:
             pass
@@ -433,7 +442,7 @@ st.session_state.carreras_habilitadas_polla = [c for c in ultimas_6_carreras if 
 
 ahora_dt = obtener_hora_venezuela_local()
 
-# --- ESTILOS CSS GENERALES Y DISEÑO MEJORADO DE POTES ---
+# --- ESTILOS CSS GENERALES Y TRANSICIÓN SUAVE (ELIMINA PARPADEOS) ---
 st.markdown("""
     <style>
     * {
@@ -443,6 +452,11 @@ st.markdown("""
         background-color: #080a0f;
         color: #f0f6fc;
         overflow-x: hidden !important;
+        animation: fadeIn 0.2s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0.85; }
+        to { opacity: 1; }
     }
     [data-testid="stSidebar"] {
         display: none !important;
@@ -973,36 +987,27 @@ if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponib
 if not st.session_state.carreras_habilitadas_tripleta and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_tripleta = list(lista_carreras_disponibles)
 
-# --- MENÚ PRINCIPAL HORIZONTAL ---
+# --- MENÚ PRINCIPAL HORIZONTAL (SIN RECARGAS BRUSCAS) ---
 st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
 col_menu1, col_menu2, col_menu3, col_menu4 = st.columns(4, gap="small")
 
 with col_menu1:
     if st.button("REMATES", key="menu_btn_remates_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Remates" else "secondary"):
         st.session_state.menu_principal_opcion = "Remates"
-        guardar_estado_global()
-        st.rerun()
 
 with col_menu2:
     if st.button("DUPLETA", key="menu_btn_dupletas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Dupletas" else "secondary"):
         st.session_state.menu_principal_opcion = "Dupletas"
-        guardar_estado_global()
-        st.rerun()
 
 with col_menu3:
     if st.button("CUENTAS", key="menu_btn_cuentas_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "Cuentas" else "secondary"):
         st.session_state.menu_principal_opcion = "Cuentas"
-        guardar_estado_global()
-        st.rerun()
 
 with col_menu4:
     if st.button("⚙️ CONFIG", key="menu_btn_config_top", use_container_width=True, type="primary" if st.session_state.menu_principal_opcion == "🔒 Zona Admin" else "secondary"):
         st.session_state.menu_principal_opcion = "🔒 Zona Admin"
-        guardar_estado_global()
-        st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
-
 st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
 
 # --- BANNER MARQUESINA DINÁMICO ---
@@ -1119,18 +1124,12 @@ def renderizar_tiempo_real_universal():
         with col_so1:
             if st.button("Adelantados", key="sub_rem_adelantados", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Adelantados" else "secondary"):
                 st.session_state.sub_remate_opcion = "Adelantados"
-                guardar_estado_global()
-                st.rerun()
         with col_so2:
             if st.button("Ciegos", key="sub_rem_ciegos", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "Ciegos" else "secondary"):
                 st.session_state.sub_remate_opcion = "Ciegos"
-                guardar_estado_global()
-                st.rerun()
         with col_so3:
             if st.button("🔴 En Vivo", key="sub_rem_envivo", use_container_width=True, type="primary" if st.session_state.sub_remate_opcion == "En Vivo" else "secondary"):
                 st.session_state.sub_remate_opcion = "En Vivo"
-                guardar_estado_global()
-                st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
@@ -1171,12 +1170,10 @@ def renderizar_tiempo_real_universal():
                     with cols_carreras[idx]:
                         if st.button(abreviatura, key=f"rem_btn_sel_carr_{idx}", use_container_width=True, type="primary" if es_activa else "secondary"):
                             st.session_state["carrera_remate_activa_seleccionada"] = c_nombre
-                            guardar_estado_global()
-                            st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
 
-                # --- LÓGICA Y MAPEO DE REMATE CIEGO ACTUALIZADA ---
+                # --- REGLA ACTUALIZADA DE REMATE CIEGO ---
                 carrera_real_mapeada = carr_activa
                 if modo_actual_remate == "Ciegos":
                     mapeo = st.session_state.get('mapeo_ciegos', {})
@@ -1189,7 +1186,7 @@ def renderizar_tiempo_real_universal():
                         if carrera_real_mapeada in st.session_state.historial_ganadores:
                             st.session_state.historial_ganadores[carr_activa] = st.session_state.historial_ganadores[carrera_real_mapeada]
 
-                        # REGLA 1: Menos de 14 ejemplares -> Los slots excedentes de la tabla no juegan y no cobran deuda
+                        # 1. Menos de 14: Los que sobran no juegan y no cobran deuda
                         if total_real < 14:
                             for idx_s, (cb_k, cb_inf) in enumerate(list(st.session_state.remates[carr_activa].items())):
                                 num_slot = idx_s + 1
@@ -1201,7 +1198,7 @@ def renderizar_tiempo_real_universal():
                                             st.session_state.cuentas[jug_ant]['Pujas'] = max(0.0, st.session_state.cuentas[jug_ant]['Pujas'] - mnt_ant)
                                     st.session_state.remates[carr_activa][cb_k] = {"jugador": "No Juega", "monto": 0.0}
 
-                        # REGLA 2: Más de 14 ejemplares -> Los excedentes a partir del 15 juegan para la CASA con MONTO FIJADO
+                        # 2. Más de 14: Los sobrantes a partir del 15 van para la CASA con el MONTO FIJADO
                         else:
                             for idx_h, caballo_real in enumerate(banco_real):
                                 num_h = idx_h + 1
@@ -1664,18 +1661,12 @@ if menu_principal_opcion == "Dupletas":
     with col_d1:
         if st.button("🎟️ Dupleta", key="sub_dup_dupleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Dupleta" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Dupleta"
-            guardar_estado_global()
-            st.rerun()
     with col_d2:
         if st.button("🎟️ Tripleta", key="sub_dup_tripleta", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "Tripleta" else "secondary"):
             st.session_state.sub_dupleta_opcion = "Tripleta"
-            guardar_estado_global()
-            st.rerun()
     with col_d3:
         if st.button("🏇 POLLA HIPICA", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "POLLA HIPICA" else "secondary"):
             st.session_state.sub_dupleta_opcion = "POLLA HIPICA"
-            guardar_estado_global()
-            st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<hr style='margin: 0.2rem 0; border-color: #21262d;'>", unsafe_allow_html=True)
