@@ -2146,62 +2146,15 @@ elif menu_principal_opcion == "Cuentas":
                     st.error("⚠️ Ingrese un monto válido y la referencia.")
 
 # =========================================================================
-# 4. ZONA DE ADMINISTRADOR (COMPLETA Y RESTAURADA)
+# 4. ZONA DE ADMINISTRADOR (COMPLETA Y ORIGINAL)
 # =========================================================================
 elif menu_principal_opcion == "🔒 Zona Admin":
     st.markdown("<div class='subasta-header'>🔒 Panel de Configuración y Administración</div>", unsafe_allow_html=True)
     
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs([
-        "⚙️ Controles & Jornada",
-        "✍️ Banco de Caballos", 
-        "⏰ Horarios Remates",
-        "🎁 Incentivos",
-        "👥 Usuarios", 
-        "⚙️ Dupleta/Polla", 
-        "📺 Video", 
-        "💳 Pagos Móviles",
-        "📊 Saldos", 
-        "🖼️ Imágenes"
-    ])
+    admin_tabs_nombres = ["✍️ Caballos", "⏰ Horarios", "🎁 Incentivos", "👥 Usuarios", "⚙️ Montos", "📺 Video", "💳 Pagos Móviles", "📊 Saldos", "🖼️ Imágenes", "🙈 Ciegos & Mapeo"]
+    tabs_admin = st.tabs(admin_tabs_nombres)
 
-    with tab1:
-        st.markdown("### ⚙️ Controles Generales de la Jornada")
-        with st.container(border=True):
-            st.markdown("👤 **Selector de Usuario Activo**")
-            usuario_seleccionado_admin = st.selectbox(
-                "Cambiar de Usuario en Sesión",
-                options=st.session_state.lista_usuarios,
-                index=st.session_state.lista_usuarios.index(st.session_state.usuario_activo) if st.session_state.usuario_activo in st.session_state.lista_usuarios else 0,
-                key="admin_select_usuario_activo"
-            )
-            if usuario_seleccionado_admin != st.session_state.usuario_activo:
-                st.session_state.usuario_activo = usuario_seleccionado_admin
-                guardar_estado_global()
-                st.rerun()
-
-        with st.container(border=True):
-            st.markdown("🏠 **Retención de la Casa**")
-            porcentaje_casa_val = st.slider("Porcentaje de retención (%)", 0, 50, int(st.session_state.get('porcentaje_casa', 30)), key="admin_slider_retencion_casa")
-            if porcentaje_casa_val != st.session_state.get('porcentaje_casa', 30):
-                st.session_state.porcentaje_casa = porcentaje_casa_val
-                guardar_estado_global()
-
-        with st.container(border=True):
-            st.markdown("🔒 **Estado de Dupletas y Polla Hípica**")
-            if st.session_state.dupleta_bloqueada:
-                st.markdown("<p style='color: #ff4757; font-weight: bold;'>🔴 ESTADO: BLOQUEADAS</p>", unsafe_allow_html=True)
-                if st.button("🔓 Desbloquear Emisión", key="admin_btn_desbloquear_dupleta", use_container_width=True, type="primary"):
-                    st.session_state.dupleta_bloqueada = False
-                    guardar_estado_global()
-                    st.rerun()
-            else:
-                st.markdown("<p style='color: #00d2d3; font-weight: bold;'>🟢 ESTADO: ABIERTAS</p>", unsafe_allow_html=True)
-                if st.button("🔒 Bloquear Emisión", key="admin_btn_bloquear_dupleta", use_container_width=True):
-                    st.session_state.dupleta_bloqueada = True
-                    guardar_estado_global()
-                    st.rerun()
-
-    with tab2:
+    with tabs_admin[0]:
         st.markdown("### ✍️ Banco de Caballos (Data Persistente y Asignación)")
         with st.container(border=True):
             st.markdown("📅 **Configuración General de la Semana**")
@@ -2225,7 +2178,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.rerun()
 
         st.markdown("---")
-        st.markdown("📋 **Gestión de Ejemplares por Carrera y Asignación de Modalidades**")
         carr_banco_sel = st.selectbox("Seleccionar Carrera", list(st.session_state.remates.keys()), key="select_carrera_banco_admin")
         
         with st.container(border=True):
@@ -2268,7 +2220,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.success("✅ ¡Banco de ejemplares y remates actualizados correctamente!")
                     st.rerun()
 
-    with tab3:
+    with tabs_admin[1]:
         st.markdown("### ⏰ Horarios de Apertura y Cierre de Remates")
         with st.container(border=True):
             mod_horario_sel = st.selectbox("Seleccionar Modalidad", options=["Adelantados", "Ciegos", "En Vivo"], key="admin_mod_horario_sel")
@@ -2304,7 +2256,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.success(f"✅ Horarios guardados para **{carr_horario_sel} ({mod_horario_sel})**.")
                 st.rerun()
 
-    with tab4:
+    with tabs_admin[2]:
         st.markdown("### 🎁 Gestión de Incentivos por Carrera")
         with st.container(border=True):
             carr_inc_sel = st.selectbox("Seleccionar Carrera para Incentivo", options=lista_carreras_disponibles, key="select_carr_incentivo_admin")
@@ -2324,7 +2276,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.success("✅ ¡Incentivos actualizados correctamente!")
                 st.rerun()
 
-    with tab5:
+    with tabs_admin[3]:
         st.markdown("### 👥 Registro de Usuarios")
         with st.container(border=True):
             nuevo_usuario_input = st.text_input("Nuevo Usuario", placeholder="Ej: JUAN", key="input_nuevo_usuario_reg")
@@ -2338,8 +2290,8 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.toast(f"✅ ¡Registrado **{usuario_limpio}**!")
                     st.rerun()
 
-    with tab6:
-        st.markdown("### ⚙️ Configuración de Dupleta, Tripleta y Polla")
+    with tabs_admin[4]:
+        st.markdown("### ⚙️ Configuración de Montos")
         with st.container(border=True):
             monto_dup_cfg = st.number_input("Dupleta (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("Dupleta", 500.0)), step=50.0, key="cfg_monto_dupleta")
             monto_trip_cfg = st.number_input("Tripleta (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("Tripleta", 500.0)), step=50.0, key="cfg_monto_tripleta")
@@ -2353,7 +2305,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Montos guardados!")
                 st.rerun()
 
-    with tab7:
+    with tabs_admin[5]:
         st.markdown("### 📺 Video en Vivo")
         with st.container(border=True):
             nueva_url_video = st.text_input("URL", value=st.session_state.get('url_video_en_vivo', ''), placeholder="https://youtube.com/watch?v=...", key="input_live_video_url")
@@ -2363,7 +2315,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.toast("✅ ¡Guardado!")
                 st.rerun()
 
-    with tab8:
+    with tabs_admin[6]:
         st.markdown("### 💳 Panel de Validación de Pagos Móviles (Telegram)")
         reportes_pago_lista = st.session_state.get('reportes_pago', [])
         if not reportes_pago_lista:
@@ -2386,7 +2338,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                             st.success(f"✅ ¡Pago aprobado y abonado a la cuenta de {jug_rep}!")
                             st.rerun()
 
-    with tab9:
+    with tabs_admin[7]:
         st.markdown("### 📊 Saldos de Usuarios")
         usuarios_futuros = [u for u in st.session_state.lista_usuarios if u != "CASA"]
         if usuarios_futuros:
@@ -2400,7 +2352,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             st.dataframe(pd.DataFrame(datos_cuentas_adm), use_container_width=True, hide_index=True)
         st.metric("Ganancia Casa", formatear_bs(st.session_state.ganancia_casa))
 
-    with tab10:
+    with tabs_admin[8]:
         st.markdown("### 🖼️ Imágenes por Carrera")
         todas_carrs_img = list(st.session_state.remates.keys())
         carr_img_sel = st.selectbox("Seleccionar Carrera", todas_carrs_img, key="adm_img_sel_carr")
@@ -2417,6 +2369,30 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     guardar_estado_global()
                     st.toast("✅ ¡Imagen guardada!")
                     st.rerun()
+
+    with tabs_admin[9]:
+        st.markdown("### 🙈 Configuración de Remates Ciegos (Mapeo y Monto Fijo)")
+        with st.container(border=True):
+            for ciego_k in ["1V", "6V"]:
+                st.markdown(f"**Remate Ciego: {ciego_k}**")
+                mapeo_actual = st.session_state.get('mapeo_ciegos', {}).get(ciego_k, "")
+                idx_sel_map = lista_carreras_disponibles.index(mapeo_actual) if mapeo_actual in lista_carreras_disponibles else 0
+                
+                nuevo_map = st.selectbox(f"Mapear {ciego_k} con Carrera Real", options=[""] + lista_carreras_disponibles, index=0 if not mapeo_actual else (lista_carreras_disponibles.index(mapeo_actual)+1 if mapeo_actual in lista_carreras_disponibles else 0), key=f"map_ciego_{ciego_k}")
+                
+                det_c = st.session_state.detalles_carreras.get(ciego_k, {})
+                m_fijo_c = st.number_input(f"Monto Fijo por Ejemplar ({ciego_k})", min_value=50.0, value=float(det_c.get('monto_fijo_ciego', 500.0)), step=50.0, key=f"monto_fijo_ciego_{ciego_k}")
+                
+                if st.button(f"💾 Guardar Mapeo y Monto ({ciego_k})", key=f"btn_save_ciego_{ciego_k}", type="primary"):
+                    if 'mapeo_ciegos' not in st.session_state: st.session_state.mapeo_ciegos = {}
+                    st.session_state.mapeo_ciegos[ciego_k] = nuevo_map
+                    if ciego_k not in st.session_state.detalles_carreras:
+                        st.session_state.detalles_carreras[ciego_k] = {}
+                    st.session_state.detalles_carreras[ciego_k]['monto_fijo_ciego'] = m_fijo_c
+                    guardar_estado_global()
+                    st.success(f"✅ Remate Ciego **{ciego_k}** configurado correctamente.")
+                    st.rerun()
+                st.markdown("---")
 
 # =========================================================================
 # TRANSMISIÓN EN VIVO
