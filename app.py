@@ -1158,9 +1158,9 @@ st.markdown("<br>", unsafe_allow_html=True)
 menu_principal_opcion = st.session_state.menu_principal_opcion
 
 # =========================================================================
-# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL
+# BLOQUE FRAGMENTADO UNIVERSAL EN TIEMPO REAL (OPTIMIZADO CADA 8 SEGUNDOS)
 # =========================================================================
-@st.fragment(run_every=2.0)
+@st.fragment(run_every=8.0)
 def renderizar_tiempo_real_universal():
     cargar_estado_global(forzar_recarga=True)
     ahora_dt_frag = obtener_hora_venezuela_local()
