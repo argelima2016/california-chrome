@@ -1591,8 +1591,7 @@ def renderizar_tiempo_real_universal():
                     """, unsafe_allow_html=True)
 
                 if modo_actual_remate == "Adelantados":
-                    with st.container(border=True):
-                        st.markdown(f"<p style='font-size: 11px; font-weight: 700; margin-bottom: 2px; color: #f1e05a;'>GANADOR - {carr_activa}</p>", unsafe_allow_html=True)
+                    with st.expander(f"🏆 Seleccionar y Liquidar Ganador - {carr_activa}", expanded=False):
                         if carr_activa not in st.session_state.historial_ganadores:
                             caballos_lista_ganador = [c for c in list(st.session_state.remates[carr_activa].keys()) if c not in excluidos_carr_activa]
                             if not caballos_lista_ganador:
@@ -1621,6 +1620,8 @@ def renderizar_tiempo_real_universal():
                                     }
                                     guardar_estado_global()
                                     st.rerun()
+                        else:
+                            st.info("ℹ️ Esta carrera ya tiene un ganador liquidado.")
 
                 with st.expander(f"📜 Historial de Pujas - {carr_activa} ({modo_actual_remate})", expanded=False):
                     historial_carrera_actual = [
@@ -2601,49 +2602,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     guardar_estado_global()
                     st.toast("✅ ¡Agregado!")
                     st.rerun()
-
-        st.markdown("---")
-        st.markdown("#### 🔴 Gestionar Ejemplares 'RETIRADOS'")
-        if carr_banco_sel not in st.session_state.ejemplares_retirados:
-            st.session_state.ejemplares_retirados[carr_banco_sel] = []
-
-        lista_todos_carr_banco = st.session_state.banco_caballos_por_carrera.get(carr_banco_sel, [])
-        retirados_actuales_banco = st.session_state.ejemplares_retirados[carr_banco_sel]
-
-        with st.container(border=True):
-            nuevos_retirados = st.multiselect(
-                f"Selecciona los ejemplares **RETIRADOS** en {carr_banco_sel}:",
-                options=lista_todos_carr_banco,
-                default=[c for c in retirados_actuales_banco if c in lista_todos_carr_banco],
-                key=f"multiselect_retirado_{carr_banco_sel}"
-            )
-            if st.button("💾 Guardar Cambios 'RETIRADOS'", key=f"btn_save_retirados_{carr_banco_sel}", use_container_width=True, type="primary"):
-                st.session_state.ejemplares_retirados[carr_banco_sel] = nuevos_retirados
-                guardar_estado_global()
-                st.toast(f"✅ ¡Ejemplares retirados actualizados para {carr_banco_sel}!")
-                st.rerun()
-
-        st.markdown("---")
-        st.markdown("#### ⚠️ Gestionar Ejemplares 'NO VALE'")
-        if 'ejemplares_no_valido' not in st.session_state:
-            st.session_state.ejemplares_no_valido = {}
-        if carr_banco_sel not in st.session_state.ejemplares_no_valido:
-            st.session_state.ejemplares_no_valido[carr_banco_sel] = []
-
-        bloqueados_actuales_banco = st.session_state.ejemplares_no_valido[carr_banco_sel]
-
-        with st.container(border=True):
-            nuevos_no_validos = st.multiselect(
-                f"Selecciona los ejemplares que **NO VALEN** en {carr_banco_sel}:",
-                options=lista_todos_carr_banco,
-                default=[c for c in bloqueados_actuales_banco if c in lista_todos_carr_banco],
-                key=f"multiselect_no_vale_{carr_banco_sel}"
-            )
-            if st.button("💾 Guardar Cambios 'NO VALE'", key=f"btn_save_no_vale_{carr_banco_sel}", use_container_width=True, type="primary"):
-                st.session_state.ejemplares_no_valido[carr_banco_sel] = nuevos_no_validos
-                guardar_estado_global()
-                st.toast(f"✅ ¡Ejemplares 'NO VALE' actualizados para {carr_banco_sel}!")
-                st.rerun()
 
         for idx_b, ej_item in enumerate(st.session_state.banco_caballos_por_carrera[carr_banco_sel]):
             col_ib1, col_ib2 = st.columns([5, 1])
