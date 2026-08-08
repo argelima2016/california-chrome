@@ -1078,7 +1078,7 @@ if not elementos_carrusel_info:
 texto_unido_marquesina = " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ".join(elementos_carrusel_info)
 html_banner_marquesina = f"""
 <style>
-    .marquee-container {
+    .marquee-container {{
         width: 100%;
         background: transparent;
         border: none;
@@ -1089,8 +1089,8 @@ html_banner_marquesina = f"""
         box-sizing: border-box;
         display: flex;
         align-items: center;
-    }
-    .marquee-text {
+    }}
+    .marquee-text {{
         display: inline-block;
         white-space: nowrap;
         animation: scrollRight 150s linear infinite !important;
@@ -1103,15 +1103,15 @@ html_banner_marquesina = f"""
         letter-spacing: 1.2px;
         text-shadow: 0px 0px 8px rgba(0, 255, 255, 0.9), 2px 2px 2px #000000;
         padding-right: 100%;
-    }
-    @keyframes scrollRight {
-        0% {
+    }}
+    @keyframes scrollRight {{
+        0% {{
             transform: translateX(-100%);
-        }
-        100% {
+        }}
+        100% {{
             transform: translateX(100%);
-        }
-    }
+        }}
+    }}
 </style>
 <div class="marquee-container">
     <div class="marquee-text">{texto_unido_marquesina}</div>
@@ -1497,22 +1497,6 @@ def renderizar_tiempo_real_universal():
                     st.session_state.ejemplares_no_valido = {}
                 if carr_activa not in st.session_state.ejemplares_no_valido:
                     st.session_state.ejemplares_no_valido[carr_activa] = []
-
-                # --- ⚙️ GESTIÓN DE RETIROS Y NO VÁLIDOS (ENCIMA DE LA TABLA DE REMATE) ---
-                with st.expander(f"⚙️ Gestionar Retiros / No Válidos - {carr_activa}", expanded=False):
-                    banco_carr_rem = st.session_state.banco_caballos_por_carrera.get(carr_activa, [])
-                    ret_act = st.session_state.ejemplares_retirados.get(carr_activa, [])
-                    noval_act = st.session_state.ejemplares_no_valido.get(carr_activa, [])
-                    
-                    n_ret = st.multiselect("Ejemplares Retirados", options=banco_carr_rem, default=[c for c in ret_act if c in banco_carr_rem], key=f"quick_ret_{carr_activa}")
-                    n_noval = st.multiselect("Ejemplares No Valen", options=banco_carr_rem, default=[c for c in noval_act if c in banco_carr_rem], key=f"quick_noval_{carr_activa}")
-                    
-                    if st.button("💾 Guardar Cambios en Ejemplares", key=f"btn_quick_gestion_{carr_activa}", use_container_width=True, type="primary"):
-                        st.session_state.ejemplares_retirados[carr_activa] = n_ret
-                        st.session_state.ejemplares_no_valido[carr_activa] = n_noval
-                        guardar_estado_global()
-                        st.toast("✅ ¡Estado de ejemplares actualizado!")
-                        st.rerun()
 
                 # --- TABLA DE REMATES ---
                 retirados_carr_activa = st.session_state.ejemplares_retirados.get(carr_activa, [])
@@ -2689,7 +2673,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if ampm_cier_m == "AM" and h_cier_m_val == 12: h_cm_24 = 0
 
                 dt_im_final = datetime.combine(f_ini_m, dtime(h_im_24, m_ini_m_val))
-                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cm_24:=m_cier_m_val))
+                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cier_m_val))
 
                 st.session_state.fechas_horas_inicio_modalidad_multiple[mod_mult_sel] = dt_im_final
                 st.session_state.fechas_horas_cierre_modalidad_multiple[mod_mult_sel] = dt_cm_final
