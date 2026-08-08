@@ -400,8 +400,8 @@ def obtener_siguientes_montos(monto_actual):
         siguientes = [ultimo + i * 1000 for i in range(1, 50)]
     return siguientes
 
-# --- LECTOR DE IMAGEN FIJA ÚNICA (Gemini_Generated_Image_mn48tzmn48tzmn48.png) ---
-def get_image_base64(nombre_archivo):
+# --- CARGAR ARCHIVOS BASE64 (LOGO Y BANNER) ---
+def cargar_base64_archivo(nombre_archivo):
     ruta_directorio = os.path.dirname(os.path.abspath(__file__))
     try:
         ruta_imagen = os.path.join(ruta_directorio, nombre_archivo)
@@ -412,12 +412,21 @@ def get_image_base64(nombre_archivo):
         pass
     return ""
 
-img_b64 = get_image_base64("Gemini_Generated_Image_mn48tzmn48tzmn48.png")
+# Cargar Logo para la cabecera
+logo_b64 = cargar_base64_archivo("1001397336_preview_rev_1.png")
+if not logo_b64:
+    for alt in ["1001397336_preview_rev_1.jpg", "logo.png", "logo.jpg"]:
+        logo_b64 = cargar_base64_archivo(alt)
+        if logo_b64:
+            break
 
-if img_b64:
-    logo_display = f'<img src="data:image/png;base64,{img_b64}" class="header-logo-img" />'
+if logo_b64:
+    logo_display = f'<img src="data:image/png;base64,{logo_b64}" class="header-logo-img" />'
 else:
     logo_display = '<span style="color: #f1c40f; font-size: 28px; font-weight: 900; font-style: italic; letter-spacing: 1.5px;">WOLF READY TO RUN</span>'
+
+# Cargar Banner Estático Único
+banner_b64 = cargar_base64_archivo("Gemini_Generated_Image_mn48tzmn48tzmn48.png")
 
 # --- INICIALIZAR REMATES Y LISTA DE CARRERAS DISPONIBLES PRIMERO ---
 if not st.session_state.remates:
@@ -586,6 +595,7 @@ st.markdown("""
         word-break: break-word;
     }
     
+    /* DISEÑO NUEVO Y MEJORADO PARA POTE E INCENTIVO */
     .dashboard-pote-card {
         background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
         border: 2px solid #f1c40f;
@@ -1118,11 +1128,11 @@ html_banner_marquesina = f"""
 """
 components.html(html_banner_marquesina, height=36)
 
-# --- IMAGEN FIJA ÚNICA ---
-if img_b64:
+# --- IMAGEN FIJA ÚNICA DE LA CARTELERA ---
+if banner_b64:
     st.markdown(f"""
         <div style="width: 100%; height: 180px; margin: 0 0 8px 0; overflow: hidden; border-radius: 6px;">
-            <img src="data:image/png;base64,{img_b64}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+            <img src="data:image/png;base64,{banner_b64}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
         </div>
     """, unsafe_allow_html=True)
 else:
@@ -1793,8 +1803,8 @@ if menu_principal_opcion == "Dupletas":
         img_src_html = ""
         if carr_h in st.session_state.imagenes_carreras:
             img_src_html = f'<img src="{st.session_state.imagenes_carreras[carr_h]}" style="width:100%; height:260px; object-fit:cover; border-radius:8px; margin-bottom:10px;" />'
-        elif img_b64:
-            img_src_html = f'<img src="data:image/png;base64,{img_b64}" style="width:100%; height:260px; object-fit:cover; border-radius:8px; margin-bottom:10px;" />'
+        elif banner_b64:
+            img_src_html = f'<img src="data:image/png;base64,{banner_b64}" style="width:100%; height:260px; object-fit:cover; border-radius:8px; margin-bottom:10px;" />'
         else:
             img_src_html = f'<div style="width:100%; height:260px; background:#161b22; border:1px dashed #30363d; display:flex; align-items:center; justify-content:center; border-radius:8px; margin-bottom:10px; color:#8b949e; font-size:13px; font-weight:700;">{carr_h}</div>'
 
