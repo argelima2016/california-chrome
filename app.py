@@ -157,7 +157,6 @@ def cargar_estado_global(forzar_recarga=False):
         '_local_timestamp': 0.0
     }
     
-    # Preservar selecciones actuales del usuario si ya existen
     menu_actual = st.session_state.get('menu_principal_opcion', "Remates")
     sub_remate_actual = st.session_state.get('sub_remate_opcion', "En Vivo")
     sub_dup_actual = st.session_state.get('sub_dupleta_opcion', "Dupleta")
@@ -183,7 +182,6 @@ def cargar_estado_global(forzar_recarga=False):
                 if k not in st.session_state or forzar_recarga:
                     st.session_state[k] = data.get(k, v)
             
-            # Restaurar selecciones del usuario para que no se pierdan al sincronizar
             st.session_state['menu_principal_opcion'] = menu_actual
             st.session_state['sub_remate_opcion'] = sub_remate_actual
             st.session_state['sub_dupleta_opcion'] = sub_dup_actual
@@ -243,7 +241,7 @@ def guardar_estado_global():
 
 cargar_estado_global()
 
-# --- VIGILANTE DE SINCRONIZACIÓN SEGURO (CADA 6 SEGUNDOS, SIN FORZAR RERUN SI EL USUARIO ESTÁ EN CONFIGURACIÓN) ---
+# --- VIGILANTE DE SINCRONIZACIÓN SEGURO (CADA 6 SEGUNDOS) ---
 @st.fragment(run_every=6.0)
 def vigilante_sincronizacion_global():
     if supabase and st.session_state.get('menu_principal_opcion') != "🔒 Zona Admin":
@@ -1294,7 +1292,8 @@ def renderizar_tiempo_real_universal():
                     aviso_en_vivo_txt = " (Cierra 10s antes)" if modo_actual_remate == "En Vivo" else ""
                     st.markdown(f"<div style='background:#161b22; padding:5px; border-radius:5px; margin-bottom:6px; border:1px solid #30363d; font-size:11px;'>⏰ Cierre Estricto ({modo_actual_remate}): <b>{dt_limite.strftime('%d/%m/%Y - %I:%M %p')}</b>{aviso_en_vivo_txt}</div>", unsafe_allow_html=True)
 
-                if dt_limite_efectivo and not carrera_cerrada:
+                # --- CONTROL BLINDADO: SOLO SI LA CARRERA NO ESTÁ CERRADA ---
+                if not carrera_cerrada and dt_limite_efectivo:
                     diferencia_segundos = (dt_limite_efectivo - ahora_dt_frag).total_seconds()
                     
                     if diferencia_segundos > 0:
