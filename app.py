@@ -804,15 +804,6 @@ st.markdown("""
         background-color: #ff4757;
         color: #ff4757;
     }
-
-    /* ESTILO PARA LIMITAR EL TAMAÑO DE LA IMAGEN EN COMPUTADORAS (PC) */
-    @media (min-width: 769px) {
-        .imagen-carrera-pc-container {
-            max-width: 380px !important;
-            margin: 0 auto !important;
-            display: block !important;
-        }
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -1087,7 +1078,7 @@ if not elementos_carrusel_info:
 texto_unido_marquesina = " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ".join(elementos_carrusel_info)
 html_banner_marquesina = f"""
 <style>
-    .marquee-container {{
+    .marquee-container {
         width: 100%;
         background: transparent;
         border: none;
@@ -1098,8 +1089,8 @@ html_banner_marquesina = f"""
         box-sizing: border-box;
         display: flex;
         align-items: center;
-    }}
-    .marquee-text {{
+    }
+    .marquee-text {
         display: inline-block;
         white-space: nowrap;
         animation: scrollRight 150s linear infinite !important;
@@ -1112,15 +1103,15 @@ html_banner_marquesina = f"""
         letter-spacing: 1.2px;
         text-shadow: 0px 0px 8px rgba(0, 255, 255, 0.9), 2px 2px 2px #000000;
         padding-right: 100%;
-    }}
-    @keyframes scrollRight {{
-        0% {{
+    }
+    @keyframes scrollRight {
+        0% {
             transform: translateX(-100%);
-        }}
-        100% {{
+        }
+        100% {
             transform: translateX(100%);
-        }}
-    }}
+        }
+    }
 </style>
 <div class="marquee-container">
     <div class="marquee-text">{texto_unido_marquesina}</div>
@@ -1357,9 +1348,7 @@ def renderizar_tiempo_real_universal():
                 if carr_activa in st.session_state.imagenes_carreras:
                     try:
                         img_url_val = st.session_state.imagenes_carreras[carr_activa]
-                        st.markdown(f'<div class="imagen-carrera-pc-container">', unsafe_allow_html=True)
                         st.image(img_url_val, caption=f"Imagen oficial - {carr_activa}", use_container_width=True)
-                        st.markdown('</div>', unsafe_allow_html=True)
                     except Exception:
                         pass
 
@@ -2602,49 +2591,6 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                     st.toast("✅ ¡Agregado!")
                     st.rerun()
 
-        st.markdown("---")
-        st.markdown("#### 🔴 Gestionar Ejemplares 'RETIRADOS'")
-        if carr_banco_sel not in st.session_state.ejemplares_retirados:
-            st.session_state.ejemplares_retirados[carr_banco_sel] = []
-
-        lista_todos_carr_banco = st.session_state.banco_caballos_por_carrera.get(carr_banco_sel, [])
-        retirados_actuales_banco = st.session_state.ejemplares_retirados[carr_banco_sel]
-
-        with st.container(border=True):
-            nuevos_retirados = st.multiselect(
-                f"Selecciona los ejemplares **RETIRADOS** en {carr_banco_sel}:",
-                options=lista_todos_carr_banco,
-                default=[c for c in retirados_actuales_banco if c in lista_todos_carr_banco],
-                key=f"multiselect_retirado_{carr_banco_sel}"
-            )
-            if st.button("💾 Guardar Cambios 'RETIRADOS'", key=f"btn_save_retirados_{carr_banco_sel}", use_container_width=True, type="primary"):
-                st.session_state.ejemplares_retirados[carr_banco_sel] = nuevos_retirados
-                guardar_estado_global()
-                st.toast(f"✅ ¡Ejemplares retirados actualizados para {carr_banco_sel}!")
-                st.rerun()
-
-        st.markdown("---")
-        st.markdown("#### ⚠️ Gestionar Ejemplares 'NO VALE'")
-        if 'ejemplares_no_valido' not in st.session_state:
-            st.session_state.ejemplares_no_valido = {}
-        if carr_banco_sel not in st.session_state.ejemplares_no_valido:
-            st.session_state.ejemplares_no_valido[carr_banco_sel] = []
-
-        bloqueados_actuales_banco = st.session_state.ejemplares_no_valido[carr_banco_sel]
-
-        with st.container(border=True):
-            nuevos_no_validos = st.multiselect(
-                f"Selecciona los ejemplares que **NO VALEN** en {carr_banco_sel}:",
-                options=lista_todos_carr_banco,
-                default=[c for c in bloqueados_actuales_banco if c in lista_todos_carr_banco],
-                key=f"multiselect_no_vale_{carr_banco_sel}"
-            )
-            if st.button("💾 Guardar Cambios 'NO VALE'", key=f"btn_save_no_vale_{carr_banco_sel}", use_container_width=True, type="primary"):
-                st.session_state.ejemplares_no_valido[carr_banco_sel] = nuevos_no_validos
-                guardar_estado_global()
-                st.toast(f"✅ ¡Ejemplares 'NO VALE' actualizados para {carr_banco_sel}!")
-                st.rerun()
-
         for idx_b, ej_item in enumerate(st.session_state.banco_caballos_por_carrera[carr_banco_sel]):
             col_ib1, col_ib2 = st.columns([5, 1])
             with col_ib1: st.text(ej_item)
@@ -2925,9 +2871,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             if carr_img_sel in st.session_state.imagenes_carreras:
                 try:
                     img_guardada = st.session_state.imagenes_carreras[carr_img_sel]
-                    st.markdown(f'<div class="imagen-carrera-pc-container">', unsafe_allow_html=True)
-                    st.image(img_guardada, caption=f"Imagen guardada - {carr_img_sel}", use_container_width=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    st.image(img_guardada, width=250, caption=f"Imagen guardada - {carr_img_sel}")
                 except Exception:
                     pass
                 
