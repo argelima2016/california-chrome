@@ -125,7 +125,7 @@ def cargar_estado_global(forzar_recarga=False):
         'carreras_habilitadas_dupleta': [],
         'carreras_habilitadas_tripleta': [],
         'carreras_habilitadas_polla': [],
-        'config_montos_especiales': {"Dupleta": 500.0, "Tripleta": 500.0, "6 En Linea": 1000.0},
+        'config_montos_especiales': {"Dupleta": 500.0, "Tripleta": 500.0, "POLLA HIPICA": 1000.0},
         'dupleta_bloqueada': False,
         'carreras_activas_remate': [],
         'carreras_por_modalidad': {"Adelantados": [], "Ciegos": [], "En Vivo": []},
@@ -446,6 +446,13 @@ if not st.session_state.remates:
         }
 
 lista_carreras_disponibles = list(st.session_state.remates.keys())
+
+# --- REGLA: AUTOMÁTICAMENTE LAS ÚLTIMAS 6 CARRERAS CONSECUTIVAS PARA POLLA HÍPICA ---
+total_carrs = st.session_state.get('total_carreras_semana', len(lista_carreras_disponibles))
+inicio_polla_idx = max(1, total_carrs - 5)
+ultimas_6_carreras = [f"Carrera {i}" for i in range(inicio_polla_idx, total_carrs + 1)]
+st.session_state.carreras_habilitadas_polla = [c for c in ultimas_6_carreras if c in lista_carreras_disponibles]
+
 ahora_dt = obtener_hora_venezuela_local()
 
 # --- ESTILOS CSS GENERALES OPTIMIZADOS PARA TELÉFONOS MÓVILES ---
@@ -1023,8 +1030,6 @@ if not st.session_state.carreras_habilitadas_dupleta and lista_carreras_disponib
     st.session_state.carreras_habilitadas_dupleta = list(lista_carreras_disponibles)
 if not st.session_state.carreras_habilitadas_tripleta and lista_carreras_disponibles:
     st.session_state.carreras_habilitadas_tripleta = list(lista_carreras_disponibles)
-if not st.session_state.carreras_habilitadas_polla and lista_carreras_disponibles:
-    st.session_state.carreras_habilitadas_polla = list(lista_carreras_disponibles)
 
 # --- MENÚ PRINCIPAL HORIZONTAL ---
 st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
@@ -1165,8 +1170,8 @@ if lista_b64_banners:
                     setTimeout(function() {{
                         imgElement.src = images[index];
                         imgElement.style.opacity = "1";
-                    }}, 400);
-                }}, 8000);
+                    }, 400);
+                }, 8000);
             }}
         }})();
     </script>
@@ -1201,7 +1206,7 @@ with st.sidebar.expander("👤 Usuario Activo y Selector", expanded=True):
 with st.sidebar.expander("🏠 Retención de la Casa", expanded=False):
     porcentaje_casa = st.slider("Retención (%)", 0, 50, 30, key="sb_slider_retencion_casa")
 
-with st.sidebar.expander("🔒 Estado Dupletas / 6 En Linea", expanded=False):
+with st.sidebar.expander("🔒 Estado Dupletas / Polla Hípica", expanded=False):
     if st.session_state.dupleta_bloqueada:
         st.markdown("<p style='color: #ff4757; font-weight: bold;'>🔴 BLOQUEADAS</p>", unsafe_allow_html=True)
         if st.button("🔓 Desbloquear", key="sb_btn_desbloquear_dupleta", use_container_width=True):
@@ -1605,7 +1610,7 @@ def renderizar_tiempo_real_universal():
                                     monto_casa_calc = pote_carr_total * (porcentaje_casa / 100)
                                     
                                     incentivo_establecido = float(detalles_carr.get('incentivo_adelantados', 0.0))
-                                    premio_final_liq = pote_carr_total - monto_casa_calc + incentivo_establecido
+                                    premio_final_liq = pote_carr_total - monto_casa_calc + incentiv_establecido if 'incentivo_establecido' in locals() else pote_carr_total - monto_casa_calc + float(detalles_carr.get('incentivo_adelantados', 0.0))
                                     
                                     info_g = st.session_state.remates[carr_activa][caballo_ganador_elegido]
                                     if info_g['jugador'] != "Sin Postor":
@@ -1785,7 +1790,7 @@ def renderizar_tiempo_real_universal():
 renderizar_tiempo_real_universal()
 
 # =========================================================================
-# 2. MÓDULO DE DUPLETA Y 6 EN LINEA (INCLUYENDO REGLAS DE POLLA)
+# 2. MÓDULO DE DUPLETA, TRIPLETA Y POLLA HÍPICA
 # =========================================================================
 if menu_principal_opcion == "Dupletas":
     st.markdown('<div class="carrusel-horizontal-box">', unsafe_allow_html=True)
@@ -1801,8 +1806,8 @@ if menu_principal_opcion == "Dupletas":
             guardar_estado_global()
             st.rerun()
     with col_d3:
-        if st.button("🏇 6 En Linea (Polla)", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "6 En Linea" else "secondary"):
-            st.session_state.sub_dupleta_opcion = "6 En Linea"
+        if st.button("🏇 POLLA HIPICA", key="sub_dup_polla", use_container_width=True, type="primary" if st.session_state.sub_dupleta_opcion == "POLLA HIPICA" else "secondary"):
+            st.session_state.sub_dupleta_opcion = "POLLA HIPICA"
             guardar_estado_global()
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
@@ -1847,11 +1852,16 @@ if menu_principal_opcion == "Dupletas":
     elif sub_dup_actual == "Tripleta":
         pote_total = sum([t['monto'] for t in st.session_state.tripleta_tickets if t.get('estado') == 'Pendiente'])
         carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_tripleta if c in lista_carreras_disponibles]
-    else:
+    else: # POLLA HIPICA
         pote_total = sum([t['monto'] for t in st.session_state.polla_tickets])
-        carreras_permitidas = [c for c in st.session_state.carreras_habilitadas_polla if c in lista_carreras_disponibles]
+        # Siempre las últimas 6 carreras consecutivas de la semana
+        total_c = st.session_state.get('total_carreras_semana', len(lista_carreras_disponibles))
+        inicio_p = max(1, total_c - 5)
+        carreras_ult6 = [f"Carrera {i}" for i in range(inicio_p, total_c + 1)]
+        carreras_permitidas = [c for c in carreras_ult6 if c in lista_carreras_disponibles]
+        st.session_state.carreras_habilitadas_polla = carreras_permitidas
 
-    # --- DISEÑO LLAMATIVO Y ÉPICO PARA EL POTE DE DUPLETAS/TRIPLETAS/POLLA ---
+    # --- DISEÑO LLAMATIVO Y ÉPICO PARA EL POTE ---
     st.markdown(f"""
         <div class="pote-cyber-card">
             <div class="pote-cyber-title">💰 POTE ACUMULADO DE {sub_dup_actual.upper()}</div>
@@ -1893,12 +1903,12 @@ if menu_principal_opcion == "Dupletas":
 
     with st.container(border=True):
         st.markdown(f"👤 **Jugador Activo:** `{st.session_state.usuario_activo}` &nbsp;|&nbsp; 💵 **Costo Ticket:** `{formatear_bs(monto_unico_seccion)}`")
-        if sub_dup_actual == "6 En Linea":
-            st.markdown("<p style='color: #00ffff; font-size: 11px; font-weight: 700;'>ℹ️ <b>Regla de Polla:</b> No se admiten llaves, cada ejemplar juega por separado. En caso de retiro, se aplicará el corrimiento automático al siguiente ejemplar activo.</p>", unsafe_allow_html=True)
+        if sub_dup_actual == "POLLA HIPICA":
+            st.markdown("<p style='color: #00ffff; font-size: 11px; font-weight: 700;'>ℹ️ <b>Regla de Polla Hípica:</b> Se juega en las últimas 6 carreras consecutivas de la semana. <u>Se permite registrar pollas/tickets repetidos</u>. Si hay varios ganadores con los mismos puntos máximos, <b>el pote se repartirá equitativamente entre ellos</b>.</p>", unsafe_allow_html=True)
         st.markdown("---")
 
         if not carreras_permitidas:
-            st.warning(f"⚠️ No hay carreras habilitadas para **{sub_dup_actual}**. Configúralas en Zona Admin.")
+            st.warning(f"⚠️ No hay carreras habilitadas para **{sub_dup_actual}**.")
         else:
             seleccion_legs = []
             valido_legs = True
@@ -1910,35 +1920,49 @@ if menu_principal_opcion == "Dupletas":
                 st.markdown(f"🔹 **Paso {paso + 1} de {cantidad_pasos}**")
                 
                 carr_leg = carreras_permitidas[paso % len(carreras_permitidas)]
-                
-                st.markdown(f"🏁 **Carrera fija:** `{carr_leg}`")
+                st.markdown(f"🏁 **Carrera:** `{carr_leg}`")
                 
                 retirados_carr_t = st.session_state.ejemplares_retirados.get(carr_leg, [])
                 no_val_carr_t = st.session_state.get('ejemplares_no_valido', {}).get(carr_leg, [])
                 excluidos_carr_t = set(retirados_carr_t) | set(no_val_carr_t)
 
-                todos_caballos_carr = list(st.session_state.remates.get(carr_leg, {}).keys())
-                caballos_in_carr = [c for c in todos_caballos_carr if c not in excluidos_carr_t]
-                
-                if excluidos_carr_t and sub_dup_actual in ["Dupleta", "Tripleta"]:
-                    st.markdown(f"<p style='color: #ff4757; font-size: 11px; font-weight: bold;'>⚠️ Hay ejemplares retirados o sin validez en esta carrera. Puede cambiar el ejemplar seleccionado:</p>", unsafe_allow_html=True)
+                banco_cab_carr = st.session_state.banco_caballos_por_carrera.get(carr_leg, [])
+                caballos_in_carr = [c for c in banco_cab_carr if c not in excluidos_carr_t]
+                if not caballos_in_carr:
+                    caballos_in_carr = banco_cab_carr if banco_cab_carr else ["1 - Ejemplar 1"]
 
-                cab_leg = st.selectbox(
-                    f"Selecciona el Ejemplar para {carr_leg}", 
-                    options=caballos_in_carr if caballos_in_carr else ["Sin Caballos Disponibles"], 
-                    key=f"ticket_cab_{sub_dup_actual}_{paso}"
-                )
-                
-                if sub_dup_actual == "6 En Linea" and cab_leg in excluidos_carr_t and todos_caballos_carr:
-                    idx_ret = todos_caballos_carr.index(cab_leg) if cab_leg in todos_caballos_carr else 0
+                # --- MODELO DE SELECCIÓN VISUAL (ESTILO TARJETAS / GRILLA COMO LA IMAGEN) ---
+                st.markdown("🐎 **Selecciona tu ejemplar (Modelo Grilla Visual):**")
+                k_sel_polla_grid = f"sel_grid_{sub_dup_actual}_{carr_leg}_{paso}"
+                if k_sel_polla_grid not in st.session_state or st.session_state[k_sel_polla_grid] not in caballos_in_carr:
+                    st.session_state[k_sel_polla_grid] = caballos_in_carr[0]
+
+                # Grilla interactiva de selección rápida de ejemplares
+                cols_g = st.columns(min(3, len(caballos_in_carr)), gap="small")
+                for idx_cb_g, cb_g_item in enumerate(caballos_in_carr):
+                    cg_idx = idx_cb_g % len(cols_g)
+                    num_parte_g = cb_g_item.split(" - ")[0]
+                    nombre_corto_g = cb_g_item.split(" - ")[1] if " - " in cb_g_item else cb_g_item
+                    es_seleccionado_grid = (st.session_state[k_sel_polla_grid] == cb_g_item)
+                    
+                    with cols_g[cg_idx]:
+                        if st.button(f"#{num_parte_g} {nombre_corto_g[:10]}", key=f"btn_grid_sel_{carr_leg}_{idx_cb_g}_{paso}", use_container_width=True, type="primary" if es_seleccionado_grid else "secondary"):
+                            st.session_state[k_sel_polla_grid] = cb_g_item
+                            st.rerun()
+
+                cab_leg = st.session_state[k_sel_polla_grid]
+                st.info(f"Seleccionado para `{carr_leg}`: **{cab_leg}**")
+
+                if sub_dup_actual == "POLLA HIPICA" and cab_leg in excluidos_carr_t and banco_cab_carr:
+                    idx_ret = banco_cab_carr.index(cab_leg) if cab_leg in banco_cab_carr else 0
                     siguiente_cab = None
-                    for siguiente_c in todos_caballos_carr[idx_ret + 1:] + todos_caballos_carr[:idx_ret]:
+                    for siguiente_c in banco_cab_carr[idx_ret + 1:] + banco_cab_carr[:idx_ret]:
                         if siguiente_c not in excluidos_carr_t:
                             siguiente_cab = siguiente_c
                             break
                     if siguiente_cab:
                         cab_leg = siguiente_cab
-                        st.info(f"🔄 **Corrimiento automático Polla:** El ejemplar seleccionado en `{carr_leg}` está retirado/no válido. Se corrió automáticamente al siguiente activo: **{cab_leg}**")
+                        st.info(f"🔄 **Corrimiento automático Polla Hípica:** El ejemplar en `{carr_leg}` está retirado. Se corrió al activo: **{cab_leg}**")
 
                 if carr_leg in carreras_usadas:
                     valido_legs = False
@@ -1960,13 +1984,15 @@ if menu_principal_opcion == "Dupletas":
                             st.session_state.polla_tickets
                         )
 
+                        # REGLA: En POLLA HÍPICA se permite registrar pollas repetidas (duplicadas)
                         duplicado = False
-                        for t in lista_tickets_activo:
-                            t_legs_ordenadas = sorted(t['legs'], key=lambda x: x['carrera'])
-                            t_firma = tuple((l['carrera'], l['ejemplar']) for l in t_legs_ordenadas)
-                            if t_firma == firma_combinacion:
-                                duplicado = True
-                                break
+                        if sub_dup_actual != "POLLA HIPICA":
+                            for t in lista_tickets_activo:
+                                t_legs_ordenadas = sorted(t['legs'], key=lambda x: x['carrera'])
+                                t_firma = tuple((l['carrera'], l['ejemplar']) for l in t_legs_ordenadas)
+                                if t_firma == firma_combinacion:
+                                    duplicado = True
+                                    break
 
                         if duplicado:
                             st.error("❌ **BLOQUEADO:** Ya existe un ticket con esta misma combinación.")
@@ -2002,12 +2028,12 @@ if menu_principal_opcion == "Dupletas":
                             guardar_estado_global()
                             
                             components.html("<script>window.parent.reproducirAlertaMovilYCalle('exito');</script>", height=0, width=0)
-                            st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito (Estado: PENDIENTE)! No hay reintegro de saldos ni anulación.")
+                            st.success(f"✅ ¡Ticket {ticket_id} emitido con éxito (Estado: PENDIENTE)!")
                             st.rerun()
 
-    if sub_dup_actual == "6 En Linea":
+    if sub_dup_actual == "POLLA HIPICA":
         st.markdown("---")
-        st.markdown("### 🏆 Panel de Resultados y Tabla de Posiciones (Reglas de Polla)")
+        st.markdown("### 🏆 Panel de Resultados y Tabla de Posiciones (Polla Hípica)")
         
         with st.container(border=True):
             st.markdown("🎯 **Cargar Resultados Oficiales por Carrera (Puntuación: 1° = 5 Ptos | 2° = 3 Ptos | 3° = 1 Pto)**")
@@ -2074,18 +2100,24 @@ if menu_principal_opcion == "Dupletas":
             st.dataframe(df_posiciones, use_container_width=True)
 
             max_puntos_actual = df_posiciones["puntos"].max() if not df_posiciones.empty else 0
-            for t_id, info_p in tabla_puntuaciones.items():
-                if info_p['puntos'] >= 30 or (max_puntos_actual > 0 and info_p['puntos'] == max_puntos_actual and len(resultados_oficiales) >= len(carreras_permitidas)):
-                    t['estado'] = '🏆 ¡GANADOR!'
-                    st.markdown(f"""
-                        <div style="background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%); border: 3px solid #ffffff; border-radius: 10px; padding: 12px; text-align: center; color: #000000; font-weight: 900; margin-top: 10px; box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);">
-                            🏆 ¡TICKET GANADOR DE POLLA - {t_id}! 🏆<br>
-                            El ticket de <b>{info_p['jugador']}</b> lidera con <b>{info_p['puntos']} puntos</b>. ¡Felicidades!
-                        </div>
-                    """, unsafe_allow_html=True)
-                    break
+            
+            # REGLA: Si hay varios ganadores con los mismos puntos máximos, el pote se reparte equitativamente
+            if max_puntos_actual > 0 and len(resultados_oficiales) >= len(carreras_permitidas):
+                tickets_ganadores_lista = [row for row in tabla_puntuaciones.values() if row['puntos'] == max_puntos_actual]
+                cant_ganadores = len(tickets_ganadores_lista)
+                pote_repartido = pote_total / cant_ganadores if cant_ganadores > 0 else 0
+
+                nombres_ganadores_str = ", ".join([f"{g['ticket']} ({g['jugador']})" for g in tickets_ganadores_lista])
+                
+                st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%); border: 3px solid #ffffff; border-radius: 10px; padding: 12px; text-align: center; color: #000000; font-weight: 900; margin-top: 10px; box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);">
+                        🏆 ¡POLLA HÍPICA FINALIZADA - POTES REPARTIDOS! 🏆<br>
+                        Ganadores con <b>{max_puntos_actual} puntos</b>: {nombres_ganadores_str}<br>
+                        💰 Pote total ({formatear_bs(pote_total)}) repartido entre {cant_ganadores} ganador(es): <b>{formatear_bs(pote_repartido)} c/u</b>.
+                    </div>
+                """, unsafe_allow_html=True)
         else:
-            st.info("ℹ️ No hay tickets registrados en la Polla para calcular posiciones.")
+            st.info("ℹ️ No hay tickets registrados en la Polla Hípica para calcular posiciones.")
 
     st.markdown("---")
     st.markdown(f"### 📋 Historial de Tickets ({sub_dup_actual})")
@@ -2114,7 +2146,7 @@ if menu_principal_opcion == "Dupletas":
                 st.markdown(f"> {detalles_legs}")
                 st.caption(f"Emitido: {t['fecha']}")
 
-                if sub_dup_actual != "6 En Linea":
+                if sub_dup_actual != "POLLA HIPICA":
                     retirado_in_ticket = False
                     carrera_afectada = None
                     for leg in t['legs']:
@@ -2367,7 +2399,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "✍️ Caballos", 
         "👥 Usuarios", 
-        "⚙️ Dupleta/6L", 
+        "⚙️ Dupleta/Polla", 
         "📺 Video", 
         "📊 Saldos", 
         "🖼️ Imágenes"
@@ -2419,7 +2451,10 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 st.session_state.carreras_activas_remate = list(carreras_generadas)
                 st.session_state.carreras_habilitadas_dupleta = list(carreras_generadas)
                 st.session_state.carreras_habilitadas_tripleta = list(carreras_generadas)
-                st.session_state.carreras_habilitadas_polla = list(carreras_generadas)
+                
+                # Actualizar últimas 6 carreras para polla hípica
+                inicio_p_adm = max(1, nueva_cantidad_carreras - 5)
+                st.session_state.carreras_habilitadas_polla = [f"Carrera {i}" for i in range(inicio_p_adm, nueva_cantidad_carreras + 1)]
                 
                 if not st.session_state.carreras_por_modalidad.get("Adelantados"):
                     st.session_state.carreras_por_modalidad["Adelantados"] = list(carreras_generadas)
@@ -2653,20 +2688,20 @@ elif menu_principal_opcion == "🔒 Zona Admin":
             st.markdown("💰 **Montos Únicos**")
             monto_dup_cfg = st.number_input("Dupleta (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("Dupleta", 500.0)), step=50.0, key="cfg_monto_dupleta")
             monto_trip_cfg = st.number_input("Tripleta (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("Tripleta", 500.0)), step=50.0, key="cfg_monto_tripleta")
-            monto_polla_cfg = st.number_input("6 En Linea (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("6 En Linea", 1000.0)), step=50.0, key="cfg_monto_polla")
+            monto_polla_cfg = st.number_input("Polla Hípica (Bs.)", min_value=0.0, value=float(st.session_state.config_montos_especiales.get("POLLA HIPICA", 1000.0)), step=50.0, key="cfg_monto_polla")
             
             if st.button("💾 Guardar Montos", key="btn_save_montos_cfg", use_container_width=True, type="primary"):
                 st.session_state.config_montos_especiales["Dupleta"] = monto_dup_cfg
                 st.session_state.config_montos_especiales["Tripleta"] = monto_trip_cfg
-                st.session_state.config_montos_especiales["6 En Linea"] = monto_polla_cfg
+                st.session_state.config_montos_especiales["POLLA HIPICA"] = monto_polla_cfg
                 guardar_estado_global()
                 st.toast("✅ ¡Guardado!")
                 st.rerun()
 
         st.markdown("---")
         with st.container(border=True):
-            st.markdown("⏰ **Control de Horarios (Hora Tope) por Modalidad (Dupleta / Tripleta / 6 En Linea)**")
-            mod_mult_sel = st.selectbox("Seleccionar Modalidad Múltiple", ["Dupleta", "Tripleta", "6 En Linea"], key="sel_mod_multiple_horarios")
+            st.markdown("⏰ **Control de Horarios (Hora Tope) por Modalidad (Dupleta / Tripleta / Polla Hípica)**")
+            mod_mult_sel = st.selectbox("Seleccionar Modalidad Múltiple", ["Dupleta", "Tripleta", "POLLA HIPICA"], key="sel_mod_multiple_horarios")
             
             col_hm1, col_hm2 = st.columns(2)
             with col_hm1:
@@ -2701,7 +2736,7 @@ elif menu_principal_opcion == "🔒 Zona Admin":
                 if ampm_cier_m == "AM" and h_cier_m_val == 12: h_cm_24 = 0
 
                 dt_im_final = datetime.combine(f_ini_m, dtime(h_im_24, m_ini_m_val))
-                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cm_24:=m_cier_m_val))
+                dt_cm_final = datetime.combine(f_cier_m, dtime(h_cm_24, m_cier_m_val))
 
                 st.session_state.fechas_horas_inicio_modalidad_multiple[mod_mult_sel] = dt_im_final
                 st.session_state.fechas_horas_cierre_modalidad_multiple[mod_mult_sel] = dt_cm_final
@@ -2711,21 +2746,18 @@ elif menu_principal_opcion == "🔒 Zona Admin":
 
         st.markdown("---")
         with st.container(border=True):
-            st.markdown("🏇 **Carreras Habilitadas**")
+            st.markdown("🏇 **Carreras Habilitadas (Dupleta y Tripleta)**")
             carr_disp_all = list(st.session_state.remates.keys())
             
             def_dup = [c for c in st.session_state.carreras_habilitadas_dupleta if c in carr_disp_all]
             def_trip = [c for c in st.session_state.carreras_habilitadas_tripleta if c in carr_disp_all]
-            def_polla = [c for c in st.session_state.carreras_habilitadas_polla if c in carr_disp_all]
 
             sel_dup_hab = st.multiselect("Dupleta", options=carr_disp_all, default=def_dup, key="multiselect_hab_dup")
             sel_trip_hab = st.multiselect("Tripleta", options=carr_disp_all, default=def_trip, key="multiselect_hab_trip")
-            sel_polla_hab = st.multiselect("6 En Linea", options=carr_disp_all, default=def_polla, key="multiselect_hab_polla")
 
             if st.button("💾 Guardar Habilitadas", key="btn_save_carr_hab", use_container_width=True, type="primary"):
                 st.session_state.carreras_habilitadas_dupleta = sel_dup_hab
                 st.session_state.carreras_habilitadas_tripleta = sel_trip_hab
-                st.session_state.carreras_habilitadas_polla = sel_polla_hab
                 guardar_estado_global()
                 st.toast("✅ ¡Guardado!")
                 st.rerun()
